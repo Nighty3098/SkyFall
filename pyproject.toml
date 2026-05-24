@@ -1,5 +1,0 @@
-[project]
-name = "SkyFall"
-
-[tool.pyside6-project]
-files = ["main.py", "SkyFall/Main.qml", "SkyFall/qmldir"]

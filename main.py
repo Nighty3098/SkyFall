@@ -11,8 +11,8 @@ class MainWindow(QMainWindow):
         ui_file = Path(__file__).parent / "resources" / "form.ui"
         self.ui = QUiLoader().load(ui_file)
         self.setCentralWidget(self.ui)
-        self.setMinimumSize(800, 500)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+
         self._load_app_icon()
 
     def _load_app_icon(self):
@@ -24,7 +24,7 @@ class MainWindow(QMainWindow):
         pixmap = QPixmap()
         pixmap.loadFromData(svg_content.encode("utf-8"))
         if not pixmap.isNull():
-            pixmap = pixmap.scaled(400, 400, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
             label.setPixmap(pixmap)
 
 if __name__ == "__main__":

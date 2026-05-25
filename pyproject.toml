@@ -1,5 +1,5 @@
 [project]
-name = "PySide Widgets Project"
+name = "SkyFall"
 
 [tool.pyside6-project]
 files = ["main.py", "resources/form.ui", "resources/style.qss"]

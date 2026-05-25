@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>1200</width>
     <height>647</height>
    </rect>
   </property>
@@ -22,7 +22,7 @@
       </property>
       <widget class="QWidget" name="mainTab">
        <attribute name="title">
-        <string>SkyFall</string>
+        <string>SKYFALL</string>
        </attribute>
        <layout class="QVBoxLayout" name="mainTabLayout">
         <item>
@@ -440,6 +440,77 @@
        <attribute name="title">
         <string>MAIL</string>
        </attribute>
+      </widget>
+      <widget class="QWidget" name="dorkingTab">
+       <attribute name="title">
+        <string>DORKING</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_12">
+        <item>
+         <layout class="QGridLayout" name="gridLayout_5">
+          <item row="0" column="1">
+           <widget class="QLabel" name="label_9">
+            <property name="text">
+             <string>Dorks</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLabel" name="label_8">
+            <property name="text">
+             <string>Category</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QPlainTextEdit" name="dorksResult"/>
+          </item>
+          <item row="1" column="1">
+           <widget class="QListWidget" name="dorksList"/>
+          </item>
+          <item row="1" column="0">
+           <widget class="QListWidget" name="dorksCategoryList">
+            <item>
+             <property name="text">
+              <string>ADMIN PANELS</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>.ENV</string>
+             </property>
+            </item>
+            <item>
+             <property name="text">
+              <string>DB</string>
+             </property>
+            </item>
+           </widget>
+          </item>
+          <item row="2" column="2">
+           <widget class="QPushButton" name="dorkItButton">
+            <property name="text">
+             <string>Dork</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Result</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="2">
+           <widget class="QLineEdit" name="customDorkEdit">
+            <property name="placeholderText">
+             <string>Custom Dork</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
       </widget>
       <widget class="QWidget" name="proxy_tab">
        <attribute name="title">

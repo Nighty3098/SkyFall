@@ -26,7 +26,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(800, 647)
+        MainWindow.resize(1200, 647)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -345,6 +345,59 @@ class Ui_MainWindow(object):
         self.mail_tools_tab = QWidget()
         self.mail_tools_tab.setObjectName(u"mail_tools_tab")
         self.mainTabsWidget.addTab(self.mail_tools_tab, "")
+        self.dorkingTab = QWidget()
+        self.dorkingTab.setObjectName(u"dorkingTab")
+        self.verticalLayout_12 = QVBoxLayout(self.dorkingTab)
+        self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.gridLayout_5 = QGridLayout()
+        self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.label_9 = QLabel(self.dorkingTab)
+        self.label_9.setObjectName(u"label_9")
+
+        self.gridLayout_5.addWidget(self.label_9, 0, 1, 1, 1)
+
+        self.label_8 = QLabel(self.dorkingTab)
+        self.label_8.setObjectName(u"label_8")
+
+        self.gridLayout_5.addWidget(self.label_8, 0, 0, 1, 1)
+
+        self.dorksResult = QPlainTextEdit(self.dorkingTab)
+        self.dorksResult.setObjectName(u"dorksResult")
+
+        self.gridLayout_5.addWidget(self.dorksResult, 1, 2, 1, 1)
+
+        self.dorksList = QListWidget(self.dorkingTab)
+        self.dorksList.setObjectName(u"dorksList")
+
+        self.gridLayout_5.addWidget(self.dorksList, 1, 1, 1, 1)
+
+        self.dorksCategoryList = QListWidget(self.dorkingTab)
+        QListWidgetItem(self.dorksCategoryList)
+        QListWidgetItem(self.dorksCategoryList)
+        QListWidgetItem(self.dorksCategoryList)
+        self.dorksCategoryList.setObjectName(u"dorksCategoryList")
+
+        self.gridLayout_5.addWidget(self.dorksCategoryList, 1, 0, 1, 1)
+
+        self.dorkItButton = QPushButton(self.dorkingTab)
+        self.dorkItButton.setObjectName(u"dorkItButton")
+
+        self.gridLayout_5.addWidget(self.dorkItButton, 2, 2, 1, 1)
+
+        self.label_10 = QLabel(self.dorkingTab)
+        self.label_10.setObjectName(u"label_10")
+
+        self.gridLayout_5.addWidget(self.label_10, 0, 2, 1, 1)
+
+        self.customDorkEdit = QLineEdit(self.dorkingTab)
+        self.customDorkEdit.setObjectName(u"customDorkEdit")
+
+        self.gridLayout_5.addWidget(self.customDorkEdit, 2, 0, 1, 2)
+
+
+        self.verticalLayout_12.addLayout(self.gridLayout_5)
+
+        self.mainTabsWidget.addTab(self.dorkingTab, "")
         self.proxy_tab = QWidget()
         self.proxy_tab.setObjectName(u"proxy_tab")
         self.verticalLayout_3 = QVBoxLayout(self.proxy_tab)
@@ -434,7 +487,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.appIconLabel.setStyleSheet(QCoreApplication.translate("MainWindow", u"color: #82aaff;", None))
         self.winTitle.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SkyFall", None))
+        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))
         self.telegramUsernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
         self.telegramUseProxyCheck.setText(QCoreApplication.translate("MainWindow", u"Use Proxy", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Safety Delays", None))
@@ -476,6 +529,23 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_analyzer_tab), QCoreApplication.translate("MainWindow", u"ANALYZER", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.telegram_tools_tab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mail_tools_tab), QCoreApplication.translate("MainWindow", u"MAIL", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Dorks", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Category", None))
+
+        __sortingEnabled1 = self.dorksCategoryList.isSortingEnabled()
+        self.dorksCategoryList.setSortingEnabled(False)
+        ___qlistwidgetitem1 = self.dorksCategoryList.item(0)
+        ___qlistwidgetitem1.setText(QCoreApplication.translate("MainWindow", u"ADMIN PANELS", None))
+        ___qlistwidgetitem2 = self.dorksCategoryList.item(1)
+        ___qlistwidgetitem2.setText(QCoreApplication.translate("MainWindow", u".ENV", None))
+        ___qlistwidgetitem3 = self.dorksCategoryList.item(2)
+        ___qlistwidgetitem3.setText(QCoreApplication.translate("MainWindow", u"DB", None))
+        self.dorksCategoryList.setSortingEnabled(__sortingEnabled1)
+
+        self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"Result", None))
+        self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
+        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.proxy_tab), QCoreApplication.translate("MainWindow", u"PROXY", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))

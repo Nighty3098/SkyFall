@@ -626,6 +626,21 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.intelligentXApiKeyEdit)
 
+        self.virustotalApiKeyEdit = QLineEdit(self.global_serrings_tab)
+        self.virustotalApiKeyEdit.setObjectName(u"virustotalApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.virustotalApiKeyEdit)
+
+        self.ipinfoApiKeyEdit = QLineEdit(self.global_serrings_tab)
+        self.ipinfoApiKeyEdit.setObjectName(u"ipinfoApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.ipinfoApiKeyEdit)
+
+        self.pushButton = QPushButton(self.global_serrings_tab)
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.verticalLayout_4.addWidget(self.pushButton)
+
         self.verticalSpacer_2 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_4.addItem(self.verticalSpacer_2)
@@ -645,7 +660,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(0)
+        self.mainTabsWidget.setCurrentIndex(7)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -730,6 +745,9 @@ class Ui_MainWindow(object):
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))
         self.telegramPhoneEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram Phone Number", None))
         self.intelligentXApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IntelligentX API KEY", None))
+        self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
+        self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
+        self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.global_serrings_tab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
     # retranslateUi
 

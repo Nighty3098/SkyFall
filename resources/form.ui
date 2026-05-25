@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="mainTabsWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>7</number>
       </property>
       <widget class="QWidget" name="mainTab">
        <attribute name="title">
@@ -842,6 +842,27 @@
            <widget class="QLineEdit" name="intelligentXApiKeyEdit">
             <property name="placeholderText">
              <string>IntelligentX API KEY</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="virustotalApiKeyEdit">
+            <property name="placeholderText">
+             <string>Virustotal</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLineEdit" name="ipinfoApiKeyEdit">
+            <property name="placeholderText">
+             <string>IpInfo</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="pushButton">
+            <property name="text">
+             <string>Save</string>
             </property>
            </widget>
           </item>

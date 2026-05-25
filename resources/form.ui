@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="mainTabsWidget">
       <property name="currentIndex">
-       <number>0</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="mainTab">
        <attribute name="title">
@@ -448,49 +448,122 @@
        <layout class="QVBoxLayout" name="verticalLayout_12">
         <item>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="1" column="0">
-           <widget class="QLineEdit" name="dorksCategorySearchEdit">
-            <property name="placeholderText">
-             <string>Search</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0" colspan="2">
-           <widget class="QLineEdit" name="customDorkEdit">
-            <property name="placeholderText">
-             <string>Custom Dork</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="1">
-           <widget class="QLineEdit" name="dorksListSearchEdit">
-            <property name="placeholderText">
-             <string>Search</string>
-            </property>
-           </widget>
+          <item row="3" column="0" colspan="3">
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QLineEdit" name="customDorkEdit">
+              <property name="placeholderText">
+               <string>Custom Dork</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="dorkItButton">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Dork</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
           <item row="0" column="0" colspan="3">
            <widget class="QSplitter" name="splitter">
             <property name="orientation">
              <enum>Qt::Orientation::Horizontal</enum>
             </property>
-            <widget class="QListWidget" name="dorksCategoryList"/>
-            <widget class="QListWidget" name="dorksList"/>
-            <widget class="QPlainTextEdit" name="dorksResult"/>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QPushButton" name="dorkItButton">
-            <property name="text">
-             <string>Dork</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="2">
-           <widget class="QLineEdit" name="dorksResultSearchEdit">
-            <property name="placeholderText">
-             <string>Search</string>
-            </property>
+            <widget class="QWidget" name="categorySection">
+             <layout class="QVBoxLayout" name="verticalLayout_14">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QListWidget" name="dorksCategoryList"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="dorksCategorySearchEdit">
+                <property name="placeholderText">
+                 <string>Category Search</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="dorksSection">
+             <layout class="QVBoxLayout" name="verticalLayout_15">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QListWidget" name="dorksList"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="dorksListSearchEdit">
+                <property name="placeholderText">
+                 <string>Dork Search</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="resultSection">
+             <layout class="QVBoxLayout" name="verticalLayout_16">
+              <property name="spacing">
+               <number>6</number>
+              </property>
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="dorksResult"/>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="dorksResultSearchEdit">
+                <property name="placeholderText">
+                 <string>Result Search</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>

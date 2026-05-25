@@ -16,11 +16,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSpinBox,
-    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
-    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy,
-    QSpacerItem, QSpinBox, QTabWidget, QVBoxLayout,
-    QWidget)
+    QFrame, QGridLayout, QGroupBox, QHBoxLayout,
+    QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QMainWindow, QPlainTextEdit, QProgressBar, QPushButton,
+    QSizePolicy, QSpacerItem, QSpinBox, QTabWidget,
+    QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -398,6 +398,33 @@ class Ui_MainWindow(object):
         self.verticalLayout_12.addLayout(self.gridLayout_5)
 
         self.mainTabsWidget.addTab(self.dorkingTab, "")
+        self.graphTab = QWidget()
+        self.graphTab.setObjectName(u"graphTab")
+        self.verticalLayout_13 = QVBoxLayout(self.graphTab)
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        self.gridLayout_6 = QGridLayout()
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.exportGraphButton = QPushButton(self.graphTab)
+        self.exportGraphButton.setObjectName(u"exportGraphButton")
+
+        self.gridLayout_6.addWidget(self.exportGraphButton, 1, 0, 1, 1)
+
+        self.importGraphButton = QPushButton(self.graphTab)
+        self.importGraphButton.setObjectName(u"importGraphButton")
+
+        self.gridLayout_6.addWidget(self.importGraphButton, 1, 1, 1, 1)
+
+        self.frame = QFrame(self.graphTab)
+        self.frame.setObjectName(u"frame")
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_6.addWidget(self.frame, 0, 0, 1, 2)
+
+
+        self.verticalLayout_13.addLayout(self.gridLayout_6)
+
+        self.mainTabsWidget.addTab(self.graphTab, "")
         self.proxy_tab = QWidget()
         self.proxy_tab.setObjectName(u"proxy_tab")
         self.verticalLayout_3 = QVBoxLayout(self.proxy_tab)
@@ -546,6 +573,9 @@ class Ui_MainWindow(object):
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Result", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
+        self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
+        self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
+        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.proxy_tab), QCoreApplication.translate("MainWindow", u"PROXY", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))

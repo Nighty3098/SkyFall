@@ -288,13 +288,19 @@ QLabel#winTitle {
 }
 
 
+QAbstractScrollArea QWidget {
+    background-color: transparent;
+}
+
 QScrollBar:vertical {
     background-color: transparent;
+    background: transparent;
     width: 8px;
     margin: 0px;
     border: none;
 }
 
+/* Ползунок */
 QScrollBar::handle:vertical {
     background-color: #82aaff;
     min-height: 20px;
@@ -309,18 +315,19 @@ QScrollBar::handle:vertical:pressed {
     background-color: #618bee;
 }
 
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+    background-color: transparent;
+}
+
 QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
     background: transparent;
     height: 0px;
 }
 
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
-    background: transparent;
-}
-
-
 QScrollBar:horizontal {
     background-color: transparent;
+    background: transparent;
     height: 8px;
     margin: 0px;
     border: none;
@@ -340,11 +347,37 @@ QScrollBar::handle:horizontal:pressed {
     background-color: #618bee;
 }
 
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
+    background: transparent;
+    background-color: transparent;
+}
+
 QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     background: transparent;
     width: 0px;
 }
 
-QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal {
-    background: transparent;
+QTabBar::scroller {
+    width: 60px;
+    background-color: transparent;
+}
+
+QTabBar QToolButton {
+    background-color: #12293C;
+    border-radius: 4px;
+    margin: 2px;
+}
+
+QTabBar QToolButton:hover {
+    background-color: #82aaff;
+    color: #12293C;
+}
+
+QTabBar QToolButton:pressed {
+    background-color: #618bee;
+}
+
+QTabBar::tear {
+    background-color: #12293C;
+    width: 0px;
 }

@@ -19,14 +19,14 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSp
     QFrame, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QMainWindow, QPlainTextEdit, QProgressBar, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QTabWidget,
-    QVBoxLayout, QWidget)
+    QSizePolicy, QSpacerItem, QSpinBox, QSplitter,
+    QTabWidget, QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1200, 647)
+        MainWindow.resize(1200, 679)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout = QVBoxLayout(self.centralwidget)
@@ -351,63 +351,45 @@ class Ui_MainWindow(object):
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
         self.gridLayout_5 = QGridLayout()
         self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.dorkItButton = QPushButton(self.dorkingTab)
-        self.dorkItButton.setObjectName(u"dorkItButton")
+        self.dorksCategorySearchEdit = QLineEdit(self.dorkingTab)
+        self.dorksCategorySearchEdit.setObjectName(u"dorksCategorySearchEdit")
 
-        self.gridLayout_5.addWidget(self.dorkItButton, 4, 2, 1, 1)
-
-        self.dorksList = QListWidget(self.dorkingTab)
-        self.dorksList.setObjectName(u"dorksList")
-
-        self.gridLayout_5.addWidget(self.dorksList, 1, 1, 1, 1)
-
-        self.label_8 = QLabel(self.dorkingTab)
-        self.label_8.setObjectName(u"label_8")
-        self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_5.addWidget(self.label_8, 0, 0, 1, 1)
-
-        self.dorksResult = QPlainTextEdit(self.dorkingTab)
-        self.dorksResult.setObjectName(u"dorksResult")
-
-        self.gridLayout_5.addWidget(self.dorksResult, 1, 2, 1, 1)
-
-        self.label_10 = QLabel(self.dorkingTab)
-        self.label_10.setObjectName(u"label_10")
-        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_5.addWidget(self.label_10, 0, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.dorksCategorySearchEdit, 1, 0, 1, 1)
 
         self.customDorkEdit = QLineEdit(self.dorkingTab)
         self.customDorkEdit.setObjectName(u"customDorkEdit")
 
-        self.gridLayout_5.addWidget(self.customDorkEdit, 4, 0, 1, 2)
-
-        self.dorksCategorySearchEdit = QLineEdit(self.dorkingTab)
-        self.dorksCategorySearchEdit.setObjectName(u"dorksCategorySearchEdit")
-
-        self.gridLayout_5.addWidget(self.dorksCategorySearchEdit, 2, 0, 1, 1)
-
-        self.label_9 = QLabel(self.dorkingTab)
-        self.label_9.setObjectName(u"label_9")
-        self.label_9.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_5.addWidget(self.label_9, 0, 1, 1, 1)
-
-        self.dorksCategoryList = QListWidget(self.dorkingTab)
-        self.dorksCategoryList.setObjectName(u"dorksCategoryList")
-
-        self.gridLayout_5.addWidget(self.dorksCategoryList, 1, 0, 1, 1)
+        self.gridLayout_5.addWidget(self.customDorkEdit, 3, 0, 1, 2)
 
         self.dorksListSearchEdit = QLineEdit(self.dorkingTab)
         self.dorksListSearchEdit.setObjectName(u"dorksListSearchEdit")
 
-        self.gridLayout_5.addWidget(self.dorksListSearchEdit, 2, 1, 1, 1)
+        self.gridLayout_5.addWidget(self.dorksListSearchEdit, 1, 1, 1, 1)
+
+        self.splitter = QSplitter(self.dorkingTab)
+        self.splitter.setObjectName(u"splitter")
+        self.splitter.setOrientation(Qt.Orientation.Horizontal)
+        self.dorksCategoryList = QListWidget(self.splitter)
+        self.dorksCategoryList.setObjectName(u"dorksCategoryList")
+        self.splitter.addWidget(self.dorksCategoryList)
+        self.dorksList = QListWidget(self.splitter)
+        self.dorksList.setObjectName(u"dorksList")
+        self.splitter.addWidget(self.dorksList)
+        self.dorksResult = QPlainTextEdit(self.splitter)
+        self.dorksResult.setObjectName(u"dorksResult")
+        self.splitter.addWidget(self.dorksResult)
+
+        self.gridLayout_5.addWidget(self.splitter, 0, 0, 1, 3)
+
+        self.dorkItButton = QPushButton(self.dorkingTab)
+        self.dorkItButton.setObjectName(u"dorkItButton")
+
+        self.gridLayout_5.addWidget(self.dorkItButton, 3, 2, 1, 1)
 
         self.dorksResultSearchEdit = QLineEdit(self.dorkingTab)
         self.dorksResultSearchEdit.setObjectName(u"dorksResultSearchEdit")
 
-        self.gridLayout_5.addWidget(self.dorksResultSearchEdit, 2, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.dorksResultSearchEdit, 1, 2, 1, 1)
 
 
         self.verticalLayout_12.addLayout(self.gridLayout_5)
@@ -521,7 +503,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(3)
+        self.mainTabsWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -574,13 +556,10 @@ class Ui_MainWindow(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_analyzer_tab), QCoreApplication.translate("MainWindow", u"ANALYZER", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.telegram_tools_tab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mail_tools_tab), QCoreApplication.translate("MainWindow", u"MAIL", None))
-        self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Category", None))
-        self.label_10.setText(QCoreApplication.translate("MainWindow", u"Result", None))
-        self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorksCategorySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
-        self.label_9.setText(QCoreApplication.translate("MainWindow", u"Dorks", None))
+        self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorksListSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
+        self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
         self.dorksResultSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))

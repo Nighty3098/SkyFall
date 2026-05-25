@@ -176,7 +176,7 @@ class Ui_MainWindow(object):
 
         self.telegramDownloadProgress = QProgressBar(self.downloaderSettingsSection)
         self.telegramDownloadProgress.setObjectName(u"telegramDownloadProgress")
-        self.telegramDownloadProgress.setValue(24)
+        self.telegramDownloadProgress.setValue(0)
 
         self.verticalLayout_5.addWidget(self.telegramDownloadProgress)
 
@@ -496,26 +496,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.serverWafDebug, 4, 1, 1, 1)
 
-        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
-
-        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 2, 2, 1, 1)
-
-        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
-
-        self.gridLayout_2.addWidget(self.serverNmapDebug, 2, 1, 1, 1)
-
-        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
-
-        self.gridLayout_2.addWidget(self.serverTlsDebug, 3, 1, 1, 1)
-
-        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
-
-        self.gridLayout_2.addWidget(self.serverWhoisDebug, 3, 2, 1, 1)
-
         self.serverTechStackDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverTechStackDebug.setObjectName(u"serverTechStackDebug")
 
@@ -526,25 +506,51 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.serverOpenPortsDebug, 2, 3, 1, 1)
 
-        self.runUrlScanButton = QPushButton(self.webAnalyzerTab)
-        self.runUrlScanButton.setObjectName(u"runUrlScanButton")
+        self.serverUrlEdit = QLineEdit(self.webAnalyzerTab)
+        self.serverUrlEdit.setObjectName(u"serverUrlEdit")
 
-        self.gridLayout_2.addWidget(self.runUrlScanButton, 1, 1, 1, 3)
+        self.gridLayout_2.addWidget(self.serverUrlEdit, 0, 1, 1, 3)
 
-        self.urlEdit = QLineEdit(self.webAnalyzerTab)
-        self.urlEdit.setObjectName(u"urlEdit")
+        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
 
-        self.gridLayout_2.addWidget(self.urlEdit, 0, 1, 1, 3)
+        self.gridLayout_2.addWidget(self.serverTlsDebug, 3, 1, 1, 1)
 
         self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverLocationDebug.setObjectName(u"serverLocationDebug")
 
         self.gridLayout_2.addWidget(self.serverLocationDebug, 3, 3, 1, 1)
 
-        self.serverHeadersDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverHeadersDebug.setObjectName(u"serverHeadersDebug")
+        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
 
-        self.gridLayout_2.addWidget(self.serverHeadersDebug, 4, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.serverWhoisDebug, 3, 2, 1, 1)
+
+        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
+
+        self.gridLayout_2.addWidget(self.serverNmapDebug, 2, 1, 1, 1)
+
+        self.runUrlScanButton = QPushButton(self.webAnalyzerTab)
+        self.runUrlScanButton.setObjectName(u"runUrlScanButton")
+
+        self.gridLayout_2.addWidget(self.runUrlScanButton, 1, 1, 1, 3)
+
+        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
+
+        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 2, 2, 1, 1)
+
+        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
+
+        self.gridLayout_2.addWidget(self.serverMalwareDebug, 4, 3, 1, 1)
+
+        self.domainProgress = QProgressBar(self.webAnalyzerTab)
+        self.domainProgress.setObjectName(u"domainProgress")
+        self.domainProgress.setValue(0)
+
+        self.gridLayout_2.addWidget(self.domainProgress, 5, 1, 1, 3)
 
         self.mainTabsWidget.addTab(self.webAnalyzerTab, "")
         self.graphTab = QWidget()
@@ -556,12 +562,17 @@ class Ui_MainWindow(object):
         self.exportGraphButton = QPushButton(self.graphTab)
         self.exportGraphButton.setObjectName(u"exportGraphButton")
 
-        self.gridLayout_6.addWidget(self.exportGraphButton, 0, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.exportGraphButton, 1, 0, 1, 1)
 
         self.importGraphButton = QPushButton(self.graphTab)
         self.importGraphButton.setObjectName(u"importGraphButton")
 
-        self.gridLayout_6.addWidget(self.importGraphButton, 0, 1, 1, 1)
+        self.gridLayout_6.addWidget(self.importGraphButton, 1, 1, 1, 1)
+
+        self.widget = QWidget(self.graphTab)
+        self.widget.setObjectName(u"widget")
+
+        self.gridLayout_6.addWidget(self.widget, 0, 0, 1, 1)
 
 
         self.verticalLayout_13.addLayout(self.gridLayout_6)
@@ -660,7 +671,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(7)
+        self.mainTabsWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -722,18 +733,18 @@ class Ui_MainWindow(object):
         self.dorksResultSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Result Search", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WAF", None))
-        self.serverDnsAnalyzeDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"DNS", None))
+        self.serverTechStackDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TECH STACK", None))
+        self.serverOpenPortsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
+        self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
+        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
+        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
+        self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
         self.serverNmapDebug.setDocumentTitle("")
         self.serverNmapDebug.setPlainText("")
         self.serverNmapDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"NMAP SCAN", None))
-        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
-        self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
-        self.serverTechStackDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TECH STACK", None))
-        self.serverOpenPortsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
         self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
-        self.urlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
-        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
-        self.serverHeadersDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HEADERS", None))
+        self.serverDnsAnalyzeDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"DNS", None))
+        self.serverMalwareDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"MALWARE", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

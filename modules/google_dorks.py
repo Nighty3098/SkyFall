@@ -44,7 +44,9 @@ class GoogleDorksDB:
 
 
 if __name__ == "__main__":
+    from loguru import logger
+
     gddb = GoogleDorksDB()
     categories = gddb.getAllCategories()
     category = "Vulnerable Files"
-    print(gddb.getDorksByCategory(category))
+    logger.info(gddb.getDorksByCategory(category))

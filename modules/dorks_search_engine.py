@@ -1,4 +1,5 @@
 from ddgs import DDGS
+from loguru import logger
 
 
 class DorksSearchEngine:
@@ -7,7 +8,7 @@ class DorksSearchEngine:
 
     def search_dork(self, dork: str, max_results: int = 100):
         try:
-            print("Running: ", dork)
+            logger.debug("Running dork: {}", dork)
             self._last_search = ""
             with DDGS() as ddgs:
                 results = ddgs.text(dork, max_results=max_results)
@@ -18,7 +19,7 @@ class DorksSearchEngine:
                 if count == 0:
                     return "Not found."
                 else:
-                    print("OK")
+                    logger.debug("Dork search completed successfully")
                     return self._last_search
         except Exception as e:
             return f"Error: {e}"

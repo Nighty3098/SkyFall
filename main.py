@@ -1,15 +1,21 @@
 import sys
 from pathlib import Path
 
+from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 
-from modules.google_dorks import GoogleDorksDB
-from modules.dorks_search_engine import DorksSearchEngine
+from logger_setup import setup_logging
+from modules.connectors import setup_dorking_connectors, setup_server_connectors
+from modules.domain_controller import DorkingController as DomainController
 from modules.dorking_controller import DorkingController
-from modules.connectors import setup_dorking_connectors
+from modules.dorks_search_engine import DorksSearchEngine
+from modules.google_dorks import GoogleDorksDB
+from modules.server_analyzer import ServerAnalyzer
+
+setup_logging()
 
 
 class MainWindow(QMainWindow):
@@ -49,8 +55,12 @@ class MainWindow(QMainWindow):
         )
         self.dorkingController.load_categories()
 
+        self.serverAnalyzer = ServerAnalyzer()
+        self.domainController = DomainController(self.ui, self.serverAnalyzer)
+
     def _init_connectors(self):
         setup_dorking_connectors(self.dorkingController)
+        setup_server_connectors(self.domainController)
 
 
 if __name__ == "__main__":
@@ -61,7 +71,7 @@ if __name__ == "__main__":
         with open("resources/style.qss", "r", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
     except FileNotFoundError:
-        print("Warning: style.qss not found.")
+        logger.warning("style.qss not found.")
 
     widget.show()
     sys.exit(app.exec())

@@ -9,6 +9,8 @@ import sys
 import xml.etree.ElementTree as ET
 from collections import defaultdict
 
+from loguru import logger
+
 
 def parse_ghdb_xml(input_file, output_file):
     tree = ET.parse(input_file)
@@ -28,15 +30,14 @@ def parse_ghdb_xml(input_file, output_file):
     with open(output_file, "w", encoding="utf-8") as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(
-        f"Готово! Найдено {sum(len(v) for v in result.values())} дорков в {len(result)} категориях."
-    )
-    print(f"Результат сохранён в {output_file}")
+    total = sum(len(v) for v in result.values())
+    logger.info(f"Готово! Найдено {total} дорков в {len(result)} категориях.")
+    logger.info(f"Результат сохранён в {output_file}")
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 3:
-        print("Использование: python parse_ghdb.py <входной.xml> <выходной.json>")
+        logger.error("Использование: python parse_ghdb.py <входной.xml> <выходной.json>")
         sys.exit(1)
 
     input_xml = sys.argv[1]

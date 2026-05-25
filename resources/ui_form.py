@@ -398,6 +398,9 @@ class Ui_MainWindow(object):
         self.verticalLayout_12.addLayout(self.gridLayout_5)
 
         self.mainTabsWidget.addTab(self.dorkingTab, "")
+        self.webAnalyzerTab = QWidget()
+        self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
+        self.mainTabsWidget.addTab(self.webAnalyzerTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
         self.verticalLayout_13 = QVBoxLayout(self.graphTab)
@@ -503,7 +506,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(0)
+        self.mainTabsWidget.setCurrentIndex(4)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -573,6 +576,7 @@ class Ui_MainWindow(object):
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Result", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
+        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))

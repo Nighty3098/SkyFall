@@ -512,6 +512,11 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="webAnalyzerTab">
+       <attribute name="title">
+        <string>WEB</string>
+       </attribute>
+      </widget>
       <widget class="QWidget" name="graphTab">
        <attribute name="title">
         <string>GRAPH</string>

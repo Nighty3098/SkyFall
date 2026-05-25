@@ -8,17 +8,11 @@
 
 ## `STACK`
 
-### BACKEND
-
-- python
-- docker
-- postgresql
-
-### FRONTEND
-
-- electron
-- react js
-- typescript
+- telethon | tg api
+- qt | ui
+- sqlalchemy | orm
+- networkx | graph
+- ddgs | duckduckgo
 
 ## `FUNCTIONAL`
 

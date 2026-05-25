@@ -1,9 +1,16 @@
 import sys
+from pathlib import Path
+
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QApplication, QMainWindow
 from PySide6.QtUiTools import QUiLoader
-from pathlib import Path
+from PySide6.QtWidgets import QApplication, QMainWindow
+
+from modules.google_dorks import GoogleDorksDB
+from modules.dorks_search_engine import DorksSearchEngine
+from modules.dorking_controller import DorkingController
+from modules.connectors import setup_dorking_connectors
+
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
@@ -14,6 +21,9 @@ class MainWindow(QMainWindow):
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self._load_app_icon()
+        self._init_modules()
+        self._init_controller()
+        self._init_connectors()
 
     def _load_app_icon(self):
         label = self.ui.appIconLabel
@@ -24,8 +34,24 @@ class MainWindow(QMainWindow):
         pixmap = QPixmap()
         pixmap.loadFromData(svg_content.encode("utf-8"))
         if not pixmap.isNull():
-            pixmap = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            pixmap = pixmap.scaled(
+                300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+            )
             label.setPixmap(pixmap)
+
+    def _init_modules(self):
+        self.dorksSearchEngine = DorksSearchEngine()
+        self.googleDorksDB = GoogleDorksDB()
+
+    def _init_controller(self):
+        self.dorkingController = DorkingController(
+            self.ui, self.googleDorksDB, self.dorksSearchEngine
+        )
+        self.dorkingController.load_categories()
+
+    def _init_connectors(self):
+        setup_dorking_connectors(self.dorkingController)
+
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

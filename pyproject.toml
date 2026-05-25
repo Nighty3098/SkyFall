@@ -2,4 +2,4 @@
 name = "SkyFall"
 
 [tool.pyside6-project]
-files = ["main.py", "resources/form.ui", "resources/style.qss"]
+files = ["main.py", "resources/form.ui", "resources/style.qss", "modules/google_dorks.py", "modules/dorks_search_engine.py", "modules/dorking_controller.py", "modules/connectors.py"]

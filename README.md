@@ -13,6 +13,9 @@
 - sqlalchemy | orm
 - networkx | graph
 - ddgs | duckduckgo
+- python3-nmap | nmap integration
+- python-whois
+- dnspython
 - ...
 
 ## `FUNCTIONAL`
@@ -30,6 +33,7 @@
   - Tech Stack
   - WAF
   - Malware & Phishing Detection
+  - NMAP
 - Dorking via duckduckgo
 - Downloading data (messages, reactions, users, files) from telegram channels and chats
 - Creating an interactive subscription graph for user communication in telegram

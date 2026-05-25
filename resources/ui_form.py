@@ -16,11 +16,11 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSpinBox,
-    QFrame, QGridLayout, QGroupBox, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMainWindow, QPlainTextEdit, QProgressBar, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QSplitter,
-    QTabWidget, QVBoxLayout, QWidget)
+    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
+    QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
+    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy,
+    QSpacerItem, QSpinBox, QSplitter, QTabWidget,
+    QVBoxLayout, QWidget)
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
@@ -68,19 +68,25 @@ class Ui_MainWindow(object):
         self.telegram_downloader_tab.setObjectName(u"telegram_downloader_tab")
         self.horizontalLayout_3 = QHBoxLayout(self.telegram_downloader_tab)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.verticalLayout_5 = QVBoxLayout()
+        self.downloaderSplitter = QSplitter(self.telegram_downloader_tab)
+        self.downloaderSplitter.setObjectName(u"downloaderSplitter")
+        self.downloaderSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.downloaderSettingsSection = QWidget(self.downloaderSplitter)
+        self.downloaderSettingsSection.setObjectName(u"downloaderSettingsSection")
+        self.verticalLayout_5 = QVBoxLayout(self.downloaderSettingsSection)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.telegramUsernameEdit = QLineEdit(self.telegram_downloader_tab)
+        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.telegramUsernameEdit = QLineEdit(self.downloaderSettingsSection)
         self.telegramUsernameEdit.setObjectName(u"telegramUsernameEdit")
 
         self.verticalLayout_5.addWidget(self.telegramUsernameEdit)
 
-        self.telegramUseProxyCheck = QCheckBox(self.telegram_downloader_tab)
+        self.telegramUseProxyCheck = QCheckBox(self.downloaderSettingsSection)
         self.telegramUseProxyCheck.setObjectName(u"telegramUseProxyCheck")
 
         self.verticalLayout_5.addWidget(self.telegramUseProxyCheck)
 
-        self.groupBox_2 = QGroupBox(self.telegram_downloader_tab)
+        self.groupBox_2 = QGroupBox(self.downloaderSettingsSection)
         self.groupBox_2.setObjectName(u"groupBox_2")
         self.verticalLayout_8 = QVBoxLayout(self.groupBox_2)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
@@ -132,7 +138,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.groupBox_2)
 
-        self.groupBox = QGroupBox(self.telegram_downloader_tab)
+        self.groupBox = QGroupBox(self.downloaderSettingsSection)
         self.groupBox.setObjectName(u"groupBox")
         self.verticalLayout_7 = QVBoxLayout(self.groupBox)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
@@ -163,116 +169,111 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addItem(self.verticalSpacer_3)
 
-        self.telegramDownloadStart = QPushButton(self.telegram_downloader_tab)
+        self.telegramDownloadStart = QPushButton(self.downloaderSettingsSection)
         self.telegramDownloadStart.setObjectName(u"telegramDownloadStart")
 
         self.verticalLayout_5.addWidget(self.telegramDownloadStart)
 
-        self.telegramDownloadProgress = QProgressBar(self.telegram_downloader_tab)
+        self.telegramDownloadProgress = QProgressBar(self.downloaderSettingsSection)
         self.telegramDownloadProgress.setObjectName(u"telegramDownloadProgress")
         self.telegramDownloadProgress.setValue(24)
 
         self.verticalLayout_5.addWidget(self.telegramDownloadProgress)
 
-
-        self.horizontalLayout_3.addLayout(self.verticalLayout_5)
-
-        self.verticalLayout_6 = QVBoxLayout()
+        self.downloaderSplitter.addWidget(self.downloaderSettingsSection)
+        self.downloaderDebugSection = QWidget(self.downloaderSplitter)
+        self.downloaderDebugSection.setObjectName(u"downloaderDebugSection")
+        self.verticalLayout_6 = QVBoxLayout(self.downloaderDebugSection)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setContentsMargins(0, -1, -1, -1)
-        self.telegramDownloaderDebug = QPlainTextEdit(self.telegram_downloader_tab)
+        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.telegramDownloaderDebug = QPlainTextEdit(self.downloaderDebugSection)
         self.telegramDownloaderDebug.setObjectName(u"telegramDownloaderDebug")
         self.telegramDownloaderDebug.setReadOnly(True)
 
         self.verticalLayout_6.addWidget(self.telegramDownloaderDebug)
 
+        self.downloaderSplitter.addWidget(self.downloaderDebugSection)
 
-        self.horizontalLayout_3.addLayout(self.verticalLayout_6)
+        self.horizontalLayout_3.addWidget(self.downloaderSplitter)
 
         self.tabWidget.addTab(self.telegram_downloader_tab, "")
         self.telegram_analyzer_tab = QWidget()
         self.telegram_analyzer_tab.setObjectName(u"telegram_analyzer_tab")
         self.verticalLayout_9 = QVBoxLayout(self.telegram_analyzer_tab)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
-        self.gridLayout_2 = QGridLayout()
-        self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.telegramAnalyzerLoadChannelsButton = QPushButton(self.telegram_analyzer_tab)
+        self.analyzerSplitter = QSplitter(self.telegram_analyzer_tab)
+        self.analyzerSplitter.setObjectName(u"analyzerSplitter")
+        self.analyzerSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.analyzerSettingsSection = QWidget(self.analyzerSplitter)
+        self.analyzerSettingsSection.setObjectName(u"analyzerSettingsSection")
+        self.verticalLayout_17 = QVBoxLayout(self.analyzerSettingsSection)
+        self.verticalLayout_17.setObjectName(u"verticalLayout_17")
+        self.verticalLayout_17.setContentsMargins(0, 0, 0, 0)
+        self.telegramAnalyzerLoadChannelsButton = QPushButton(self.analyzerSettingsSection)
         self.telegramAnalyzerLoadChannelsButton.setObjectName(u"telegramAnalyzerLoadChannelsButton")
 
-        self.gridLayout_2.addWidget(self.telegramAnalyzerLoadChannelsButton, 0, 0, 1, 1)
+        self.verticalLayout_17.addWidget(self.telegramAnalyzerLoadChannelsButton)
 
-        self.groupBox_3 = QGroupBox(self.telegram_analyzer_tab)
+        self.telegramChannelsList = QListWidget(self.analyzerSettingsSection)
+        QListWidgetItem(self.telegramChannelsList)
+        self.telegramChannelsList.setObjectName(u"telegramChannelsList")
+
+        self.verticalLayout_17.addWidget(self.telegramChannelsList)
+
+        self.groupBox_3 = QGroupBox(self.analyzerSettingsSection)
         self.groupBox_3.setObjectName(u"groupBox_3")
         self.verticalLayout_10 = QVBoxLayout(self.groupBox_3)
         self.verticalLayout_10.setObjectName(u"verticalLayout_10")
         self.gridLayout_3 = QGridLayout()
         self.gridLayout_3.setObjectName(u"gridLayout_3")
         self.gridLayout_3.setContentsMargins(-1, 0, -1, -1)
-        self.label_6 = QLabel(self.groupBox_3)
-        self.label_6.setObjectName(u"label_6")
-
-        self.gridLayout_3.addWidget(self.label_6, 3, 0, 1, 1)
-
         self.label_5 = QLabel(self.groupBox_3)
         self.label_5.setObjectName(u"label_5")
 
         self.gridLayout_3.addWidget(self.label_5, 0, 0, 1, 1)
+
+        self.includeLinksCheck = QCheckBox(self.groupBox_3)
+        self.includeLinksCheck.setObjectName(u"includeLinksCheck")
+
+        self.gridLayout_3.addWidget(self.includeLinksCheck, 5, 0, 1, 1)
 
         self.label_7 = QLabel(self.groupBox_3)
         self.label_7.setObjectName(u"label_7")
 
         self.gridLayout_3.addWidget(self.label_7, 4, 0, 1, 1)
 
-        self.telegramAnalyzerStartDate = QDateTimeEdit(self.groupBox_3)
-        self.telegramAnalyzerStartDate.setObjectName(u"telegramAnalyzerStartDate")
+        self.telegramAnalyzerEndDate = QDateTimeEdit(self.groupBox_3)
+        self.telegramAnalyzerEndDate.setObjectName(u"telegramAnalyzerEndDate")
 
-        self.gridLayout_3.addWidget(self.telegramAnalyzerStartDate, 3, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.telegramAnalyzerEndDate, 4, 1, 1, 1)
+
+        self.label_6 = QLabel(self.groupBox_3)
+        self.label_6.setObjectName(u"label_6")
+
+        self.gridLayout_3.addWidget(self.label_6, 3, 0, 1, 1)
 
         self.telegramAnalyzerMinReplies = QSpinBox(self.groupBox_3)
         self.telegramAnalyzerMinReplies.setObjectName(u"telegramAnalyzerMinReplies")
 
         self.gridLayout_3.addWidget(self.telegramAnalyzerMinReplies, 0, 1, 1, 1)
 
-        self.telegramAnalyzerEndDate = QDateTimeEdit(self.groupBox_3)
-        self.telegramAnalyzerEndDate.setObjectName(u"telegramAnalyzerEndDate")
+        self.telegramAnalyzerStartDate = QDateTimeEdit(self.groupBox_3)
+        self.telegramAnalyzerStartDate.setObjectName(u"telegramAnalyzerStartDate")
 
-        self.gridLayout_3.addWidget(self.telegramAnalyzerEndDate, 4, 1, 1, 1)
+        self.gridLayout_3.addWidget(self.telegramAnalyzerStartDate, 3, 1, 1, 1)
 
         self.includeForwardingCheck = QCheckBox(self.groupBox_3)
         self.includeForwardingCheck.setObjectName(u"includeForwardingCheck")
 
-        self.gridLayout_3.addWidget(self.includeForwardingCheck, 1, 0, 1, 2)
-
-        self.includeLinksCheck = QCheckBox(self.groupBox_3)
-        self.includeLinksCheck.setObjectName(u"includeLinksCheck")
-
-        self.gridLayout_3.addWidget(self.includeLinksCheck, 2, 0, 1, 2)
+        self.gridLayout_3.addWidget(self.includeForwardingCheck, 6, 0, 1, 1)
 
 
         self.verticalLayout_10.addLayout(self.gridLayout_3)
 
 
-        self.gridLayout_2.addWidget(self.groupBox_3, 2, 0, 1, 1)
+        self.verticalLayout_17.addWidget(self.groupBox_3)
 
-        self.telegramAnalyzerDebug = QPlainTextEdit(self.telegram_analyzer_tab)
-        self.telegramAnalyzerDebug.setObjectName(u"telegramAnalyzerDebug")
-        self.telegramAnalyzerDebug.setReadOnly(True)
-
-        self.gridLayout_2.addWidget(self.telegramAnalyzerDebug, 0, 1, 7, 1)
-
-        self.telegramAnalyzerProgress = QProgressBar(self.telegram_analyzer_tab)
-        self.telegramAnalyzerProgress.setObjectName(u"telegramAnalyzerProgress")
-        self.telegramAnalyzerProgress.setValue(24)
-
-        self.gridLayout_2.addWidget(self.telegramAnalyzerProgress, 6, 0, 1, 1)
-
-        self.telegramChannelsList = QListWidget(self.telegram_analyzer_tab)
-        QListWidgetItem(self.telegramChannelsList)
-        self.telegramChannelsList.setObjectName(u"telegramChannelsList")
-
-        self.gridLayout_2.addWidget(self.telegramChannelsList, 1, 0, 1, 1)
-
-        self.groupBox_4 = QGroupBox(self.telegram_analyzer_tab)
+        self.groupBox_4 = QGroupBox(self.analyzerSettingsSection)
         self.groupBox_4.setObjectName(u"groupBox_4")
         self.verticalLayout_11 = QVBoxLayout(self.groupBox_4)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
@@ -323,19 +324,38 @@ class Ui_MainWindow(object):
         self.verticalLayout_11.addLayout(self.gridLayout_4)
 
 
-        self.gridLayout_2.addWidget(self.groupBox_4, 3, 0, 1, 1)
-
-        self.runTelegramAnalyzerBtn = QPushButton(self.telegram_analyzer_tab)
-        self.runTelegramAnalyzerBtn.setObjectName(u"runTelegramAnalyzerBtn")
-
-        self.gridLayout_2.addWidget(self.runTelegramAnalyzerBtn, 5, 0, 1, 1)
+        self.verticalLayout_17.addWidget(self.groupBox_4)
 
         self.verticalSpacer_4 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
-        self.gridLayout_2.addItem(self.verticalSpacer_4, 4, 0, 1, 1)
+        self.verticalLayout_17.addItem(self.verticalSpacer_4)
 
+        self.runTelegramAnalyzerBtn = QPushButton(self.analyzerSettingsSection)
+        self.runTelegramAnalyzerBtn.setObjectName(u"runTelegramAnalyzerBtn")
 
-        self.verticalLayout_9.addLayout(self.gridLayout_2)
+        self.verticalLayout_17.addWidget(self.runTelegramAnalyzerBtn)
+
+        self.telegramAnalyzerProgress = QProgressBar(self.analyzerSettingsSection)
+        self.telegramAnalyzerProgress.setObjectName(u"telegramAnalyzerProgress")
+        self.telegramAnalyzerProgress.setValue(24)
+
+        self.verticalLayout_17.addWidget(self.telegramAnalyzerProgress)
+
+        self.analyzerSplitter.addWidget(self.analyzerSettingsSection)
+        self.analyzerDebugSection = QWidget(self.analyzerSplitter)
+        self.analyzerDebugSection.setObjectName(u"analyzerDebugSection")
+        self.verticalLayout_18 = QVBoxLayout(self.analyzerDebugSection)
+        self.verticalLayout_18.setObjectName(u"verticalLayout_18")
+        self.verticalLayout_18.setContentsMargins(0, 0, 0, 0)
+        self.telegramAnalyzerDebug = QPlainTextEdit(self.analyzerDebugSection)
+        self.telegramAnalyzerDebug.setObjectName(u"telegramAnalyzerDebug")
+        self.telegramAnalyzerDebug.setReadOnly(True)
+
+        self.verticalLayout_18.addWidget(self.telegramAnalyzerDebug)
+
+        self.analyzerSplitter.addWidget(self.analyzerDebugSection)
+
+        self.verticalLayout_9.addWidget(self.analyzerSplitter)
 
         self.tabWidget.addTab(self.telegram_analyzer_tab, "")
 
@@ -344,6 +364,45 @@ class Ui_MainWindow(object):
         self.mainTabsWidget.addTab(self.telegram_tools_tab, "")
         self.mail_tools_tab = QWidget()
         self.mail_tools_tab.setObjectName(u"mail_tools_tab")
+        self.horizontalLayout_4 = QHBoxLayout(self.mail_tools_tab)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.mailSplitter = QSplitter(self.mail_tools_tab)
+        self.mailSplitter.setObjectName(u"mailSplitter")
+        self.mailSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.mailSettingsSection = QWidget(self.mailSplitter)
+        self.mailSettingsSection.setObjectName(u"mailSettingsSection")
+        self.verticalLayout_19 = QVBoxLayout(self.mailSettingsSection)
+        self.verticalLayout_19.setObjectName(u"verticalLayout_19")
+        self.verticalLayout_19.setContentsMargins(0, 0, 0, 0)
+        self.mailEdit = QLineEdit(self.mailSettingsSection)
+        self.mailEdit.setObjectName(u"mailEdit")
+
+        self.verticalLayout_19.addWidget(self.mailEdit)
+
+        self.startMailSearchButton = QPushButton(self.mailSettingsSection)
+        self.startMailSearchButton.setObjectName(u"startMailSearchButton")
+
+        self.verticalLayout_19.addWidget(self.startMailSearchButton)
+
+        self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout_19.addItem(self.verticalSpacer_6)
+
+        self.mailSplitter.addWidget(self.mailSettingsSection)
+        self.mailDebugSection = QWidget(self.mailSplitter)
+        self.mailDebugSection.setObjectName(u"mailDebugSection")
+        self.verticalLayout_20 = QVBoxLayout(self.mailDebugSection)
+        self.verticalLayout_20.setObjectName(u"verticalLayout_20")
+        self.verticalLayout_20.setContentsMargins(0, 0, 0, 0)
+        self.mailSearchDebug = QPlainTextEdit(self.mailDebugSection)
+        self.mailSearchDebug.setObjectName(u"mailSearchDebug")
+
+        self.verticalLayout_20.addWidget(self.mailSearchDebug)
+
+        self.mailSplitter.addWidget(self.mailDebugSection)
+
+        self.horizontalLayout_4.addWidget(self.mailSplitter)
+
         self.mainTabsWidget.addTab(self.mail_tools_tab, "")
         self.dorkingTab = QWidget()
         self.dorkingTab.setObjectName(u"dorkingTab")
@@ -351,21 +410,21 @@ class Ui_MainWindow(object):
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
         self.gridLayout_5 = QGridLayout()
         self.gridLayout_5.setObjectName(u"gridLayout_5")
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.dorkCustomEditLayout = QHBoxLayout()
+        self.dorkCustomEditLayout.setObjectName(u"dorkCustomEditLayout")
         self.customDorkEdit = QLineEdit(self.dorkingTab)
         self.customDorkEdit.setObjectName(u"customDorkEdit")
 
-        self.horizontalLayout_2.addWidget(self.customDorkEdit)
+        self.dorkCustomEditLayout.addWidget(self.customDorkEdit)
 
         self.dorkItButton = QPushButton(self.dorkingTab)
         self.dorkItButton.setObjectName(u"dorkItButton")
         self.dorkItButton.setMinimumSize(QSize(200, 0))
 
-        self.horizontalLayout_2.addWidget(self.dorkItButton)
+        self.dorkCustomEditLayout.addWidget(self.dorkItButton)
 
 
-        self.gridLayout_5.addLayout(self.horizontalLayout_2, 3, 0, 1, 3)
+        self.gridLayout_5.addLayout(self.dorkCustomEditLayout, 3, 0, 1, 3)
 
         self.splitter = QSplitter(self.dorkingTab)
         self.splitter.setObjectName(u"splitter")
@@ -430,6 +489,63 @@ class Ui_MainWindow(object):
         self.mainTabsWidget.addTab(self.dorkingTab, "")
         self.webAnalyzerTab = QWidget()
         self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
+        self.gridLayout_2 = QGridLayout(self.webAnalyzerTab)
+        self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWafDebug.setObjectName(u"serverWafDebug")
+
+        self.gridLayout_2.addWidget(self.serverWafDebug, 4, 1, 1, 1)
+
+        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
+
+        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 2, 2, 1, 1)
+
+        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
+
+        self.gridLayout_2.addWidget(self.serverNmapDebug, 2, 1, 1, 1)
+
+        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
+
+        self.gridLayout_2.addWidget(self.serverTlsDebug, 3, 1, 1, 1)
+
+        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
+
+        self.gridLayout_2.addWidget(self.serverWhoisDebug, 3, 2, 1, 1)
+
+        self.serverTechStackDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverTechStackDebug.setObjectName(u"serverTechStackDebug")
+
+        self.gridLayout_2.addWidget(self.serverTechStackDebug, 4, 2, 1, 1)
+
+        self.serverOpenPortsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverOpenPortsDebug.setObjectName(u"serverOpenPortsDebug")
+
+        self.gridLayout_2.addWidget(self.serverOpenPortsDebug, 2, 3, 1, 1)
+
+        self.runUrlScanButton = QPushButton(self.webAnalyzerTab)
+        self.runUrlScanButton.setObjectName(u"runUrlScanButton")
+
+        self.gridLayout_2.addWidget(self.runUrlScanButton, 1, 1, 1, 3)
+
+        self.urlEdit = QLineEdit(self.webAnalyzerTab)
+        self.urlEdit.setObjectName(u"urlEdit")
+
+        self.gridLayout_2.addWidget(self.urlEdit, 0, 1, 1, 3)
+
+        self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverLocationDebug.setObjectName(u"serverLocationDebug")
+
+        self.gridLayout_2.addWidget(self.serverLocationDebug, 3, 3, 1, 1)
+
+        self.serverHeadersDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverHeadersDebug.setObjectName(u"serverHeadersDebug")
+
+        self.gridLayout_2.addWidget(self.serverHeadersDebug, 4, 3, 1, 1)
+
         self.mainTabsWidget.addTab(self.webAnalyzerTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
@@ -440,19 +556,12 @@ class Ui_MainWindow(object):
         self.exportGraphButton = QPushButton(self.graphTab)
         self.exportGraphButton.setObjectName(u"exportGraphButton")
 
-        self.gridLayout_6.addWidget(self.exportGraphButton, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.exportGraphButton, 0, 0, 1, 1)
 
         self.importGraphButton = QPushButton(self.graphTab)
         self.importGraphButton.setObjectName(u"importGraphButton")
 
-        self.gridLayout_6.addWidget(self.importGraphButton, 1, 1, 1, 1)
-
-        self.frame = QFrame(self.graphTab)
-        self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Shadow.Raised)
-
-        self.gridLayout_6.addWidget(self.frame, 0, 0, 1, 2)
+        self.gridLayout_6.addWidget(self.importGraphButton, 0, 1, 1, 1)
 
 
         self.verticalLayout_13.addLayout(self.gridLayout_6)
@@ -462,15 +571,15 @@ class Ui_MainWindow(object):
         self.proxy_tab.setObjectName(u"proxy_tab")
         self.verticalLayout_3 = QVBoxLayout(self.proxy_tab)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.horizontalLayout_21 = QHBoxLayout()
-        self.horizontalLayout_21.setObjectName(u"horizontalLayout_21")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
         self.proxyListEdit = QPlainTextEdit(self.proxy_tab)
         self.proxyListEdit.setObjectName(u"proxyListEdit")
 
-        self.horizontalLayout_21.addWidget(self.proxyListEdit)
+        self.horizontalLayout_2.addWidget(self.proxyListEdit)
 
 
-        self.verticalLayout_3.addLayout(self.horizontalLayout_21)
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
         self.saveProxiesButton = QPushButton(self.proxy_tab)
         self.saveProxiesButton.setObjectName(u"saveProxiesButton")
@@ -536,7 +645,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(3)
+        self.mainTabsWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -563,12 +672,6 @@ class Ui_MainWindow(object):
         self.telegramDownloadStart.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_downloader_tab), QCoreApplication.translate("MainWindow", u"DOWNLOADER", None))
         self.telegramAnalyzerLoadChannelsButton.setText(QCoreApplication.translate("MainWindow", u"Load Channels", None))
-        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindow", u"Graph Parameters", None))
-        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Start", None))
-        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Min replies", None))
-        self.label_7.setText(QCoreApplication.translate("MainWindow", u"End", None))
-        self.includeForwardingCheck.setText(QCoreApplication.translate("MainWindow", u"Include Forwarding", None))
-        self.includeLinksCheck.setText(QCoreApplication.translate("MainWindow", u"Include Links", None))
 
         __sortingEnabled = self.telegramChannelsList.isSortingEnabled()
         self.telegramChannelsList.setSortingEnabled(False)
@@ -576,6 +679,12 @@ class Ui_MainWindow(object):
         ___qlistwidgetitem.setText(QCoreApplication.translate("MainWindow", u"All Channels", None))
         self.telegramChannelsList.setSortingEnabled(__sortingEnabled)
 
+        self.groupBox_3.setTitle(QCoreApplication.translate("MainWindow", u"Graph Parameters", None))
+        self.label_5.setText(QCoreApplication.translate("MainWindow", u"Min replies", None))
+        self.includeLinksCheck.setText(QCoreApplication.translate("MainWindow", u"Include Links", None))
+        self.label_7.setText(QCoreApplication.translate("MainWindow", u"End", None))
+        self.label_6.setText(QCoreApplication.translate("MainWindow", u"Start", None))
+        self.includeForwardingCheck.setText(QCoreApplication.translate("MainWindow", u"Include Forwarding", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("MainWindow", u"Output Formats", None))
         self.telegramAnalyzerHTMLCheck.setText(QCoreApplication.translate("MainWindow", u"HTML", None))
         self.telegramAnalyzerCSVCheck.setText(QCoreApplication.translate("MainWindow", u"CSV", None))
@@ -588,6 +697,8 @@ class Ui_MainWindow(object):
         self.runTelegramAnalyzerBtn.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_analyzer_tab), QCoreApplication.translate("MainWindow", u"ANALYZER", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.telegram_tools_tab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
+        self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
+        self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mail_tools_tab), QCoreApplication.translate("MainWindow", u"MAIL", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
@@ -595,6 +706,19 @@ class Ui_MainWindow(object):
         self.dorksListSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dork Search", None))
         self.dorksResultSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Result Search", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
+        self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WAF", None))
+        self.serverDnsAnalyzeDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"DNS", None))
+        self.serverNmapDebug.setDocumentTitle("")
+        self.serverNmapDebug.setPlainText("")
+        self.serverNmapDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"NMAP SCAN", None))
+        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
+        self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
+        self.serverTechStackDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TECH STACK", None))
+        self.serverOpenPortsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
+        self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
+        self.urlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
+        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
+        self.serverHeadersDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HEADERS", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

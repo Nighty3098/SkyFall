@@ -491,45 +491,48 @@ class Ui_MainWindow(object):
         self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
         self.gridLayout_2 = QGridLayout(self.webAnalyzerTab)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverWafDebug.setObjectName(u"serverWafDebug")
+        self.label_10 = QLabel(self.webAnalyzerTab)
+        self.label_10.setObjectName(u"label_10")
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.serverWafDebug, 4, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.label_10, 2, 3, 1, 1)
 
-        self.serverTechStackDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverTechStackDebug.setObjectName(u"serverTechStackDebug")
+        self.label_13 = QLabel(self.webAnalyzerTab)
+        self.label_13.setObjectName(u"label_13")
+        self.label_13.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.serverTechStackDebug, 4, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.label_13, 4, 3, 1, 1)
 
-        self.serverOpenPortsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverOpenPortsDebug.setObjectName(u"serverOpenPortsDebug")
+        self.label_12 = QLabel(self.webAnalyzerTab)
+        self.label_12.setObjectName(u"label_12")
+        self.label_12.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.serverOpenPortsDebug, 2, 3, 1, 1)
-
-        self.serverUrlEdit = QLineEdit(self.webAnalyzerTab)
-        self.serverUrlEdit.setObjectName(u"serverUrlEdit")
-
-        self.gridLayout_2.addWidget(self.serverUrlEdit, 0, 1, 1, 3)
-
-        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
-
-        self.gridLayout_2.addWidget(self.serverTlsDebug, 3, 1, 1, 1)
-
-        self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverLocationDebug.setObjectName(u"serverLocationDebug")
-
-        self.gridLayout_2.addWidget(self.serverLocationDebug, 3, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.label_12, 4, 2, 1, 1)
 
         self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
 
-        self.gridLayout_2.addWidget(self.serverWhoisDebug, 3, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.serverWhoisDebug, 5, 2, 1, 1)
 
         self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverNmapDebug.setObjectName(u"serverNmapDebug")
 
-        self.gridLayout_2.addWidget(self.serverNmapDebug, 2, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.serverNmapDebug, 3, 1, 1, 1)
+
+        self.serverRobotsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverRobotsDebug.setObjectName(u"serverRobotsDebug")
+
+        self.gridLayout_2.addWidget(self.serverRobotsDebug, 7, 2, 1, 1)
+
+        self.serverOpenPortsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverOpenPortsDebug.setObjectName(u"serverOpenPortsDebug")
+
+        self.gridLayout_2.addWidget(self.serverOpenPortsDebug, 3, 3, 1, 1)
+
+        self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverLocationDebug.setObjectName(u"serverLocationDebug")
+
+        self.gridLayout_2.addWidget(self.serverLocationDebug, 5, 3, 1, 1)
 
         self.runUrlScanButton = QPushButton(self.webAnalyzerTab)
         self.runUrlScanButton.setObjectName(u"runUrlScanButton")
@@ -539,18 +542,69 @@ class Ui_MainWindow(object):
         self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
 
-        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 2, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 3, 2, 1, 1)
 
-        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
+        self.label_8 = QLabel(self.webAnalyzerTab)
+        self.label_8.setObjectName(u"label_8")
+        self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.gridLayout_2.addWidget(self.serverMalwareDebug, 4, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.label_8, 2, 1, 1, 1)
+
+        self.label_11 = QLabel(self.webAnalyzerTab)
+        self.label_11.setObjectName(u"label_11")
+        self.label_11.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_11, 4, 1, 1, 1)
+
+        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
+
+        self.gridLayout_2.addWidget(self.serverTlsDebug, 5, 1, 1, 1)
 
         self.domainProgress = QProgressBar(self.webAnalyzerTab)
         self.domainProgress.setObjectName(u"domainProgress")
         self.domainProgress.setValue(0)
 
-        self.gridLayout_2.addWidget(self.domainProgress, 5, 1, 1, 3)
+        self.gridLayout_2.addWidget(self.domainProgress, 8, 1, 1, 3)
+
+        self.serverUrlEdit = QLineEdit(self.webAnalyzerTab)
+        self.serverUrlEdit.setObjectName(u"serverUrlEdit")
+
+        self.gridLayout_2.addWidget(self.serverUrlEdit, 0, 1, 1, 3)
+
+        self.label_9 = QLabel(self.webAnalyzerTab)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_9, 2, 2, 1, 1)
+
+        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWafDebug.setObjectName(u"serverWafDebug")
+
+        self.gridLayout_2.addWidget(self.serverWafDebug, 7, 1, 1, 1)
+
+        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
+
+        self.gridLayout_2.addWidget(self.serverMalwareDebug, 7, 3, 1, 1)
+
+        self.label_14 = QLabel(self.webAnalyzerTab)
+        self.label_14.setObjectName(u"label_14")
+        self.label_14.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_14, 6, 1, 1, 1)
+
+        self.label_15 = QLabel(self.webAnalyzerTab)
+        self.label_15.setObjectName(u"label_15")
+        self.label_15.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_15, 6, 2, 1, 1)
+
+        self.label_16 = QLabel(self.webAnalyzerTab)
+        self.label_16.setObjectName(u"label_16")
+        self.label_16.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label_16, 6, 3, 1, 1)
 
         self.mainTabsWidget.addTab(self.webAnalyzerTab, "")
         self.graphTab = QWidget()
@@ -671,7 +725,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(0)
+        self.mainTabsWidget.setCurrentIndex(3)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -732,19 +786,28 @@ class Ui_MainWindow(object):
         self.dorksListSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dork Search", None))
         self.dorksResultSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Result Search", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
-        self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WAF", None))
-        self.serverTechStackDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TECH STACK", None))
-        self.serverOpenPortsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
-        self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
-        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
-        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"Open Ports", None))
+        self.label_13.setText(QCoreApplication.translate("MainWindow", u"Server Location", None))
+        self.label_12.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
         self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
         self.serverNmapDebug.setDocumentTitle("")
         self.serverNmapDebug.setPlainText("")
         self.serverNmapDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"NMAP SCAN", None))
+        self.serverRobotsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"ROBOTS", None))
+        self.serverOpenPortsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
+        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
         self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
         self.serverDnsAnalyzeDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"DNS", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"Nmap Scan", None))
+        self.label_11.setText(QCoreApplication.translate("MainWindow", u"SSL / TLS", None))
+        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
+        self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"DNS", None))
+        self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HEADERS", None))
         self.serverMalwareDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"MALWARE", None))
+        self.label_14.setText(QCoreApplication.translate("MainWindow", u"Headers", None))
+        self.label_15.setText(QCoreApplication.translate("MainWindow", u"Robots", None))
+        self.label_16.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

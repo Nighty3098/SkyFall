@@ -10,7 +10,7 @@ files = [
     "modules/dorking_controller.py",
     "modules/dorks_search_engine.py",
     "modules/google_dorks.py",
-    "modules/server_analyzer.py",
+    "modules/domain_analyzer.py",
     "resources/form.ui",
     "resources/style.qss",
 ]

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import QApplication
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
-    from modules.server_analyzer import ServerAnalyzer
+    from modules.domain_analyzer import DomainAnalyzer
 
 
 STEPS = 7
@@ -16,10 +16,10 @@ class DorkingController:
     def __init__(
         self,
         ui: "QMainWindow",
-        server_analyzer: "ServerAnalyzer",
+        domain_analyzer: "DomainAnalyzer",
     ):
         self.ui = ui
-        self.server_analyzer = server_analyzer
+        self.domain_analyzer = domain_analyzer
         self.domain = ""
 
     def set_domain(self, domain):
@@ -34,7 +34,7 @@ class DorkingController:
 
         self.ui.serverLocationDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.get_ip_and_location(self.domain),
+                self.domain_analyzer.get_ip_and_location(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )
@@ -43,7 +43,7 @@ class DorkingController:
 
         self.ui.serverTlsDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.get_ssl_tls_info(self.domain),
+                self.domain_analyzer.get_ssl_tls_info(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )
@@ -52,7 +52,7 @@ class DorkingController:
 
         self.ui.serverDnsAnalyzeDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.get_dns_and_hosts(self.domain),
+                self.domain_analyzer.get_dns_and_hosts(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )
@@ -61,7 +61,7 @@ class DorkingController:
 
         self.ui.serverWafDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.analyze_web_stack(self.domain),
+                self.domain_analyzer.analyze_web_stack(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )
@@ -70,7 +70,7 @@ class DorkingController:
 
         self.ui.serverWhoisDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.get_whois_info(self.domain),
+                self.domain_analyzer.get_whois_info(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )
@@ -79,7 +79,7 @@ class DorkingController:
 
         self.ui.serverNmapDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.run_nmap_scan(self.domain),
+                self.domain_analyzer.run_nmap_scan(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )
@@ -88,7 +88,7 @@ class DorkingController:
 
         self.ui.serverMalwareDebug.setPlainText(
             json.dumps(
-                self.server_analyzer.check_malware_reputation(self.domain),
+                self.domain_analyzer.check_malware_reputation(self.domain),
                 indent=2,
                 ensure_ascii=False,
             )

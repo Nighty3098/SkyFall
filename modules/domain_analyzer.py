@@ -9,9 +9,9 @@ import whois
 from loguru import logger
 
 
-class ServerAnalyzer:
+class DomainAnalyzer:
     def __init__(self) -> None:
-        logger.debug("Init: ServerAnalyzer")
+        logger.debug("Init: DomainAnalyzer")
         self.API_KEYS = {
             "VIRUSTOTAL": "",
             "GOOGLE_SAFE": "",

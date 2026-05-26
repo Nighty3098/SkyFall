@@ -9,6 +9,8 @@ files = [
     "src/modules/dorks_search_engine.py",
     "src/modules/google_dorks.py",
     "src/modules/domain_analyzer.py",
+    "src/controllers/domain_controller.py",
+    "src/controllers/dorking_controller.py",
     "resources/form.ui",
     "resources/style.qss",
 ]

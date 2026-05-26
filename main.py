@@ -46,25 +46,20 @@ class MainWindow(QMainWindow):
             label.setPixmap(pixmap)
 
     def _init_modules(self):
-        try:
-            logger.debug("Init modules")
-            self.dorksSearchEngine = DorksSearchEngine()
-            self.googleDorksDB = GoogleDorksDB()
-        except Exception as e:
-            logger.error(f"Error: {e}")
+        logger.debug("Init modules")
+        self.dorksSearchEngine = DorksSearchEngine()
+        self.googleDorksDB = GoogleDorksDB()
 
     def _init_controller(self):
         logger.debug("Init controllers")
-        try:
-            self.dorkingController = DorkingController(
-                self.ui, self.googleDorksDB, self.dorksSearchEngine
-            )
-            self.dorkingController.load_categories()
 
-            self.domainAnalyzer = DomainAnalyzer()
-            self.domainController = DomainController(self.ui, self.domainAnalyzer)
-        except Exception as e:
-            logger.error(f"Error: {e}")
+        self.dorkingController = DorkingController(
+            self.ui, self.googleDorksDB, self.dorksSearchEngine
+        )
+        self.dorkingController.load_categories()
+
+        self.domainAnalyzer = DomainAnalyzer()
+        self.domainController = DomainController(self.ui, self.domainAnalyzer)
 
     def _init_connectors(self):
         setup_dorking_connectors(self.dorkingController)

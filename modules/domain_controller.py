@@ -1,6 +1,7 @@
 import json
 from typing import TYPE_CHECKING
 
+from loguru import logger
 from PySide6.QtWidgets import QApplication
 
 if TYPE_CHECKING:
@@ -18,6 +19,8 @@ class DomainController:
         ui: "QMainWindow",
         domain_analyzer: "DomainAnalyzer",
     ):
+        logger.debug("Init: DomainController")
+
         self.ui = ui
         self.domain_analyzer = domain_analyzer
         self.domain = ""

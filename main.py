@@ -1,3 +1,4 @@
+import asyncio
 import sys
 from pathlib import Path
 
@@ -28,8 +29,6 @@ class MainWindow(QMainWindow):
 
         self._load_app_icon()
         self._init_modules()
-        self._init_controller()
-        self._init_connectors()
 
     def _load_app_icon(self):
         label = self.ui.appIconLabel
@@ -50,18 +49,17 @@ class MainWindow(QMainWindow):
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
 
-    def _init_controller(self):
+    async def _async_init(self):
         logger.debug("Init controllers")
 
         self.dorkingController = DorkingController(
             self.ui, self.googleDorksDB, self.dorksSearchEngine
         )
-        self.dorkingController.load_categories()
+        await self.dorkingController.load_categories()
 
         self.domainAnalyzer = DomainAnalyzer()
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
 
-    def _init_connectors(self):
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
 
@@ -76,5 +74,6 @@ if __name__ == "__main__":
     except FileNotFoundError:
         logger.warning("style.qss not found.")
 
+    asyncio.run(widget._async_init())
     widget.show()
     sys.exit(app.exec())

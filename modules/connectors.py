@@ -2,8 +2,8 @@ import asyncio
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from modules.domain_controller import DomainController
-    from modules.dorking_controller import DorkingController
+    from src.controllers.domain_controller import DomainController
+    from src.controllers.dorking_controller import DorkingController
 
 
 def setup_dorking_connectors(controller: "DorkingController"):

@@ -4,6 +4,8 @@ from loguru import logger
 
 class DorksSearchEngine:
     def __init__(self) -> None:
+        logger.debug("Init: DorksSearchEngine")
+
         self._last_search = ""
 
     def search_dork(self, dork: str, max_results: int = 100):

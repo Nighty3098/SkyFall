@@ -1,9 +1,13 @@
 import json
 from typing import Dict, List
 
+from loguru import logger
+
 
 class GoogleDorksDB:
     def __init__(self):
+        logger.debug("Init: GoogleDorksDB")
+
         self.dorks_db_path = "data/dorks.json"
         self.dorks_db: Dict[str, Dict[str, List[str]]] = {}
 

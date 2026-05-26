@@ -8,12 +8,12 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from logger_setup import setup_logging
-from modules.connectors import setup_domain_connectors, setup_dorking_connectors
-from modules.domain_analyzer import DomainAnalyzer
+from src.modules.connectors import setup_domain_connectors, setup_dorking_connectors
+from src.modules.domain_analyzer import DomainAnalyzer
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
-from modules.dorks_search_engine import DorksSearchEngine
-from modules.google_dorks import GoogleDorksDB
+from src.modules.dorks_search_engine import DorksSearchEngine
+from src.modules.google_dorks import GoogleDorksDB
 
 setup_logging()
 

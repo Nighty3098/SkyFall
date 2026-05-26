@@ -5,8 +5,8 @@ from loguru import logger
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
-    from modules.dorks_search_engine import DorksSearchEngine
-    from modules.google_dorks import GoogleDorksDB
+    from src.modules.dorks_search_engine import DorksSearchEngine
+    from src.modules.google_dorks import GoogleDorksDB
 
 
 class DorkingController:

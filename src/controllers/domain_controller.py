@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QApplication
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
-    from modules.domain_analyzer import DomainAnalyzer
+    from src.modules.domain_analyzer import DomainAnalyzer
 
 
 STEPS = 8

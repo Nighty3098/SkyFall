@@ -1,4 +1,4 @@
-import json
+import asyncio
 import socket
 import ssl
 
@@ -6,6 +6,7 @@ import dns.resolver
 import nmap
 import requests
 import whois
+from fake_useragent import UserAgent
 from loguru import logger
 
 
@@ -17,8 +18,24 @@ class DomainAnalyzer:
             "GOOGLE_SAFE": "",
             "IPINFO": "",
         }
+        self.ua = UserAgent()
 
-    def get_ip_and_location(self, domain):
+    async def get_robots_txt(self, domain):
+        logger.debug("Trying to get robots.txt")
+        try:
+            response = requests.get(
+                f"https://{domain}/robots.txt",
+                timeout=5,
+                headers={"User-Agent": self.ua.random},
+            )
+
+            return response.text
+
+        except Exception as e:
+            logger.error(f"Error: {e}")
+            return f"Error getting robots.txt: {e}"
+
+    async def get_ip_and_location(self, domain):
         logger.debug("Trying to get IP and location")
         try:
             ip = socket.gethostbyname(domain)
@@ -87,7 +104,7 @@ class DomainAnalyzer:
             "details": errors,
         }
 
-    def get_ssl_tls_info(self, domain):
+    async def get_ssl_tls_info(self, domain):
         logger.debug("Trying to get SSL and TLS info")
         context = ssl.create_default_context()
         try:
@@ -107,7 +124,7 @@ class DomainAnalyzer:
             logger.error(f"Error SSL/TLS: {e}")
             return {"error": f"Error SSL/TLS: {e}"}
 
-    def get_dns_and_hosts(self, domain):
+    async def get_dns_and_hosts(self, domain):
         logger.debug("Trying to get DNS and hosts info")
         try:
             record_types = ["A", "MX", "TXT", "NS", "CNAME"]
@@ -133,11 +150,11 @@ class DomainAnalyzer:
             logger.error(f"Error DNS: {e}")
             return {"error": f"Error DNS: {e}"}
 
-    def analyze_web_stack(self, domain):
+    async def analyze_web_stack(self, domain):
         logger.debug("Trying to analyze web stack")
         try:
             response = requests.get(
-                f"https://{domain}", timeout=5, headers={"User-Agent": "Mozilla/5.0"}
+                f"https://{domain}", timeout=5, headers={"User-Agent": self.ua.random}
             )
             headers = dict(response.headers)
             html = response.text.lower()
@@ -173,7 +190,7 @@ class DomainAnalyzer:
             logger.error(f"Error: {e}")
             return {"error": f"Error: {e}"}
 
-    def get_whois_info(self, domain):
+    async def get_whois_info(self, domain):
         logger.debug("Trying to get whois info")
         try:
             w = whois.whois(domain)
@@ -195,11 +212,11 @@ class DomainAnalyzer:
             logger.error(f"Error WHOIS: {e}")
             return {"error": f"Error WHOIS: {e}"}
 
-    def run_nmap_scan(self, domain):
+    async def run_nmap_scan(self, domain):
         logger.debug("Trying to get nmap info")
         try:
             nm = nmap.PortScanner()
-            nm.scan(domain, "1-65535", arguments="-T4 --open")
+            nm.scan(domain, "1-65535", arguments="-T4 --open --script=vuln")
 
             scan_data = {}
             for host in nm.all_hosts():
@@ -207,11 +224,21 @@ class DomainAnalyzer:
                 for proto in nm[host].all_protocols():
                     for port in nm[host][proto].keys():
                         port_info = nm[host][proto][port]
+                        script_output = port_info.get("script")
+                        domain_vulns = ""
+                        if script_output:
+                            for script_name, output in script_output.items():
+                                domain_vulns += f" '{script_name}' "
                         scan_data[host].append(
                             {
                                 "port": port,
                                 "state": port_info["state"],
                                 "service": port_info["name"],
+                                "version": port_info["version"],
+                                "product": port_info["product"],
+                                "extrainfo": port_info["extrainfo"],
+                                "conf": port_info["conf"],
+                                "vulns": domain_vulns,
                             }
                         )
             return scan_data if scan_data else "ALL PORT CLOSED"
@@ -219,7 +246,7 @@ class DomainAnalyzer:
             logger.error(f"Error NMAP: {e}")
             return {"error": f"NMAP not found: {e}"}
 
-    def check_malware_reputation(self, domain):
+    async def check_malware_reputation(self, domain):
         logger.debug("Trying to get malware info")
 
         if self.API_KEYS["VIRUSTOTAL"]:

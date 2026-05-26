@@ -1,3 +1,4 @@
+import asyncio
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -16,6 +17,6 @@ def setup_domain_connectors(controller: "DomainAnalyzer"):
     controller.ui.runUrlScanButton.clicked.connect(
         lambda: (
             controller.set_domain(controller.ui.serverUrlEdit.text()),
-            controller.analyze_domain(),
+            asyncio.run(controller.analyze_domain()),
         )
     )

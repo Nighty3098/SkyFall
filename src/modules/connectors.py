@@ -8,9 +8,11 @@ if TYPE_CHECKING:
 
 def setup_dorking_connectors(controller: "DorkingController"):
     controller.ui.dorksCategoryList.itemDoubleClicked.connect(
-        controller.load_dorks_by_category
+        lambda item: asyncio.run(controller.load_dorks_by_category(item))
     )
-    controller.ui.dorksList.itemDoubleClicked.connect(controller.search_dork)
+    controller.ui.dorksList.itemDoubleClicked.connect(
+        lambda item: asyncio.run(controller.search_dork(item))
+    )
 
 
 def setup_domain_connectors(controller: "DomainController"):

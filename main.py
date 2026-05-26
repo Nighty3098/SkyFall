@@ -8,12 +8,12 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from logger_setup import setup_logging
-from modules.connectors import setup_dorking_connectors, setup_domain_connectors
-from modules.domain_controller import DorkingController as DomainController
+from modules.connectors import setup_domain_connectors, setup_dorking_connectors
+from modules.domain_analyzer import DomainAnalyzer
+from modules.domain_controller import DomainController
 from modules.dorking_controller import DorkingController
 from modules.dorks_search_engine import DorksSearchEngine
 from modules.google_dorks import GoogleDorksDB
-from modules.domain_analyzer import DomainAnalyzer
 
 setup_logging()
 
@@ -46,17 +46,25 @@ class MainWindow(QMainWindow):
             label.setPixmap(pixmap)
 
     def _init_modules(self):
-        self.dorksSearchEngine = DorksSearchEngine()
-        self.googleDorksDB = GoogleDorksDB()
+        try:
+            logger.debug("Init modules")
+            self.dorksSearchEngine = DorksSearchEngine()
+            self.googleDorksDB = GoogleDorksDB()
+        except Exception as e:
+            logger.error(f"Error: {e}")
 
     def _init_controller(self):
-        self.dorkingController = DorkingController(
-            self.ui, self.googleDorksDB, self.dorksSearchEngine
-        )
-        self.dorkingController.load_categories()
+        logger.debug("Init controllers")
+        try:
+            self.dorkingController = DorkingController(
+                self.ui, self.googleDorksDB, self.dorksSearchEngine
+            )
+            self.dorkingController.load_categories()
 
-        self.domainAnalyzer = DomainAnalyzer()
-        self.domainController = DomainController(self.ui, self.domainAnalyzer)
+            self.domainAnalyzer = DomainAnalyzer()
+            self.domainController = DomainController(self.ui, self.domainAnalyzer)
+        except Exception as e:
+            logger.error(f"Error: {e}")
 
     def _init_connectors(self):
         setup_dorking_connectors(self.dorkingController)

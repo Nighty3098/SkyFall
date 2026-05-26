@@ -12,7 +12,7 @@ if TYPE_CHECKING:
 STEPS = 8
 
 
-class DorkingController:
+class DomainController:
     def __init__(
         self,
         ui: "QMainWindow",

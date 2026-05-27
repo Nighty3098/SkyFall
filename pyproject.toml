@@ -13,4 +13,5 @@ files = [
     "src/controllers/dorking_controller.py",
     "resources/form.ui",
     "resources/style.qss",
+    "src/utils.py"
 ]

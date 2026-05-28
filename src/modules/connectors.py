@@ -1,7 +1,7 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from src.utils import filter_list
+from src.utils import filter_list, find_text
 
 if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
@@ -21,6 +21,10 @@ def setup_dorking_connectors(controller: "DorkingController"):
     )
     controller.ui.dorksListSearchEdit.textChanged.connect(
         lambda text: filter_list(controller.ui.dorksList, text)
+    )
+
+    controller.ui.dorksResultSearchEdit.textChanged.connect(
+        lambda text : find_text(controller, text)
     )
 
 

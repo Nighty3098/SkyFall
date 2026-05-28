@@ -6,6 +6,7 @@ from src.utils import filter_list, find_text
 if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
+    from src.controllers.settings_controller import Settings
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -24,8 +25,12 @@ def setup_dorking_connectors(controller: "DorkingController"):
     )
 
     controller.ui.dorksResultSearchEdit.textChanged.connect(
-        lambda text : find_text(controller, text)
+        lambda text: find_text(controller, text)
     )
+
+
+def setup_settings_connectors(settings: "Settings"):
+    settings.ui.pushButton.clicked.connect(settings.save)
 
 
 def setup_domain_connectors(controller: "DomainController"):

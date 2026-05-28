@@ -9,12 +9,18 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from logger_setup import setup_logging
-from src.modules.connectors import setup_domain_connectors, setup_dorking_connectors
+from src.modules.connectors import (
+    setup_domain_connectors,
+    setup_dorking_connectors,
+    setup_settings_connectors,
+)
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
+from src.controllers.settings_controller import Settings
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.google_dorks import GoogleDorksDB
+from src.modules.intelx_search_engine import IntelxSearchEngine
 
 setup_logging()
 
@@ -52,6 +58,8 @@ class MainWindow(QMainWindow):
     async def _async_init(self):
         logger.debug("Init controllers")
 
+        self.settings = Settings(self.ui)
+
         self.dorkingController = DorkingController(
             self.ui, self.googleDorksDB, self.dorksSearchEngine
         )
@@ -62,6 +70,11 @@ class MainWindow(QMainWindow):
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
+        setup_settings_connectors(self.settings)
+
+        self.intelxSearchEngine = IntelxSearchEngine(
+            self.settings.intelligent_x_api_key
+        )
 
 
 if __name__ == "__main__":

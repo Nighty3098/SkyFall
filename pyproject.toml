@@ -15,4 +15,5 @@ files = [
     "src/modules/google_dorks.py",
     "src/modules/intelx_search_engine.py",
     "src/utils.py",
+    "src/controllers/settings_controller.py"
 ]

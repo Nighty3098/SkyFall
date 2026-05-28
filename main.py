@@ -13,6 +13,7 @@ from src.modules.connectors import (
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_settings_connectors,
+    setup_intelx_connectors
 )
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.controllers.domain_controller import DomainController
@@ -21,6 +22,7 @@ from src.controllers.settings_controller import Settings
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.controllers.intelx_controller import IntelxController
 
 setup_logging()
 
@@ -76,6 +78,9 @@ class MainWindow(QMainWindow):
             self.settings.intelligent_x_api_key
         )
 
+        self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
+
+        setup_intelx_connectors(self.IntelxController)
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

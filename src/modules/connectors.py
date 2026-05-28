@@ -7,6 +7,7 @@ if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.settings_controller import Settings
+    from src.controllers.intelx_controller import IntelxController
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -38,5 +39,12 @@ def setup_domain_connectors(controller: "DomainController"):
         lambda: (
             controller.set_domain(controller.ui.serverUrlEdit.text()),
             asyncio.run(controller.analyze_domain()),
+        )
+    )
+
+def setup_intelx_connectors(controller: "IntelxController"):
+    controller.ui.startMailSearchButton.clicked.connect(
+        lambda: (
+            asyncio.run(controller.startSearching(controller.ui.mailEdit.text())),
         )
     )

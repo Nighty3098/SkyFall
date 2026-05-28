@@ -725,7 +725,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(2)
+        self.mainTabsWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 

@@ -648,7 +648,14 @@
             <property name="title">
              <string>Settings</string>
             </property>
-            <layout class="QVBoxLayout" name="verticalLayout_21">
+            <layout class="QHBoxLayout" name="horizontalLayout_5">
+             <item>
+              <widget class="QCheckBox" name="useCustomDorkCheck">
+               <property name="text">
+                <string>Cusom Dork</string>
+               </property>
+              </widget>
+             </item>
              <item>
               <widget class="QCheckBox" name="useSearxngCheck">
                <property name="text">

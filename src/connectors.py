@@ -6,8 +6,8 @@ from src.utils import filter_list, find_text
 if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
-    from src.controllers.settings_controller import Settings
     from src.controllers.intelx_controller import IntelxController
+    from src.controllers.settings_controller import Settings
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -29,6 +29,10 @@ def setup_dorking_connectors(controller: "DorkingController"):
         lambda text: find_text(controller, text)
     )
 
+    controller.ui.dorkItButton.clicked.connect(
+        lambda: asyncio.run(controller.search_dork(0))
+    )
+
 
 def setup_settings_connectors(settings: "Settings"):
     settings.ui.pushButton.clicked.connect(settings.save)
@@ -42,9 +46,9 @@ def setup_domain_connectors(controller: "DomainController"):
         )
     )
 
+
 def setup_intelx_connectors(controller: "IntelxController"):
     controller.ui.startMailSearchButton.clicked.connect(
-        lambda: (
-            asyncio.run(controller.startSearching(controller.ui.mailEdit.text())),
-        )
+        lambda: (asyncio.run(controller.startSearching(controller.ui.mailEdit.text())),)
     )
+

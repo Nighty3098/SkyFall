@@ -77,6 +77,28 @@
 - [ ] Creating interactive graphs of communication with various data
 - [ ] Exporting graphs to JSON or SQL DB
 
+## `SETUP SEARXNG`
+
+To work with dorking, you need to run searxng via docker:
+
+```bash
+
+docker compose up --build
+
+```
+
+## `RUN`
+
+```bash
+
+python3 -m venv venv
+source venv/bin/activate
+pip3 install -r requirements.txt
+
+python3 main.py
+
+```
+
 ## `CONTACTS`
 
 Main Developer: https://t.me/Night3098

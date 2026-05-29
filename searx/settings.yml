@@ -10,5 +10,41 @@ search:
     - html
     - json
 
+  plugins:
+    - Text improvements
+    - Tracker protection
+
 ui:
   default_locale: "en"
+
+engines:
+  - name: google
+    engine: google
+    shortcut: g
+    use_mobile_ui: true
+    timeout: 10.0
+    disabled: false
+
+  - name: duckduckgo
+    engine: duckduckgo
+    shortcut: ddg
+    timeout: 10.0
+    disabled: false
+
+  - name: brave
+    engine: brave
+    shortcut: br
+    timeout: 10.0
+    disabled: false
+
+  - name: qwant
+    engine: qwant
+    shortcut: qw
+    timeout: 5.0
+    disabled: true
+
+  - name: yahoo
+    engine: yahoo
+    shortcut: yh
+    timeout: 5.0
+    disabled: false

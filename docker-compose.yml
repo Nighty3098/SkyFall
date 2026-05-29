@@ -1,19 +1,17 @@
-version: "3.7"
-
 services:
   searxng:
     image: docker.io/searxng/searxng:latest
     container_name: searxng
     restart: always
     volumes:
-      - ./searx:/etc/searxng:rw
+      - ./searx/settings.yml:/etc/searxng/settings.yml:ro
     ports:
       - "8080:8080"
     environment:
       - SEARXNG_SETTINGS_PATH=/etc/searxng/settings.yml
-    cap_drop:
-      - ALL
-    cap_add:
-      - CHOWN
-      - SETGID
-      - SETUID
+    networks:
+      - skyfall_net
+
+networks:
+  skyfall_net:
+    driver: bridge

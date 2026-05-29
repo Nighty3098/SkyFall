@@ -10,19 +10,30 @@ class DorksSearchEngine:
 
         self._last_search = ""
 
-    def search_dork(self, dork: str, max_results: int = 100):
+    def search_dork(self, dork: str, use_searxng: bool = False):
         try:
             logger.debug("Running dork: {}", dork)
             self._last_search = ""
-            results = searxng_search(dork)
-            count = 0
-            for index, r in enumerate(results, start=1):
-                self._last_search += f"\n{index} - {r['title']}\nURL: {r['href']}\nSNIPPET: {r['body']}\n"
-                count += 1
+
+            if use_searxng:
+                results = searxng_search(dork)
+                count = 0
+                for index, r in enumerate(results, start=1):
+                    self._last_search += f"\n{index} - {r['title']}\nURL: {r['href']}\nSNIPPET: {r['body']}\n"
+                    count += 1
+            else:
+                with DDGS() as ddgs:
+                    results = ddgs.text(dork, max_results=1000000000)
+                    count = 0
+                    for index, r in enumerate(results, start=1):
+                        self._last_search += f"\n{index} - {r['title']}\nURL: {r['href']}\nSNIPPET: {r['body']}\n"
+                        count += 1
+
             if count == 0:
                 return "Not found."
             else:
                 logger.debug("Dork search completed successfully")
                 return self._last_search
+
         except Exception as e:
             return f"Error: {e}"

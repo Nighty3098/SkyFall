@@ -36,4 +36,5 @@ class DorkingController:
 
     async def search_dork(self, item):
         dork = item.text()
-        self.ui.dorksResult.setPlainText(self.dorks_search_engine.search_dork(dork))
+        useSearxng = self.ui.useSearxngCheck.isChecked()
+        self.ui.dorksResult.setPlainText(self.dorks_search_engine.search_dork(dork, useSearxng))

@@ -483,6 +483,19 @@ class Ui_MainWindow(object):
 
         self.gridLayout_5.addWidget(self.splitter, 0, 0, 1, 3)
 
+        self.groupBox_5 = QGroupBox(self.dorkingTab)
+        self.groupBox_5.setObjectName(u"groupBox_5")
+        self.groupBox_5.setMaximumSize(QSize(16777215, 100))
+        self.verticalLayout_21 = QVBoxLayout(self.groupBox_5)
+        self.verticalLayout_21.setObjectName(u"verticalLayout_21")
+        self.useSearxngCheck = QCheckBox(self.groupBox_5)
+        self.useSearxngCheck.setObjectName(u"useSearxngCheck")
+
+        self.verticalLayout_21.addWidget(self.useSearxngCheck)
+
+
+        self.gridLayout_5.addWidget(self.groupBox_5, 1, 0, 1, 3)
+
 
         self.verticalLayout_12.addLayout(self.gridLayout_5)
 
@@ -785,6 +798,8 @@ class Ui_MainWindow(object):
         self.dorksCategorySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Category Search", None))
         self.dorksListSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dork Search", None))
         self.dorksResultSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Result Search", None))
+        self.groupBox_5.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
+        self.useSearxngCheck.setText(QCoreApplication.translate("MainWindow", u"Use SearXNG", None))
         self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Open Ports", None))
         self.label_13.setText(QCoreApplication.translate("MainWindow", u"Server Location", None))

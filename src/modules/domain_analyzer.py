@@ -124,8 +124,8 @@ class DomainAnalyzer:
             logger.error(f"Error SSL/TLS: {e}")
             return {"error": f"Error SSL/TLS: {e}"}
 
-    async def get_dns_and_hosts(self, domain):
-        logger.debug("Trying to get DNS and hosts info")
+    async def get_dns(self, domain):
+        logger.debug("Trying to get DNS info")
         try:
             record_types = ["A", "MX", "TXT", "NS", "CNAME"]
             dns_results = {}
@@ -136,6 +136,14 @@ class DomainAnalyzer:
                 except Exception:
                     dns_results[r_type] = []
 
+            return dns_results
+        except Exception as e:
+            logger.error(f"Error DNS: {e}")
+            return {"error": f"Error DNS: {e}"}
+
+    async def get_hosts(self, domain):
+        logger.debug("Trying to get associated hosts")
+        try:
             associated_hosts = []
             for sub in ["www", "mail", "dev", "api", "test"]:
                 try:
@@ -145,10 +153,10 @@ class DomainAnalyzer:
                 except socket.gaierror:
                     pass
 
-            return {"dns_records": dns_results, "associated_hosts": associated_hosts}
+            return associated_hosts
         except Exception as e:
-            logger.error(f"Error DNS: {e}")
-            return {"error": f"Error DNS: {e}"}
+            logger.error(f"Error hosts: {e}")
+            return {"error": f"Error hosts: {e}"}
 
     async def analyze_web_stack(self, domain):
         logger.debug("Trying to analyze web stack")

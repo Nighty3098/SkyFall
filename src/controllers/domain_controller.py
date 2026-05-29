@@ -58,9 +58,11 @@ class DomainController:
         )
         self._update_progress(3)
 
+        dns_records = await self.domain_analyzer.get_dns(self.domain)
+        associated_hosts = await self.domain_analyzer.get_hosts(self.domain)
         self.ui.serverDnsAnalyzeDebug.setPlainText(
             json.dumps(
-                await self.domain_analyzer.get_dns_and_hosts(self.domain),
+                {"dns_records": dns_records, "associated_hosts": associated_hosts},
                 indent=2,
                 ensure_ascii=False,
             )

@@ -11,7 +11,7 @@ files = [
     "src/controllers/dorking_controller.py",
     "src/controllers/intelx_controller.py",
     "src/controllers/settings_controller.py",
-    "src/modules/connectors.py",
+    "src/connectors.py",
     "src/modules/domain_analyzer.py",
     "src/modules/dorks_search_engine.py",
     "src/modules/google_dorks.py",

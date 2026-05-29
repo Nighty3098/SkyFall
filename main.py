@@ -9,7 +9,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 
 from logger_setup import setup_logging
-from src.modules.connectors import (
+from src.connectors import (
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_settings_connectors,

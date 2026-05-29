@@ -16,6 +16,9 @@
 - python3-nmap | nmap integration
 - python-whois
 - dnspython
+- fake_useragent
+- ssl
+- socket
 - ...
 
 ## `FUNCTIONAL`
@@ -32,12 +35,34 @@
   - [x] Web stack (HTTP headers, web server, WAF, detected tech — Nginx, Apache, WordPress, Bitrix, jQuery)
   - [x] WAF
   - [x] Malware reputation (VirusTotal, Google Safe Browsing, CRDF Labs)
-  - [ ] NMAP
+  - [x] NMAP (vuln scripts)
 - [x] Dorking via duckduckgo
-- [ ] Downloading data (messages, reactions, users, files) from telegram channels and chats
+- [ ] Telegram OSINT
+  - [ ] User Data Collection
+    - [ ] Complete user profiles: ID, username, first name, last name, phone (if available)
+    - [ ] Statuses and flags: verification, Telegram Premium, bots, scam/fake accounts
+    - [ ] Activity: online/offline status, last seen timestamp
+    - [ ] Additional information: bio, language, profile photo
+    - [ ] Relationships: mutual contacts, presence in your contacts
+  - [ ] Channel Members Collection
+    - [ ] Retrieval of all channel/group members
+    - [ ] Saving membership data (join date, status)
+    - [ ] Integration with global user database
+  - [ ] Link Extraction
+    - [ ] Automatic extraction of all URLs from messages
+    - [ ] Support for Telegram links (t.me, @username)
+    - [ ] Saving link context (surrounding text)
+    - [ ] Link classification by type (telegram, http, https)
+  - [ ] Interaction Graph Analysis
+    - [ ] Build interaction graphs from collected data
+    - [ ] Nodes: users, channels, domains
+    - [ ] Edges: membership, replies, forwards, link mentions
+    - [ ] Export to multiple formats (GraphML, GEXF, JSON, CSV, PNG)
+    - [ ] Filter by date, minimum reply count
+    - [ ] Graph statistics (node/edge types, degrees, bot/premium counts)
 - [ ] Creating an interactive subscription graph for user communication in telegram
 - [ ] Search for email information (which resources were registered on)
-  - [ ] intelx.io
+  - [x] intelx.io
 - [ ] Username search
   - [ ] Reddit
   - [ ] Telegram

@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.modules.domain_analyzer import DomainAnalyzer
 
 
-STEPS = 8
+STEPS = 9
 
 
 class DomainController:
@@ -87,7 +87,7 @@ class DomainController:
         )
         self._update_progress(6)
 
-        self.ui.serverOpenPortsDebug.setPlainText(
+        self.ui.serverNmapDebug.setPlainText(
             json.dumps(
                 await self.domain_analyzer.run_nmap_scan(self.domain),
                 indent=2,
@@ -104,3 +104,12 @@ class DomainController:
             )
         )
         self._update_progress(8)
+
+        self.ui.serverSubdomainsDebug.setPlainText(
+            json.dumps(
+                await self.domain_analyzer.find_subdomains(self.domain),
+                indent=2,
+                ensure_ascii=False,
+            )
+        )
+        self._update_progress(9)

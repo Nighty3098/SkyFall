@@ -713,7 +713,7 @@
          </widget>
         </item>
         <item row="3" column="1">
-         <widget class="QPlainTextEdit" name="serverNmapDebug">
+         <widget class="QPlainTextEdit" name="serverSubdomainsDebug">
           <property name="documentTitle">
            <string/>
           </property>
@@ -721,7 +721,7 @@
            <string/>
           </property>
           <property name="placeholderText">
-           <string>NMAP SCAN</string>
+           <string>SUBDOMAIN DORKING</string>
           </property>
          </widget>
         </item>
@@ -763,7 +763,7 @@
         <item row="2" column="1">
          <widget class="QLabel" name="label_8">
           <property name="text">
-           <string>Nmap Scan</string>
+           <string>Subdomains Dorking</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignmentFlag::AlignCenter</set>

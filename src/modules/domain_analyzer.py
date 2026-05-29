@@ -8,7 +8,8 @@ import requests
 import whois
 from fake_useragent import UserAgent
 from loguru import logger
-
+from ddgs import DDGS
+from urllib.parse import urlparse
 
 class DomainAnalyzer:
     def __init__(self) -> None:
@@ -32,7 +33,7 @@ class DomainAnalyzer:
             return response.text
 
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.error(f"Robots.txt: Error: {e}")
             return f"Error getting robots.txt: {e}"
 
     async def get_ip_and_location(self, domain):
@@ -40,7 +41,7 @@ class DomainAnalyzer:
         try:
             ip = socket.gethostbyname(domain)
         except Exception as e:
-            return {"error": f"Domain not resolve IP: {e}"}
+            return {"error": f"GET IP: Domain not resolve IP: {e}"}
 
         ipinfo_url = f"https://ipinfo.io/{ip}/json"
         if self.API_KEYS["IPINFO"]:
@@ -195,8 +196,8 @@ class DomainAnalyzer:
                 "detected_tech": tech_stack if tech_stack else "DEFAULT HTML/JS",
             }
         except Exception as e:
-            logger.error(f"Error: {e}")
-            return {"error": f"Error: {e}"}
+            logger.error(f"Stack Error: {e}")
+            return {"error": f"Stack Error: {e}"}
 
     async def get_whois_info(self, domain):
         logger.debug("Trying to get whois info")
@@ -323,3 +324,32 @@ class DomainAnalyzer:
             "status": "CLEAN",
             "note": "API KEYS NOT FOUND",
         }
+
+    async def find_subdomains(self, domain):
+        logger.debug("Trying to find subdomains")
+        try:
+            dork = f"site:{domain} -www"
+            max_results = 1000000000000
+            discovered_subdomains = set()
+            result = ""
+
+            with DDGS() as ddgs:
+                results = ddgs.text(dork, max_results=max_results)
+
+                for result in results:
+                    url = result.get("href")
+                    if url:
+                        parsed_url = urlparse(url)
+                        hostname = parsed_url.hostname
+
+                        if hostname and hostname.endswith(domain):
+                            if hostname not in discovered_subdomains:
+                                discovered_subdomains.add(hostname)
+
+            for sub in sorted(discovered_subdomains):
+                result += f"- {sub}"
+            return result
+
+        except Exception as e:
+            logger.error(f"Subdomains: Error: {e}")
+            return e

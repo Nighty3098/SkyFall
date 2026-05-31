@@ -2,8 +2,6 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.thread_utils import invoke
-
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -21,9 +19,5 @@ class IntelxController:
         self.ui = ui
         self.intelx_search_engine = intelx_search_engine
 
-    def start_searching(self, email):
-        invoke(
-            self.ui.mailSearchDebug,
-            "setPlainText",
-            self.intelx_search_engine.get_data(email),
-        )
+    async def start_searching(self, email):
+        self.ui.mailSearchDebug.setPlainText(self.intelx_search_engine.get_data(email))

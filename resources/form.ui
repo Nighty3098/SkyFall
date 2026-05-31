@@ -595,7 +595,11 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QListWidget" name="dorksList"/>
+               <widget class="QListWidget" name="dorksList">
+                <property name="contextMenuPolicy">
+                 <enum>Qt::ContextMenuPolicy::CustomContextMenu</enum>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QLineEdit" name="dorksListSearchEdit">

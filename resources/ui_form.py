@@ -454,6 +454,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_15.setContentsMargins(0, 0, 0, 0)
         self.dorksList = QListWidget(self.dorksSection)
         self.dorksList.setObjectName(u"dorksList")
+        self.dorksList.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
 
         self.verticalLayout_15.addWidget(self.dorksList)
 

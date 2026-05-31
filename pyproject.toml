@@ -7,17 +7,18 @@ files = [
     "main.py",
     "resources/form.ui",
     "resources/style.qss",
+    "src/connectors.py",
+    "src/context_menus.py",
     "src/controllers/domain_controller.py",
     "src/controllers/dorking_controller.py",
     "src/controllers/intelx_controller.py",
     "src/controllers/settings_controller.py",
-    "src/connectors.py",
     "src/modules/domain_analyzer.py",
     "src/modules/dorks_search_engine.py",
     "src/modules/google_dorks.py",
     "src/modules/intelx_search_engine.py",
-    "src/utils.py",
     "src/searxng_search.py",
+    "src/utils.py",
 ]
 
 [tool.ruff]

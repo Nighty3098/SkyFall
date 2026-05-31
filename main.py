@@ -24,6 +24,7 @@ from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.context_menus import open_dorks_list_menu
 
 setup_logging()
 
@@ -38,6 +39,13 @@ class MainWindow(QMainWindow):
 
         self._load_app_icon()
         self._init_modules()
+        self._init_ui()
+
+    def _init_ui(self):
+        self.ui.dorksList.customContextMenuRequested.connect(
+            lambda position: open_dorks_list_menu(self.ui.dorksList, self.ui.customDorkEdit, position)
+        )
+
 
     def _load_app_icon(self):
         label = self.ui.appIconLabel

@@ -1,6 +1,6 @@
 * {
     outline: none;
-    font-size: 10px;
+    font-size: 1rem;
     font-family: "JetBrains Mono", monospace;
 }
 

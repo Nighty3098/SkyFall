@@ -2,7 +2,6 @@ import json
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from PySide6.QtWidgets import QApplication
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -30,7 +29,6 @@ class DomainController:
 
     def _update_progress(self, step: int):
         self.ui.domainProgress.setValue(int(step / STEPS * 100))
-        QApplication.processEvents()
 
     async def analyze_domain(self):
         self.ui.domainProgress.setValue(0)

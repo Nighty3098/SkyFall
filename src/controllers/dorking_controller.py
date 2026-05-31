@@ -41,10 +41,10 @@ class DorkingController:
         if not use_custom_dork:
             dork = item.text()
             self.ui.dorksResult.setPlainText(
-                self.dorks_search_engine.search_dork(dork, use_searxng)
+                await self.dorks_search_engine.search_dork(dork, use_searxng)
             )
         else:
             dork = self.ui.customDorkEdit.text()
             self.ui.dorksResult.setPlainText(
-                self.dorks_search_engine.search_dork(dork, use_searxng)
+                await self.dorks_search_engine.search_dork(dork, use_searxng)
             )

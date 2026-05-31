@@ -7,6 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
+from qasync import QEventLoop
 
 from logger_setup import setup_logging
 from src.connectors import (
@@ -93,6 +94,10 @@ if __name__ == "__main__":
     except FileNotFoundError:
         logger.warning("style.qss not found.")
 
-    asyncio.run(widget._async_init())
     widget.show()
-    sys.exit(app.exec())
+
+    loop = QEventLoop(app)
+    asyncio.set_event_loop(loop)
+    asyncio.ensure_future(widget._async_init())
+    loop.run_forever()
+    loop.close()

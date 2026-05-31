@@ -1,3 +1,4 @@
+import asyncio
 import socket
 import ssl
 from urllib.parse import urlparse
@@ -24,7 +25,8 @@ class DomainAnalyzer:
     async def get_robots_txt(self, domain):
         logger.debug("Trying to get robots.txt")
         try:
-            response = requests.get(
+            response = await asyncio.to_thread(
+                requests.get,
                 f"https://{domain}/robots.txt",
                 timeout=5,
                 headers={"User-Agent": self.ua.random},
@@ -39,7 +41,7 @@ class DomainAnalyzer:
     async def get_ip_and_location(self, domain):
         logger.debug("Trying to get IP and location")
         try:
-            ip = socket.gethostbyname(domain)
+            ip = await asyncio.to_thread(socket.gethostbyname, domain)
         except Exception as e:
             return {"error": f"GET IP: Domain not resolve IP: {e}"}
 
@@ -89,7 +91,9 @@ class DomainAnalyzer:
         errors = []
         for provider in providers:
             try:
-                response = requests.get(provider["url"], timeout=4)
+                response = await asyncio.to_thread(
+                    requests.get, provider["url"], timeout=4
+                )
                 if response.status_code == 200:
                     data = response.json()
                     if data.get("status") == "fail":
@@ -107,8 +111,8 @@ class DomainAnalyzer:
 
     async def get_ssl_tls_info(self, domain):
         logger.debug("Trying to get SSL and TLS info")
-        context = ssl.create_default_context()
-        try:
+        def _fetch_ssl():
+            context = ssl.create_default_context()
             with socket.create_connection((domain, 443), timeout=5) as sock:
                 with context.wrap_socket(sock, server_hostname=domain) as ssock:
                     cert = ssock.getpeercert()
@@ -121,6 +125,8 @@ class DomainAnalyzer:
                         },
                         "expires": cert.get("notAfter"),
                     }
+        try:
+            return await asyncio.to_thread(_fetch_ssl)
         except Exception as e:
             logger.error(f"Error SSL/TLS: {e}")
             return {"error": f"Error SSL/TLS: {e}"}
@@ -132,7 +138,9 @@ class DomainAnalyzer:
             dns_results = {}
             for r_type in record_types:
                 try:
-                    answers = dns.resolver.resolve(domain, r_type)
+                    answers = await asyncio.to_thread(
+                        dns.resolver.resolve, domain, r_type
+                    )
                     dns_results[r_type] = [str(rdata) for rdata in answers]
                 except Exception:
                     dns_results[r_type] = []
@@ -149,7 +157,7 @@ class DomainAnalyzer:
             for sub in ["www", "mail", "dev", "api", "test"]:
                 try:
                     sub_domain = f"{sub}.{domain}"
-                    socket.gethostbyname(sub_domain)
+                    await asyncio.to_thread(socket.gethostbyname, sub_domain)
                     associated_hosts.append(sub_domain)
                 except socket.gaierror:
                     pass
@@ -162,8 +170,11 @@ class DomainAnalyzer:
     async def analyze_web_stack(self, domain):
         logger.debug("Trying to analyze web stack")
         try:
-            response = requests.get(
-                f"https://{domain}", timeout=5, headers={"User-Agent": self.ua.random}
+            response = await asyncio.to_thread(
+                requests.get,
+                f"https://{domain}",
+                timeout=5,
+                headers={"User-Agent": self.ua.random},
             )
             headers = dict(response.headers)
             html = response.text.lower()
@@ -202,7 +213,7 @@ class DomainAnalyzer:
     async def get_whois_info(self, domain):
         logger.debug("Trying to get whois info")
         try:
-            w = whois.whois(domain)
+            w = await asyncio.to_thread(whois.whois, domain)
             return {
                 "registrar": w.registrar,
                 "creation_date": str(
@@ -225,7 +236,9 @@ class DomainAnalyzer:
         logger.debug("Trying to get nmap info")
         try:
             nm = nmap.PortScanner()
-            nm.scan(domain, "1-65535", arguments="-T4 --open --script=vuln")
+            await asyncio.to_thread(
+                nm.scan, domain, "1-65535", arguments="-T4 --open --script=vuln"
+            )
 
             scan_data = {}
             for host in nm.all_hosts():
@@ -262,7 +275,9 @@ class DomainAnalyzer:
             try:
                 url = f"https://www.virustotal.com/api/v3/domains/{domain}"
                 headers = {"x-apikey": self.API_KEYS["VIRUSTOTAL"]}
-                res = requests.get(url, headers=headers, timeout=5)
+                res = await asyncio.to_thread(
+                    requests.get, url, headers=headers, timeout=5
+                )
                 if res.status_code == 200:
                     stats = (
                         res.json()
@@ -295,7 +310,9 @@ class DomainAnalyzer:
                         "threatEntries": [{"url": f"http://{domain}/"}],
                     },
                 }
-                res = requests.post(url, json=payload, timeout=5)
+                res = await asyncio.to_thread(
+                    requests.post, url, json=payload, timeout=5
+                )
                 if res.status_code == 200:
                     matches = res.json().get("matches", [])
                     return {
@@ -308,7 +325,7 @@ class DomainAnalyzer:
 
         try:
             url = f"https://www.crdf.fr/{domain}"
-            response = requests.get(url, timeout=5)
+            response = await asyncio.to_thread(requests.get, url, timeout=5)
             if response.status_code == 200:
                 data = response.json()
                 return {
@@ -331,21 +348,23 @@ class DomainAnalyzer:
             dork = f"site:{domain} -www"
             max_results = 1000000000000
             discovered_subdomains = set()
+
+            def _search():
+                local_results = set()
+                with DDGS() as ddgs:
+                    results = ddgs.text(dork, max_results=max_results)
+                    for r in results:
+                        url = r.get("href")
+                        if url:
+                            parsed_url = urlparse(url)
+                            hostname = parsed_url.hostname
+                            if hostname and hostname.endswith(domain):
+                                local_results.add(hostname)
+                return local_results
+
+            discovered_subdomains = await asyncio.to_thread(_search)
+
             result = ""
-
-            with DDGS() as ddgs:
-                results = ddgs.text(dork, max_results=max_results)
-
-                for result in results:
-                    url = result.get("href")
-                    if url:
-                        parsed_url = urlparse(url)
-                        hostname = parsed_url.hostname
-
-                        if hostname and hostname.endswith(domain):
-                            if hostname not in discovered_subdomains:
-                                discovered_subdomains.add(hostname)
-
             for sub in sorted(discovered_subdomains):
                 result += f"- {sub}"
             return result

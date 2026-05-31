@@ -1,5 +1,5 @@
+import asyncio
 import json
-import time
 
 import requests
 from loguru import logger
@@ -24,7 +24,7 @@ class IntelxSearchEngine:
             "Connection": "keep-alive",
         }
 
-    def _send_request(self, email):
+    async def _send_request(self, email):
         search_data = {
             "term": email,
             "lookuplevel": 0,
@@ -39,7 +39,8 @@ class IntelxSearchEngine:
 
         try:
             raw_data = json.dumps(search_data)
-            init_response = requests.post(
+            init_response = await asyncio.to_thread(
+                requests.post,
                 f"{self.base_url}/intelligent/search",
                 data=raw_data,
                 headers=self.headers,
@@ -53,8 +54,8 @@ class IntelxSearchEngine:
             logger.error(f"Error initializing search: {e}")
             return None
 
-    def get_data(self, email):
-        search_id = self._send_request(email)
+    async def get_data(self, email):
+        search_id = await self._send_request(email)
         if not search_id:
             return "[!] Failed to initialize search task."
 
@@ -62,13 +63,15 @@ class IntelxSearchEngine:
 
         try:
             for i in range(5):
-                time.sleep(2)
+                await asyncio.sleep(2)
                 try:
                     result_url = (
                         f"{self.base_url}/intelligent/search/result"
                         f"?id={search_id}&limit=1000"
                     )
-                    res_response = requests.get(result_url, headers=self.headers)
+                    res_response = await asyncio.to_thread(
+                        requests.get, result_url, headers=self.headers
+                    )
                     res_response.raise_for_status()
 
                     data = res_response.json()

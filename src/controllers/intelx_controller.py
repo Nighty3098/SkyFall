@@ -20,4 +20,6 @@ class IntelxController:
         self.intelx_search_engine = intelx_search_engine
 
     async def start_searching(self, email):
-        self.ui.mailSearchDebug.setPlainText(self.intelx_search_engine.get_data(email))
+        self.ui.mailSearchDebug.setPlainText(
+            await self.intelx_search_engine.get_data(email)
+        )

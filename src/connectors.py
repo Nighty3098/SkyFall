@@ -12,10 +12,10 @@ if TYPE_CHECKING:
 
 def setup_dorking_connectors(controller: "DorkingController"):
     controller.ui.dorksCategoryList.itemDoubleClicked.connect(
-        lambda item: asyncio.run(controller.load_dorks_by_category(item))
+        lambda item: asyncio.ensure_future(controller.load_dorks_by_category(item))
     )
     controller.ui.dorksList.itemDoubleClicked.connect(
-        lambda item: asyncio.run(controller.search_dork(item))
+        lambda item: asyncio.ensure_future(controller.search_dork(item))
     )
 
     controller.ui.dorksCategorySearchEdit.textChanged.connect(
@@ -30,7 +30,7 @@ def setup_dorking_connectors(controller: "DorkingController"):
     )
 
     controller.ui.dorkItButton.clicked.connect(
-        lambda: asyncio.run(controller.search_dork(0))
+        lambda: asyncio.ensure_future(controller.search_dork(0))
     )
 
 
@@ -42,7 +42,7 @@ def setup_domain_connectors(controller: "DomainController"):
     controller.ui.runUrlScanButton.clicked.connect(
         lambda: (
             controller.set_domain(controller.ui.serverUrlEdit.text()),
-            asyncio.run(controller.analyze_domain()),
+            asyncio.ensure_future(controller.analyze_domain()),
         )
     )
 
@@ -50,6 +50,6 @@ def setup_domain_connectors(controller: "DomainController"):
 def setup_intelx_connectors(controller: "IntelxController"):
     controller.ui.startMailSearchButton.clicked.connect(
         lambda: (
-            asyncio.run(controller.start_searching(controller.ui.mailEdit.text())),
+            asyncio.ensure_future(controller.start_searching(controller.ui.mailEdit.text())),
         )
     )

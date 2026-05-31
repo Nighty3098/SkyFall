@@ -19,3 +19,14 @@ files = [
     "src/utils.py",
     "src/searxng_search.py",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+exclude = ["resources/ui_form.py", "modules/", "scripts/"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+
+[tool.ruff.format]
+quote-style = "double"

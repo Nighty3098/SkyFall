@@ -1,16 +1,20 @@
 import json
 import time
+
 import requests
 from loguru import logger
 
-class IntelxSearchEngine():
+
+class IntelxSearchEngine:
     def __init__(self, api_key):
         logger.debug("Init: IntelxSearchEngine")
 
         self.base_url = "https://public.intelx.io"
         self.api_key = api_key
         self.headers = {
-            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0",
+            "User-Agent": (
+                "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"
+            ),
             "Accept": "*/*",
             "Accept-Language": "en-US,en;q=0.9",
             "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
@@ -36,7 +40,9 @@ class IntelxSearchEngine():
         try:
             raw_data = json.dumps(search_data)
             init_response = requests.post(
-                f"{self.base_url}/intelligent/search", data=raw_data, headers=self.headers
+                f"{self.base_url}/intelligent/search",
+                data=raw_data,
+                headers=self.headers,
             )
             init_response.raise_for_status()
 
@@ -46,7 +52,6 @@ class IntelxSearchEngine():
         except Exception as e:
             logger.error(f"Error initializing search: {e}")
             return None
-
 
     def get_data(self, email):
         search_id = self._send_request(email)
@@ -59,7 +64,10 @@ class IntelxSearchEngine():
             for i in range(5):
                 time.sleep(2)
                 try:
-                    result_url = f"{self.base_url}/intelligent/search/result?id={search_id}&limit=1000"
+                    result_url = (
+                        f"{self.base_url}/intelligent/search/result"
+                        f"?id={search_id}&limit=1000"
+                    )
                     res_response = requests.get(result_url, headers=self.headers)
                     res_response.raise_for_status()
 
@@ -75,7 +83,7 @@ class IntelxSearchEngine():
                         logger.debug("IntelX backend finished searching.")
                         break
                 except Exception as e:
-                    logger.error(f"Error fetching results (attempt {i+1}): {e}")
+                    logger.error(f"Error fetching results (attempt {i + 1}): {e}")
                     break
 
             result = "\n" + "=" * 45 + "\n"

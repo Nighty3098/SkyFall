@@ -122,4 +122,3 @@ class DomainController:
                 )
             )
         self._update_progress(9)
-

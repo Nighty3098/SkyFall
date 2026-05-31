@@ -49,6 +49,7 @@ def setup_domain_connectors(controller: "DomainController"):
 
 def setup_intelx_connectors(controller: "IntelxController"):
     controller.ui.startMailSearchButton.clicked.connect(
-        lambda: (asyncio.run(controller.startSearching(controller.ui.mailEdit.text())),)
+        lambda: (
+            asyncio.run(controller.start_searching(controller.ui.mailEdit.text())),
+        )
     )
-

@@ -1,4 +1,3 @@
-import asyncio
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -20,6 +19,5 @@ class IntelxController:
         self.ui = ui
         self.intelx_search_engine = intelx_search_engine
 
-    async def startSearching(self, email):
+    async def start_searching(self, email):
         self.ui.mailSearchDebug.setPlainText(self.intelx_search_engine.get_data(email))
-

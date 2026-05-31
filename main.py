@@ -12,17 +12,17 @@ from logger_setup import setup_logging
 from src.connectors import (
     setup_domain_connectors,
     setup_dorking_connectors,
+    setup_intelx_connectors,
     setup_settings_connectors,
-    setup_intelx_connectors
 )
-from src.modules.domain_analyzer import DomainAnalyzer
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
+from src.controllers.intelx_controller import IntelxController
 from src.controllers.settings_controller import Settings
+from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
-from src.controllers.intelx_controller import IntelxController
 
 setup_logging()
 
@@ -82,12 +82,13 @@ class MainWindow(QMainWindow):
 
         setup_intelx_connectors(self.IntelxController)
 
+
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWindow()
 
     try:
-        with open("resources/style.qss", "r", encoding="utf-8") as f:
+        with open("resources/style.qss", encoding="utf-8") as f:
             app.setStyleSheet(f.read())
     except FileNotFoundError:
         logger.warning("style.qss not found.")

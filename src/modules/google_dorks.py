@@ -1,5 +1,4 @@
 import json
-from typing import Dict, List
 
 from loguru import logger
 
@@ -9,14 +8,14 @@ class GoogleDorksDB:
         logger.debug("Init: GoogleDorksDB")
 
         self.dorks_db_path = "data/dorks.json"
-        self.dorks_db: Dict[str, Dict[str, List[str]]] = {}
+        self.dorks_db: dict[str, dict[str, list[str]]] = {}
 
-    def _loadDorksDB(self):
+    def _load_dorks_db(self):
         if self.dorks_db_path in self.dorks_db:
             return self.dorks_db[self.dorks_db_path]
 
         try:
-            with open(self.dorks_db_path, "r", encoding="utf-8") as db:
+            with open(self.dorks_db_path, encoding="utf-8") as db:
                 data = json.load(db)
         except FileNotFoundError:
             raise FileNotFoundError(f"File '{self.dorks_db_path}' not found.")
@@ -38,12 +37,12 @@ class GoogleDorksDB:
         self.dorks_db[self.dorks_db_path] = cleaned
         return cleaned
 
-    def getAllCategories(self) -> List[str]:
-        data = self._loadDorksDB()
+    def get_all_categories(self) -> list[str]:
+        data = self._load_dorks_db()
         return sorted(data.keys())
 
-    def getDorksByCategory(self, category: str) -> List[str]:
-        data = self._loadDorksDB()
+    def get_dorks_by_category(self, category: str) -> list[str]:
+        data = self._load_dorks_db()
         return data.get(category, [])
 
 
@@ -51,6 +50,6 @@ if __name__ == "__main__":
     from loguru import logger
 
     gddb = GoogleDorksDB()
-    categories = gddb.getAllCategories()
+    categories = gddb.get_all_categories()
     category = "Vulnerable Files"
-    logger.info(gddb.getDorksByCategory(category))
+    logger.info(gddb.get_dorks_by_category(category))

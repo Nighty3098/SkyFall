@@ -1,15 +1,15 @@
-import asyncio
 import socket
 import ssl
+from urllib.parse import urlparse
 
 import dns.resolver
 import nmap
 import requests
 import whois
+from ddgs import DDGS
 from fake_useragent import UserAgent
 from loguru import logger
-from ddgs import DDGS
-from urllib.parse import urlparse
+
 
 class DomainAnalyzer:
     def __init__(self) -> None:

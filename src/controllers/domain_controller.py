@@ -35,81 +35,91 @@ class DomainController:
     async def analyze_domain(self):
         self.ui.domainProgress.setValue(0)
 
-        self.ui.serverRobotsDebug.setPlainText(
-            await self.domain_analyzer.get_robots_txt(self.domain),
-        )
+        if self.ui.domainRobotsCheck.isChecked():
+            self.ui.serverRobotsDebug.setPlainText(
+                await self.domain_analyzer.get_robots_txt(self.domain),
+            )
         self._update_progress(1)
 
-        self.ui.serverLocationDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.get_ip_and_location(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainLocationCheck.isChecked():
+            self.ui.serverLocationDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.get_ip_and_location(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(2)
 
-        self.ui.serverTlsDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.get_ssl_tls_info(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainSSLCheck.isChecked():
+            self.ui.serverTlsDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.get_ssl_tls_info(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(3)
 
-        dns_records = await self.domain_analyzer.get_dns(self.domain)
-        associated_hosts = await self.domain_analyzer.get_hosts(self.domain)
-        self.ui.serverDnsAnalyzeDebug.setPlainText(
-            json.dumps(
-                {"dns_records": dns_records, "associated_hosts": associated_hosts},
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainDNSCheck.isChecked():
+            dns_records = await self.domain_analyzer.get_dns(self.domain)
+            associated_hosts = await self.domain_analyzer.get_hosts(self.domain)
+            self.ui.serverDnsAnalyzeDebug.setPlainText(
+                json.dumps(
+                    {"dns_records": dns_records, "associated_hosts": associated_hosts},
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(4)
 
-        self.ui.serverWafDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.analyze_web_stack(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainHeadersCheck.isChecked():
+            self.ui.serverWafDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.analyze_web_stack(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(5)
 
-        self.ui.serverWhoisDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.get_whois_info(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainWhoisCheck.isChecked():
+            self.ui.serverWhoisDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.get_whois_info(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(6)
 
-        self.ui.serverNmapDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.run_nmap_scan(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainNmapCheck.isChecked():
+            self.ui.serverNmapDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.run_nmap_scan(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(7)
 
-        self.ui.serverMalwareDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.check_malware_reputation(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainMalwareCheck.isChecked():
+            self.ui.serverMalwareDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.check_malware_reputation(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(8)
 
-        self.ui.serverSubdomainsDebug.setPlainText(
-            json.dumps(
-                await self.domain_analyzer.find_subdomains(self.domain),
-                indent=2,
-                ensure_ascii=False,
+        if self.ui.domainSubdomainsCheck.isChecked():
+            self.ui.serverSubdomainsDebug.setPlainText(
+                json.dumps(
+                    await self.domain_analyzer.find_subdomains(self.domain),
+                    indent=2,
+                    ensure_ascii=False,
+                )
             )
-        )
         self._update_progress(9)
+

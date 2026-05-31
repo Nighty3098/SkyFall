@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1200</width>
-    <height>679</height>
+    <width>1113</width>
+    <height>950</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -675,40 +675,105 @@
         <string>WEB</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="2" column="3">
-         <widget class="QLabel" name="label_10">
-          <property name="text">
-           <string>Open Ports</string>
+        <item row="5" column="3">
+         <widget class="QPlainTextEdit" name="serverLocationDebug">
+          <property name="placeholderText">
+           <string>SERVER LOCATION</string>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
+         </widget>
+        </item>
+        <item row="2" column="2">
+         <widget class="QCheckBox" name="domainDNSCheck">
+          <property name="text">
+           <string>DNS</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="5" column="1">
+         <widget class="QPlainTextEdit" name="serverTlsDebug">
+          <property name="placeholderText">
+           <string>TLS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="2">
+         <widget class="QPlainTextEdit" name="serverDnsAnalyzeDebug">
+          <property name="placeholderText">
+           <string>DNS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="2">
+         <widget class="QCheckBox" name="domainRobotsCheck">
+          <property name="text">
+           <string>Robots</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="7" column="2">
+         <widget class="QPlainTextEdit" name="serverRobotsDebug">
+          <property name="placeholderText">
+           <string>ROBOTS</string>
           </property>
          </widget>
         </item>
         <item row="4" column="3">
-         <widget class="QLabel" name="label_13">
+         <widget class="QCheckBox" name="domainLocationCheck">
           <property name="text">
            <string>Server Location</string>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
-        <item row="4" column="2">
-         <widget class="QLabel" name="label_12">
-          <property name="text">
-           <string>Whois</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="2">
-         <widget class="QPlainTextEdit" name="serverWhoisDebug">
+        <item row="0" column="1" colspan="3">
+         <widget class="QLineEdit" name="serverUrlEdit">
           <property name="placeholderText">
-           <string>WHOIS</string>
+           <string>URL</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="3">
+         <widget class="QCheckBox" name="domainNmapCheck">
+          <property name="text">
+           <string>Open Ports</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="6" column="1">
+         <widget class="QCheckBox" name="domainHeadersCheck">
+          <property name="text">
+           <string>Headers</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="3" column="3">
+         <widget class="QPlainTextEdit" name="serverNmapDebug">
+          <property name="placeholderText">
+           <string>OPEN PORTS</string>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QCheckBox" name="domainSubdomainsCheck">
+          <property name="text">
+           <string>Subdomains Dorking</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -725,27 +790,6 @@
           </property>
          </widget>
         </item>
-        <item row="7" column="2">
-         <widget class="QPlainTextEdit" name="serverRobotsDebug">
-          <property name="placeholderText">
-           <string>ROBOTS</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="3">
-         <widget class="QPlainTextEdit" name="serverOpenPortsDebug">
-          <property name="placeholderText">
-           <string>OPEN PORTS</string>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="3">
-         <widget class="QPlainTextEdit" name="serverLocationDebug">
-          <property name="placeholderText">
-           <string>SERVER LOCATION</string>
-          </property>
-         </widget>
-        </item>
         <item row="1" column="1" colspan="3">
          <widget class="QPushButton" name="runUrlScanButton">
           <property name="text">
@@ -753,61 +797,13 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QPlainTextEdit" name="serverDnsAnalyzeDebug">
-          <property name="placeholderText">
-           <string>DNS</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="label_8">
-          <property name="text">
-           <string>Subdomains Dorking</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="4" column="1">
-         <widget class="QLabel" name="label_11">
+         <widget class="QCheckBox" name="domainSSLCheck">
           <property name="text">
            <string>SSL / TLS</string>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="5" column="1">
-         <widget class="QPlainTextEdit" name="serverTlsDebug">
-          <property name="placeholderText">
-           <string>TLS</string>
-          </property>
-         </widget>
-        </item>
-        <item row="8" column="1" colspan="3">
-         <widget class="QProgressBar" name="domainProgress">
-          <property name="value">
-           <number>0</number>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" colspan="3">
-         <widget class="QLineEdit" name="serverUrlEdit">
-          <property name="placeholderText">
-           <string>URL</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="2">
-         <widget class="QLabel" name="label_9">
-          <property name="text">
-           <string>DNS</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>
@@ -825,33 +821,37 @@
           </property>
          </widget>
         </item>
-        <item row="6" column="1">
-         <widget class="QLabel" name="label_14">
-          <property name="text">
-           <string>Headers</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
+        <item row="8" column="1" colspan="3">
+         <widget class="QProgressBar" name="domainProgress">
+          <property name="value">
+           <number>0</number>
           </property>
          </widget>
         </item>
-        <item row="6" column="2">
-         <widget class="QLabel" name="label_15">
-          <property name="text">
-           <string>Robots</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
+        <item row="5" column="2">
+         <widget class="QPlainTextEdit" name="serverWhoisDebug">
+          <property name="placeholderText">
+           <string>WHOIS</string>
           </property>
          </widget>
         </item>
         <item row="6" column="3">
-         <widget class="QLabel" name="label_16">
+         <widget class="QCheckBox" name="domainMalwareCheck">
           <property name="text">
            <string>Malware</string>
           </property>
-          <property name="alignment">
-           <set>Qt::AlignmentFlag::AlignCenter</set>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+         </widget>
+        </item>
+        <item row="4" column="2">
+         <widget class="QCheckBox" name="domainWhoisCheck">
+          <property name="text">
+           <string>Whois</string>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
           </property>
          </widget>
         </item>

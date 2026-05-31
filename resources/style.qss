@@ -103,9 +103,9 @@ QCheckBox {
 }
 
 QCheckBox::indicator {
-    width: 20px;
-    height: 20px;
-    border-radius: 10px;
+    width: 16px;
+    height: 16px;
+    border-radius: 8px;
     border: 0px solid #82aaff;
     background-color: #12293C;
 }
@@ -115,7 +115,7 @@ QCheckBox::indicator:unchecked {
 }
 
 QCheckBox::indicator:checked {
-    background-color: #bdc1c6;
+    background-color: #82aaff;
 }
 
 QGroupBox {

@@ -2,7 +2,7 @@
 
 # `SkyFall Project`
 
-<img src="./resources/icon.png" width="150px"/>
+<img src="./resources/app_icon.png" width="250px"/>
 
 </div>
 
@@ -29,7 +29,7 @@
   - [x] DNS
   - [x] Headers
   - [x] Server Location
-  - [ ] Associated Hosts
+  - [x] Associated Hosts
   - [x] Open ports (nmap scan 1–65535)
   - [x] WHOIS (registrar, creation/expiration dates, name servers)
   - [x] Web stack (HTTP headers, web server, WAF, detected tech — Nginx, Apache, WordPress, Bitrix, jQuery)
@@ -76,6 +76,8 @@
   - ...
 - [ ] Creating interactive graphs of communication with various data
 - [ ] Exporting graphs to JSON or SQL DB
+- [ ] Extract metadata from file
+- [ ] Reverse Image Search With Yandex
 
 ## `SETUP SEARXNG`
 

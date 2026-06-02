@@ -46,7 +46,7 @@
        <enum>QTabWidget::TabPosition::North</enum>
       </property>
       <property name="currentIndex">
-       <number>2</number>
+       <number>0</number>
       </property>
       <property name="tabBarAutoHide">
        <bool>true</bool>
@@ -81,6 +81,12 @@
         </item>
         <item>
          <widget class="QLabel" name="winTitle">
+          <property name="font">
+           <font>
+            <italic>true</italic>
+            <bold>true</bold>
+           </font>
+          </property>
           <property name="text">
            <string>SkyFall</string>
           </property>
@@ -104,7 +110,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="telegram_tools_tab">
+      <widget class="QWidget" name="telegramToolsTab">
        <attribute name="title">
         <string>TELEGRAM</string>
        </attribute>
@@ -505,7 +511,7 @@
         <string>USERNAME</string>
        </attribute>
       </widget>
-      <widget class="QWidget" name="mail_tools_tab">
+      <widget class="QWidget" name="mailToolsTab">
        <attribute name="title">
         <string>MAIL</string>
        </attribute>
@@ -922,6 +928,52 @@
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="metadataTab">
+       <attribute name="title">
+        <string>METADATA</string>
+       </attribute>
+       <layout class="QGridLayout" name="gridLayout_7">
+        <item row="0" column="0">
+         <widget class="QWidget" name="metadataFileDropWidget" native="true">
+          <property name="minimumSize">
+           <size>
+            <width>350</width>
+            <height>0</height>
+           </size>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout">
+           <item>
+            <widget class="QLabel" name="label_8">
+             <property name="font">
+              <font>
+               <pointsize>30</pointsize>
+               <italic>true</italic>
+               <bold>true</bold>
+              </font>
+             </property>
+             <property name="text">
+              <string>DROP</string>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignCenter</set>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item row="1" column="0">
+         <widget class="QPushButton" name="getMetadataButton">
+          <property name="text">
+           <string>Analyze</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="2">
+         <widget class="QPlainTextEdit" name="metadataDebug"/>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="graphTab">
        <attribute name="title">
         <string>GRAPH</string>
@@ -950,7 +1002,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="proxy_tab">
+      <widget class="QWidget" name="proxyTab">
        <attribute name="title">
         <string>PROXY</string>
        </attribute>
@@ -971,7 +1023,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="global_serrings_tab">
+      <widget class="QWidget" name="settingsTab">
        <attribute name="title">
         <string>SETTINGS</string>
        </attribute>

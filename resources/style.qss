@@ -14,6 +14,22 @@ QWidget {
     color: #7caf7c;
 }
 
+QWidget#metadataFileDropWidget {
+    border-radius: 10px;
+    border: 0px solid #82aaff;
+    background-color: #12293C;
+    color: #bdc1c6;
+    padding: 5px;
+    selection-background-color: #82aaff;
+}
+
+QWidget#metadataFileDropWidget QLabel {
+    background: transparent;
+    font-size: 50px;
+    font-width: bolder;
+    font-style: italic;
+}
+
 tabWidget * {
     background: #011627;
     color: #7caf7c;
@@ -309,8 +325,8 @@ QLabel#winTitle {
     color: #82aaff;
     font-size: 60px;
     font-style: italic;
+    font-width: bolder;
 }
-
 
 QAbstractScrollArea QWidget {
     background-color: transparent;

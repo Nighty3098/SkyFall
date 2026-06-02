@@ -5,12 +5,42 @@
    id="svg1"
    sodipodi:docname="icon.svg"
    inkscape:version="1.4.4 (dcaf3e7d9e, 2026-05-05)"
+   inkscape:export-filename="icon.png"
+   inkscape:export-xdpi="76.800003"
+   inkscape:export-ydpi="76.800003"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns="http://www.w3.org/2000/svg"
    xmlns:svg="http://www.w3.org/2000/svg">
   <defs
-     id="defs1" />
+     id="defs1">
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter1"
+       x="-0.10465447"
+       y="-0.10467491"
+       width="1.2093089"
+       height="1.2093498">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="22.326286"
+         id="feGaussianBlur1" />
+    </filter>
+    <filter
+       inkscape:collect="always"
+       style="color-interpolation-filters:sRGB"
+       id="filter2"
+       x="-0.0047071975"
+       y="-0.004708117"
+       width="1.0094144"
+       height="1.0094162">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.0042021"
+         id="feGaussianBlur2" />
+    </filter>
+  </defs>
   <sodipodi:namedview
      id="namedview1"
      pagecolor="#ffffff"
@@ -20,18 +50,25 @@
      inkscape:pageopacity="0.0"
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
-     inkscape:zoom="1.43125"
-     inkscape:cx="319.65066"
-     inkscape:cy="320"
-     inkscape:window-width="2560"
-     inkscape:window-height="1403"
+     inkscape:zoom="1.0120466"
+     inkscape:cx="330.02434"
+     inkscape:cy="306.31001"
+     inkscape:window-width="1920"
+     inkscape:window-height="1131"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg1" />
   <path
      fill="currentColor"
-     d="M557.7 64.9L363.5 139.6L365.8 110.3C366.8 97.5 353 88.8 341.8 95.2L165.3 197.4C102.6 233.7 64 300.6 64 373C64 485.1 154.9 576 267 576C339.4 576 406.3 537.4 442.6 474.7L544.8 298.3C551.3 287.2 542.6 273.3 529.7 274.3L500.4 276.6L575.1 82.4C575.7 80.9 576 79.2 576 77.6C576 70.1 570 64.1 562.5 64.1C560.8 64.1 559.2 64.4 557.7 65zM256 256C326.7 256 384 313.3 384 384C384 454.7 326.7 512 256 512C185.3 512 128 454.7 128 384C128 313.3 185.3 256 256 256zM256 352C256 334.3 241.7 320 224 320C206.3 320 192 334.3 192 352C192 369.7 206.3 384 224 384C241.7 384 256 369.7 256 352zM272 448C280.8 448 288 440.8 288 432C288 423.2 280.8 416 272 416C263.2 416 256 423.2 256 432C256 440.8 263.2 448 272 448z"
+     d="m 557.7,64.85 -194.2,74.7 2.3,-29.3 c 1,-12.8 -12.8,-21.5 -24,-15.1 L 165.3,197.35 C 102.6,233.65 64,300.55 64,372.95 c 0,112.1 90.9,203 203,203 72.4,0 139.3,-38.6 175.6,-101.3 l 102.2,-176.4 c 6.5,-11.1 -2.2,-25 -15.1,-24 l -29.3,2.3 74.7,-194.2 c 0.6,-1.5 0.9,-3.2 0.9,-4.8 0,-7.5 -6,-13.5 -13.5,-13.5 -1.7,0 -3.3,0.3 -4.8,0.9 z M 273.78574,441.7122 C 344.48574,441.7122 384,313.25 384,383.95 c 0,70.7 107.71217,-156.57188 37.01217,-156.57188 -70.7,0 -132.94049,222.3314 -132.94049,151.6314 0,-70.7 -84.98594,62.70268 -14.28594,62.70268 z M 256,351.95 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 z m 16,96 c 8.8,0 16,-7.2 16,-16 0,-8.8 -7.2,-16 -16,-16 -8.8,0 -16,7.2 -16,16 0,8.8 7.2,16 16,16 z"
      id="path1"
-     style="fill:#82aaff;fill-opacity:1" />
+     style="fill:#82aaff;fill-opacity:1;filter:url(#filter1)"
+     sodipodi:nodetypes="cccccsscccccssccsssssssssssssss" />
+  <path
+     fill="currentColor"
+     d="m 557.7,64.85 -194.2,74.7 2.3,-29.3 c 1,-12.8 -12.8,-21.5 -24,-15.1 L 165.3,197.35 C 102.6,233.65 64,300.55 64,372.95 c 0,112.1 90.9,203 203,203 72.4,0 139.3,-38.6 175.6,-101.3 l 102.2,-176.4 c 6.5,-11.1 -2.2,-25 -15.1,-24 l -29.3,2.3 74.7,-194.2 c 0.6,-1.5 0.9,-3.2 0.9,-4.8 0,-7.5 -6,-13.5 -13.5,-13.5 -1.7,0 -3.3,0.3 -4.8,0.9 z M 273.78574,441.7122 C 344.48574,441.7122 384,313.25 384,383.95 c 0,70.7 107.71217,-156.57188 37.01217,-156.57188 -70.7,0 -132.94049,222.3314 -132.94049,151.6314 0,-70.7 -84.98594,62.70268 -14.28594,62.70268 z M 256,351.95 c 0,-17.7 -14.3,-32 -32,-32 -17.7,0 -32,14.3 -32,32 0,17.7 14.3,32 32,32 17.7,0 32,-14.3 32,-32 z m 16,96 c 8.8,0 16,-7.2 16,-16 0,-8.8 -7.2,-16 -16,-16 -8.8,0 -16,7.2 -16,16 0,8.8 7.2,16 16,16 z"
+     id="path1-5"
+     style="fill:#82aaff;fill-opacity:1;filter:url(#filter2)"
+     sodipodi:nodetypes="cccccsscccccssccsssssssssssssss" />
 </svg>

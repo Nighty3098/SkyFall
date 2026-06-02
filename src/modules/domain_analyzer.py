@@ -111,6 +111,7 @@ class DomainAnalyzer:
 
     async def get_ssl_tls_info(self, domain):
         logger.debug("Trying to get SSL and TLS info")
+
         def _fetch_ssl():
             context = ssl.create_default_context()
             with socket.create_connection((domain, 443), timeout=5) as sock:
@@ -125,6 +126,7 @@ class DomainAnalyzer:
                         },
                         "expires": cert.get("notAfter"),
                     }
+
         try:
             return await asyncio.to_thread(_fetch_ssl)
         except Exception as e:

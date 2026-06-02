@@ -50,6 +50,8 @@ def setup_domain_connectors(controller: "DomainController"):
 def setup_intelx_connectors(controller: "IntelxController"):
     controller.ui.startMailSearchButton.clicked.connect(
         lambda: (
-            asyncio.ensure_future(controller.start_searching(controller.ui.mailEdit.text())),
+            asyncio.ensure_future(
+                controller.start_searching(controller.ui.mailEdit.text())
+            ),
         )
     )

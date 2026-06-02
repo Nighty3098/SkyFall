@@ -1,6 +1,8 @@
-from PySide6.QtGui import QPixmap
 from pathlib import Path
+
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
+
 
 def load_app_icon(parent):
     label = parent.ui.appIconLabel
@@ -11,10 +13,9 @@ def load_app_icon(parent):
     pixmap = QPixmap()
     pixmap.loadFromData(svg_content.encode("utf-8"))
     if not pixmap.isNull():
-        pixmap = pixmap.scaled(
-            300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
-        )
+        pixmap = pixmap.scaled(300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         label.setPixmap(pixmap)
+
 
 def setup_navbar(parent):
     parent.ui.mainStackedWidget.tabBar().hide()
@@ -25,6 +26,7 @@ def setup_navbar(parent):
     tabs = [parent.ui.mainStackedWidget.tabText(i) for i in range(tab_count)]
     parent.ui.menuListWidget.addItems(tabs)
     parent.ui.menuListWidget.setCurrentRow(0)
+
 
 def setup_ui(self):
     setup_navbar(self)

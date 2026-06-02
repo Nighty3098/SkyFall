@@ -18,6 +18,7 @@ class DorksSearchEngine:
             self._last_search = ""
 
             if use_searxng:
+
                 def _search_searxng():
                     local_results = ""
                     results = searxng_search(dork)
@@ -33,6 +34,7 @@ class DorksSearchEngine:
                 result, count = await asyncio.to_thread(_search_searxng)
                 self._last_search = result
             else:
+
                 def _search_ddgs():
                     local_results = ""
                     with DDGS() as ddgs:

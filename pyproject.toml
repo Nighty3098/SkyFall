@@ -18,6 +18,9 @@ files = [
     "src/modules/google_dorks.py",
     "src/modules/intelx_search_engine.py",
     "src/searxng_search.py",
+    "src/shortcuts.py",
+    "src/ui/horizontal_tab_style.py",
+    "src/ui/setup_ui.py",
     "src/utils.py",
 ]
 

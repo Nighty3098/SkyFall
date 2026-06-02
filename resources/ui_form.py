@@ -29,10 +29,20 @@ class Ui_MainWindow(object):
         MainWindow.resize(1165, 679)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout = QVBoxLayout(self.centralwidget)
-        self.verticalLayout.setObjectName(u"verticalLayout")
-        self.mainTabsWidget = QTabWidget(self.centralwidget)
-        self.mainTabsWidget.setObjectName(u"mainTabsWidget")
+        self.horizontalLayout_6 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_6.setSpacing(0)
+        self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
+        self.horizontalLayout_6.setContentsMargins(6, 6, 6, 6)
+        self.menuListWidget = QListWidget(self.centralwidget)
+        self.menuListWidget.setObjectName(u"menuListWidget")
+        self.menuListWidget.setMaximumSize(QSize(150, 16777215))
+
+        self.horizontalLayout_6.addWidget(self.menuListWidget)
+
+        self.mainStackedWidget = QTabWidget(self.centralwidget)
+        self.mainStackedWidget.setObjectName(u"mainStackedWidget")
+        self.mainStackedWidget.setTabPosition(QTabWidget.TabPosition.North)
+        self.mainStackedWidget.setTabBarAutoHide(True)
         self.mainTab = QWidget()
         self.mainTab.setObjectName(u"mainTab")
         self.mainTabLayout = QVBoxLayout(self.mainTab)
@@ -57,11 +67,12 @@ class Ui_MainWindow(object):
 
         self.mainTabLayout.addItem(self.mainTabSpacer)
 
-        self.mainTabsWidget.addTab(self.mainTab, "")
+        self.mainStackedWidget.addTab(self.mainTab, "")
         self.telegram_tools_tab = QWidget()
         self.telegram_tools_tab.setObjectName(u"telegram_tools_tab")
         self.verticalLayout_2 = QVBoxLayout(self.telegram_tools_tab)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.tabWidget = QTabWidget(self.telegram_tools_tab)
         self.tabWidget.setObjectName(u"tabWidget")
         self.telegram_downloader_tab = QWidget()
@@ -361,7 +372,10 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.tabWidget)
 
-        self.mainTabsWidget.addTab(self.telegram_tools_tab, "")
+        self.mainStackedWidget.addTab(self.telegram_tools_tab, "")
+        self.usernameSearchTab = QWidget()
+        self.usernameSearchTab.setObjectName(u"usernameSearchTab")
+        self.mainStackedWidget.addTab(self.usernameSearchTab, "")
         self.mail_tools_tab = QWidget()
         self.mail_tools_tab.setObjectName(u"mail_tools_tab")
         self.horizontalLayout_4 = QHBoxLayout(self.mail_tools_tab)
@@ -403,7 +417,7 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_4.addWidget(self.mailSplitter)
 
-        self.mainTabsWidget.addTab(self.mail_tools_tab, "")
+        self.mainStackedWidget.addTab(self.mail_tools_tab, "")
         self.dorkingTab = QWidget()
         self.dorkingTab.setObjectName(u"dorkingTab")
         self.verticalLayout_12 = QVBoxLayout(self.dorkingTab)
@@ -486,7 +500,7 @@ class Ui_MainWindow(object):
 
         self.groupBox_5 = QGroupBox(self.dorkingTab)
         self.groupBox_5.setObjectName(u"groupBox_5")
-        self.groupBox_5.setMaximumSize(QSize(16777215, 100))
+        self.groupBox_5.setMaximumSize(QSize(16777215, 80))
         self.horizontalLayout_5 = QHBoxLayout(self.groupBox_5)
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.useCustomDorkCheck = QCheckBox(self.groupBox_5)
@@ -499,13 +513,17 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_5.addWidget(self.useSearxngCheck)
 
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.horizontalLayout_5.addItem(self.horizontalSpacer_3)
+
 
         self.gridLayout_5.addWidget(self.groupBox_5, 1, 0, 1, 3)
 
 
         self.verticalLayout_12.addLayout(self.gridLayout_5)
 
-        self.mainTabsWidget.addTab(self.dorkingTab, "")
+        self.mainStackedWidget.addTab(self.dorkingTab, "")
         self.webAnalyzerTab = QWidget()
         self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
         self.gridLayout_2 = QGridLayout(self.webAnalyzerTab)
@@ -625,7 +643,7 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainWhoisCheck, 4, 2, 1, 1)
 
-        self.mainTabsWidget.addTab(self.webAnalyzerTab, "")
+        self.mainStackedWidget.addTab(self.webAnalyzerTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
         self.verticalLayout_13 = QVBoxLayout(self.graphTab)
@@ -650,7 +668,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_13.addLayout(self.gridLayout_6)
 
-        self.mainTabsWidget.addTab(self.graphTab, "")
+        self.mainStackedWidget.addTab(self.graphTab, "")
         self.proxy_tab = QWidget()
         self.proxy_tab.setObjectName(u"proxy_tab")
         self.verticalLayout_3 = QVBoxLayout(self.proxy_tab)
@@ -670,7 +688,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addWidget(self.saveProxiesButton)
 
-        self.mainTabsWidget.addTab(self.proxy_tab, "")
+        self.mainStackedWidget.addTab(self.proxy_tab, "")
         self.global_serrings_tab = QWidget()
         self.global_serrings_tab.setObjectName(u"global_serrings_tab")
         self.horizontalLayout = QHBoxLayout(self.global_serrings_tab)
@@ -736,15 +754,15 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
 
-        self.mainTabsWidget.addTab(self.global_serrings_tab, "")
+        self.mainStackedWidget.addTab(self.global_serrings_tab, "")
 
-        self.verticalLayout.addWidget(self.mainTabsWidget)
+        self.horizontalLayout_6.addWidget(self.mainStackedWidget)
 
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
 
-        self.mainTabsWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(2)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -755,7 +773,7 @@ class Ui_MainWindow(object):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
         self.appIconLabel.setStyleSheet(QCoreApplication.translate("MainWindow", u"color: #82aaff;", None))
         self.winTitle.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))
         self.telegramUsernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
         self.telegramUseProxyCheck.setText(QCoreApplication.translate("MainWindow", u"Use Proxy", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Safety Delays", None))
@@ -795,10 +813,11 @@ class Ui_MainWindow(object):
         self.checkBox_8.setText(QCoreApplication.translate("MainWindow", u"CheckBox", None))
         self.runTelegramAnalyzerBtn.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_analyzer_tab), QCoreApplication.translate("MainWindow", u"ANALYZER", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.telegram_tools_tab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegram_tools_tab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.usernameSearchTab), QCoreApplication.translate("MainWindow", u"USERNAME", None))
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
         self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.mail_tools_tab), QCoreApplication.translate("MainWindow", u"MAIL", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mail_tools_tab), QCoreApplication.translate("MainWindow", u"MAIL", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
         self.dorksCategorySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Category Search", None))
@@ -807,7 +826,7 @@ class Ui_MainWindow(object):
         self.groupBox_5.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
         self.useCustomDorkCheck.setText(QCoreApplication.translate("MainWindow", u"Cusom Dork", None))
         self.useSearxngCheck.setText(QCoreApplication.translate("MainWindow", u"Use SearXNG", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
         self.domainDNSCheck.setText(QCoreApplication.translate("MainWindow", u"DNS", None))
         self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
@@ -830,12 +849,12 @@ class Ui_MainWindow(object):
         self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
         self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.proxy_tab), QCoreApplication.translate("MainWindow", u"PROXY", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.proxy_tab), QCoreApplication.translate("MainWindow", u"PROXY", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))
@@ -844,6 +863,6 @@ class Ui_MainWindow(object):
         self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
         self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
-        self.mainTabsWidget.setTabText(self.mainTabsWidget.indexOf(self.global_serrings_tab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.global_serrings_tab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
     # retranslateUi
 

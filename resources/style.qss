@@ -27,14 +27,9 @@ QTabWidget {
     border: none;
 }
 
-QTabWidget::tab-bar {
-    alignment: center;
-    border: none;
-}
-
 QTabBar::tab {
-    height: 25px;
     width: 150px;
+    height: 30px;
     background: #011627;
     color: #bdc1c6;
     border-radius: 10px;
@@ -42,17 +37,46 @@ QTabBar::tab {
     margin-top: 5px;
     margin-left: 10px;
     margin-right: 10px;
+    padding-left: 15px;
 }
 
 QTabBar::tab:selected {
-    height: 25px;
-    width: 150px;
     color: #011627;
     background-color: #82aaff;
-    margin-bottom: 0px;
+    margin-bottom: 5px;
 }
 
 QTabBar::tab:hover:!selected {
+    background-color: #82aaff;
+    color: #011627;
+}
+
+QListWidget#menuListWidget {
+    background: transparent;
+    border: none;
+    outline: 0;
+}
+
+QListWidget#menuListWidget {
+    margin: 0px;
+    padding: 0px;
+}
+
+QListWidget#menuListWidget::item {
+    width: auto;
+    height: 20px;
+    background: #011627;
+    color: #bdc1c6;
+    border-radius: 10px;
+    padding-left: 15px;
+}
+
+QListWidget#menuListWidget::item:selected {
+    color: #011627;
+    background-color: #82aaff;
+}
+
+QListWidget#menuListWidget::item:hover:!selected {
     background-color: #82aaff;
     color: #011627;
 }

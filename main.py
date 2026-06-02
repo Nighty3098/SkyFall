@@ -13,8 +13,8 @@ from src.connectors import (
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_intelx_connectors,
-    setup_settings_connectors,
     setup_metadata_connectors,
+    setup_settings_connectors,
 )
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController

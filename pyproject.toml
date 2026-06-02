@@ -35,5 +35,9 @@ exclude = ["resources/ui_form.py", "modules/", "scripts/"]
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
 
+[tool.ruff.lint.per-file-ignores]
+"main.py" = ["N802"]
+"src/ui/drop_widget.py" = ["N802"]
+
 [tool.ruff.format]
 quote-style = "double"

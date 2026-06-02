@@ -7,8 +7,8 @@ if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.intelx_controller import IntelxController
-    from src.controllers.settings_controller import Settings
     from src.controllers.metadata_controller import MetadataController
+    from src.controllers.settings_controller import Settings
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -58,18 +58,18 @@ def setup_intelx_connectors(controller: "IntelxController"):
     )
 
 def setup_metadata_connectors(controller: "MetadataController"):
-    controller.ui.metadataFileDropWidget.fileDropped.connect(
+    controller.ui.metadataFileDropWidget.file_dropped.connect(
         lambda path: (
             controller.ui.metadataFilePath.setText(f"File: {path}"),
             controller.ui.metadataStatusLabel.setText(controller.get_file_type(path)),
-            controller.start_metadata_analyzer(controller.ui.metadataFileDropWidget.getFilePath())
+            controller.start_metadata_analyzer(controller.ui.metadataFileDropWidget.get_file_path())
         )
     )
 
     controller.ui.getMetadataButton.clicked.connect(
         lambda: (
             asyncio.ensure_future(
-                controller.start_metadata_analyzer(controller.ui.metadataFileDropWidget.getFilePath())
+                controller.start_metadata_analyzer(controller.ui.metadataFileDropWidget.get_file_path())
             ),
         )
     )

@@ -1,4 +1,3 @@
-import sys
 from pathlib import Path
 
 import magic
@@ -6,7 +5,7 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
 
-class MetadataAnalyzer():
+class MetadataAnalyzer:
     def __init__(self):
         self.result = ""
 

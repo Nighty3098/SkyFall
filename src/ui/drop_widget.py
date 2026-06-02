@@ -1,8 +1,9 @@
 from PySide6.QtCore import Signal
 from PySide6.QtWidgets import QFrame
 
+
 class DropWidget(QFrame):
-    fileDropped = Signal(str)
+    file_dropped = Signal(str)
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -20,7 +21,7 @@ class DropWidget(QFrame):
     def dropEvent(self, event):
         for url in event.mimeData().urls():
             self.file_path = url.toLocalFile()
-            self.fileDropped.emit(self.file_path)
+            self.file_dropped.emit(self.file_path)
 
-    def getFilePath(self):
+    def get_file_path(self):
         return self.file_path

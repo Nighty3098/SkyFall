@@ -26,7 +26,6 @@ QWidget#metadataFileDropWidget {
 QWidget#metadataFileDropWidget QLabel {
     background: transparent;
     font-size: 50px;
-    font-width: bolder;
     font-style: italic;
 }
 
@@ -98,6 +97,16 @@ QListWidget#menuListWidget::item:hover:!selected {
 }
 
 QLineEdit {
+    border-radius: 10px;
+    border: 0px solid #82aaff;
+    background-color: #12293C;
+    color: #bdc1c6;
+    padding: 5px;
+    height:20px;
+    selection-background-color: #82aaff;
+}
+
+QLabel#metadataFilePath {
     border-radius: 10px;
     border: 0px solid #82aaff;
     background-color: #12293C;
@@ -325,7 +334,6 @@ QLabel#winTitle {
     color: #82aaff;
     font-size: 60px;
     font-style: italic;
-    font-width: bolder;
 }
 
 QAbstractScrollArea QWidget {

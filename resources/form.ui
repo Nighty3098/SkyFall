@@ -46,7 +46,7 @@
        <enum>QTabWidget::TabPosition::North</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>6</number>
       </property>
       <property name="tabBarAutoHide">
        <bool>true</bool>
@@ -934,16 +934,16 @@
        </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
         <item row="0" column="0">
-         <widget class="QWidget" name="metadataFileDropWidget" native="true">
+         <widget class="DropWidget" name="metadataFileDropWidget" native="true">
           <property name="minimumSize">
            <size>
-            <width>350</width>
+            <width>400</width>
             <height>0</height>
            </size>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
-            <widget class="QLabel" name="label_8">
+            <widget class="QLabel" name="metadataStatusLabel">
              <property name="font">
               <font>
                <pointsize>30</pointsize>
@@ -962,15 +962,37 @@
           </layout>
          </widget>
         </item>
-        <item row="1" column="0">
+        <item row="2" column="0">
          <widget class="QPushButton" name="getMetadataButton">
           <property name="text">
            <string>Analyze</string>
           </property>
          </widget>
         </item>
-        <item row="0" column="1" rowspan="2">
+        <item row="0" column="1" rowspan="3">
          <widget class="QPlainTextEdit" name="metadataDebug"/>
+        </item>
+        <item row="1" column="0">
+         <widget class="QLabel" name="metadataFilePath">
+          <property name="minimumSize">
+           <size>
+            <width>400</width>
+            <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>30</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>File</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignmentFlag::AlignCenter</set>
+          </property>
+         </widget>
         </item>
        </layout>
       </widget>
@@ -1147,6 +1169,14 @@
    </layout>
   </widget>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>DropWidget</class>
+   <extends>QWidget</extends>
+   <header location="global">src/ui/drop_widget</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

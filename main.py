@@ -14,17 +14,30 @@ from src.connectors import (
     setup_dorking_connectors,
     setup_intelx_connectors,
     setup_settings_connectors,
+    setup_metadata_connectors,
 )
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.intelx_controller import IntelxController
+from src.controllers.metadata_controller import MetadataController
 from src.controllers.settings_controller import Settings
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.modules.metadata_analyzer import MetadataAnalyzer
 from src.shortcuts import ShortcutManager
+from src.ui.drop_widget import DropWidget
 from src.ui.setup_ui import setup_ui
+
+
+class Loader(QUiLoader):
+    def createWidget(self, class_name, parent=None, name=""):
+        if class_name == "DropWidget":
+            widget = DropWidget(parent)
+            widget.setObjectName(name)
+            return widget
+        return super().createWidget(class_name, parent, name)
 
 setup_logging()
 
@@ -33,7 +46,7 @@ class MainWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
         ui_file = Path(__file__).parent / "resources" / "form.ui"
-        self.ui = QUiLoader().load(ui_file)
+        self.ui = Loader().load(ui_file)
         self.setCentralWidget(self.ui)
         self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
@@ -43,32 +56,31 @@ class MainWindow(QMainWindow):
 
     def _init_modules(self):
         logger.debug("Init modules")
+        self.settings = Settings(self.ui)
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
+        self.domainAnalyzer = DomainAnalyzer()
+        self.metadataAnalyzer = MetadataAnalyzer()
+        self.intelxSearchEngine = IntelxSearchEngine(
+            self.settings.intelligent_x_api_key
+        )
 
     async def _async_init(self):
         logger.debug("Init controllers")
-
-        self.settings = Settings(self.ui)
 
         self.dorkingController = DorkingController(
             self.ui, self.googleDorksDB, self.dorksSearchEngine
         )
         await self.dorkingController.load_categories()
 
-        self.domainAnalyzer = DomainAnalyzer()
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
+        self.metadataController = MetadataController(self.ui, self.metadataAnalyzer)
+        self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
         setup_settings_connectors(self.settings)
-
-        self.intelxSearchEngine = IntelxSearchEngine(
-            self.settings.intelligent_x_api_key
-        )
-
-        self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
-
+        setup_metadata_connectors(self.metadataController)
         setup_intelx_connectors(self.IntelxController)
 
 

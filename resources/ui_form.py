@@ -22,6 +22,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSp
     QSpacerItem, QSpinBox, QSplitter, QTabWidget,
     QVBoxLayout, QWidget)
 
+from src.ui.drop_widget import DropWidget
+
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
@@ -652,21 +654,21 @@ class Ui_MainWindow(object):
         self.metadataTab.setObjectName(u"metadataTab")
         self.gridLayout_7 = QGridLayout(self.metadataTab)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.metadataFileDropWidget = QWidget(self.metadataTab)
+        self.metadataFileDropWidget = DropWidget(self.metadataTab)
         self.metadataFileDropWidget.setObjectName(u"metadataFileDropWidget")
-        self.metadataFileDropWidget.setMinimumSize(QSize(350, 0))
+        self.metadataFileDropWidget.setMinimumSize(QSize(400, 0))
         self.verticalLayout = QVBoxLayout(self.metadataFileDropWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
-        self.label_8 = QLabel(self.metadataFileDropWidget)
-        self.label_8.setObjectName(u"label_8")
+        self.metadataStatusLabel = QLabel(self.metadataFileDropWidget)
+        self.metadataStatusLabel.setObjectName(u"metadataStatusLabel")
         font1 = QFont()
         font1.setPointSize(30)
         font1.setBold(True)
         font1.setItalic(True)
-        self.label_8.setFont(font1)
-        self.label_8.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.metadataStatusLabel.setFont(font1)
+        self.metadataStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.verticalLayout.addWidget(self.label_8)
+        self.verticalLayout.addWidget(self.metadataStatusLabel)
 
 
         self.gridLayout_7.addWidget(self.metadataFileDropWidget, 0, 0, 1, 1)
@@ -674,12 +676,20 @@ class Ui_MainWindow(object):
         self.getMetadataButton = QPushButton(self.metadataTab)
         self.getMetadataButton.setObjectName(u"getMetadataButton")
 
-        self.gridLayout_7.addWidget(self.getMetadataButton, 1, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.getMetadataButton, 2, 0, 1, 1)
 
         self.metadataDebug = QPlainTextEdit(self.metadataTab)
         self.metadataDebug.setObjectName(u"metadataDebug")
 
-        self.gridLayout_7.addWidget(self.metadataDebug, 0, 1, 2, 1)
+        self.gridLayout_7.addWidget(self.metadataDebug, 0, 1, 3, 1)
+
+        self.metadataFilePath = QLabel(self.metadataTab)
+        self.metadataFilePath.setObjectName(u"metadataFilePath")
+        self.metadataFilePath.setMinimumSize(QSize(400, 0))
+        self.metadataFilePath.setMaximumSize(QSize(400, 30))
+        self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_7.addWidget(self.metadataFilePath, 1, 0, 1, 1)
 
         self.mainStackedWidget.addTab(self.metadataTab, "")
         self.graphTab = QWidget()
@@ -800,7 +810,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(6)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -888,8 +898,9 @@ class Ui_MainWindow(object):
         self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
+        self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
         self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
+        self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"METADATA", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

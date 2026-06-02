@@ -10,6 +10,15 @@ class MetadataAnalyzer():
     def __init__(self):
         self.result = ""
 
+    def get_file_type(self, path):
+        path = Path(path)
+        try:
+            mime = magic.Magic(mime=True)
+            file_type = mime.from_file(str(path))
+            return f"{file_type}\n"
+        except Exception as e:
+            return e
+
     def get_metadata(self, path):
         path = Path(path)
         self.result = ""

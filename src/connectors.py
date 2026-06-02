@@ -61,7 +61,7 @@ def setup_metadata_connectors(controller: "MetadataController"):
     controller.ui.metadataFileDropWidget.fileDropped.connect(
         lambda path: (
             controller.ui.metadataFilePath.setText(f"File: {path}"),
-            controller.ui.metadataStatusLabel.setText("[V]"),
+            controller.ui.metadataStatusLabel.setText(controller.get_file_type(path)),
             controller.start_metadata_analyzer(controller.ui.metadataFileDropWidget.getFilePath())
         )
     )

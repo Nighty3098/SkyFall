@@ -22,3 +22,6 @@ class MetadataController:
     def start_metadata_analyzer(self, path):
         result = self.metadata_analyzer.get_metadata(path)
         self.ui.metadataDebug.setPlainText(result)
+
+    def get_file_type(self, path):
+        return self.metadata_analyzer.get_file_type(path)

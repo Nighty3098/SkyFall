@@ -1,3 +1,6 @@
+import datetime
+import hashlib
+import stat
 from pathlib import Path
 
 import magic
@@ -16,7 +19,19 @@ class MetadataAnalyzer:
             file_type = mime.from_file(str(path))
             return f"{file_type}\n"
         except Exception as e:
-            return e
+            return str(e)
+
+    def _get_file_hashes(self, path: Path) -> dict:
+        md5_hash = hashlib.md5()
+        sha256_hash = hashlib.sha256()
+        try:
+            with open(path, "rb") as f:
+                for byte_block in iter(lambda: f.read(65536), b""):
+                    md5_hash.update(byte_block)
+                    sha256_hash.update(byte_block)
+            return {"md5": md5_hash.hexdigest(), "sha256": sha256_hash.hexdigest()}
+        except Exception:
+            return {"md5": "Error", "sha256": "Error"}
 
     def get_metadata(self, path):
         path = Path(path)
@@ -26,9 +41,30 @@ class MetadataAnalyzer:
             self.result += f"Error: File '{path}' not found."
             return self.result
 
+        file_stat = path.stat()
+
+        def _ts_to_str(ts):
+            return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+
+        created_time = _ts_to_str(file_stat.st_ctime)
+        modified_time = _ts_to_str(file_stat.st_mtime)
+        accessed_time = _ts_to_str(file_stat.st_atime)
+
+        file_permissions = stat.filemode(file_stat.st_mode)
+
         self.result += "=" * 50 + "\n"
         self.result += f"File: {path.name}\n"
-        self.result += f"Size: {path.stat().st_size / 1024:.2f} KB\n"
+        size_kb = file_stat.st_size / 1024
+        self.result += f"Size: {size_kb:.2f} KB ({file_stat.st_size} bytes)\n"
+
+        self.result += f"Created (OS): {created_time}\n"
+        self.result += f"Modified (OS): {modified_time}\n"
+        self.result += f"Accessed (OS): {accessed_time}\n"
+        self.result += f"Permissions: {file_permissions}\n"
+
+        hashes = self._get_file_hashes(path)
+        self.result += f"MD5 Hash: {hashes['md5']}\n"
+        self.result += f"SHA-256 Hash: {hashes['sha256']}\n"
 
         try:
             mime = magic.Magic(mime=True)
@@ -38,11 +74,12 @@ class MetadataAnalyzer:
             self.result += f"Could not determine MIME type: {e}\n"
 
         self.result += "-" * 50 + "\n"
-        self.result += "Metadata:\n"
+        self.result += "Internal Metadata (Hachoir):\n"
 
         parser = createParser(str(path))
         if not parser:
-            self.result += "Hachoir could not parse this format.\n"
+            self.result += "  Hachoir could not parse this format.\n"
+            self.result += "=" * 50 + "\n"
             return self.result
 
         try:
@@ -52,9 +89,9 @@ class MetadataAnalyzer:
                 for line in text_data:
                     self.result += f"  {line}\n"
             else:
-                self.result += "  No metadata found in file.\n"
+                self.result += "  No internal metadata found in file.\n"
         except Exception as e:
-            self.result += f"Error reading metadata: {e}\n"
+            self.result += f"  Error reading metadata: {e}\n"
         finally:
             parser.stream._input.close()
 

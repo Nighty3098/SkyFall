@@ -930,9 +930,22 @@
       </widget>
       <widget class="QWidget" name="metadataTab">
        <attribute name="title">
-        <string>METADATA</string>
+        <string>FILE INFO</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
+        <item row="2" column="0">
+         <widget class="QPushButton" name="getMetadataButton">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="text">
+           <string>Analyze</string>
+          </property>
+         </widget>
+        </item>
         <item row="0" column="0">
          <widget class="DropWidget" name="metadataFileDropWidget" native="true">
           <property name="minimumSize">
@@ -941,12 +954,24 @@
             <height>0</height>
            </size>
           </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <layout class="QVBoxLayout" name="verticalLayout">
            <item>
             <widget class="QLabel" name="metadataStatusLabel">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
              <property name="font">
               <font>
-               <pointsize>30</pointsize>
+               <pointsize>25</pointsize>
                <italic>true</italic>
                <bold>true</bold>
               </font>
@@ -957,20 +982,13 @@
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
           </layout>
          </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QPushButton" name="getMetadataButton">
-          <property name="text">
-           <string>Analyze</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1" rowspan="3">
-         <widget class="QPlainTextEdit" name="metadataDebug"/>
         </item>
         <item row="1" column="0">
          <widget class="QLabel" name="metadataFilePath">
@@ -993,6 +1011,16 @@
            <set>Qt::AlignmentFlag::AlignCenter</set>
           </property>
          </widget>
+        </item>
+        <item row="3" column="0">
+         <widget class="QPushButton" name="virustotalScanFileButton">
+          <property name="text">
+           <string>Virustotal Scan</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1" rowspan="4">
+         <widget class="QPlainTextEdit" name="metadataDebug"/>
         </item>
        </layout>
       </widget>

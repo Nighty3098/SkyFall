@@ -8,7 +8,7 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 
 
-class MetadataAnalyzer:
+class FileAnalyzer:
     def __init__(self):
         self.result = ""
 

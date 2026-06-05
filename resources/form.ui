@@ -46,7 +46,7 @@
        <enum>QTabWidget::TabPosition::North</enum>
       </property>
       <property name="currentIndex">
-       <number>0</number>
+       <number>6</number>
       </property>
       <property name="tabBarAutoHide">
        <bool>true</bool>
@@ -958,6 +958,12 @@
        <layout class="QGridLayout" name="gridLayout_7">
         <item row="2" column="0">
          <widget class="QPushButton" name="getMetadataButton">
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
+           </size>
+          </property>
           <property name="text">
            <string>Analyze</string>
           </property>
@@ -972,6 +978,12 @@
            <size>
             <width>400</width>
             <height>0</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>400</width>
+            <height>16777215</height>
            </size>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout">
@@ -990,6 +1002,9 @@
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignCenter</set>
              </property>
+             <property name="wordWrap">
+              <bool>true</bool>
+             </property>
             </widget>
            </item>
           </layout>
@@ -999,7 +1014,7 @@
          <widget class="QLabel" name="metadataFilePath">
           <property name="maximumSize">
            <size>
-            <width>16777215</width>
+            <width>400</width>
             <height>30</height>
            </size>
           </property>

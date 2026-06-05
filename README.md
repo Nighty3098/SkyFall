@@ -23,7 +23,7 @@
 
 ## `FUNCTIONAL`
 
-- [ ] Collecting all information about web resources or ip addresses
+- [x] Collecting all information about web resources or ip addresses
   - [x] IP info
   - [x] SSL / TLS
   - [x] DNS

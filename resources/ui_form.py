@@ -666,6 +666,7 @@ class Ui_MainWindow(object):
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.getMetadataButton = QPushButton(self.metadataTab)
         self.getMetadataButton.setObjectName(u"getMetadataButton")
+        self.getMetadataButton.setMaximumSize(QSize(400, 16777215))
 
         self.gridLayout_7.addWidget(self.getMetadataButton, 2, 0, 1, 1)
 
@@ -677,6 +678,7 @@ class Ui_MainWindow(object):
         self.metadataFileDropWidget = DropWidget(self.metadataTab)
         self.metadataFileDropWidget.setObjectName(u"metadataFileDropWidget")
         self.metadataFileDropWidget.setMinimumSize(QSize(400, 0))
+        self.metadataFileDropWidget.setMaximumSize(QSize(400, 16777215))
         self.verticalLayout = QVBoxLayout(self.metadataFileDropWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.metadataStatusLabel = QLabel(self.metadataFileDropWidget)
@@ -695,7 +697,7 @@ class Ui_MainWindow(object):
 
         self.metadataFilePath = QLabel(self.metadataTab)
         self.metadataFilePath.setObjectName(u"metadataFilePath")
-        self.metadataFilePath.setMaximumSize(QSize(16777215, 30))
+        self.metadataFilePath.setMaximumSize(QSize(400, 30))
         self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_7.addWidget(self.metadataFilePath, 1, 0, 1, 1)
@@ -819,7 +821,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(6)
         self.tabWidget.setCurrentIndex(0)
 
 

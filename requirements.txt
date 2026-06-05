@@ -9,6 +9,7 @@ dnspython==2.8.0
 fake-useragent==2.2.0
 h11==0.16.0
 h2==4.3.0
+hachoir==3.3.0
 hpack==4.1.0
 httpcore==1.0.9
 httpx==0.28.1
@@ -21,8 +22,10 @@ PySide6==6.11.1
 PySide6_Addons==6.11.1
 PySide6_Essentials==6.11.1
 python-dateutil==2.9.0.post0
+python-magic==0.4.27
 python-nmap==0.7.1
 python-whois==0.9.6
+qasync==0.28.0
 requests==2.34.2
 ruff==0.15.15
 shiboken6==6.11.1

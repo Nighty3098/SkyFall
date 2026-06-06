@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QFrame
 
 class DropWidget(QFrame):
     file_dropped = Signal(str)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 

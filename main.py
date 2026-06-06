@@ -18,14 +18,14 @@ from src.connectors import (
 )
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
-from src.controllers.intelx_controller import IntelxController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
+from src.controllers.intelx_controller import IntelxController
 from src.controllers.settings_controller import Settings
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
+from src.modules.file_analyzer import FileAnalyzer
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
-from src.modules.file_analyzer import FileAnalyzer
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
 from src.ui.setup_ui import setup_ui
@@ -38,6 +38,7 @@ class Loader(QUiLoader):
             widget.setObjectName(name)
             return widget
         return super().createWidget(class_name, parent, name)
+
 
 setup_logging()
 
@@ -52,7 +53,9 @@ class MainWindow(QMainWindow):
 
         self._init_modules()
         setup_ui(self)
-        self._shortcuts_manager = ShortcutManager(self, self.ui.mainStackedWidget, self.ui.menuListWidget)
+        self._shortcuts_manager = ShortcutManager(
+            self, self.ui.mainStackedWidget, self.ui.menuListWidget
+        )
 
     def _init_modules(self):
         logger.debug("Init modules")

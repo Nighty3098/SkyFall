@@ -4,6 +4,12 @@
 
 <img src="./resources/app_icon.png" width="250px"/>
 
+<br />
+
+<img src="./resources/img.png" width="85%" />
+
+<br />
+
 </div>
 
 ## `STACK`

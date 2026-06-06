@@ -689,6 +689,7 @@ class Ui_MainWindow(object):
         font1.setItalic(True)
         self.metadataStatusLabel.setFont(font1)
         self.metadataStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.metadataStatusLabel.setWordWrap(True)
 
         self.verticalLayout.addWidget(self.metadataStatusLabel)
 
@@ -912,7 +913,7 @@ class Ui_MainWindow(object):
         self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
         self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
         self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
-        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"METADATA", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE INFO", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))

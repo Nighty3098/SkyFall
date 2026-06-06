@@ -21,6 +21,8 @@ class FileAnalyzeController:
 
     def start_file_analyzer(self, path):
         result = self.file_analyzer.get_metadata(path)
+        result += "\n\n"
+        result += self.file_analyzer.check_tail_data(path)
         self.ui.metadataDebug.setPlainText(result)
 
     def get_file_type(self, path):

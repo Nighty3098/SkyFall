@@ -33,6 +33,27 @@ class FileAnalyzer:
         except Exception:
             return {"md5": "Error", "sha256": "Error"}
 
+    def check_tail_data(self, path):
+        self.result += "-" * 50 + "\n"
+        self.result += "Append / Tail Data:\n"
+
+        with open(path, "rb") as f:
+            data = f.read()
+
+        png_eof = b"IEND\xaeB`\x82"
+        idx = data.find(png_eof)
+
+        if idx != -1:
+            tail = data[idx + len(png_eof) :]
+            if len(tail) > 0:
+                self.result += (
+                    f"Hidden data discovered after EOF! Size: {len(tail)} bytes.\n"
+                )
+        self.result += "Clean\n"
+        self.result += "-" * 50 + "\n"
+
+        return self.result
+
     def get_metadata(self, path):
         path = Path(path)
         self.result = ""
@@ -44,7 +65,7 @@ class FileAnalyzer:
         file_stat = path.stat()
 
         def _ts_to_str(ts):
-            return datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+            return datetime.datetime.fromtimestamp(ts).strftime("%Y-%m-%d %H:%M:%S")
 
         created_time = _ts_to_str(file_stat.st_ctime)
         modified_time = _ts_to_str(file_stat.st_mtime)
@@ -52,7 +73,6 @@ class FileAnalyzer:
 
         file_permissions = stat.filemode(file_stat.st_mode)
 
-        self.result += "=" * 50 + "\n"
         self.result += f"File: {path.name}\n"
         size_kb = file_stat.st_size / 1024
         self.result += f"Size: {size_kb:.2f} KB ({file_stat.st_size} bytes)\n"
@@ -94,7 +114,5 @@ class FileAnalyzer:
             self.result += f"  Error reading metadata: {e}\n"
         finally:
             parser.stream._input.close()
-
-        self.result += "=" * 50 + "\n"
 
         return self.result

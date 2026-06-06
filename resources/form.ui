@@ -953,7 +953,7 @@
       </widget>
       <widget class="QWidget" name="metadataTab">
        <attribute name="title">
-        <string>METADATA</string>
+        <string>FILE INFO</string>
        </attribute>
        <layout class="QGridLayout" name="gridLayout_7">
         <item row="2" column="0">

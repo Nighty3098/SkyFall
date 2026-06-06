@@ -52,7 +52,7 @@ class MainWindow(QMainWindow):
 
         self._init_modules()
         setup_ui(self)
-        self._shortcuts_manager = ShortcutManager(self)
+        self._shortcuts_manager = ShortcutManager(self, self.ui.mainStackedWidget, self.ui.menuListWidget)
 
     def _init_modules(self):
         logger.debug("Init modules")

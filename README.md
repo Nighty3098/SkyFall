@@ -2,11 +2,11 @@
 
 # `SkyFall Project`
 
-<img src="./resources/app_icon.png" width="250px"/>
+<img src="./resources/banner.png" width="95%" />
 
 <br />
 
-<img src="./resources/img.png" width="85%" />
+<img src="./resources/img.png" width="95%" />
 
 <br />
 

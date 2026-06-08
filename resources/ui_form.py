@@ -28,7 +28,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1165, 679)
+        MainWindow.resize(1023, 839)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.horizontalLayout_6 = QHBoxLayout(self.centralwidget)
@@ -675,6 +675,13 @@ class Ui_MainWindow(object):
 
         self.gridLayout_7.addWidget(self.metadataDebug, 0, 1, 3, 1)
 
+        self.metadataFilePath = QLabel(self.metadataTab)
+        self.metadataFilePath.setObjectName(u"metadataFilePath")
+        self.metadataFilePath.setMaximumSize(QSize(400, 30))
+        self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_7.addWidget(self.metadataFilePath, 1, 0, 1, 1)
+
         self.metadataFileDropWidget = DropWidget(self.metadataTab)
         self.metadataFileDropWidget.setObjectName(u"metadataFileDropWidget")
         self.metadataFileDropWidget.setMinimumSize(QSize(400, 0))
@@ -696,12 +703,10 @@ class Ui_MainWindow(object):
 
         self.gridLayout_7.addWidget(self.metadataFileDropWidget, 0, 0, 1, 1)
 
-        self.metadataFilePath = QLabel(self.metadataTab)
-        self.metadataFilePath.setObjectName(u"metadataFilePath")
-        self.metadataFilePath.setMaximumSize(QSize(400, 30))
-        self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.virustotalFileDebug = QPlainTextEdit(self.metadataTab)
+        self.virustotalFileDebug.setObjectName(u"virustotalFileDebug")
 
-        self.gridLayout_7.addWidget(self.metadataFilePath, 1, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.virustotalFileDebug, 0, 2, 3, 1)
 
         self.mainStackedWidget.addTab(self.metadataTab, "")
         self.graphTab = QWidget()
@@ -827,7 +832,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(9)
+        self.mainStackedWidget.setCurrentIndex(6)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -916,8 +921,8 @@ class Ui_MainWindow(object):
         self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
-        self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
         self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
+        self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE INFO", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

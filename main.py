@@ -62,8 +62,10 @@ class MainWindow(QMainWindow):
         self.settings = Settings(self.ui)
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
-        self.domainAnalyzer = DomainAnalyzer()
-        self.fileAnalyzer = FileAnalyzer()
+        self.domainAnalyzer = DomainAnalyzer(
+            self.settings.virustotal_api_key, "", self.settings.ipinfo_api_key
+        )
+        self.fileAnalyzer = FileAnalyzer(self.settings.virustotal_api_key)
         self.intelxSearchEngine = IntelxSearchEngine(
             self.settings.intelligent_x_api_key
         )

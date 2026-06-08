@@ -13,12 +13,12 @@ from loguru import logger
 
 
 class DomainAnalyzer:
-    def __init__(self) -> None:
+    def __init__(self, virustotal_api_key, google_safe_api_key, ipinfo_api_key) -> None:
         logger.debug("Init: DomainAnalyzer")
         self.API_KEYS = {
-            "VIRUSTOTAL": "",
-            "GOOGLE_SAFE": "",
-            "IPINFO": "",
+            "VIRUSTOTAL": virustotal_api_key,
+            "GOOGLE_SAFE": google_safe_api_key,
+            "IPINFO": ipinfo_api_key,
         }
         self.ua = UserAgent()
 

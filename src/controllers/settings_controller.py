@@ -3,6 +3,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QPixmap
+from PySide6.QtWidgets import QApplication
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -19,6 +22,7 @@ DEFAULT_SETTINGS = {
     "intelligent_x_api_key": "",
     "virustotal_api_key": "",
     "ipinfo_api_key": "",
+    "light_theme": False,
 }
 
 FIELD_MAP = {
@@ -44,8 +48,10 @@ class Settings:
         self.intelligent_x_api_key = ""
         self.virustotal_api_key = ""
         self.ipinfo_api_key = ""
+        self.light_theme = False
 
         self._load()
+        self._apply_theme()
 
     def _load(self):
         logger.debug("Loading settings")
@@ -69,6 +75,40 @@ class Settings:
             if widget:
                 widget.setText(getattr(self, key, ""))
 
+        checkbox = getattr(self.ui, "lightThemeCheck", None)
+        if checkbox:
+            checkbox.setChecked(self.light_theme)
+
+    def _apply_theme(self):
+        theme = "style_light.qss" if self.light_theme else "style.qss"
+        qss_path = Path(__file__).parent.parent.parent / "resources" / theme
+        app = QApplication.instance()
+        if app is None:
+            return
+        try:
+            app.setStyleSheet(qss_path.read_text(encoding="utf-8"))
+        except FileNotFoundError:
+            logger.warning(f"{qss_path} not found, using default theme")
+
+        icon_color = "#3A3A3A" if self.light_theme else "#C1C1C1"
+        self.ui.appIconLabel.setStyleSheet(f"color: {icon_color};")
+        self._reload_icon(icon_color)
+
+    def _reload_icon(self, color):
+        svg_path = Path(__file__).parent.parent.parent / "resources" / "icon.svg"
+        try:
+            svg_content = svg_path.read_text(encoding="utf-8")
+            svg_content = svg_content.replace("currentColor", color)
+            pixmap = QPixmap()
+            pixmap.loadFromData(svg_content.encode("utf-8"))
+            if not pixmap.isNull():
+                pixmap = pixmap.scaled(
+                    300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
+                )
+                self.ui.appIconLabel.setPixmap(pixmap)
+        except (FileNotFoundError, OSError):
+            logger.warning("Failed to reload icon")
+
     def save(self):
         logger.debug("Saving settings")
         for key, widget_name in FIELD_MAP.items():
@@ -76,10 +116,15 @@ class Settings:
             if widget:
                 setattr(self, key, widget.text())
 
+        checkbox = getattr(self.ui, "lightThemeCheck", None)
+        if checkbox:
+            self.light_theme = checkbox.isChecked()
+
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}
         CONFIG_FILE.write_text(
             json.dumps(data, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
+        self._apply_theme()
         logger.success("Settings saved")

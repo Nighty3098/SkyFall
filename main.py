@@ -91,12 +91,6 @@ if __name__ == "__main__":
     app = QApplication(sys.argv)
     widget = MainWindow()
 
-    try:
-        with open("resources/style.qss", encoding="utf-8") as f:
-            app.setStyleSheet(f.read())
-    except FileNotFoundError:
-        logger.warning("style.qss not found.")
-
     widget.show()
 
     loop = QEventLoop(app)

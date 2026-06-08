@@ -798,6 +798,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.ipinfoApiKeyEdit)
 
+        self.lightThemeCheck = QCheckBox(self.settingsTab)
+        self.lightThemeCheck.setObjectName(u"lightThemeCheck")
+
+        self.verticalLayout_4.addWidget(self.lightThemeCheck)
+
         self.pushButton = QPushButton(self.settingsTab)
         self.pushButton.setObjectName(u"pushButton")
 
@@ -822,7 +827,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(9)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -926,6 +931,7 @@ class Ui_MainWindow(object):
         self.intelligentXApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IntelligentX API KEY", None))
         self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
         self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
+        self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
     # retranslateUi

@@ -2,13 +2,15 @@
 
 # `SkyFall Project`
 
+<br /><br />
+
 <img src="./resources/banner.png" width="95%" />
 
-<br />
+<br /><br /><br /><br />
 
 <img src="./resources/img.png" width="95%" />
 
-<br />
+<br /><br />
 
 </div>
 

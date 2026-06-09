@@ -57,6 +57,11 @@ class MainWindow(QMainWindow):
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
 
+    def closeEvent(self, event):
+        if hasattr(self, "fileAnalyzer"):
+            asyncio.ensure_future(self.fileAnalyzer.close())
+        super().closeEvent(event)
+
     def _init_modules(self):
         logger.debug("Init modules")
         self.settings = Settings(self.ui)

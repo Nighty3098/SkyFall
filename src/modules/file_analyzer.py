@@ -1,12 +1,12 @@
+import asyncio
 import datetime
 import hashlib
 import os
 import stat
-import time
 from pathlib import Path
 
+import httpx
 import magic
-import requests
 from fake_useragent import UserAgent
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
@@ -23,22 +23,33 @@ class FileAnalyzer:
             "accept": "application/json",
             "x-apikey": self.API_KEYS["VIRUSTOTAL"],
         }
-
-        self.result = ""
-        self.virustotal_result = ""
         self.ua = UserAgent()
+        self._client = httpx.AsyncClient(headers=self.HEADERS, timeout=120)
 
-    def calculate_sha256(self, path):
-        sha256_hash = hashlib.sha256()
+    async def close(self):
+        await self._client.aclose()
+
+    async def _read_file_bytes(self, path):
+        def _read(path):
+            with open(path, "rb") as f:
+                return f.read()
+        return await asyncio.to_thread(_read, path)
+
+    async def _calculate_sha256(self, path):
         logger.debug("Calc file sha256...")
-        with open(path, "rb") as f:
-            for byte_block in iter(lambda: f.read(65536), b""):
-                sha256_hash.update(byte_block)
-        return sha256_hash.hexdigest()
 
-    def check_file_by_hash(self, path):
+        def _hash(path):
+            sha256_hash = hashlib.sha256()
+            with open(path, "rb") as f:
+                for byte_block in iter(lambda: f.read(65536), b""):
+                    sha256_hash.update(byte_block)
+            return sha256_hash.hexdigest()
+
+        return await asyncio.to_thread(_hash, path)
+
+    async def check_file_by_hash(self, path):
         url = f"https://www.virustotal.com/api/v3/files/{path}"
-        response = requests.get(url, headers=self.HEADERS)
+        response = await self._client.get(url)
 
         if response.status_code == 200:
             return response.json()
@@ -48,9 +59,9 @@ class FileAnalyzer:
             logger.error(f"Error: {response.status_code}")
             return None
 
-    def get_large_file_upload_url(self):
+    async def get_large_file_upload_url(self):
         url = "https://www.virustotal.com/api/v3/files/upload_url"
-        response = requests.get(url, headers=self.HEADERS)
+        response = await self._client.get(url)
 
         if response.status_code == 200:
             return response.json()["data"]
@@ -61,7 +72,7 @@ class FileAnalyzer:
             print(response.text)
             return None
 
-    def upload_and_scan_file(self, file_path):
+    async def upload_and_scan_file(self, file_path):
         file_size_bytes = os.path.getsize(file_path)
         file_size_mb = file_size_bytes / (1024 * 1024)
 
@@ -73,7 +84,7 @@ class FileAnalyzer:
 
         if file_size_mb > 32:
             logger.debug("File size > 32 MB...")
-            upload_url = self.get_large_file_upload_url()
+            upload_url = await self.get_large_file_upload_url()
             if not upload_url:
                 return None
         else:
@@ -82,9 +93,13 @@ class FileAnalyzer:
 
         logger.debug("Starting upload to virustotal...")
 
-        with open(file_path, "rb") as file_to_upload:
-            files = {"file": (os.path.basename(file_path), file_to_upload)}
-            response = requests.post(upload_url, headers=self.HEADERS, files=files)
+        def _read_file(path):
+            with open(path, "rb") as f:
+                return (os.path.basename(path), f.read())
+
+        filename, content = await asyncio.to_thread(_read_file, file_path)
+        files = {"file": (filename, content)}
+        response = await self._client.post(upload_url, files=files)
 
         if response.status_code == 200:
             analysis_data = response.json()
@@ -95,40 +110,40 @@ class FileAnalyzer:
             logger.debug(response.text)
             return None
 
-    def wait_for_analysis(self, analysis_id):
+    async def wait_for_analysis(self, analysis_id):
         url = f"https://www.virustotal.com/api/v3/analyses/{analysis_id}"
 
         while True:
-            response = requests.get(url, headers=self.HEADERS)
+            response = await self._client.get(url)
             if response.status_code == 200:
                 status = response.json()["data"]["attributes"]["status"]
                 if status == "completed":
                     logger.debug("Complete!")
                     return response.json()["data"]["attributes"]["results"]
                 else:
-                    time.sleep(30)
+                    await asyncio.sleep(30)
             else:
                 logger.error(f"Error: {response.status_code}")
                 return None
 
     def get_virustotal_info(self, stats):
-        self.virustotal_result += "-" * 50 + "\n"
-        self.virustotal_result += f"❌ Malicious: {stats.get('malicious', 0)}\n"
-        self.virustotal_result += f"⚠️ Suspicious: {stats.get('suspicious', 0)}\n"
-        self.virustotal_result += f"✅ Harmless: {stats.get('harmless', 0)}\n"
-        self.virustotal_result += f"❔ Undetected: {stats.get('undetected', 0)}\n"
-        self.virustotal_result += "-" * 50 + "\n"
-        return self.virustotal_result
+        result = "-" * 50 + "\n"
+        result += f"Malicious: {stats.get('malicious', 0)}\n"
+        result += f"Suspicious: {stats.get('suspicious', 0)}\n"
+        result += f"Harmless: {stats.get('harmless', 0)}\n"
+        result += f"Undetected: {stats.get('undetected', 0)}\n"
+        result += "-" * 50 + "\n"
+        return result
 
-    def virustotal_analyze(self, path):
+    async def virustotal_analyze(self, path):
         if not os.path.exists(path):
             logger.debug(f"Error: File {path} not found.")
-            return
+            return ""
 
-        file_hash = self.calculate_sha256(path)
+        file_hash = await self._calculate_sha256(path)
         logger.debug(f"SHA-256: {file_hash}")
 
-        report = self.check_file_by_hash(file_hash)
+        report = await self.check_file_by_hash(file_hash)
 
         if report:
             logger.debug("Found in VirusTotal DB!")
@@ -136,9 +151,9 @@ class FileAnalyzer:
             return self.get_virustotal_info(stats)
         else:
             logger.debug("File not found in VirusTotal DB.")
-            analysis_id = self.upload_and_scan_file(path)
+            analysis_id = await self.upload_and_scan_file(path)
             if analysis_id:
-                results = self.wait_for_analysis(analysis_id)
+                results = await self.wait_for_analysis(analysis_id)
                 if results:
                     stats = {
                         "malicious": 0,
@@ -151,6 +166,7 @@ class FileAnalyzer:
                         if category in stats:
                             stats[category] += 1
                     return self.get_virustotal_info(stats)
+            return ""
 
     def get_file_type(self, path):
         path = Path(path)
@@ -161,24 +177,26 @@ class FileAnalyzer:
         except Exception as e:
             return str(e)
 
-    def _get_file_hashes(self, path: Path) -> dict:
-        md5_hash = hashlib.md5()
-        sha256_hash = hashlib.sha256()
-        try:
-            with open(path, "rb") as f:
-                for byte_block in iter(lambda: f.read(65536), b""):
-                    md5_hash.update(byte_block)
-                    sha256_hash.update(byte_block)
-            return {"md5": md5_hash.hexdigest(), "sha256": sha256_hash.hexdigest()}
-        except Exception:
-            return {"md5": "Error", "sha256": "Error"}
+    async def _get_file_hashes(self, path: Path) -> dict:
+        def _hashes(path):
+            md5_hash = hashlib.md5()
+            sha256_hash = hashlib.sha256()
+            try:
+                with open(path, "rb") as f:
+                    for byte_block in iter(lambda: f.read(65536), b""):
+                        md5_hash.update(byte_block)
+                        sha256_hash.update(byte_block)
+                return {"md5": md5_hash.hexdigest(), "sha256": sha256_hash.hexdigest()}
+            except Exception:
+                return {"md5": "Error", "sha256": "Error"}
 
-    def check_tail_data(self, path):
-        self.result += "-" * 50 + "\n"
-        self.result += "Append / Tail Data:\n"
+        return await asyncio.to_thread(_hashes, path)
 
-        with open(path, "rb") as f:
-            data = f.read()
+    async def check_tail_data(self, path):
+        result = "-" * 50 + "\n"
+        result += "Append / Tail Data:\n"
+
+        data = await self._read_file_bytes(path)
 
         png_eof = b"IEND\xaeB`\x82"
         idx = data.find(png_eof)
@@ -186,21 +204,21 @@ class FileAnalyzer:
         if idx != -1:
             tail = data[idx + len(png_eof) :]
             if len(tail) > 0:
-                self.result += (
+                result += (
                     f"Hidden data discovered after EOF! Size: {len(tail)} bytes.\n"
                 )
-        self.result += "Clean\n"
-        self.result += "-" * 50 + "\n"
+        result += "Clean\n"
+        result += "-" * 50 + "\n"
 
-        return self.result
+        return result
 
-    def get_metadata(self, path):
+    async def get_metadata(self, path):
         path = Path(path)
-        self.result = ""
+        result = ""
 
         if not path.exists():
-            self.result += f"Error: File '{path}' not found."
-            return self.result
+            result += f"Error: File '{path}' not found."
+            return result
 
         file_stat = path.stat()
 
@@ -213,46 +231,58 @@ class FileAnalyzer:
 
         file_permissions = stat.filemode(file_stat.st_mode)
 
-        self.result += f"File: {path.name}\n"
+        result += f"File: {path.name}\n"
         size_kb = file_stat.st_size / 1024
-        self.result += f"Size: {size_kb:.2f} KB ({file_stat.st_size} bytes)\n"
+        result += f"Size: {size_kb:.2f} KB ({file_stat.st_size} bytes)\n"
 
-        self.result += f"Created (OS): {created_time}\n"
-        self.result += f"Modified (OS): {modified_time}\n"
-        self.result += f"Accessed (OS): {accessed_time}\n"
-        self.result += f"Permissions: {file_permissions}\n"
+        result += f"Created (OS): {created_time}\n"
+        result += f"Modified (OS): {modified_time}\n"
+        result += f"Accessed (OS): {accessed_time}\n"
+        result += f"Permissions: {file_permissions}\n"
 
-        hashes = self._get_file_hashes(path)
-        self.result += f"MD5 Hash: {hashes['md5']}\n"
-        self.result += f"SHA-256 Hash: {hashes['sha256']}\n"
+        hashes = await self._get_file_hashes(path)
+        result += f"MD5 Hash: {hashes['md5']}\n"
+        result += f"SHA-256 Hash: {hashes['sha256']}\n"
 
         try:
-            mime = magic.Magic(mime=True)
-            file_type = mime.from_file(str(path))
-            self.result += f"MIME type: {file_type}\n"
+            def _mime(path):
+                mime = magic.Magic(mime=True)
+                return mime.from_file(str(path))
+            file_type = await asyncio.to_thread(_mime, path)
+            result += f"MIME type: {file_type}\n"
         except Exception as e:
-            self.result += f"Could not determine MIME type: {e}\n"
+            result += f"Could not determine MIME type: {e}\n"
 
-        self.result += "-" * 50 + "\n"
-        self.result += "Internal Metadata (Hachoir):\n"
+        result += "-" * 50 + "\n"
+        result += "Internal Metadata (Hachoir):\n"
 
-        parser = createParser(str(path))
-        if not parser:
-            self.result += "  Hachoir could not parse this format.\n"
-            self.result += "=" * 50 + "\n"
-            return self.result
+        def _parse_metadata(path):
+            parser = createParser(str(path))
+            if not parser:
+                return None
+            try:
+                metadata = extractMetadata(parser)
+                if metadata:
+                    return metadata.exportPlaintext()
+                return []
+            except Exception:
+                raise
+            finally:
+                parser.stream._input.close()
 
         try:
-            metadata = extractMetadata(parser)
-            if metadata:
-                text_data = metadata.exportPlaintext()
+            text_data = await asyncio.to_thread(_parse_metadata, path)
+            if text_data is None:
+                result += "  Hachoir could not parse this format.\n"
+                result += "=" * 50 + "\n"
+                return result
+
+            if text_data:
                 for line in text_data:
-                    self.result += f"  {line}\n"
+                    result += f"  {line}\n"
             else:
-                self.result += "  No internal metadata found in file.\n"
+                result += "  No internal metadata found in file.\n"
         except Exception as e:
-            self.result += f"  Error reading metadata: {e}\n"
-        finally:
-            parser.stream._input.close()
+            result += f"  Error reading metadata: {e}\n"
 
-        return self.result
+        return result

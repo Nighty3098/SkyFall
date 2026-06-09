@@ -63,8 +63,10 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
         lambda path: (
             controller.ui.metadataFilePath.setText(f"File: {path}"),
             controller.ui.metadataStatusLabel.setText(controller.get_file_type(path)),
-            controller.start_file_analyzer(
-                controller.ui.metadataFileDropWidget.get_file_path()
+            asyncio.ensure_future(
+                controller.start_file_analyzer(
+                    controller.ui.metadataFileDropWidget.get_file_path()
+                )
             ),
         )
     )

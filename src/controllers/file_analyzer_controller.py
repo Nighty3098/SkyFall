@@ -19,13 +19,13 @@ class FileAnalyzeController:
         self.ui = ui
         self.file_analyzer = file_analyzer
 
-    def start_file_analyzer(self, path):
-        result = self.file_analyzer.get_metadata(path)
+    async def start_file_analyzer(self, path):
+        result = await self.file_analyzer.get_metadata(path)
         result += "\n\n"
-        result += self.file_analyzer.check_tail_data(path)
+        result += await self.file_analyzer.check_tail_data(path)
         self.ui.metadataDebug.setPlainText(result)
 
-        virustotal_result = self.file_analyzer.virustotal_analyze(path)
+        virustotal_result = await self.file_analyzer.virustotal_analyze(path)
         self.ui.virustotalFileDebug.setPlainText(virustotal_result)
 
     def get_file_type(self, path):

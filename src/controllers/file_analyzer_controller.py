@@ -28,5 +28,8 @@ class FileAnalyzeController:
         virustotal_result = await self.file_analyzer.virustotal_analyze(path)
         self.ui.virustotalFileDebug.setPlainText(virustotal_result)
 
+        strings_result = await self.file_analyzer.get_strings(path)
+        self.ui.stringsFileDebug.setPlainText("\n".join(strings_result))
+
     def get_file_type(self, path):
         return self.file_analyzer.get_file_type(path)

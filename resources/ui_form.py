@@ -31,10 +31,13 @@ class Ui_MainWindow(object):
         MainWindow.resize(1023, 839)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.horizontalLayout_6 = QHBoxLayout(self.centralwidget)
-        self.horizontalLayout_6.setSpacing(0)
+        self.verticalLayout_22 = QVBoxLayout(self.centralwidget)
+        self.verticalLayout_22.setSpacing(0)
+        self.verticalLayout_22.setObjectName(u"verticalLayout_22")
+        self.verticalLayout_22.setContentsMargins(6, 6, 6, 6)
+        self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.horizontalLayout_6.setContentsMargins(6, 6, 6, 6)
+        self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
         self.menuListWidget = QListWidget(self.centralwidget)
         self.menuListWidget.setObjectName(u"menuListWidget")
         self.menuListWidget.setMaximumSize(QSize(150, 16777215))
@@ -664,23 +667,22 @@ class Ui_MainWindow(object):
         self.metadataTab.setObjectName(u"metadataTab")
         self.gridLayout_7 = QGridLayout(self.metadataTab)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.getMetadataButton = QPushButton(self.metadataTab)
-        self.getMetadataButton.setObjectName(u"getMetadataButton")
-        self.getMetadataButton.setMaximumSize(QSize(400, 16777215))
-
-        self.gridLayout_7.addWidget(self.getMetadataButton, 2, 0, 1, 1)
-
-        self.metadataDebug = QPlainTextEdit(self.metadataTab)
-        self.metadataDebug.setObjectName(u"metadataDebug")
-
-        self.gridLayout_7.addWidget(self.metadataDebug, 0, 1, 3, 1)
-
         self.metadataFilePath = QLabel(self.metadataTab)
         self.metadataFilePath.setObjectName(u"metadataFilePath")
         self.metadataFilePath.setMaximumSize(QSize(400, 30))
         self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_7.addWidget(self.metadataFilePath, 1, 0, 1, 1)
+
+        self.stringsFileDebug = QPlainTextEdit(self.metadataTab)
+        self.stringsFileDebug.setObjectName(u"stringsFileDebug")
+
+        self.gridLayout_7.addWidget(self.stringsFileDebug, 0, 3, 3, 1)
+
+        self.metadataDebug = QPlainTextEdit(self.metadataTab)
+        self.metadataDebug.setObjectName(u"metadataDebug")
+
+        self.gridLayout_7.addWidget(self.metadataDebug, 0, 1, 3, 1)
 
         self.metadataFileDropWidget = DropWidget(self.metadataTab)
         self.metadataFileDropWidget.setObjectName(u"metadataFileDropWidget")
@@ -702,6 +704,12 @@ class Ui_MainWindow(object):
 
 
         self.gridLayout_7.addWidget(self.metadataFileDropWidget, 0, 0, 1, 1)
+
+        self.getMetadataButton = QPushButton(self.metadataTab)
+        self.getMetadataButton.setObjectName(u"getMetadataButton")
+        self.getMetadataButton.setMaximumSize(QSize(400, 16777215))
+
+        self.gridLayout_7.addWidget(self.getMetadataButton, 2, 0, 1, 1)
 
         self.virustotalFileDebug = QPlainTextEdit(self.metadataTab)
         self.virustotalFileDebug.setObjectName(u"virustotalFileDebug")
@@ -828,11 +836,14 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_6.addWidget(self.mainStackedWidget)
 
+
+        self.verticalLayout_22.addLayout(self.horizontalLayout_6)
+
         MainWindow.setCentralWidget(self.centralwidget)
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(6)
+        self.mainStackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -920,9 +931,12 @@ class Ui_MainWindow(object):
         self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
-        self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
         self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
+        self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
+        self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
         self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
+        self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
+        self.virustotalFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"VIRUSTOTAL", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE INFO", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

@@ -33,6 +33,7 @@ class FileAnalyzer:
         def _read(path):
             with open(path, "rb") as f:
                 return f.read()
+
         return await asyncio.to_thread(_read, path)
 
     async def _calculate_sha256(self, path):
@@ -245,9 +246,11 @@ class FileAnalyzer:
         result += f"SHA-256 Hash: {hashes['sha256']}\n"
 
         try:
+
             def _mime(path):
                 mime = magic.Magic(mime=True)
                 return mime.from_file(str(path))
+
             file_type = await asyncio.to_thread(_mime, path)
             result += f"MIME type: {file_type}\n"
         except Exception as e:

@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
-
+from PySide6.QtGui import QFontDatabase
 from logger_setup import setup_logging
 from src.connectors import (
     setup_domain_connectors,
@@ -56,6 +56,21 @@ class MainWindow(QMainWindow):
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
+        self.init_font("resources/Caveat-VariableFont_wght.ttf")
+        self.init_font("resources/IosevkaCharonMono-Regular.ttf")
+
+    def init_font(self, font_path):
+        font_id = QFontDatabase.addApplicationFont(font_path)
+
+        if font_id == -1:
+            logger.error(f"Error loading font: {font_path}")
+            return None
+
+        font_families = QFontDatabase.applicationFontFamilies(font_id)
+        if font_families:
+            logger.debug(f"Loaded font: {font_path}")
+            return font_families[0]
+        return None
 
     def closeEvent(self, event):
         if hasattr(self, "fileAnalyzer"):

@@ -5,6 +5,8 @@ name = "SkyFall"
 files = [
     "logger_setup.py",
     "main.py",
+    "resources/Caveat-VariableFont_wght.ttf",
+    "resources/IosevkaCharonMono-Regular.ttf",
     "resources/form.ui",
     "resources/style.qss",
     "resources/style_light.qss",

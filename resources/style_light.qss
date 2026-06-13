@@ -1,7 +1,7 @@
 * {
     outline: none;
-    font-size: 0.9rem;
-    font-family: "JetBrains Mono", monospace;
+    font-size: 1rem;
+    font-family: "Iosevka Charon Mono", monospace;
 }
 
 MainWindow, QWidget {
@@ -303,8 +303,9 @@ QLabel#appIconLabel {
 
 QLabel#winTitle {
     color: #3A3A3A;
-    font-size: 60px;
+    font-size: 80px;
     font-style: italic;
+    font-family: "Caveat", monospace;
 }
 
 QScrollBar:vertical {

@@ -2,9 +2,9 @@ import asyncio
 import datetime
 import hashlib
 import os
+import re
 import stat
 from pathlib import Path
-import re
 
 import httpx
 import magic
@@ -292,11 +292,11 @@ class FileAnalyzer:
         return result
 
     async def get_strings(self, path, min_len=4):
-        with open(path, 'rb') as f:
+        with open(path, "rb") as f:
             content = f.read()
 
         # Matches printable ASCII characters: space (32) to ~ (126)
         # The {min_len,} ensures it only picks up sequences of at least X characters
-        pattern = rb'[ -~]{' + str(min_len).encode() + rb',}'
+        pattern = rb"[ -~]{" + str(min_len).encode() + rb",}"
 
-        return [s.decode('ascii') for s in re.findall(pattern, content)]
+        return [s.decode("ascii") for s in re.findall(pattern, content)]

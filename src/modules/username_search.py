@@ -1,10 +1,8 @@
-import json
 import logging
 import re
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Any, Dict, List, Optional, Tuple, Union
-from urllib.parse import urlparse
+from typing import Any
 
 import requests
 from requests.adapters import HTTPAdapter
@@ -30,21 +28,21 @@ class SiteManifest:
     name: str
     url: str
     url_main: str
-    url_probe: Optional[str] = None
+    url_probe: str | None = None
     username_claimed: str = ""
-    error_type: Union[str, List[str]] = "status_code"
-    error_msg: Optional[Union[str, List[str]]] = None
-    error_code: Optional[Union[int, List[int]]] = None
-    error_url: Optional[str] = None
-    request_method: Optional[str] = None
-    request_payload: Optional[Dict[str, Any]] = None
-    headers: Dict[str, str] = field(default_factory=dict)
-    regex_check: Optional[str] = None
+    error_type: str | list[str] = "status_code"
+    error_msg: str | list[str] | None = None
+    error_code: int | list[int] | None = None
+    error_url: str | None = None
+    request_method: str | None = None
+    request_payload: dict[str, Any] | None = None
+    headers: dict[str, str] = field(default_factory=dict)
+    regex_check: str | None = None
     is_nsfw: bool = False
     is_false_positive: bool = False
 
     @classmethod
-    def from_dict(cls, name: str, data: Dict[str, Any]) -> "SiteManifest":
+    def from_dict(cls, name: str, data: dict[str, Any]) -> "SiteManifest":
         return cls(
             name=name,
             url=data.get("url", ""),
@@ -65,14 +63,13 @@ class SiteManifest:
 
 @dataclass
 class QueryResult:
-
     site_name: str
     url_user: str
     url_main: str
     status: QueryStatus
-    http_status: Optional[int] = None
-    response_time_ms: Optional[float] = None
-    error_context: Optional[str] = None
+    http_status: int | None = None
+    response_time_ms: float | None = None
+    error_context: str | None = None
 
     @property
     def is_found(self) -> bool:
@@ -80,7 +77,7 @@ class QueryResult:
 
 
 class SiteChecker:
-    WAF_SIGNATURES: List[str] = [
+    WAF_SIGNATURES: list[str] = [
         "Cloudflare challenge spinner",
         "Cloudflare challenge error text",
         "AwsWafIntegration.forceRefreshToken",
@@ -91,12 +88,12 @@ class SiteChecker:
         "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
     )
 
-    DEFAULT_ERROR_CODES: List[int] = [404]
+    DEFAULT_ERROR_CODES: list[int] = [404]
 
     def __init__(
         self,
-        session: Optional[requests.Session] = None,
-        proxy: Optional[Dict[str, str]] = None,
+        session: requests.Session | None = None,
+        proxy: dict[str, str] | None = None,
         timeout: int = 30,
         max_retries: int = 2,
     ):
@@ -107,7 +104,7 @@ class SiteChecker:
 
     @staticmethod
     def _create_session(
-        proxy: Optional[Dict[str, str]] = None, max_retries: int = 2
+        proxy: dict[str, str] | None = None, max_retries: int = 2
     ) -> requests.Session:
         session = requests.Session()
         retry_strategy = Retry(
@@ -134,7 +131,7 @@ class SiteChecker:
             )
             return True
 
-    def generate_username_variants(self, username: str) -> List[str]:
+    def generate_username_variants(self, username: str) -> list[str]:
         if "{?}" not in username:
             return [username]
         base = username.replace("{?}", "{}")
@@ -156,7 +153,7 @@ class SiteChecker:
             return manifest.request_method.upper()
         return "POST" if manifest.request_payload else "GET"
 
-    def _prepare_headers(self, manifest: SiteManifest) -> Dict[str, str]:
+    def _prepare_headers(self, manifest: SiteManifest) -> dict[str, str]:
         headers = {"User-Agent": self.DEFAULT_USER_AGENT}
         headers.update(manifest.headers)
         return headers
@@ -165,8 +162,8 @@ class SiteChecker:
         self,
         url: str,
         method: str,
-        headers: Dict[str, str],
-        payload: Optional[Dict] = None,
+        headers: dict[str, str],
+        payload: dict | None = None,
     ) -> requests.Response:
         kwargs = {
             "url": url,
@@ -181,7 +178,7 @@ class SiteChecker:
         return response
 
     def _check_message_error(
-        self, response: requests.Response, error_msg: Union[str, List[str]]
+        self, response: requests.Response, error_msg: str | list[str]
     ) -> bool:
         response_text = response.text
         if isinstance(error_msg, str):
@@ -191,7 +188,7 @@ class SiteChecker:
     def _check_status_code(
         self,
         response: requests.Response,
-        error_code: Optional[Union[int, List[int]]] = None,
+        error_code: int | list[int] | None = None,
     ) -> bool:
         if error_code is not None:
             if isinstance(error_code, int):
@@ -200,7 +197,7 @@ class SiteChecker:
         return response.status_code >= 300 or response.status_code < 200
 
     def _check_response_url(
-        self, response: requests.Response, error_url: Optional[str] = None
+        self, response: requests.Response, error_url: str | None = None
     ) -> bool:
         if 200 <= response.status_code < 300:
             return False
@@ -210,7 +207,7 @@ class SiteChecker:
 
     def _apply_error_check(
         self, response: requests.Response, manifest: SiteManifest, error_type: str
-    ) -> Optional[QueryStatus]:
+    ) -> QueryStatus | None:
         if error_type == ErrorType.MESSAGE.value:
             if manifest.error_msg is None:
                 return None

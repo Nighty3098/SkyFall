@@ -4,10 +4,11 @@ from pathlib import Path
 
 from loguru import logger
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFontDatabase
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
-from PySide6.QtGui import QFontDatabase
+
 from logger_setup import setup_logging
 from src.connectors import (
     setup_domain_connectors,

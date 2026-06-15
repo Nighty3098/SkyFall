@@ -41,6 +41,7 @@ class Ui_MainWindow(object):
         self.menuListWidget = QListWidget(self.centralwidget)
         self.menuListWidget.setObjectName(u"menuListWidget")
         self.menuListWidget.setMaximumSize(QSize(150, 16777215))
+        self.menuListWidget.setStyleSheet(u"padding: 4px;")
 
         self.horizontalLayout_6.addWidget(self.menuListWidget)
 

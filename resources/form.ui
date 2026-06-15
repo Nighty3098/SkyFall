@@ -43,6 +43,9 @@
           <height>16777215</height>
          </size>
         </property>
+        <property name="styleSheet">
+         <string notr="true">padding: 4px;</string>
+        </property>
        </widget>
       </item>
       <item>

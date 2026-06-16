@@ -216,20 +216,7 @@ class DomainAnalyzer:
         logger.debug("Trying to get whois info")
         try:
             w = await asyncio.to_thread(whois.whois, domain)
-            return {
-                "registrar": w.registrar,
-                "creation_date": str(
-                    w.creation_date
-                    if isinstance(w.creation_date, list)
-                    else w.creation_date
-                ),
-                "expiration_date": str(
-                    w.expiration_date
-                    if isinstance(w.expiration_date, list)
-                    else w.expiration_date
-                ),
-                "name_servers": w.name_servers,
-            }
+            return w
         except Exception as e:
             logger.error(f"Error WHOIS: {e}")
             return {"error": f"Error WHOIS: {e}"}

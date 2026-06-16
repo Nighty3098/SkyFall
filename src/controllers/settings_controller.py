@@ -21,6 +21,7 @@ DEFAULT_SETTINGS = {
     "telegram_phone": "",
     "intelligent_x_api_key": "",
     "virustotal_api_key": "",
+    "google_safe_api_key": "",
     "ipinfo_api_key": "",
     "light_theme": False,
 }
@@ -32,6 +33,7 @@ FIELD_MAP = {
     "telegram_phone": "telegramPhoneEdit",
     "intelligent_x_api_key": "intelligentXApiKeyEdit",
     "virustotal_api_key": "virustotalApiKeyEdit",
+    "google_safe_api_key": "googleSafeApiKeyEdit",
     "ipinfo_api_key": "ipinfoApiKeyEdit",
 }
 
@@ -48,6 +50,7 @@ class Settings:
         self.intelligent_x_api_key = ""
         self.virustotal_api_key = ""
         self.ipinfo_api_key = ""
+        self.google_safe_api_key = ""
         self.light_theme = False
 
         self._load()

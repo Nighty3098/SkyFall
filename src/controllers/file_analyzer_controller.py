@@ -26,7 +26,7 @@ class FileAnalyzeController:
             result += "\n\n"
             result += await self.file_analyzer.check_tail_data(path)
             self.ui.metadataDebug.setPlainText(result)
-        
+
         if self.ui.fileStringsCheck.isChecked():
             self.ui.stringsFileDebug.setPlainText("Loading...")
             strings_result = await self.file_analyzer.get_strings(path)

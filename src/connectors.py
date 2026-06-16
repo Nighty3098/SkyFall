@@ -1,8 +1,8 @@
 import asyncio
 from typing import TYPE_CHECKING
 
-from src.utils import filter_list, find_text
 from src.modules.metadata_cleaner import remove_metadata
+from src.utils import filter_list, find_text
 
 if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
@@ -84,9 +84,7 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
 
     controller.ui.cleanMetadataButton.clicked.connect(
         lambda: (
-            remove_metadata(
-                controller.ui.metadataFileDropWidget.get_file_path()
-            ),
+            remove_metadata(controller.ui.metadataFileDropWidget.get_file_path()),
             asyncio.ensure_future(
                 controller.start_file_analyzer(
                     controller.ui.metadataFileDropWidget.get_file_path()
@@ -94,4 +92,3 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
             ),
         )
     )
-

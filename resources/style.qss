@@ -166,7 +166,7 @@ QDoubleSpinBox, QSpinBox, QComboBox, QDateTimeEdit {
 }
 
 QDoubleSpinBox::up-button, QDoubleSpinBox::down-button,
-QSpinBox::up-button, QSpinBox::down-button {
+QSpinBox::up-button, QSpinBox::down-button, QDateTimeEdit::up-button, QDateTimeEdit::down-button {
     border: none;
     border-radius: 5px;
     background: #262626;

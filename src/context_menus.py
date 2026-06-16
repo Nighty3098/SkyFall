@@ -1,10 +1,8 @@
 from loguru import logger
-from PySide6.QtGui import QCursor
 from PySide6.QtWidgets import QMenu
 
 
-def open_dorks_list_menu(list_widget, custom_dork_edit, position=None):
-    position = list_widget.mapFromGlobal(QCursor.pos())
+def open_dorks_list_menu(list_widget, custom_dork_edit, position):
     item = list_widget.itemAt(position)
     if item is not None:
         menu = QMenu()

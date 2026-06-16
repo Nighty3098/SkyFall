@@ -1,6 +1,7 @@
 import asyncio
 from typing import TYPE_CHECKING
 
+from src.context_menus import open_dorks_list_menu
 from src.modules.metadata_cleaner import remove_metadata
 from src.utils import filter_list, find_text
 
@@ -18,6 +19,12 @@ def setup_dorking_connectors(controller: "DorkingController"):
     )
     controller.ui.dorksList.itemDoubleClicked.connect(
         lambda item: asyncio.ensure_future(controller.search_dork(item))
+    )
+
+    controller.ui.dorksList.customContextMenuRequested.connect(
+        lambda pos: open_dorks_list_menu(
+            controller.ui.dorksList, controller.ui.customDorkEdit, pos
+        )
     )
 
     controller.ui.dorksCategorySearchEdit.textChanged.connect(

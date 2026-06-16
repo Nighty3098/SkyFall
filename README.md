@@ -71,6 +71,7 @@
 - [ ] Creating an interactive subscription graph for user communication in telegram
 - [ ] Search for email information (which resources were registered on)
   - [x] intelx.io
+  - [ ] ddg dorking
 - [ ] Username search
   - [ ] Reddit
   - [ ] Telegram
@@ -82,10 +83,14 @@
   - [ ] Medium
   - [ ] VK
   - ...
+- File analyzer:
+  - [x] Extract metadata from file
+  - [x] Analyze file via VirusTotal
+  - [x] Clean file metadata
+  - [x] Extract strings from file
 - [ ] Creating interactive graphs of communication with various data
 - [ ] Exporting graphs to JSON or SQL DB
-- [ ] Extract metadata from file
-- [ ] Reverse Image Search With Yandex
+- [ ] Reverse Image Search With Yandex and Google
 
 ## `SETUP SEARXNG`
 

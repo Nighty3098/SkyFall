@@ -23,6 +23,7 @@ files = [
     "src/modules/file_analyzer.py",
     "src/modules/google_dorks.py",
     "src/modules/intelx_search_engine.py",
+    "src/modules/metadata_cleaner.py",
     "src/modules/username_search.py",
     "src/searxng_search.py",
     "src/shortcuts.py",

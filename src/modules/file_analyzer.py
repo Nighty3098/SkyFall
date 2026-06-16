@@ -9,9 +9,25 @@ from pathlib import Path
 import httpx
 import magic
 from fake_useragent import UserAgent
+from loguru import logger
+
+# Silence hachoir's noisy internal warnings (JPEG ICC/header issues)
+import hachoir.core.config as _hconfig
+_hconfig.quiet = True
+
 from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
-from loguru import logger
+
+# Monkey-patch hachoir's datetime parsing to handle single-digit minutes/seconds
+# e.g. EXIF "2025:04:11 14:6:56" has single-digit minutes
+import re as _re
+import hachoir.metadata.setter as _hms
+_hms.DATETIME_REGEX1 = _re.compile(
+    r"^([0-9]{4})~([01][0-9])~([0-9]{1,2})~([0-9]{1,2})~([0-9]{1,2})~([0-9]{1,2})$"
+)
+_hms.DATETIME_REGEX2 = _re.compile(
+    r"^([01]?[0-9])~([0-9]{1,2})~([0-9]{4})~([0-9]{1,2})~([0-9]{1,2})~([0-9]{1,2})$"
+)
 
 
 class FileAnalyzer:

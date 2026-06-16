@@ -54,7 +54,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>6</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -964,37 +964,17 @@
           <string>FILE INFO</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_7">
-          <item row="1" column="0">
-           <widget class="QLabel" name="metadataFilePath">
-            <property name="maximumSize">
-             <size>
-              <width>400</width>
-              <height>30</height>
-             </size>
-            </property>
+          <item row="0" column="3">
+           <widget class="QCheckBox" name="fileStringsCheck">
             <property name="text">
-             <string>File</string>
+             <string>Check</string>
             </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="3" rowspan="3">
-           <widget class="QPlainTextEdit" name="stringsFileDebug">
-            <property name="placeholderText">
-             <string>STRINGS</string>
+            <property name="checked">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="0" column="1" rowspan="3">
-           <widget class="QPlainTextEdit" name="metadataDebug">
-            <property name="placeholderText">
-             <string>METADATA</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
+          <item row="0" column="0" rowspan="2">
            <widget class="DropWidget" name="metadataFileDropWidget" native="true">
             <property name="minimumSize">
              <size>
@@ -1032,7 +1012,7 @@
             </layout>
            </widget>
           </item>
-          <item row="2" column="0">
+          <item row="3" column="0">
            <widget class="QPushButton" name="getMetadataButton">
             <property name="maximumSize">
              <size>
@@ -1045,10 +1025,67 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="2" rowspan="3">
+          <item row="0" column="2">
+           <widget class="QCheckBox" name="fileVirustotalCheck">
+            <property name="text">
+             <string>Check</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QLabel" name="metadataFilePath">
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>30</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>File</string>
+            </property>
+            <property name="alignment">
+             <set>Qt::AlignmentFlag::AlignCenter</set>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="fileMetadataCheck">
+            <property name="text">
+             <string>Check</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QPushButton" name="cleanMetadataButton">
+            <property name="text">
+             <string>Clean Metadata</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="1" rowspan="4">
+           <widget class="QPlainTextEdit" name="metadataDebug">
+            <property name="placeholderText">
+             <string>METADATA</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" rowspan="4">
            <widget class="QPlainTextEdit" name="virustotalFileDebug">
             <property name="placeholderText">
              <string>VIRUSTOTAL</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3" rowspan="4">
+           <widget class="QPlainTextEdit" name="stringsFileDebug">
+            <property name="placeholderText">
+             <string>STRINGS</string>
             </property>
            </widget>
           </item>

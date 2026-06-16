@@ -668,22 +668,11 @@ class Ui_MainWindow(object):
         self.metadataTab.setObjectName(u"metadataTab")
         self.gridLayout_7 = QGridLayout(self.metadataTab)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.metadataFilePath = QLabel(self.metadataTab)
-        self.metadataFilePath.setObjectName(u"metadataFilePath")
-        self.metadataFilePath.setMaximumSize(QSize(400, 30))
-        self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.fileStringsCheck = QCheckBox(self.metadataTab)
+        self.fileStringsCheck.setObjectName(u"fileStringsCheck")
+        self.fileStringsCheck.setChecked(True)
 
-        self.gridLayout_7.addWidget(self.metadataFilePath, 1, 0, 1, 1)
-
-        self.stringsFileDebug = QPlainTextEdit(self.metadataTab)
-        self.stringsFileDebug.setObjectName(u"stringsFileDebug")
-
-        self.gridLayout_7.addWidget(self.stringsFileDebug, 0, 3, 3, 1)
-
-        self.metadataDebug = QPlainTextEdit(self.metadataTab)
-        self.metadataDebug.setObjectName(u"metadataDebug")
-
-        self.gridLayout_7.addWidget(self.metadataDebug, 0, 1, 3, 1)
+        self.gridLayout_7.addWidget(self.fileStringsCheck, 0, 3, 1, 1)
 
         self.metadataFileDropWidget = DropWidget(self.metadataTab)
         self.metadataFileDropWidget.setObjectName(u"metadataFileDropWidget")
@@ -704,18 +693,52 @@ class Ui_MainWindow(object):
         self.verticalLayout.addWidget(self.metadataStatusLabel)
 
 
-        self.gridLayout_7.addWidget(self.metadataFileDropWidget, 0, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.metadataFileDropWidget, 0, 0, 2, 1)
 
         self.getMetadataButton = QPushButton(self.metadataTab)
         self.getMetadataButton.setObjectName(u"getMetadataButton")
         self.getMetadataButton.setMaximumSize(QSize(400, 16777215))
 
-        self.gridLayout_7.addWidget(self.getMetadataButton, 2, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.getMetadataButton, 3, 0, 1, 1)
+
+        self.fileVirustotalCheck = QCheckBox(self.metadataTab)
+        self.fileVirustotalCheck.setObjectName(u"fileVirustotalCheck")
+        self.fileVirustotalCheck.setChecked(True)
+
+        self.gridLayout_7.addWidget(self.fileVirustotalCheck, 0, 2, 1, 1)
+
+        self.metadataFilePath = QLabel(self.metadataTab)
+        self.metadataFilePath.setObjectName(u"metadataFilePath")
+        self.metadataFilePath.setMaximumSize(QSize(400, 30))
+        self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_7.addWidget(self.metadataFilePath, 2, 0, 1, 1)
+
+        self.fileMetadataCheck = QCheckBox(self.metadataTab)
+        self.fileMetadataCheck.setObjectName(u"fileMetadataCheck")
+        self.fileMetadataCheck.setChecked(True)
+
+        self.gridLayout_7.addWidget(self.fileMetadataCheck, 0, 1, 1, 1)
+
+        self.cleanMetadataButton = QPushButton(self.metadataTab)
+        self.cleanMetadataButton.setObjectName(u"cleanMetadataButton")
+
+        self.gridLayout_7.addWidget(self.cleanMetadataButton, 4, 0, 1, 1)
+
+        self.metadataDebug = QPlainTextEdit(self.metadataTab)
+        self.metadataDebug.setObjectName(u"metadataDebug")
+
+        self.gridLayout_7.addWidget(self.metadataDebug, 1, 1, 4, 1)
 
         self.virustotalFileDebug = QPlainTextEdit(self.metadataTab)
         self.virustotalFileDebug.setObjectName(u"virustotalFileDebug")
 
-        self.gridLayout_7.addWidget(self.virustotalFileDebug, 0, 2, 3, 1)
+        self.gridLayout_7.addWidget(self.virustotalFileDebug, 1, 2, 4, 1)
+
+        self.stringsFileDebug = QPlainTextEdit(self.metadataTab)
+        self.stringsFileDebug.setObjectName(u"stringsFileDebug")
+
+        self.gridLayout_7.addWidget(self.stringsFileDebug, 1, 3, 4, 1)
 
         self.mainStackedWidget.addTab(self.metadataTab, "")
         self.graphTab = QWidget()
@@ -844,7 +867,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(6)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -932,12 +955,16 @@ class Ui_MainWindow(object):
         self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
-        self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
-        self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
-        self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
+        self.fileStringsCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
         self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
+        self.fileVirustotalCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
+        self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
+        self.fileMetadataCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
+        self.cleanMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Clean Metadata", None))
+        self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
         self.virustotalFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"VIRUSTOTAL", None))
+        self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE INFO", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))

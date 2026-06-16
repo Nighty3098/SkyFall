@@ -54,7 +54,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>9</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -161,7 +161,7 @@
           <item>
            <widget class="QTabWidget" name="tabWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>1</number>
             </property>
             <widget class="QWidget" name="telegram_downloader_tab">
              <attribute name="title">
@@ -1212,6 +1212,13 @@
              <widget class="QLineEdit" name="virustotalApiKeyEdit">
               <property name="placeholderText">
                <string>Virustotal</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="googleSafeApiKeyEdit">
+              <property name="placeholderText">
+               <string>Google Safe API KEY</string>
               </property>
              </widget>
             </item>

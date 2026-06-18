@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VENV=".qtcreator/Python_3_14_4venv"
+VENV=".qtcreator/Python_3_14_5venv"
 ACTIVATE="$VENV/bin/activate"
 
 if [ ! -f "$ACTIVATE" ]; then

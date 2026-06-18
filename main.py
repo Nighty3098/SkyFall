@@ -1,3 +1,4 @@
+import argparse
 import asyncio
 import sys
 from pathlib import Path
@@ -41,11 +42,26 @@ class Loader(QUiLoader):
         return super().createWidget(class_name, parent, name)
 
 
-setup_logging()
-
-
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
+        print(
+            """
+┌─────────────────────────────────────────────────────────────────┐
+│                                                                 │
+│            _______ __          _______       __ __              │
+│           |   _   |  |--.--.--|   _   .---.-|  |  |             │
+│           |   1___|    <|  |  |.  1___|  _  |  |  |             │
+│           |____   |__|__|___  |.  __) |___._|__|__|             │
+│           |:  1   |     |_____|:  |                             │
+│           |::.. . |           |::.|                             │
+│           `-------'           `---'                             │
+│                                                                 │
+│                      SkyFall Ver. 1.0                           │
+│                    Coded by Nighty3098                          │
+│               https://nighty3098.vercel.app                     │
+└─────────────────────────────────────────────────────────────────┘
+            """
+        )
         super().__init__(parent)
         ui_file = Path(__file__).parent / "resources" / "form.ui"
         self.ui = Loader().load(ui_file)
@@ -113,6 +129,15 @@ class MainWindow(QMainWindow):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-d", "--debug", action="store_true")
+    args = parser.parse_args()
+
+    if args.debug:
+        setup_logging(True)
+    else:
+        setup_logging(False)
+
     app = QApplication(sys.argv)
     widget = MainWindow()
 

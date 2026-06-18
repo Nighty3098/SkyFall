@@ -4,7 +4,7 @@ from pathlib import Path
 from loguru import logger
 
 
-def setup_logging() -> None:
+def setup_logging(is_debug: bool) -> None:
     log_dir = Path.home() / ".skyfall" / "logs"
     log_dir.mkdir(parents=True, exist_ok=True)
 
@@ -26,16 +26,16 @@ def setup_logging() -> None:
         backtrace=True,
         diagnose=True,
     )
-
-    logger.add(
-        sys.stderr,
-        colorize=True,
-        format=(
-            "<green>{time:HH:mm:ss}</green> | "
-            "<level>{level: <8}</level> | "
-            "<cyan>{name}</cyan>:<cyan>{line}</cyan> | "
-            "<level>{message}</level>"
-        ),
-        level="DEBUG",
-        enqueue=True,
-    )
+    if is_debug:
+        logger.add(
+            sys.stderr,
+            colorize=True,
+            format=(
+                "<green>{time:HH:mm:ss}</green> | "
+                "<level>{level: <8}</level> | "
+                "<cyan>{name}</cyan>:<cyan>{line}</cyan> | "
+                "<level>{message}</level>"
+            ),
+            level="DEBUG",
+            enqueue=True,
+        )

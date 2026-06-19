@@ -10,7 +10,7 @@ if TYPE_CHECKING:
     from src.modules.domain_analyzer import DomainAnalyzer
 
 
-STEPS = 9
+STEPS = 12
 
 
 class DomainController:
@@ -133,3 +133,24 @@ class DomainController:
                 )
             )
         self._update_progress(9)
+
+        if self.ui.securityTxtCheck.isChecked():
+            self.ui.securityTxtDebug.setPlainText("Loading")
+            self.ui.securityTxtDebug.setPlainText(
+                await self.domain_analyzer.get_security_txt(self.domain)
+            )
+        self._update_progress(10)
+
+        if self.ui.cookiesCheck.isChecked():
+            self.ui.cookiesDebug.setPlainText("Loading")
+            self.ui.cookiesDebug.setPlainText(
+                await self.domain_analyzer.get_cookies(self.domain)
+            )
+        self._update_progress(11)
+
+        if self.ui.socialTagsCheck.isChecked():
+            self.ui.socialTagsDebug.setPlainText("Loading")
+            self.ui.socialTagsDebug.setPlainText(
+                await self.domain_analyzer.get_social_tags(self.domain)
+            )
+        self._update_progress(12)

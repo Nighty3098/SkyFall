@@ -40,6 +40,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
         self.menuListWidget = QListWidget(self.centralwidget)
         self.menuListWidget.setObjectName(u"menuListWidget")
+        self.menuListWidget.setMinimumSize(QSize(150, 0))
         self.menuListWidget.setMaximumSize(QSize(150, 16777215))
         self.menuListWidget.setStyleSheet(u"padding: 4px;")
 
@@ -578,26 +579,90 @@ class Ui_MainWindow(object):
         self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
         self.gridLayout_2 = QGridLayout(self.webAnalyzerTab)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.domainProgress = QProgressBar(self.webAnalyzerTab)
+        self.domainProgress.setObjectName(u"domainProgress")
+        self.domainProgress.setValue(0)
+
+        self.gridLayout_2.addWidget(self.domainProgress, 10, 1, 1, 3)
+
+        self.runUrlScanButton = QPushButton(self.webAnalyzerTab)
+        self.runUrlScanButton.setObjectName(u"runUrlScanButton")
+
+        self.gridLayout_2.addWidget(self.runUrlScanButton, 1, 1, 1, 3)
+
+        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
+
+        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 3, 2, 1, 1)
+
+        self.securityTxtDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.securityTxtDebug.setObjectName(u"securityTxtDebug")
+
+        self.gridLayout_2.addWidget(self.securityTxtDebug, 9, 1, 1, 1)
+
+        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
+
+        self.gridLayout_2.addWidget(self.serverWhoisDebug, 5, 2, 1, 1)
+
         self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverLocationDebug.setObjectName(u"serverLocationDebug")
 
         self.gridLayout_2.addWidget(self.serverLocationDebug, 5, 3, 1, 1)
-
-        self.domainDNSCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainDNSCheck.setObjectName(u"domainDNSCheck")
-        self.domainDNSCheck.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.domainDNSCheck, 2, 2, 1, 1)
 
         self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverTlsDebug.setObjectName(u"serverTlsDebug")
 
         self.gridLayout_2.addWidget(self.serverTlsDebug, 5, 1, 1, 1)
 
-        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
+        self.serverUrlEdit = QLineEdit(self.webAnalyzerTab)
+        self.serverUrlEdit.setObjectName(u"serverUrlEdit")
 
-        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 3, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.serverUrlEdit, 0, 1, 1, 3)
+
+        self.domainSubdomainsCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainSubdomainsCheck.setObjectName(u"domainSubdomainsCheck")
+        self.domainSubdomainsCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainSubdomainsCheck, 2, 1, 1, 1)
+
+        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
+
+        self.gridLayout_2.addWidget(self.serverNmapDebug, 3, 3, 1, 1)
+
+        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
+
+        self.gridLayout_2.addWidget(self.serverMalwareDebug, 7, 3, 1, 1)
+
+        self.domainMalwareCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainMalwareCheck.setObjectName(u"domainMalwareCheck")
+        self.domainMalwareCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainMalwareCheck, 6, 3, 1, 1)
+
+        self.serverSubdomainsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverSubdomainsDebug.setObjectName(u"serverSubdomainsDebug")
+
+        self.gridLayout_2.addWidget(self.serverSubdomainsDebug, 3, 1, 1, 1)
+
+        self.domainWhoisCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainWhoisCheck.setObjectName(u"domainWhoisCheck")
+        self.domainWhoisCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainWhoisCheck, 4, 2, 1, 1)
+
+        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWafDebug.setObjectName(u"serverWafDebug")
+
+        self.gridLayout_2.addWidget(self.serverWafDebug, 7, 1, 1, 1)
+
+        self.domainSSLCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainSSLCheck.setObjectName(u"domainSSLCheck")
+        self.domainSSLCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainSSLCheck, 4, 1, 1, 1)
 
         self.domainRobotsCheck = QCheckBox(self.webAnalyzerTab)
         self.domainRobotsCheck.setObjectName(u"domainRobotsCheck")
@@ -605,10 +670,11 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainRobotsCheck, 6, 2, 1, 1)
 
-        self.serverRobotsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverRobotsDebug.setObjectName(u"serverRobotsDebug")
+        self.domainDNSCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainDNSCheck.setObjectName(u"domainDNSCheck")
+        self.domainDNSCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.serverRobotsDebug, 7, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.domainDNSCheck, 2, 2, 1, 1)
 
         self.domainLocationCheck = QCheckBox(self.webAnalyzerTab)
         self.domainLocationCheck.setObjectName(u"domainLocationCheck")
@@ -616,14 +682,9 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainLocationCheck, 4, 3, 1, 1)
 
-        self.serverUrlEdit = QLineEdit(self.webAnalyzerTab)
-        self.serverUrlEdit.setObjectName(u"serverUrlEdit")
-
-        self.gridLayout_2.addWidget(self.serverUrlEdit, 0, 1, 1, 3)
-
         self.domainNmapCheck = QCheckBox(self.webAnalyzerTab)
         self.domainNmapCheck.setObjectName(u"domainNmapCheck")
-        self.domainNmapCheck.setChecked(True)
+        self.domainNmapCheck.setChecked(False)
 
         self.gridLayout_2.addWidget(self.domainNmapCheck, 2, 3, 1, 1)
 
@@ -633,65 +694,38 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainHeadersCheck, 6, 1, 1, 1)
 
-        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
+        self.serverRobotsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverRobotsDebug.setObjectName(u"serverRobotsDebug")
 
-        self.gridLayout_2.addWidget(self.serverNmapDebug, 3, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.serverRobotsDebug, 7, 2, 1, 1)
 
-        self.domainSubdomainsCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainSubdomainsCheck.setObjectName(u"domainSubdomainsCheck")
-        self.domainSubdomainsCheck.setChecked(True)
+        self.securityTxtCheck = QCheckBox(self.webAnalyzerTab)
+        self.securityTxtCheck.setObjectName(u"securityTxtCheck")
+        self.securityTxtCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.domainSubdomainsCheck, 2, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.securityTxtCheck, 8, 1, 1, 1)
 
-        self.serverSubdomainsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverSubdomainsDebug.setObjectName(u"serverSubdomainsDebug")
+        self.cookiesDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.cookiesDebug.setObjectName(u"cookiesDebug")
 
-        self.gridLayout_2.addWidget(self.serverSubdomainsDebug, 3, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.cookiesDebug, 9, 2, 1, 1)
 
-        self.runUrlScanButton = QPushButton(self.webAnalyzerTab)
-        self.runUrlScanButton.setObjectName(u"runUrlScanButton")
+        self.cookiesCheck = QCheckBox(self.webAnalyzerTab)
+        self.cookiesCheck.setObjectName(u"cookiesCheck")
+        self.cookiesCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.runUrlScanButton, 1, 1, 1, 3)
+        self.gridLayout_2.addWidget(self.cookiesCheck, 8, 2, 1, 1)
 
-        self.domainSSLCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainSSLCheck.setObjectName(u"domainSSLCheck")
-        self.domainSSLCheck.setChecked(True)
+        self.socialTagsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.socialTagsDebug.setObjectName(u"socialTagsDebug")
 
-        self.gridLayout_2.addWidget(self.domainSSLCheck, 4, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.socialTagsDebug, 9, 3, 1, 1)
 
-        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverWafDebug.setObjectName(u"serverWafDebug")
+        self.socialTagsCheck = QCheckBox(self.webAnalyzerTab)
+        self.socialTagsCheck.setObjectName(u"socialTagsCheck")
+        self.socialTagsCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.serverWafDebug, 7, 1, 1, 1)
-
-        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
-
-        self.gridLayout_2.addWidget(self.serverMalwareDebug, 7, 3, 1, 1)
-
-        self.domainProgress = QProgressBar(self.webAnalyzerTab)
-        self.domainProgress.setObjectName(u"domainProgress")
-        self.domainProgress.setValue(0)
-
-        self.gridLayout_2.addWidget(self.domainProgress, 8, 1, 1, 3)
-
-        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
-
-        self.gridLayout_2.addWidget(self.serverWhoisDebug, 5, 2, 1, 1)
-
-        self.domainMalwareCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainMalwareCheck.setObjectName(u"domainMalwareCheck")
-        self.domainMalwareCheck.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.domainMalwareCheck, 6, 3, 1, 1)
-
-        self.domainWhoisCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainWhoisCheck.setObjectName(u"domainWhoisCheck")
-        self.domainWhoisCheck.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.domainWhoisCheck, 4, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.socialTagsCheck, 8, 3, 1, 1)
 
         self.mainStackedWidget.addTab(self.webAnalyzerTab, "")
         self.metadataTab = QWidget()
@@ -902,7 +936,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(2)
+        self.mainStackedWidget.setCurrentIndex(5)
         self.tabWidget.setCurrentIndex(1)
 
 
@@ -970,28 +1004,31 @@ class Ui_MainWindow(object):
         self.useSearxngCheck.setText(QCoreApplication.translate("MainWindow", u"Use SearXNG", None))
         self.useCustomDorkCheck.setText(QCoreApplication.translate("MainWindow", u"Cusom Dork", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
-        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
-        self.domainDNSCheck.setText(QCoreApplication.translate("MainWindow", u"DNS", None))
-        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
+        self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
         self.serverDnsAnalyzeDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"DNS", None))
-        self.domainRobotsCheck.setText(QCoreApplication.translate("MainWindow", u"Robots", None))
-        self.serverRobotsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"ROBOTS", None))
-        self.domainLocationCheck.setText(QCoreApplication.translate("MainWindow", u"Server Location", None))
+        self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
+        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
+        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
         self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
-        self.domainNmapCheck.setText(QCoreApplication.translate("MainWindow", u"Open Ports", None))
-        self.domainHeadersCheck.setText(QCoreApplication.translate("MainWindow", u"Headers", None))
-        self.serverNmapDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
         self.domainSubdomainsCheck.setText(QCoreApplication.translate("MainWindow", u"Subdomains Dorking", None))
+        self.serverNmapDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
+        self.serverMalwareDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"MALWARE", None))
+        self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.serverSubdomainsDebug.setDocumentTitle("")
         self.serverSubdomainsDebug.setPlainText("")
         self.serverSubdomainsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SUBDOMAIN DORKING", None))
-        self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
-        self.domainSSLCheck.setText(QCoreApplication.translate("MainWindow", u"SSL / TLS", None))
-        self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HEADERS", None))
-        self.serverMalwareDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"MALWARE", None))
-        self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
-        self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
         self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
+        self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HEADERS", None))
+        self.domainSSLCheck.setText(QCoreApplication.translate("MainWindow", u"SSL / TLS", None))
+        self.domainRobotsCheck.setText(QCoreApplication.translate("MainWindow", u"Robots", None))
+        self.domainDNSCheck.setText(QCoreApplication.translate("MainWindow", u"DNS", None))
+        self.domainLocationCheck.setText(QCoreApplication.translate("MainWindow", u"Server Location", None))
+        self.domainNmapCheck.setText(QCoreApplication.translate("MainWindow", u"Open Ports", None))
+        self.domainHeadersCheck.setText(QCoreApplication.translate("MainWindow", u"Headers", None))
+        self.serverRobotsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"ROBOTS", None))
+        self.securityTxtCheck.setText(QCoreApplication.translate("MainWindow", u"Security.txt", None))
+        self.cookiesCheck.setText(QCoreApplication.translate("MainWindow", u"Cookies", None))
+        self.socialTagsCheck.setText(QCoreApplication.translate("MainWindow", u"Social Tags", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.fileStringsCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
@@ -1003,7 +1040,7 @@ class Ui_MainWindow(object):
         self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
         self.virustotalFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"VIRUSTOTAL", None))
         self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
-        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE INFO", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE ANALYZE", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))

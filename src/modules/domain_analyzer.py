@@ -7,6 +7,7 @@ import dns.resolver
 import nmap
 import requests
 import whois
+from bs4 import BeautifulSoup
 from ddgs import DDGS
 from fake_useragent import UserAgent
 from loguru import logger
@@ -382,9 +383,71 @@ class DomainAnalyzer:
 
             result = ""
             for sub in sorted(discovered_subdomains):
-                result += f"- {sub}"
+                result += sub
             return result
 
         except Exception as e:
             logger.error(f"Subdomains: Error: {e}")
             return e
+
+    async def get_security_txt(self, domain):
+        logger.debug("Trying to find security.txt")
+
+        try:
+            response = await asyncio.to_thread(
+                requests.get, f"https://{domain}/.well-known/security.txt", timeout=5
+            )
+
+            if response.status_code == 404:
+                return "Not Found"
+            else:
+                return response.text
+        except Exception as e:
+            logger.error(f"Security.txt: Error: {e}")
+            return str(e)
+
+    async def get_cookies(self, domain):
+        logger.debug("Trying to get cookies")
+
+        try:
+            response = await asyncio.to_thread(
+                requests.get, f"https://{domain}", timeout=5
+            )
+
+            lines = []
+            for cookie in response.cookies:
+                http_only = cookie.has_nonstandard_attr("HttpOnly")
+                lines.append(
+                    f"{cookie.name}: {cookie.value}"
+                    f"  (domain={cookie.domain}, path={cookie.path},"
+                    f" secure={cookie.secure}, httpOnly={http_only})"
+                )
+            return "\n".join(lines) if lines else "No cookies"
+        except Exception as e:
+            logger.error(f"Cookies: Error: {e}")
+            return str(e)
+
+    async def get_social_tags(self, domain):
+        logger.debug("Trying to get social tags")
+        try:
+            response = await asyncio.to_thread(
+                requests.get, f"https://{domain}", timeout=5
+            )
+            soup = BeautifulSoup(response.text, "html.parser")
+
+            tags = {}
+            for meta in soup.find_all("meta"):
+                key = meta.get("property") or meta.get("name")
+                if not key:
+                    continue
+                if isinstance(key, list):
+                    key = " ".join(key)
+                if key.startswith("og:") or key.startswith("twitter:"):
+                    tags[key] = meta.get("content", "")
+
+            if not tags:
+                return "Not Found"
+            return "\n".join(f"{k}: {v}" for k, v in tags.items())
+        except Exception as e:
+            logger.error(f"Social tags: Error: {e}")
+            return str(e)

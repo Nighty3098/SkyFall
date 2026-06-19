@@ -1,5 +1,7 @@
 anyio==4.13.0
+beautifulsoup4==4.15.0
 brotli==1.2.0
+bs4==0.0.2
 certifi==2026.5.20
 charset-normalizer==3.4.7
 click==8.4.1
@@ -41,6 +43,7 @@ ruff==0.15.15
 shiboken6==6.11.1
 six==1.17.0
 socksio==1.0.0
+soupsieve==2.8.4
 typing_extensions==4.15.0
 urllib3==2.7.0
 xlsxwriter==3.2.9

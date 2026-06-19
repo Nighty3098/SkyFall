@@ -147,6 +147,33 @@ class DomainAnalyzer:
                 except Exception:
                     dns_results[r_type] = []
 
+            soa = {}
+            try:
+                soa_record = await asyncio.to_thread(
+                    dns.resolver.resolve, domain, "SOA"
+                )
+                soa = soa_record[0]
+                dns_results["SOA"] = {
+                    "mname": str(soa.mname),
+                    "rname": str(soa.rname),
+                    "serial": soa.serial,
+                    "refresh": soa.refresh,
+                    "retry": soa.retry,
+                    "expire": soa.expire,
+                    "minimum": soa.minimum,
+                }
+            except Exception:
+                dns_results["SOA"] = {}
+
+            ns_ips = {}
+            for ns in dns_results.get("NS", []):
+                try:
+                    answers = await asyncio.to_thread(dns.resolver.resolve, ns, "A")
+                    ns_ips[ns] = [str(rdata) for rdata in answers]
+                except Exception:
+                    ns_ips[ns] = []
+            dns_results["NS_IP"] = ns_ips
+
             return dns_results
         except Exception as e:
             logger.error(f"Error DNS: {e}")

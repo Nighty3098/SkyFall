@@ -1,3 +1,4 @@
+import asyncio
 import concurrent.futures
 import json
 import os
@@ -224,15 +225,10 @@ class UsernameSearch:
         timeout=60,
         proxy=None,
         on_result=None,
-        on_progress=None,
     ):
         site_data = self._load_sites()
-        total = len(site_data)
-        if on_progress:
-            on_progress(0, total)
 
         results = []
-        done = 0
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.MAX_WORKERS
         ) as executor:
@@ -245,8 +241,59 @@ class UsernameSearch:
             for future in concurrent.futures.as_completed(futures):
                 r = future.result()
                 results.append(r)
+                if r["status"] == self.Status.CLAIMED:
+                    if on_result:
+                        on_result(r)
+
+                if r["status"] == self.Status.UNKNOWN and r["context"]:
+                    logger.warning(f"[{r['site']}] {r['context']}")
+
+        return results
+
+    async def check_async(
+        self,
+        username,
+        timeout=60,
+        proxy=None,
+        show_all=False,
+        dump=False,
+        only_claimed=False,
+        on_result=None,
+        on_progress=None,
+    ):
+        site_data = await asyncio.to_thread(self._load_sites)
+        total = len(site_data)
+        if on_progress:
+            on_progress(0, total)
+
+        results = []
+        done, claimed_count = 0, 0
+
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.MAX_WORKERS
+        ) as executor:
+            tasks = [
+                asyncio.ensure_future(
+                    loop.run_in_executor(
+                        executor,
+                        self._check_site,
+                        name,
+                        info,
+                        username,
+                        proxy,
+                        timeout,
+                    )
+                )
+                for name, info in site_data.items()
+            ]
+
+            for coro in asyncio.as_completed(tasks):
+                r = await coro
+                results.append(r)
                 done += 1
                 if r["status"] == self.Status.CLAIMED:
+                    claimed_count += 1
                     if on_result:
                         on_result(r)
 
@@ -255,5 +302,19 @@ class UsernameSearch:
 
                 if r["status"] == self.Status.UNKNOWN and r["context"]:
                     logger.warning(f"[{r['site']}] {r['context']}")
+
+            if not only_claimed:
+                for r in results:
+                    if r["status"] in (self.Status.CLAIMED, self.Status.WAF):
+                        continue
+                    if dump and r["status"] == self.Status.WAF:
+                        logger.warning(
+                            f"WAF on {r['site']}: {r['url_user']} (HTTP {r['http_status']})"  # noqa: E501
+                        )
+                    if show_all:
+                        if r["status"] == self.Status.UNKNOWN:
+                            logger.warning(
+                                f"Unknown on {r['site']}: {r['context'] or 'No context'}"  # noqa: E501
+                            )
 
         return results

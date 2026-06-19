@@ -288,20 +288,25 @@ class UsernameSearch:
                 for name, info in site_data.items()
             ]
 
-            for coro in asyncio.as_completed(tasks):
-                r = await coro
-                results.append(r)
-                done += 1
-                if r["status"] == self.Status.CLAIMED:
-                    claimed_count += 1
-                    if on_result:
-                        on_result(r)
+            try:
+                for coro in asyncio.as_completed(tasks):
+                    r = await coro
+                    results.append(r)
+                    done += 1
+                    if r["status"] == self.Status.CLAIMED:
+                        claimed_count += 1
+                        if on_result:
+                            on_result(r)
 
-                if on_progress:
-                    on_progress(done, total)
+                    if on_progress:
+                        on_progress(done, total)
 
-                if r["status"] == self.Status.UNKNOWN and r["context"]:
-                    logger.warning(f"[{r['site']}] {r['context']}")
+                    if r["status"] == self.Status.UNKNOWN and r["context"]:
+                        logger.warning(f"[{r['site']}] {r['context']}")
+            except asyncio.CancelledError:
+                for t in tasks:
+                    t.cancel()
+                raise
 
             if not only_claimed:
                 for r in results:

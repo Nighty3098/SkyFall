@@ -40,6 +40,4 @@ class UsernameController:
                 f"\n--- Search completed: {found} found ---"
             )
         except Exception as e:
-            self.ui.usernameScriptDebug.appendPlainText(
-                f"\n--- Error: {e} ---"
-            )
+            self.ui.usernameScriptDebug.appendPlainText(f"\n--- Error: {e} ---")

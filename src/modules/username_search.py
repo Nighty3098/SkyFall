@@ -36,7 +36,9 @@ class UsernameSearch:
         ]
         self.MAX_WORKERS = 20
         self.DATA_FILE = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            os.path.dirname(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            ),
             "data/username_data.json",
         )
         self.REMOTE_DATA_URL = "https://data.sherlockproject.xyz"

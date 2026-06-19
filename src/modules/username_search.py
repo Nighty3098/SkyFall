@@ -36,8 +36,8 @@ class UsernameSearch:
         ]
         self.MAX_WORKERS = 20
         self.DATA_FILE = os.path.join(
-            os.path.dirname(os.path.abspath(__file__)),
-            "sherlock_project/resources/data.json",
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "data/username_data.json",
         )
         self.REMOTE_DATA_URL = "https://data.sherlockproject.xyz"
         self._site_data = data
@@ -225,10 +225,15 @@ class UsernameSearch:
         timeout=60,
         proxy=None,
         on_result=None,
+        on_progress=None,
     ):
         site_data = self._load_sites()
+        total = len(site_data)
+        if on_progress:
+            on_progress(0, total)
 
         results = []
+        done = 0
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.MAX_WORKERS
         ) as executor:
@@ -241,23 +246,24 @@ class UsernameSearch:
             for future in concurrent.futures.as_completed(futures):
                 r = future.result()
                 results.append(r)
+                done += 1
                 if r["status"] == self.Status.CLAIMED:
                     if on_result:
                         on_result(r)
+
+                if on_progress:
+                    on_progress(done, total)
 
                 if r["status"] == self.Status.UNKNOWN and r["context"]:
                     logger.warning(f"[{r['site']}] {r['context']}")
 
         return results
 
-    async def check_async(
+    async def acheck(
         self,
         username,
         timeout=60,
         proxy=None,
-        show_all=False,
-        dump=False,
-        only_claimed=False,
         on_result=None,
         on_progress=None,
     ):
@@ -267,59 +273,33 @@ class UsernameSearch:
             on_progress(0, total)
 
         results = []
-        done, claimed_count = 0, 0
-
+        done = 0
         loop = asyncio.get_running_loop()
         with concurrent.futures.ThreadPoolExecutor(
             max_workers=self.MAX_WORKERS
         ) as executor:
             tasks = [
-                asyncio.ensure_future(
-                    loop.run_in_executor(
-                        executor,
-                        self._check_site,
-                        name,
-                        info,
-                        username,
-                        proxy,
-                        timeout,
-                    )
+                loop.run_in_executor(
+                    executor,
+                    self._check_site,
+                    name,
+                    info,
+                    username,
+                    proxy,
+                    timeout,
                 )
                 for name, info in site_data.items()
             ]
-
-            try:
-                for coro in asyncio.as_completed(tasks):
-                    r = await coro
-                    results.append(r)
-                    done += 1
-                    if r["status"] == self.Status.CLAIMED:
-                        claimed_count += 1
-                        if on_result:
-                            on_result(r)
-
-                    if on_progress:
-                        on_progress(done, total)
-
-                    if r["status"] == self.Status.UNKNOWN and r["context"]:
-                        logger.warning(f"[{r['site']}] {r['context']}")
-            except asyncio.CancelledError:
-                for t in tasks:
-                    t.cancel()
-                raise
-
-            if not only_claimed:
-                for r in results:
-                    if r["status"] in (self.Status.CLAIMED, self.Status.WAF):
-                        continue
-                    if dump and r["status"] == self.Status.WAF:
-                        logger.warning(
-                            f"WAF on {r['site']}: {r['url_user']} (HTTP {r['http_status']})"  # noqa: E501
-                        )
-                    if show_all:
-                        if r["status"] == self.Status.UNKNOWN:
-                            logger.warning(
-                                f"Unknown on {r['site']}: {r['context'] or 'No context'}"  # noqa: E501
-                            )
+            for coro in asyncio.as_completed(tasks):
+                r = await coro
+                results.append(r)
+                done += 1
+                if r["status"] == self.Status.CLAIMED:
+                    if on_result:
+                        on_result(r)
+                if on_progress:
+                    on_progress(done, total)
+                if r["status"] == self.Status.UNKNOWN and r["context"]:
+                    logger.warning(f"[{r['site']}] {r['context']}")
 
         return results

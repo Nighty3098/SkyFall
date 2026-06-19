@@ -103,9 +103,7 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
 
 def setup_username_connectors(controller: "UsernameController"):
     controller.ui.searchUsernameButton.clicked.connect(
-        lambda: (
-            asyncio.ensure_future(
-                controller.start_searching(controller.ui.usernameEdit.text())
-            ),
+        lambda: asyncio.ensure_future(
+            controller.start_searching(controller.ui.usernameEdit.text())
         )
     )

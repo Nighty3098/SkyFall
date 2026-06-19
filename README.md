@@ -14,21 +14,6 @@
 
 </div>
 
-## `STACK`
-
-- telethon | tg api
-- qt | ui
-- sqlalchemy | orm
-- networkx | graph
-- ddgs | duckduckgo
-- python3-nmap | nmap integration
-- python-whois
-- dnspython
-- fake_useragent
-- ssl
-- socket
-- ...
-
 ## `FUNCTIONAL`
 
 - [x] Collecting all information about web resources or ip addresses
@@ -72,17 +57,7 @@
 - [ ] Search for email information (which resources were registered on)
   - [x] intelx.io
   - [ ] ddg dorking
-- [ ] Username search
-  - [ ] Reddit
-  - [ ] Telegram
-  - [ ] Discord
-  - [ ] YT
-  - [ ] Pinterest
-  - [ ] Leetcode
-  - [ ] Linkedin
-  - [ ] Medium
-  - [ ] VK
-  - ...
+- [x] Username search (sherlock project db)
 - File analyzer:
   - [x] Extract metadata from file
   - [x] Analyze file via VirusTotal

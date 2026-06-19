@@ -1,4 +1,3 @@
-import asyncio
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -25,7 +24,7 @@ class UsernameController:
         self.ui.usernameSearchProgress.setValue(0)
 
         try:
-            results = await self.username_search.check_async(
+            results = await self.username_search.acheck(
                 username,
                 on_result=lambda r: self.ui.usernameScriptDebug.appendPlainText(
                     f"[{r['status']}] {r['site']}: {r['url_user']}"
@@ -40,5 +39,7 @@ class UsernameController:
             self.ui.usernameScriptDebug.appendPlainText(
                 f"\n--- Search completed: {found} found ---"
             )
-        except asyncio.CancelledError:
-            self.ui.usernameScriptDebug.appendPlainText("\n--- Search cancelled ---")
+        except Exception as e:
+            self.ui.usernameScriptDebug.appendPlainText(
+                f"\n--- Error: {e} ---"
+            )

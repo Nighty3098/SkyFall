@@ -17,17 +17,20 @@ from src.connectors import (
     setup_intelx_connectors,
     setup_metadata_connectors,
     setup_settings_connectors,
+    setup_username_connectors,
 )
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.intelx_controller import IntelxController
 from src.controllers.settings_controller import Settings
+from src.controllers.username_search_controller import UsernameController
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.modules.username_search import UsernameSearch
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
 from src.ui.setup_ui import setup_ui
@@ -99,6 +102,7 @@ class MainWindow(QMainWindow):
         self.settings = Settings(self.ui)
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
+        self.usernameSearch = UsernameSearch()
         self.domainAnalyzer = DomainAnalyzer(
             self.settings.virustotal_api_key,
             self.settings.google_safe_api_key,
@@ -120,12 +124,14 @@ class MainWindow(QMainWindow):
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
+        self.usernameController = UsernameController(self.ui, self.usernameSearch)
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
         setup_settings_connectors(self.settings)
         setup_metadata_connectors(self.fileAnalyzeController)
         setup_intelx_connectors(self.IntelxController)
+        setup_username_connectors(self.usernameController)
 
 
 if __name__ == "__main__":

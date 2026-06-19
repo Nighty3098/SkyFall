@@ -139,13 +139,28 @@ class FileAnalyzer:
                 logger.error(f"Error: {response.status_code}")
                 return None
 
-    def get_virustotal_info(self, stats):
+    def get_virustotal_info(self, stats, results=None):
         result = "-" * 50 + "\n"
         result += f"Malicious: {stats.get('malicious', 0)}\n"
         result += f"Suspicious: {stats.get('suspicious', 0)}\n"
         result += f"Harmless: {stats.get('harmless', 0)}\n"
         result += f"Undetected: {stats.get('undetected', 0)}\n"
         result += "-" * 50 + "\n"
+
+        if results:
+            result += "Detected:\n"
+            found_threats = False
+            for engine, details in results.items():
+                category = details.get("category")
+                if category in ["malicious", "suspicious"]:
+                    found_threats = True
+                    result_name = details.get("result", "Unknown Threat")
+                    result += f"  [{category.upper()}] {engine}: {result_name}\n"
+
+            if not found_threats:
+                result += "Not found\n"
+            result += "-" * 50 + "\n"
+
         return result
 
     async def virustotal_analyze(self, path):
@@ -160,8 +175,10 @@ class FileAnalyzer:
 
         if report:
             logger.debug("Found in VirusTotal DB!")
-            stats = report["data"]["attributes"]["last_analysis_stats"]
-            return self.get_virustotal_info(stats)
+            attributes = report["data"]["attributes"]
+            stats = attributes["last_analysis_stats"]
+            results = attributes.get("last_analysis_results")
+            return self.get_virustotal_info(stats, results)
         else:
             logger.debug("File not found in VirusTotal DB.")
             analysis_id = await self.upload_and_scan_file(path)

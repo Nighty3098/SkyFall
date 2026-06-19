@@ -395,6 +395,36 @@ class Ui_MainWindow(object):
         self.mainStackedWidget.addTab(self.telegramToolsTab, "")
         self.usernameSearchTab = QWidget()
         self.usernameSearchTab.setObjectName(u"usernameSearchTab")
+        self.gridLayout_8 = QGridLayout(self.usernameSearchTab)
+        self.gridLayout_8.setObjectName(u"gridLayout_8")
+        self.usernameScriptDebug = QPlainTextEdit(self.usernameSearchTab)
+        self.usernameScriptDebug.setObjectName(u"usernameScriptDebug")
+
+        self.gridLayout_8.addWidget(self.usernameScriptDebug, 2, 0, 1, 1)
+
+        self.horizontalLayout_8 = QHBoxLayout()
+        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.horizontalLayout_8.setContentsMargins(-1, -1, -1, 0)
+        self.usernameEdit = QLineEdit(self.usernameSearchTab)
+        self.usernameEdit.setObjectName(u"usernameEdit")
+
+        self.horizontalLayout_8.addWidget(self.usernameEdit)
+
+        self.searchUsernameButton = QPushButton(self.usernameSearchTab)
+        self.searchUsernameButton.setObjectName(u"searchUsernameButton")
+        self.searchUsernameButton.setMinimumSize(QSize(100, 0))
+
+        self.horizontalLayout_8.addWidget(self.searchUsernameButton)
+
+
+        self.gridLayout_8.addLayout(self.horizontalLayout_8, 0, 0, 1, 2)
+
+        self.usernameSearchProgress = QProgressBar(self.usernameSearchTab)
+        self.usernameSearchProgress.setObjectName(u"usernameSearchProgress")
+        self.usernameSearchProgress.setValue(0)
+
+        self.gridLayout_8.addWidget(self.usernameSearchProgress, 3, 0, 1, 2)
+
         self.mainStackedWidget.addTab(self.usernameSearchTab, "")
         self.mailToolsTab = QWidget()
         self.mailToolsTab.setObjectName(u"mailToolsTab")
@@ -523,15 +553,15 @@ class Ui_MainWindow(object):
         self.groupBox_5.setMaximumSize(QSize(16777215, 80))
         self.horizontalLayout_5 = QHBoxLayout(self.groupBox_5)
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.useCustomDorkCheck = QCheckBox(self.groupBox_5)
-        self.useCustomDorkCheck.setObjectName(u"useCustomDorkCheck")
-
-        self.horizontalLayout_5.addWidget(self.useCustomDorkCheck)
-
         self.useSearxngCheck = QCheckBox(self.groupBox_5)
         self.useSearxngCheck.setObjectName(u"useSearxngCheck")
 
         self.horizontalLayout_5.addWidget(self.useSearxngCheck)
+
+        self.useCustomDorkCheck = QCheckBox(self.groupBox_5)
+        self.useCustomDorkCheck.setObjectName(u"useCustomDorkCheck")
+
+        self.horizontalLayout_5.addWidget(self.useCustomDorkCheck)
 
         self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
@@ -676,8 +706,8 @@ class Ui_MainWindow(object):
 
         self.metadataFileDropWidget = DropWidget(self.metadataTab)
         self.metadataFileDropWidget.setObjectName(u"metadataFileDropWidget")
-        self.metadataFileDropWidget.setMinimumSize(QSize(400, 0))
-        self.metadataFileDropWidget.setMaximumSize(QSize(400, 16777215))
+        self.metadataFileDropWidget.setMinimumSize(QSize(300, 0))
+        self.metadataFileDropWidget.setMaximumSize(QSize(300, 16777215))
         self.verticalLayout = QVBoxLayout(self.metadataFileDropWidget)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.metadataStatusLabel = QLabel(self.metadataFileDropWidget)
@@ -830,6 +860,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.virustotalApiKeyEdit)
 
+        self.googleSafeApiKeyEdit = QLineEdit(self.settingsTab)
+        self.googleSafeApiKeyEdit.setObjectName(u"googleSafeApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.googleSafeApiKeyEdit)
+
         self.ipinfoApiKeyEdit = QLineEdit(self.settingsTab)
         self.ipinfoApiKeyEdit.setObjectName(u"ipinfoApiKeyEdit")
 
@@ -867,8 +902,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(6)
-        self.tabWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(2)
+        self.tabWidget.setCurrentIndex(1)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -919,6 +954,9 @@ class Ui_MainWindow(object):
         self.runTelegramAnalyzerBtn.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_analyzer_tab), QCoreApplication.translate("MainWindow", u"ANALYZER", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegramToolsTab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
+        self.usernameScriptDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Script", None))
+        self.usernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
+        self.searchUsernameButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.usernameSearchTab), QCoreApplication.translate("MainWindow", u"USERNAME", None))
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
         self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
@@ -929,8 +967,8 @@ class Ui_MainWindow(object):
         self.dorksListSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dork Search", None))
         self.dorksResultSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Result Search", None))
         self.groupBox_5.setTitle(QCoreApplication.translate("MainWindow", u"Settings", None))
-        self.useCustomDorkCheck.setText(QCoreApplication.translate("MainWindow", u"Cusom Dork", None))
         self.useSearxngCheck.setText(QCoreApplication.translate("MainWindow", u"Use SearXNG", None))
+        self.useCustomDorkCheck.setText(QCoreApplication.translate("MainWindow", u"Cusom Dork", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
         self.domainDNSCheck.setText(QCoreApplication.translate("MainWindow", u"DNS", None))
@@ -977,6 +1015,7 @@ class Ui_MainWindow(object):
         self.telegramPhoneEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram Phone Number", None))
         self.intelligentXApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IntelligentX API KEY", None))
         self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
+        self.googleSafeApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Google Safe API KEY", None))
         self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))

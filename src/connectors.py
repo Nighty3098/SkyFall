@@ -2,6 +2,7 @@ import asyncio
 from typing import TYPE_CHECKING
 
 from src.context_menus import open_dorks_list_menu
+from src.controllers.username_search_controller import UsernameController
 from src.modules.metadata_cleaner import remove_metadata
 from src.utils import filter_list, find_text
 
@@ -70,7 +71,6 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
     controller.ui.metadataFileDropWidget.file_dropped.connect(
         lambda path: (
             controller.ui.metadataFilePath.setText(f"File: {path}"),
-            controller.ui.metadataStatusLabel.setText(controller.get_file_type(path)),
             asyncio.ensure_future(
                 controller.start_file_analyzer(
                     controller.ui.metadataFileDropWidget.get_file_path()
@@ -96,6 +96,16 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
                 controller.start_file_analyzer(
                     controller.ui.metadataFileDropWidget.get_file_path()
                 )
+            ),
+        )
+    )
+
+
+def setup_username_connectors(controller: "UsernameController"):
+    controller.ui.searchUsernameButton.clicked.connect(
+        lambda: (
+            asyncio.ensure_future(
+                controller.start_searching(controller.ui.usernameEdit.text())
             ),
         )
     )

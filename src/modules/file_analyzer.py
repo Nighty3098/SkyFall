@@ -140,12 +140,12 @@ class FileAnalyzer:
                 return None
 
     def get_virustotal_info(self, stats, results=None):
-        result = "-" * 50 + "\n"
+        result = "-" * 45 + "\n"
         result += f"Malicious: {stats.get('malicious', 0)}\n"
         result += f"Suspicious: {stats.get('suspicious', 0)}\n"
         result += f"Harmless: {stats.get('harmless', 0)}\n"
         result += f"Undetected: {stats.get('undetected', 0)}\n"
-        result += "-" * 50 + "\n"
+        result += "-" * 45 + "\n"
 
         if results:
             result += "Detected:\n"
@@ -159,7 +159,7 @@ class FileAnalyzer:
 
             if not found_threats:
                 result += "Not found\n"
-            result += "-" * 50 + "\n"
+            result += "-" * 45 + "\n"
 
         return result
 
@@ -223,7 +223,7 @@ class FileAnalyzer:
         return await asyncio.to_thread(_hashes, path)
 
     async def check_tail_data(self, path):
-        result = "-" * 50 + "\n"
+        result = "-" * 45 + "\n"
         result += "Append / Tail Data:\n"
 
         data = await self._read_file_bytes(path)
@@ -238,7 +238,7 @@ class FileAnalyzer:
                     f"Hidden data discovered after EOF! Size: {len(tail)} bytes.\n"
                 )
         result += "Clean\n"
-        result += "-" * 50 + "\n"
+        result += "-" * 45 + "\n"
 
         return result
 
@@ -285,7 +285,7 @@ class FileAnalyzer:
         except Exception as e:
             result += f"Could not determine MIME type: {e}\n"
 
-        result += "-" * 50 + "\n"
+        result += "-" * 45 + "\n"
         result += "Internal Metadata (Hachoir):\n"
 
         def _parse_metadata(path):
@@ -306,7 +306,7 @@ class FileAnalyzer:
             text_data = await asyncio.to_thread(_parse_metadata, path)
             if text_data is None:
                 result += "  Hachoir could not parse this format.\n"
-                result += "=" * 50 + "\n"
+                result += "-" * 45 + "\n"
                 return result
 
             if text_data:

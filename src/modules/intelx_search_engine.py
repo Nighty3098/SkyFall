@@ -172,7 +172,7 @@ class IntelxSearchEngine:
                     logger.error(f"Error fetching results (attempt {i + 1}): {e}")
                     break
 
-            result = "\n" + "=" * 45 + "\n"
+            result = "\n" + "-" * 45 + "\n"
 
             if databases:
                 result += f"[+] Found ({len(databases)}) databases:\n"
@@ -180,7 +180,7 @@ class IntelxSearchEngine:
                     result += f"  - {db}\n"
 
                 if records_with_data:
-                    result += "\n" + "=" * 45 + "\n"
+                    result += "\n" + "-" * 45 + "\n"
                     result += "[+] Data:\n"
                     for idx, record in enumerate(records_with_data, 1):
                         result += f"\n--- #{idx} ---\n"
@@ -217,7 +217,7 @@ class IntelxSearchEngine:
             else:
                 result += "Not found\n"
 
-            result += "=" * 45
+            result += "-" * 45
             return result
 
         except Exception as e:

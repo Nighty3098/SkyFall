@@ -1,310 +1,320 @@
-import logging
+import asyncio
+import concurrent.futures
+import json
+import os
 import re
-from dataclasses import dataclass, field
-from enum import Enum
-from typing import Any
+from time import monotonic
 
 import requests
-from requests.adapters import HTTPAdapter
-from urllib3.util.retry import Retry
+from loguru import logger
 
 
-class QueryStatus(Enum):
-    CLAIMED = "Claimed"
-    AVAILABLE = "Available"
-    UNKNOWN = "Unknown"
-    ILLEGAL = "Illegal"
-    WAF = "WAF"
-
-
-class ErrorType(Enum):
-    MESSAGE = "message"
-    STATUS_CODE = "status_code"
-    RESPONSE_URL = "response_url"
-
-
-@dataclass
-class SiteManifest:
-    name: str
-    url: str
-    url_main: str
-    url_probe: str | None = None
-    username_claimed: str = ""
-    error_type: str | list[str] = "status_code"
-    error_msg: str | list[str] | None = None
-    error_code: int | list[int] | None = None
-    error_url: str | None = None
-    request_method: str | None = None
-    request_payload: dict[str, Any] | None = None
-    headers: dict[str, str] = field(default_factory=dict)
-    regex_check: str | None = None
-    is_nsfw: bool = False
-    is_false_positive: bool = False
-
-    @classmethod
-    def from_dict(cls, name: str, data: dict[str, Any]) -> "SiteManifest":
-        return cls(
-            name=name,
-            url=data.get("url", ""),
-            url_main=data.get("urlMain", ""),
-            url_probe=data.get("urlProbe"),
-            username_claimed=data.get("username_claimed", ""),
-            error_type=data.get("errorType", "status_code"),
-            error_msg=data.get("errorMsg"),
-            error_code=data.get("errorCode"),
-            error_url=data.get("errorUrl"),
-            request_method=data.get("request_method"),
-            request_payload=data.get("request_payload"),
-            headers=data.get("headers", {}),
-            regex_check=data.get("regexCheck"),
-            is_nsfw=data.get("isNSFW", False),
-        )
-
-
-@dataclass
-class QueryResult:
-    site_name: str
-    url_user: str
-    url_main: str
-    status: QueryStatus
-    http_status: int | None = None
-    response_time_ms: float | None = None
-    error_context: str | None = None
-
-    @property
-    def is_found(self) -> bool:
-        return self.status == QueryStatus.CLAIMED
-
-
-class SiteChecker:
-    WAF_SIGNATURES: list[str] = [
-        "Cloudflare challenge spinner",
-        "Cloudflare challenge error text",
-        "AwsWafIntegration.forceRefreshToken",
-        "perimeterxIdentifiers",
-    ]
-
-    DEFAULT_USER_AGENT: str = (
-        "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0"
-    )
-
-    DEFAULT_ERROR_CODES: list[int] = [404]
-
-    def __init__(
-        self,
-        session: requests.Session | None = None,
-        proxy: dict[str, str] | None = None,
-        timeout: int = 30,
-        max_retries: int = 2,
-    ):
-
-        self.session = session or self._create_session(proxy, max_retries)
-        self.timeout = timeout
-        self.logger = logging.getLogger(f"{__name__}.{self.__class__.__name__}")
+class UsernameSearch:
+    class Status:
+        CLAIMED = "Claimed"
+        AVAILABLE = "Available"
+        UNKNOWN = "Unknown"
+        ILLEGAL = "Illegal"
+        WAF = "WAF"
 
     @staticmethod
-    def _create_session(
-        proxy: dict[str, str] | None = None, max_retries: int = 2
-    ) -> requests.Session:
-        session = requests.Session()
-        retry_strategy = Retry(
-            total=max_retries,
-            backoff_factor=0.5,
-            status_forcelist=[429, 500, 502, 503, 504],
-            allowed_methods=["HEAD", "GET", "POST", "PUT"],
+    def _interpolate(obj, username):
+        if isinstance(obj, str):
+            return obj.replace("{}", username)
+        if isinstance(obj, dict):
+            return {k: UsernameSearch._interpolate(v, username) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [UsernameSearch._interpolate(i, username) for i in obj]
+        return obj
+
+    def __init__(self, data_path=None, data=None):
+        self.waf_fingerprints = [
+            r".loading-spinner{visibility:hidden}body.no-js .challenge-running{display:none}body.dark{background-color:#222;color:#d9d9d9}body.dark a{color:#fff}body.dark a:hover{color:#ee730a;text-decoration:underline}body.dark .lds-ring div{border-color:#999 transparent transparent}body.dark .font-red{color:#b20f03}body.dark",  # noqa: E501
+            r'<span id="challenge-error-text">',
+            r"AwsWafIntegration.forceRefreshToken",
+            r'{return l.onPageView}}),Object.defineProperty(r,"perimeterxIdentifiers",{enumerable:',  # noqa: E501
+        ]
+        self.MAX_WORKERS = 20
+        self.DATA_FILE = os.path.join(
+            os.path.dirname(os.path.abspath(__file__)),
+            "sherlock_project/resources/data.json",
         )
-        adapter = HTTPAdapter(max_retries=retry_strategy)
-        session.mount("https://", adapter)
-        session.mount("http://", adapter)
-        if proxy:
-            session.proxies.update(proxy)
-        return session
+        self.REMOTE_DATA_URL = "https://data.sherlockproject.xyz"
+        self._site_data = data
+        self._data_path = data_path
 
-    def validate_username(self, username: str, manifest: SiteManifest) -> bool:
-        if not manifest.regex_check:
-            return True
-        try:
-            return bool(re.match(manifest.regex_check, username))
-        except re.error as e:
-            self.logger.warning(
-                "Invalid regex for %s: %s — %s", manifest.name, manifest.regex_check, e
+    def _load_sites(self):
+        if self._site_data is not None:
+            return self._site_data
+        path = self._data_path
+        if path is None:
+            path = (
+                self.DATA_FILE
+                if os.path.isfile(self.DATA_FILE)
+                else self.REMOTE_DATA_URL
             )
-            return True
+        if path.startswith(("http://", "https://")):
+            resp = requests.get(path, timeout=30)
+            resp.raise_for_status()
+            data = resp.json()
+        else:
+            with open(path, encoding="utf-8") as f:
+                data = json.load(f)
+        data.pop("$schema", None)
+        self._site_data = data
+        return data
 
-    def generate_username_variants(self, username: str) -> list[str]:
-        if "{?}" not in username:
-            return [username]
-        base = username.replace("{?}", "{}")
-        return [base.format(sep) for sep in ("_", "-", ".")]
+    def _check_site(self, site_name, net_info, username, proxy=None, timeout=60):
+        regex_check = net_info.get("regexCheck")
+        if regex_check and re.search(regex_check, username) is None:
+            return {
+                "site": site_name,
+                "url_main": net_info.get("urlMain", ""),
+                "url_user": "",
+                "status": self.Status.ILLEGAL,
+                "http_status": "",
+                "response_time": None,
+                "context": None,
+            }
 
-    def detect_waf(self, response: requests.Response) -> bool:
-        response_text = response.text.lower()
-        for signature in self.WAF_SIGNATURES:
-            if signature.lower() in response_text:
-                return True
-        return False
+        url = self._interpolate(net_info["url"], username.replace(" ", "%20"))
+        url_probe = self._interpolate(net_info.get("urlProbe", url), username)
 
-    def _get_request_url(self, manifest: SiteManifest, username: str) -> str:
-        template = manifest.url_probe or manifest.url
-        return template.replace("{}", username)
-
-    def _get_request_method(self, manifest: SiteManifest) -> str:
-        if manifest.request_method:
-            return manifest.request_method.upper()
-        return "POST" if manifest.request_payload else "GET"
-
-    def _prepare_headers(self, manifest: SiteManifest) -> dict[str, str]:
-        headers = {"User-Agent": self.DEFAULT_USER_AGENT}
-        headers.update(manifest.headers)
-        return headers
-
-    def _perform_request(
-        self,
-        url: str,
-        method: str,
-        headers: dict[str, str],
-        payload: dict | None = None,
-    ) -> requests.Response:
-        kwargs = {
-            "url": url,
-            "headers": headers,
-            "timeout": self.timeout,
-            "allow_redirects": False,
+        headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:129.0) Gecko/20100101 Firefox/129.0",  # noqa: E501
         }
-        if payload and method in ("POST", "PUT"):
-            kwargs["json"] = payload
+        headers.update(net_info.get("headers", {}))
 
-        response = self.session.request(method=method.upper(), **kwargs)
-        return response
+        raw_error_type = net_info["errorType"]
+        error_types = (
+            [raw_error_type] if isinstance(raw_error_type, str) else raw_error_type
+        )
 
-    def _check_message_error(
-        self, response: requests.Response, error_msg: str | list[str]
-    ) -> bool:
-        response_text = response.text
-        if isinstance(error_msg, str):
-            return error_msg in response_text
-        return any(msg in response_text for msg in error_msg)
+        request_method = net_info.get("request_method")
+        if request_method is None:
+            request_method = "HEAD" if raw_error_type == "status_code" else "GET"
+        method_map = {
+            "GET": requests.get,
+            "HEAD": requests.head,
+            "POST": requests.post,
+            "PUT": requests.put,
+        }
+        request_func = method_map[request_method]
 
-    def _check_status_code(
-        self,
-        response: requests.Response,
-        error_code: int | list[int] | None = None,
-    ) -> bool:
-        if error_code is not None:
-            if isinstance(error_code, int):
-                return response.status_code == error_code
-            return response.status_code in error_code
-        return response.status_code >= 300 or response.status_code < 200
+        request_payload = (
+            self._interpolate(net_info.get("request_payload"), username)
+            if net_info.get("request_payload")
+            else None
+        )
+        allow_redirects = "response_url" not in error_types
 
-    def _check_response_url(
-        self, response: requests.Response, error_url: str | None = None
-    ) -> bool:
-        if 200 <= response.status_code < 300:
-            return False
-        if error_url and error_url in response.url:
-            return True
-        return response.status_code >= 300
+        start = monotonic()
+        response = None
+        error_context = None
+        try:
+            kwargs = {
+                "url": url_probe,
+                "headers": headers,
+                "allow_redirects": allow_redirects,
+                "timeout": timeout,
+            }
+            if proxy:
+                kwargs["proxies"] = {"http": proxy, "https": proxy}
+            if request_payload:
+                kwargs["json"] = request_payload
+            response = request_func(**kwargs)
+        except requests.exceptions.HTTPError as e:
+            error_context = f"HTTP Error: {e}"
+        except requests.exceptions.ProxyError as e:
+            error_context = f"Proxy Error: {e}"
+        except requests.exceptions.ConnectionError as e:
+            error_context = f"Connection Error: {e}"
+        except requests.exceptions.Timeout as e:
+            error_context = f"Timeout Error: {e}"
+        except requests.exceptions.RequestException as e:
+            error_context = f"Request Error: {e}"
+        except UnicodeError as e:
+            error_context = f"Encoding Error: {e}"
 
-    def _apply_error_check(
-        self, response: requests.Response, manifest: SiteManifest, error_type: str
-    ) -> QueryStatus | None:
-        if error_type == ErrorType.MESSAGE.value:
-            if manifest.error_msg is None:
-                return None
-            found_error_msg = self._check_message_error(response, manifest.error_msg)
-            return QueryStatus.AVAILABLE if found_error_msg else QueryStatus.CLAIMED
+        response_time = monotonic() - start
 
-        elif error_type == ErrorType.STATUS_CODE.value:
-            is_available = self._check_status_code(response, manifest.error_code)
-            return QueryStatus.AVAILABLE if is_available else QueryStatus.CLAIMED
+        if error_context:
+            return {
+                "site": site_name,
+                "url_main": net_info.get("urlMain", ""),
+                "url_user": url,
+                "status": self.Status.UNKNOWN,
+                "http_status": getattr(response, "status_code", "?"),
+                "response_time": response_time,
+                "context": error_context,
+            }
 
-        elif error_type == ErrorType.RESPONSE_URL.value:
-            is_available = self._check_response_url(response, manifest.error_url)
-            return QueryStatus.AVAILABLE if is_available else QueryStatus.CLAIMED
+        http_status = response.status_code
+        resp_text = response.text
 
-        return None
+        for fp in self.waf_fingerprints:
+            if fp in resp_text:
+                return {
+                    "site": site_name,
+                    "url_main": net_info.get("urlMain", ""),
+                    "url_user": url,
+                    "status": self.Status.WAF,
+                    "http_status": http_status,
+                    "response_time": response_time,
+                    "context": None,
+                }
 
-    def _determine_status(
-        self, response: requests.Response, manifest: SiteManifest
-    ) -> QueryStatus:
-        if self.detect_waf(response):
-            return QueryStatus.WAF
+        if any(
+            et not in ("message", "status_code", "response_url") for et in error_types
+        ):
+            return {
+                "site": site_name,
+                "url_main": net_info.get("urlMain", ""),
+                "url_user": url,
+                "status": self.Status.UNKNOWN,
+                "http_status": http_status,
+                "response_time": response_time,
+                "context": f"Unknown error type '{raw_error_type}'",
+            }
 
-        error_types = manifest.error_type
-        if isinstance(error_types, str):
-            error_types = [error_types]
+        query_status = self.Status.UNKNOWN
 
-        for error_type in error_types:
-            result = self._apply_error_check(response, manifest, error_type)
-            if result == QueryStatus.AVAILABLE:
-                return QueryStatus.AVAILABLE
+        if "message" in error_types:
+            error_flag = True
+            errors = net_info.get("errorMsg")
+            if isinstance(errors, str):
+                if errors in resp_text:
+                    error_flag = False
+            else:
+                for error in errors:
+                    if error in resp_text:
+                        error_flag = False
+                        break
+            query_status = self.Status.CLAIMED if error_flag else self.Status.AVAILABLE
 
-        return QueryStatus.CLAIMED
+        if "status_code" in error_types and query_status is not self.Status.AVAILABLE:
+            error_codes = net_info.get("errorCode")
+            query_status = self.Status.CLAIMED
+            if isinstance(error_codes, int):
+                error_codes = [error_codes]
+            if error_codes is not None and http_status in error_codes:
+                query_status = self.Status.AVAILABLE
+            elif http_status >= 300 or http_status < 200:
+                query_status = self.Status.AVAILABLE
+
+        if "response_url" in error_types and query_status is not self.Status.AVAILABLE:
+            query_status = (
+                self.Status.CLAIMED
+                if 200 <= http_status < 300
+                else self.Status.AVAILABLE
+            )
+
+        return {
+            "site": site_name,
+            "url_main": net_info.get("urlMain", ""),
+            "url_user": url,
+            "status": query_status,
+            "http_status": http_status,
+            "response_time": response_time,
+            "context": None,
+        }
 
     def check(
-        self, username: str, manifest: SiteManifest, *, verbose: bool = False
-    ) -> QueryResult:
+        self,
+        username,
+        timeout=60,
+        proxy=None,
+        on_result=None,
+    ):
+        site_data = self._load_sites()
 
-        import time
+        results = []
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.MAX_WORKERS
+        ) as executor:
+            futures = {
+                executor.submit(
+                    self._check_site, name, info, username, proxy, timeout
+                ): name
+                for name, info in site_data.items()
+            }
+            for future in concurrent.futures.as_completed(futures):
+                r = future.result()
+                results.append(r)
+                if r["status"] == self.Status.CLAIMED:
+                    if on_result:
+                        on_result(r)
 
-        url_user = manifest.url.replace("{}", username)
+                if r["status"] == self.Status.UNKNOWN and r["context"]:
+                    logger.warning(f"[{r['site']}] {r['context']}")
 
-        result = QueryResult(
-            site_name=manifest.name,
-            url_user=url_user,
-            url_main=manifest.url_main,
-            status=QueryStatus.UNKNOWN,
-        )
+        return results
 
-        if not self.validate_username(username, manifest):
-            result.status = QueryStatus.ILLEGAL
-            return result
+    async def check_async(
+        self,
+        username,
+        timeout=60,
+        proxy=None,
+        show_all=False,
+        dump=False,
+        only_claimed=False,
+        on_result=None,
+        on_progress=None,
+    ):
+        site_data = await asyncio.to_thread(self._load_sites)
+        total = len(site_data)
+        if on_progress:
+            on_progress(0, total)
 
-        if manifest.is_false_positive:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = "Site in false-positive exclusion list"
-            return result
+        results = []
+        done, claimed_count = 0, 0
 
-        request_url = self._get_request_url(manifest, username)
-        method = self._get_request_method(manifest)
-        headers = self._prepare_headers(manifest)
+        loop = asyncio.get_running_loop()
+        with concurrent.futures.ThreadPoolExecutor(
+            max_workers=self.MAX_WORKERS
+        ) as executor:
+            tasks = [
+                asyncio.ensure_future(
+                    loop.run_in_executor(
+                        executor,
+                        self._check_site,
+                        name,
+                        info,
+                        username,
+                        proxy,
+                        timeout,
+                    )
+                )
+                for name, info in site_data.items()
+            ]
 
-        start_time = time.monotonic()
-        try:
-            response = self._perform_request(
-                url=request_url,
-                method=method,
-                headers=headers,
-                payload=manifest.request_payload,
-            )
-            elapsed_ms = (time.monotonic() - start_time) * 1000
+            for coro in asyncio.as_completed(tasks):
+                r = await coro
+                results.append(r)
+                done += 1
+                if r["status"] == self.Status.CLAIMED:
+                    claimed_count += 1
+                    if on_result:
+                        on_result(r)
 
-            result.http_status = response.status_code
-            if verbose:
-                result.response_time_ms = round(elapsed_ms, 2)
+                if on_progress:
+                    on_progress(done, total)
 
-            result.status = self._determine_status(response, manifest)
+                if r["status"] == self.Status.UNKNOWN and r["context"]:
+                    logger.warning(f"[{r['site']}] {r['context']}")
 
-        except requests.exceptions.HTTPError as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"HTTPError: {e}"
-        except requests.exceptions.ProxyError as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"ProxyError: {e}"
-        except requests.exceptions.ConnectionError as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"ConnectionError: {e}"
-        except requests.exceptions.Timeout as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"Timeout: {e}"
-        except requests.exceptions.RequestException as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"RequestException: {e}"
-        except UnicodeError as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"UnicodeError: {e}"
-        except Exception as e:
-            result.status = QueryStatus.UNKNOWN
-            result.error_context = f"Unexpected error: {type(e).__name__}: {e}"
+            if not only_claimed:
+                for r in results:
+                    if r["status"] in (self.Status.CLAIMED, self.Status.WAF):
+                        continue
+                    if dump and r["status"] == self.Status.WAF:
+                        logger.warning(
+                            f"WAF on {r['site']}: {r['url_user']} (HTTP {r['http_status']})"  # noqa: E501
+                        )
+                    if show_all:
+                        if r["status"] == self.Status.UNKNOWN:
+                            logger.warning(
+                                f"Unknown on {r['site']}: {r['context'] or 'No context'}"  # noqa: E501
+                            )
 
-        return result
+        return results

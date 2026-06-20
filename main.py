@@ -16,6 +16,7 @@ from src.connectors import (
     setup_dorking_connectors,
     setup_intelx_connectors,
     setup_metadata_connectors,
+    setup_proxies_connectors,
     setup_settings_connectors,
     setup_tg_analyzer_connectors,
     setup_tg_downloader_connectors,
@@ -25,6 +26,7 @@ from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.intelx_controller import IntelxController
+from src.controllers.proxy_controller import Proxy
 from src.controllers.settings_controller import Settings
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
@@ -53,8 +55,7 @@ class Loader(QUiLoader):
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
-        print(
-            """
+        print("""
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
 │            _______ __          _______       __ __              │
@@ -69,8 +70,7 @@ class MainWindow(QMainWindow):
 │                    Coded by Nighty3098                          │
 │               https://nighty3098.vercel.app                     │
 └─────────────────────────────────────────────────────────────────┘
-            """
-        )
+            """)
         super().__init__(parent)
         ui_file = Path(__file__).parent / "resources" / "form.ui"
         self.ui = Loader().load(ui_file)
@@ -106,6 +106,7 @@ class MainWindow(QMainWindow):
     def _init_modules(self):
         logger.debug("Init modules")
         self.settings = Settings(self.ui)
+        self.proxy = Proxy(self.ui)
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
         self.usernameSearch = UsernameSearch()
@@ -121,6 +122,7 @@ class MainWindow(QMainWindow):
                 "api_hash": self.ui.telegramApiHashEdit.text(),
                 "channel": "",
                 "path": self.ui.pathToStorageEdit.text(),
+                "proxy_list": self.proxy.get_proxies_text(),
             }
         )
         self.fileAnalyzer = FileAnalyzer(self.settings.virustotal_api_key)
@@ -140,7 +142,9 @@ class MainWindow(QMainWindow):
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
         self.usernameController = UsernameController(self.ui, self.usernameSearch)
-        self.tgDownloaderController = TgDownloaderController(self.ui, self.tgDownloader)
+        self.tgDownloaderController = TgDownloaderController(
+            self.ui, self.tgDownloader, self.proxy
+        )
         self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
 
         setup_dorking_connectors(self.dorkingController)
@@ -151,6 +155,7 @@ class MainWindow(QMainWindow):
         setup_username_connectors(self.usernameController)
         setup_tg_downloader_connectors(self.tgDownloaderController)
         setup_tg_analyzer_connectors(self.tgAnalyzerController)
+        setup_proxies_connectors(self.proxy)
 
 
 if __name__ == "__main__":

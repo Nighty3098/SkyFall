@@ -10,6 +10,7 @@ from PySide6.QtCore import QObject, Signal
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
+    from src.controllers.proxy_controller import Proxy
     from src.modules.tg_downloader import TgDownloader
 
 
@@ -25,11 +26,17 @@ class _DownloaderBridge(QObject):
 
 
 class TgDownloaderController:
-    def __init__(self, ui: "QMainWindow", tg_downloader: "TgDownloader"):
+    def __init__(
+        self,
+        ui: "QMainWindow",
+        tg_downloader: "TgDownloader",
+        proxy: "Proxy | None" = None,
+    ):
         logger.debug("Init: TgDownloaderController")
 
         self.ui = ui
         self.tg_downloader = tg_downloader
+        self.proxy = proxy
         self._task = None
         self._bridge = _DownloaderBridge()
         self._bridge.log_signal.connect(
@@ -90,5 +97,9 @@ class TgDownloaderController:
             "max_requests": self.ui.telegramMaxReq.value(),
             "pause_duration": self.ui.telegramPause.value(),
             "use_proxy": self.ui.telegramUseProxyCheck.isChecked(),
-            "proxy_list": self.ui.proxyListEdit.toPlainText(),
+            "proxy_list": (
+                self.proxy.get_proxies_text()
+                if self.proxy
+                else self.ui.proxyListEdit.toPlainText()
+            ),
         }

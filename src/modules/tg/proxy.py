@@ -5,6 +5,78 @@ from typing import Optional
 from urllib.parse import parse_qs, urlparse
 
 
+def parse_proxies_text(text: str) -> list[tuple]:
+    """Parse proxy text into a list of proxy tuples.
+
+    Supports the same formats as load_proxies() but operates on a string
+    directly instead of a file path.
+
+    Returns:
+        List[Tuple]: List of tuples (type, host, port, user, password).
+    """
+    proxies = []
+
+    for line in text.splitlines():
+        line = line.strip()
+        if not line or line.startswith("#"):
+            continue
+
+        if "t.me/proxy" in line or "tg://proxy" in line:
+            try:
+                if "t.me/proxy" in line:
+                    line = line.replace("https://t.me/proxy", "tg://proxy")
+                parsed = urlparse(line)
+                params = parse_qs(parsed.query)
+                server = params.get("server", [""])[0]
+                port = int(params.get("port", ["443"])[0])
+                secret = params.get("secret", [""])[0]
+                if server and secret:
+                    proxies.append(("mtproto", server, port, secret, None))
+                continue
+            except:
+                continue
+
+        proxy_type = "socks5"
+        connection_string = line
+
+        if "://" in line:
+            proxy_type, connection_string = line.split("://", 1)
+            proxy_type = proxy_type.lower()
+
+        if proxy_type == "mtproto":
+            if "@" in connection_string:
+                secret, host_port = connection_string.split("@")
+                host, port = (
+                    host_port.split(":") if ":" in host_port else (host_port, 443)
+                )
+                proxies.append(("mtproto", host, int(port), secret, None))
+            else:
+                parts = connection_string.split(":")
+                if len(parts) >= 3:
+                    proxies.append(
+                        ("mtproto", parts[0], int(parts[1]), parts[2], None)
+                    )
+                elif len(parts) == 2:
+                    proxies.append(("mtproto", parts[0], int(parts[1]), "", None))
+            continue
+
+        if "@" in connection_string:
+            auth, host_port = connection_string.split("@")
+            user, password = auth.split(":", 1) if ":" in auth else (auth, "")
+            host, port = (
+                host_port.split(":") if ":" in host_port else (host_port, 1080)
+            )
+            proxies.append((proxy_type, host, int(port), user, password))
+        else:
+            if ":" in connection_string:
+                host, port = connection_string.split(":")
+            else:
+                host, port = connection_string, 1080
+            proxies.append((proxy_type, host, int(port), None, None))
+
+    return proxies
+
+
 def load_proxies(proxies_file: str = "resources/proxies.txt") -> list[tuple]:
     """Load proxies from a file with support for multiple formats.
 
@@ -19,70 +91,11 @@ def load_proxies(proxies_file: str = "resources/proxies.txt") -> list[tuple]:
     Returns:
         List[Tuple]: List of tuples (type, host, port, user, password).
     """
-    proxies = []
     if not os.path.exists(proxies_file):
-        return proxies
+        return []
 
     with open(proxies_file, encoding="utf-8") as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-
-            if "t.me/proxy" in line or "tg://proxy" in line:
-                try:
-                    if "t.me/proxy" in line:
-                        line = line.replace("https://t.me/proxy", "tg://proxy")
-                    parsed = urlparse(line)
-                    params = parse_qs(parsed.query)
-                    server = params.get("server", [""])[0]
-                    port = int(params.get("port", ["443"])[0])
-                    secret = params.get("secret", [""])[0]
-                    if server and secret:
-                        proxies.append(("mtproto", server, port, secret, None))
-                    continue
-                except:
-                    continue
-
-            proxy_type = "socks5"
-            connection_string = line
-
-            if "://" in line:
-                proxy_type, connection_string = line.split("://", 1)
-                proxy_type = proxy_type.lower()
-
-            if proxy_type == "mtproto":
-                if "@" in connection_string:
-                    secret, host_port = connection_string.split("@")
-                    host, port = (
-                        host_port.split(":") if ":" in host_port else (host_port, 443)
-                    )
-                    proxies.append(("mtproto", host, int(port), secret, None))
-                else:
-                    parts = connection_string.split(":")
-                    if len(parts) >= 3:
-                        proxies.append(
-                            ("mtproto", parts[0], int(parts[1]), parts[2], None)
-                        )
-                    elif len(parts) == 2:
-                        proxies.append(("mtproto", parts[0], int(parts[1]), "", None))
-                continue
-
-            if "@" in connection_string:
-                auth, host_port = connection_string.split("@")
-                user, password = auth.split(":", 1) if ":" in auth else (auth, "")
-                host, port = (
-                    host_port.split(":") if ":" in host_port else (host_port, 1080)
-                )
-                proxies.append((proxy_type, host, int(port), user, password))
-            else:
-                if ":" in connection_string:
-                    host, port = connection_string.split(":")
-                else:
-                    host, port = connection_string, 1080
-                proxies.append((proxy_type, host, int(port), None, None))
-
-    return proxies
+        return parse_proxies_text(f.read())
 
 
 def prepare_mtproto_proxy(proxy_tuple: tuple) -> tuple:

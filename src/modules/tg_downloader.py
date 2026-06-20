@@ -37,7 +37,7 @@ from src.modules.tg.db import (
     update_channel_member_sync,
 )
 from src.modules.tg.extractors import extract_links, get_link_type
-from src.modules.tg.proxy import get_working_proxy, load_proxies
+from src.modules.tg.proxy import get_working_proxy, load_proxies, parse_proxies_text
 from src.modules.tg.session_manager import get_random_session, load_multi_acc_sessions
 from src.modules.tg.state import CollectorState
 from src.modules.tg.throttler import handle_flood_wait, safe_sleep
@@ -75,6 +75,7 @@ class TgDownloader:
         self.pause_duration = config.get("pause_duration", LONG_BREAK_DURATION)
         self.use_proxy = config.get("use_proxy", False)
         self.proxy_list_str = config.get("proxy_list", "")
+        logger.debug(f"Loaded: {self.proxy_list_str}")
         self.multi_acc = config.get("multi_acc", False)
 
         self.state = CollectorState()
@@ -366,15 +367,7 @@ class TgDownloader:
         proxy_list_str = self.config.get("proxy_list", "")
 
         if self.state.use_proxy and proxy_list_str:
-            import tempfile
-
-            with tempfile.NamedTemporaryFile(
-                mode="w", suffix=".txt", delete=False
-            ) as f:
-                f.write(proxy_list_str)
-                temp_proxy_file = f.name
-            self.state.proxies = load_proxies(temp_proxy_file)
-            os.remove(temp_proxy_file)
+            self.state.proxies = parse_proxies_text(proxy_list_str)
         elif os.path.exists(os.path.join(self.path, "resources/proxies.txt")):
             self.state.proxies = load_proxies(
                 os.path.join(self.path, "resources/proxies.txt")

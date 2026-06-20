@@ -1,5 +1,3 @@
-import os
-import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -20,12 +18,15 @@ class Proxy:
 
     def _load_proxies(self):
         try:
-            with open(PROXY_FILE, "r") as proxies_file:
+            with open(PROXY_FILE) as proxies_file:
                 content = proxies_file.read()
                 logger.debug(f"Loaded: {PROXY_FILE}")
                 self.ui.proxyListEdit.setPlainText(content)
         except FileNotFoundError:
             logger.error("Proxy file not found")
+
+    def get_proxies_text(self) -> str:
+        return self.ui.proxyListEdit.toPlainText()
 
     def save_proxies(self):
         try:

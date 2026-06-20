@@ -83,11 +83,13 @@ class TgDownloaderController:
             self.ui.telegramDownloadProgress.setValue(value)
 
     def build_collection_config(self) -> dict:
+        from pathlib import Path
+        tg_data_path = str(Path.home() / ".skyfall" / "data")
         return {
             "api_id": self.ui.tgApiKeyEdit.text(),
             "api_hash": self.ui.telegramApiHashEdit.text(),
             "channel": self.ui.telegramUsernameEdit.text(),
-            "path": self.ui.pathToStorageEdit.text(),
+            "path": tg_data_path,
             "collect_members": self.ui.telegramCollectMembersCheck.isChecked(),
             "collect_links": self.ui.telegramCollectLinksCheck.isChecked(),
             "download_media": self.ui.telegramDownloadMediaCheck.isChecked(),

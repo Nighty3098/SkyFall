@@ -49,7 +49,8 @@ class TgAnalyzerController:
             return False, str(e)
 
     def build_analysis_params(self) -> dict:
-        db_path = self.ui.pathToStorageEdit.text()
+        from pathlib import Path
+        db_path = str(Path.home() / ".skyfall" / "data")
 
         selected_channels = [
             item.text()

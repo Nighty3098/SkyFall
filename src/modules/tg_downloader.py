@@ -48,7 +48,7 @@ LONG_BREAK_DURATION = 60
 MAX_CONSECUTIVE_REQUESTS = 100
 MEMBER_DELAY = 3
 REPLY_DELAY = 1
-SESSION_NAME = "session"
+SESSION_NAME = "tg_session.session"
 
 
 class TgDownloader:
@@ -130,9 +130,7 @@ class TgDownloader:
                 self.multi_acc = False
 
         await self._setup_proxy()
-        self.MEDIA_DIR = os.path.join(
-            os.path.abspath(self.path), "GhostlyGrabber_media"
-        )
+        self.MEDIA_DIR = os.path.join(os.path.abspath(self.path), "SkyFall_TG_media")
         self.channel_media_dir = os.path.join(self.MEDIA_DIR, self.channel_name)
         os.makedirs(self.channel_media_dir, exist_ok=True)
 
@@ -481,9 +479,12 @@ class TgDownloader:
         connected = False
         max_proxy_rotations = 20
 
+        def get_phone():
+            return input("Enter phone (or bot token): ")
+
         for rotation in range(max_proxy_rotations):
             try:
-                await self.client.start()
+                await self.client.start(phone=get_phone)
                 connected = True
                 break
             except Exception as start_e:

@@ -107,6 +107,8 @@ class MainWindow(QMainWindow):
         logger.debug("Init modules")
         self.settings = Settings(self.ui)
         self.proxy = Proxy(self.ui)
+        from pathlib import Path
+        tg_data_path = str(Path.home() / ".skyfall" / "data")
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
         self.usernameSearch = UsernameSearch()
@@ -121,7 +123,7 @@ class MainWindow(QMainWindow):
                 "api_id": self.ui.tgApiKeyEdit.text(),
                 "api_hash": self.ui.telegramApiHashEdit.text(),
                 "channel": "",
-                "path": self.ui.pathToStorageEdit.text(),
+                "path": tg_data_path,
                 "proxy_list": self.proxy.get_proxies_text(),
             }
         )

@@ -11,6 +11,7 @@ if TYPE_CHECKING:
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.intelx_controller import IntelxController
+    from src.controllers.proxy_controller import Proxy
     from src.controllers.settings_controller import Settings
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
     from src.controllers.tg_downloader_controller import TgDownloaderController
@@ -48,6 +49,10 @@ def setup_dorking_connectors(controller: "DorkingController"):
 
 def setup_settings_connectors(settings: "Settings"):
     settings.ui.pushButton.clicked.connect(settings.save)
+
+
+def setup_proxies_connectors(proxy: "Proxy"):
+    proxy.ui.saveProxiesButton.clicked.connect(proxy.save_proxies)
 
 
 def setup_domain_connectors(controller: "DomainController"):

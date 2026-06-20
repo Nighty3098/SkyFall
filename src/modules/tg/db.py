@@ -46,7 +46,7 @@ def init_db(path, channel_name=None):
     """
     global _models_cache, _engine_cache
 
-    db_name = os.path.join(os.path.abspath(path), "GhostlyGrabber.db")
+    db_name = os.path.join(os.path.abspath(path), "SkyFall_TG.db")
 
     if db_name in _engine_cache:
         engine = _engine_cache[db_name]

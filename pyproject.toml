@@ -45,6 +45,7 @@ files = [
     "src/ui/horizontal_tab_style.py",
     "src/ui/setup_ui.py",
     "src/utils.py",
+    "src/controllers/proxy_controller.py",
 ]
 
 [tool.ruff]

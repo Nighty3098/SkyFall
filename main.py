@@ -17,6 +17,8 @@ from src.connectors import (
     setup_intelx_connectors,
     setup_metadata_connectors,
     setup_settings_connectors,
+    setup_tg_analyzer_connectors,
+    setup_tg_downloader_connectors,
     setup_username_connectors,
 )
 from src.controllers.domain_controller import DomainController
@@ -24,12 +26,16 @@ from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.intelx_controller import IntelxController
 from src.controllers.settings_controller import Settings
+from src.controllers.tg_analyzer_controller import TgAnalyzerController
+from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.modules.tg_analyzer import TgAnalyzer
+from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
@@ -108,6 +114,15 @@ class MainWindow(QMainWindow):
             self.settings.google_safe_api_key,
             self.settings.ipinfo_api_key,
         )
+        self.tgAnalyzer = TgAnalyzer()
+        self.tgDownloader = TgDownloader(
+            {
+                "api_id": self.ui.tgApiKeyEdit.text(),
+                "api_hash": self.ui.telegramApiHashEdit.text(),
+                "channel": "",
+                "path": self.ui.pathToStorageEdit.text(),
+            }
+        )
         self.fileAnalyzer = FileAnalyzer(self.settings.virustotal_api_key)
         self.intelxSearchEngine = IntelxSearchEngine(
             self.settings.intelligent_x_api_key
@@ -125,6 +140,8 @@ class MainWindow(QMainWindow):
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
         self.usernameController = UsernameController(self.ui, self.usernameSearch)
+        self.tgDownloaderController = TgDownloaderController(self.ui, self.tgDownloader)
+        self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
@@ -132,6 +149,8 @@ class MainWindow(QMainWindow):
         setup_metadata_connectors(self.fileAnalyzeController)
         setup_intelx_connectors(self.IntelxController)
         setup_username_connectors(self.usernameController)
+        setup_tg_downloader_connectors(self.tgDownloaderController)
+        setup_tg_analyzer_connectors(self.tgAnalyzerController)
 
 
 if __name__ == "__main__":

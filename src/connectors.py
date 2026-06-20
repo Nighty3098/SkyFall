@@ -12,6 +12,8 @@ if TYPE_CHECKING:
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.intelx_controller import IntelxController
     from src.controllers.settings_controller import Settings
+    from src.controllers.tg_analyzer_controller import TgAnalyzerController
+    from src.controllers.tg_downloader_controller import TgDownloaderController
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -105,5 +107,24 @@ def setup_username_connectors(controller: "UsernameController"):
     controller.ui.searchUsernameButton.clicked.connect(
         lambda: asyncio.ensure_future(
             controller.start_searching(controller.ui.usernameEdit.text())
+        )
+    )
+
+
+def setup_tg_downloader_connectors(controller: "TgDownloaderController"):
+    controller.ui.telegramDownloadStart.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.start_collection(controller.build_collection_config())
+        )
+    )
+
+
+def setup_tg_analyzer_connectors(controller: "TgAnalyzerController"):
+    controller.ui.telegramAnalyzerLoadChannelsButton.clicked.connect(
+        lambda: controller.load_channels(controller.ui.pathToStorageEdit.text())
+    )
+    controller.ui.runTelegramAnalyzerBtn.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.run_analysis(controller.build_analysis_params())
         )
     )

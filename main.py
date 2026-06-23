@@ -36,9 +36,9 @@ from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.modules.maigret_search import MaigretSearch
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
-from src.modules.maigret_search import MaigretSearch
 from src.modules.username_search import UsernameSearch
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         ui_file = Path(__file__).parent / "resources" / "form.ui"
         self.ui = Loader().load(ui_file)
         self.setCentralWidget(self.ui)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self._init_modules()
         setup_ui(self)
@@ -109,6 +109,7 @@ class MainWindow(QMainWindow):
         self.settings = Settings(self.ui)
         self.proxy = Proxy(self.ui)
         from pathlib import Path
+
         tg_data_path = str(Path.home() / ".skyfall" / "data")
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
@@ -145,7 +146,9 @@ class MainWindow(QMainWindow):
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
-        self.usernameController = UsernameController(self.ui, self.usernameSearch, self.maigretSearch)
+        self.usernameController = UsernameController(
+            self.ui, self.usernameSearch, self.maigretSearch
+        )
         self.tgDownloaderController = TgDownloaderController(
             self.ui, self.tgDownloader, self.proxy
         )

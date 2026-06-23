@@ -104,16 +104,11 @@ class TgDownloader:
         session_path = os.path.join(os.path.abspath(self.path), SESSION_NAME)
         session_exists = os.path.exists(session_path)
 
-        has_api_creds = bool(provided_api_id and provided_api_hash)
-        if not has_api_creds and not session_exists:
+        if not provided_api_id or not provided_api_hash:
             self.log_callback(
-                "API_ID and API_HASH must be provided if no session exists."
+                "API_ID and API_HASH are required. Fill in the fields or set API_ID/API_HASH env vars."
             )
             return
-        if not has_api_creds and session_exists:
-            self.log_callback(
-                "No API credentials provided, trying to use existing session..."
-            )
 
         if self.multi_acc:
             self.state.multi_acc_sessions = load_multi_acc_sessions(self.path)
@@ -398,9 +393,8 @@ class TgDownloader:
             self.log_callback("Proxy disabled or no proxies loaded.")
 
     async def _create_client(self, session_path, api_id, api_hash):
-        provided_api_id, provided_api_hash = self._get_env_creds()
-        aid = int(provided_api_id) if provided_api_id else (int(api_id) if api_id else 0)
-        ah = provided_api_hash or api_hash
+        aid = int(api_id)
+        ah = api_hash
 
         try:
             if self.state.use_proxy and self.state.current_proxy:
@@ -512,9 +506,8 @@ class TgDownloader:
         return connected
 
     async def _rebuild_client(self, new_proxy, session_path, api_id, api_hash):
-        provided_api_id, provided_api_hash = self._get_env_creds()
-        aid = int(provided_api_id) if provided_api_id else (int(api_id) if api_id else 0)
-        ah = provided_api_hash or api_hash
+        aid = int(api_id)
+        ah = api_hash
 
         if isinstance(new_proxy, tuple) and len(new_proxy) >= 3:
             ptype, host, port = new_proxy[0], new_proxy[1], new_proxy[2]
@@ -558,9 +551,8 @@ class TgDownloader:
         return None
 
     async def _switch_account(self, session_path, api_id, api_hash):
-        provided_api_id, provided_api_hash = self._get_env_creds()
-        aid = int(provided_api_id) if provided_api_id else (int(api_id) if api_id else 0)
-        ah = provided_api_hash or api_hash
+        aid = int(api_id)
+        ah = api_hash
 
         self.log_callback(
             f"Switching to random account after {self.state.request_since_switch} requests..."

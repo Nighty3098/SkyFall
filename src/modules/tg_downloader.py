@@ -147,10 +147,15 @@ class TgDownloader:
         if self.client is None:
             return
 
+        self.log_callback("Connecting to Telegram (this may take a moment)...")
         try:
-            await asyncio.wait_for(self.client.connect(), timeout=15)
+            await asyncio.wait_for(self.client.connect(), timeout=30)
+            self.log_callback("Connected to Telegram")
         except asyncio.TimeoutError:
-            self.log_callback("Connection timed out after 15 seconds")
+            self.log_callback("Connection timed out after 30 seconds")
+            self.log_callback(
+                "Try disabling the proxy or check the MTProto proxy settings"
+            )
             return
         except Exception as e:
             self.log_callback(f"Connection failed: {e}")
@@ -421,6 +426,19 @@ class TgDownloader:
                         if len(self.state.current_proxy) > 3
                         else None
                     )
+                    self.log_callback(
+                        f"[debug] proxy type={ptype} host={host} port={port}"
+                    )
+                    if secret:
+                        display = (
+                            secret[:12] + "..."
+                            if len(secret) > 16
+                            else secret
+                        )
+                        self.log_callback(
+                            f"[debug] proxy secret={display} "
+                            f"(len={len(secret) if isinstance(secret, str) else 'binary'})"
+                        )
                     if ptype == "mtproto" and secret:
                         self.log_callback(f"Connecting via MTProto: {host}:{port}")
                         if _CONNECTION and hasattr(

@@ -399,7 +399,7 @@ class TgDownloader:
 
     async def _create_client(self, session_path, api_id, api_hash):
         provided_api_id, provided_api_hash = self._get_env_creds()
-        aid = int(provided_api_id) if provided_api_id else int(api_id)
+        aid = int(provided_api_id) if provided_api_id else (int(api_id) if api_id else 0)
         ah = provided_api_hash or api_hash
 
         try:
@@ -513,7 +513,7 @@ class TgDownloader:
 
     async def _rebuild_client(self, new_proxy, session_path, api_id, api_hash):
         provided_api_id, provided_api_hash = self._get_env_creds()
-        aid = int(provided_api_id) if provided_api_id else int(api_id)
+        aid = int(provided_api_id) if provided_api_id else (int(api_id) if api_id else 0)
         ah = provided_api_hash or api_hash
 
         if isinstance(new_proxy, tuple) and len(new_proxy) >= 3:
@@ -559,7 +559,7 @@ class TgDownloader:
 
     async def _switch_account(self, session_path, api_id, api_hash):
         provided_api_id, provided_api_hash = self._get_env_creds()
-        aid = int(provided_api_id) if provided_api_id else int(api_id)
+        aid = int(provided_api_id) if provided_api_id else (int(api_id) if api_id else 0)
         ah = provided_api_hash or api_hash
 
         self.log_callback(

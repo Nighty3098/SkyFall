@@ -147,41 +147,22 @@ class TgDownloader:
         if self.client is None:
             return
 
-        self.log_callback("Connecting to Telegram (this may take a moment)...")
-        try:
-            await asyncio.wait_for(self.client.connect(), timeout=30)
-            self.log_callback("Connected to Telegram")
-        except asyncio.TimeoutError:
-            self.log_callback("Connection timed out after 30 seconds")
-            self.log_callback(
-                "Try disabling the proxy or check the MTProto proxy settings"
-            )
+        connected = await self._connect_with_rotation(
+            session_path, provided_api_id, provided_api_hash
+        )
+        if not connected:
+            self.log_callback("Failed to connect with all proxies")
             return
-        except Exception as e:
-            self.log_callback(f"Connection failed: {e}")
+
+        if not await self.client.is_user_authorized():
+            self.log_callback("User not authorized.")
+            self.log_callback("Cannot authorize in non-interactive mode.")
             return
+
+        self.log_callback("Client authorized successfully!")
+        self.log_callback("Warming up account...")
 
         async with self.client:
-            try:
-                self.log_callback("Starting Telegram client...")
-                connected = await self._connect_with_rotation(
-                    session_path, provided_api_id, provided_api_hash
-                )
-                if not connected:
-                    self.log_callback("Failed to connect with all proxies")
-                    return
-
-                if not await self.client.is_user_authorized():
-                    self.log_callback("User not authorized.")
-                    self.log_callback("Cannot authorize in non-interactive mode.")
-                    return
-
-                self.log_callback("Client authorized successfully!")
-                self.log_callback("Warming up account...")
-            except Exception as e:
-                self.log_callback(f"Authorization error: {e}")
-                return
-
             self.session = session_local()
             try:
                 self.channel = await self.client.get_entity(self.channel_name)
@@ -509,37 +490,47 @@ class TgDownloader:
             try:
                 await asyncio.wait_for(
                     self.client.start(phone=_no_interactive_phone),
-                    timeout=30,
+                    timeout=120,
                 )
                 connected = True
                 break
-            except Exception as start_e:
-                self.log_callback(f"Error: {start_e}")
+            except asyncio.TimeoutError:
+                self.log_callback(
+                    "Connection timed out after 120 seconds"
+                )
                 if self.state.use_proxy:
-                    self.log_callback(
-                        f"Rotating proxy ({rotation + 1}/{max_proxy_rotations})..."
-                    )
                     self.state.remove_current_proxy()
                     self.state.rotate_proxy()
                     new_proxy = self.state.current_proxy
-                    if new_proxy:
-                        self.log_callback(
-                            f"New proxy: {new_proxy[1] if isinstance(new_proxy, tuple) else 'unknown'}"
-                        )
-                        self.client = await self._rebuild_client(
-                            new_proxy, session_path, api_id, api_hash
-                        )
-                        if self.client:
-                            try:
-                                await asyncio.wait_for(
-                                    self.client.connect(), timeout=15
-                                )
-                            except asyncio.TimeoutError:
-                                self.log_callback(
-                                    "Reconnect timed out, trying next proxy"
-                                )
-                                continue
-                    continue
+                    if not new_proxy:
+                        break
+                    self.log_callback(
+                        f"Rotating proxy ({rotation + 1}/{max_proxy_rotations})..."
+                    )
+                    self.client = await self._rebuild_client(
+                        new_proxy, session_path, api_id, api_hash
+                    )
+                else:
+                    break
+            except RuntimeError as e:
+                self.log_callback(f"Authorization error: {e}")
+                if "not authorized" in str(e).lower():
+                    return connected
+                raise
+            except Exception as start_e:
+                self.log_callback(f"Error: {start_e}")
+                if self.state.use_proxy:
+                    self.state.remove_current_proxy()
+                    self.state.rotate_proxy()
+                    new_proxy = self.state.current_proxy
+                    if not new_proxy:
+                        break
+                    self.log_callback(
+                        f"Rotating proxy ({rotation + 1}/{max_proxy_rotations})..."
+                    )
+                    self.client = await self._rebuild_client(
+                        new_proxy, session_path, api_id, api_hash
+                    )
                 else:
                     raise start_e
 

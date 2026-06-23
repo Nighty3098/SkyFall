@@ -76,7 +76,7 @@ class MainWindow(QMainWindow):
         ui_file = Path(__file__).parent / "resources" / "form.ui"
         self.ui = Loader().load(ui_file)
         self.setCentralWidget(self.ui)
-        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self._init_modules()
         setup_ui(self)

@@ -38,6 +38,7 @@ from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
+from src.modules.maigret_search import MaigretSearch
 from src.modules.username_search import UsernameSearch
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
@@ -112,6 +113,7 @@ class MainWindow(QMainWindow):
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
         self.usernameSearch = UsernameSearch()
+        self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
             self.settings.virustotal_api_key,
             self.settings.google_safe_api_key,
@@ -143,7 +145,7 @@ class MainWindow(QMainWindow):
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
-        self.usernameController = UsernameController(self.ui, self.usernameSearch)
+        self.usernameController = UsernameController(self.ui, self.usernameSearch, self.maigretSearch)
         self.tgDownloaderController = TgDownloaderController(
             self.ui, self.tgDownloader, self.proxy
         )

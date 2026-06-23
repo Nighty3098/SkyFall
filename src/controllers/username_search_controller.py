@@ -5,6 +5,7 @@ from loguru import logger
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
+    from src.modules.maigret_search import MaigretSearch
     from src.modules.username_search import UsernameSearch
 
 
@@ -13,17 +14,29 @@ class UsernameController:
         self,
         ui: "QMainWindow",
         username_search: "UsernameSearch",
+        maigret_search: "MaigretSearch",
     ):
         logger.debug("Init: UsernameController")
 
         self.ui = ui
         self.username_search = username_search
+        self.maigret_search = maigret_search
 
     async def start_searching(self, username):
         self.ui.usernameScriptDebug.clear()
+        self.ui.maigretDebug.clear()
         self.ui.usernameSearchProgress.setValue(0)
 
         try:
+            maigret_report = await self.maigret_search.search_and_report(
+                username,
+                on_progress=lambda done, total: (
+                    self.ui.usernameSearchProgress.setRange(0, total),
+                    self.ui.usernameSearchProgress.setValue(done),
+                ),
+            )
+            self.ui.maigretDebug.setPlainText(maigret_report)
+
             results = await self.username_search.acheck(
                 username,
                 on_result=lambda r: self.ui.usernameScriptDebug.appendPlainText(

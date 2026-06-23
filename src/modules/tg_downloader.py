@@ -147,6 +147,15 @@ class TgDownloader:
         if self.client is None:
             return
 
+        try:
+            await asyncio.wait_for(self.client.connect(), timeout=15)
+        except asyncio.TimeoutError:
+            self.log_callback("Connection timed out after 15 seconds")
+            return
+        except Exception as e:
+            self.log_callback(f"Connection failed: {e}")
+            return
+
         async with self.client:
             try:
                 self.log_callback("Starting Telegram client...")
@@ -473,12 +482,17 @@ class TgDownloader:
         connected = False
         max_proxy_rotations = 20
 
-        def get_phone():
-            return input("Enter phone (or bot token): ")
+        async def _no_interactive_phone():
+            raise RuntimeError(
+                "Session is not authorized and interactive login is not supported"
+            )
 
         for rotation in range(max_proxy_rotations):
             try:
-                await self.client.start(phone=get_phone)
+                await asyncio.wait_for(
+                    self.client.start(phone=_no_interactive_phone),
+                    timeout=30,
+                )
                 connected = True
                 break
             except Exception as start_e:
@@ -498,7 +512,15 @@ class TgDownloader:
                             new_proxy, session_path, api_id, api_hash
                         )
                         if self.client:
-                            await self.client.connect()
+                            try:
+                                await asyncio.wait_for(
+                                    self.client.connect(), timeout=15
+                                )
+                            except asyncio.TimeoutError:
+                                self.log_callback(
+                                    "Reconnect timed out, trying next proxy"
+                                )
+                                continue
                     continue
                 else:
                     raise start_e

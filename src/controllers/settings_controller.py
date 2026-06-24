@@ -24,6 +24,8 @@ DEFAULT_SETTINGS = {
     "google_safe_api_key": "",
     "ipinfo_api_key": "",
     "github_token": "",
+    "numverify_api_key": "",
+    "abstractapi_api_key": "",
     "light_theme": False,
 }
 
@@ -37,6 +39,8 @@ FIELD_MAP = {
     "google_safe_api_key": "googleSafeApiKeyEdit",
     "ipinfo_api_key": "ipinfoApiKeyEdit",
     "github_token": "githubTokenEdit",
+    "numverify_api_key": "numverifyApiKeyEdit",
+    "abstractapi_api_key": "abstractapiApiKeyEdit",
 }
 
 
@@ -54,6 +58,8 @@ class Settings:
         self.ipinfo_api_key = ""
         self.google_safe_api_key = ""
         self.github_token = ""
+        self.numverify_api_key = ""
+        self.abstractapi_api_key = ""
         self.light_theme = False
 
         self._load()

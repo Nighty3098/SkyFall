@@ -17,6 +17,7 @@ from src.connectors import (
     setup_github_connectors,
     setup_intelx_connectors,
     setup_metadata_connectors,
+    setup_phone_connectors,
     setup_proxies_connectors,
     setup_settings_connectors,
     setup_tg_analyzer_connectors,
@@ -28,6 +29,7 @@ from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
 from src.controllers.intelx_controller import IntelxController
+from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
 from src.controllers.settings_controller import Settings
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
@@ -40,6 +42,7 @@ from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
 from src.modules.maigret_search import MaigretSearch
+from src.modules.phone_search import PhoneSearch
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
@@ -118,6 +121,7 @@ class MainWindow(QMainWindow):
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
         self.githubSearch = GitHubSearch(self.settings.github_token)
+        self.phoneSearch = PhoneSearch()
         self.usernameSearch = UsernameSearch()
         self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
@@ -159,6 +163,13 @@ class MainWindow(QMainWindow):
         )
         self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
         self.githubController = GitHubController(self.ui, self.githubSearch)
+        self.phoneController = PhoneController(
+            self.ui,
+            self.phoneSearch,
+            numverify_key=self.settings.numverify_api_key,
+            abstractapi_key=self.settings.abstractapi_api_key,
+            intelx_key=self.settings.intelligent_x_api_key,
+        )
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
@@ -170,6 +181,7 @@ class MainWindow(QMainWindow):
         setup_tg_analyzer_connectors(self.tgAnalyzerController)
         setup_proxies_connectors(self.proxy)
         setup_github_connectors(self.githubController)
+        setup_phone_connectors(self.phoneController)
 
 
 if __name__ == "__main__":

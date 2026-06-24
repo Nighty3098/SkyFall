@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>9</number>
+         <number>10</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1432,6 +1432,90 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="phoneTab">
+         <attribute name="title">
+          <string>PHONE</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="phoneHorizontalLayout">
+          <item>
+           <widget class="QSplitter" name="phoneSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="phoneSettingsSection">
+             <layout class="QVBoxLayout" name="phoneSettingsLayout">
+              <item>
+               <widget class="QLineEdit" name="phoneNumberEdit">
+                <property name="placeholderText">
+                 <string>Phone number (+1234567890)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="phoneRegionEdit">
+                <property name="placeholderText">
+                 <string>Region code (US, RU, DE... optional)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="phoneParseBtn">
+                <property name="text">
+                 <string>Parse / Validate</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="phoneLookupBtn">
+                <property name="text">
+                 <string>Reverse Lookup</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="phoneLeakBtn">
+                <property name="text">
+                 <string>Check Leaks</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="phoneVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="phoneProgress">
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="phoneDebugSection">
+             <layout class="QVBoxLayout" name="phoneDebugLayout">
+              <item>
+               <widget class="QPlainTextEdit" name="phoneDebug">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="settingsTab">
          <attribute name="title">
           <string>SETTINGS</string>
@@ -1525,6 +1609,20 @@
              <widget class="QLineEdit" name="githubTokenEdit">
               <property name="placeholderText">
                <string>GitHub Token</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="numverifyApiKeyEdit">
+              <property name="placeholderText">
+               <string>NumVerify API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="abstractapiApiKeyEdit">
+              <property name="placeholderText">
+               <string>AbstractAPI API Key</string>
               </property>
              </widget>
             </item>

@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.github_controller import GitHubController
     from src.controllers.intelx_controller import IntelxController
+    from src.controllers.phone_controller import PhoneController
     from src.controllers.proxy_controller import Proxy
     from src.controllers.settings_controller import Settings
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
@@ -154,4 +155,16 @@ def setup_github_connectors(controller: "GitHubController"):
     )
     controller.ui.githubDorkSearchBtn.clicked.connect(
         lambda: asyncio.ensure_future(controller.search_dork())
+    )
+
+
+def setup_phone_connectors(controller: "PhoneController"):
+    controller.ui.phoneParseBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.parse_validate())
+    )
+    controller.ui.phoneLookupBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.reverse_lookup())
+    )
+    controller.ui.phoneLeakBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.check_leaks())
     )

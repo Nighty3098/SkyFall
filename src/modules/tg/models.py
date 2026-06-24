@@ -144,49 +144,49 @@ def create_models(channel_name: str | None = None):
     return TelegramUser, TelegramPost, Discussion, ChannelMember, ChannelLink, Channel
 
 
-def get_channel_posts_model(Base):
+def get_channel_posts_model(base):
     """Get the posts table model from Base metadata.
 
     Args:
-        Base: SQLAlchemy DeclarativeBase.
+        base: SQLAlchemy DeclarativeBase.
 
     Returns:
         Table object or None.
     """
-    return Base.metadata.tables.get("posts")
+    return base.metadata.tables.get("posts")
 
 
-def get_channel_discussions_model(Base):
+def get_channel_discussions_model(base):
     """Get the discussions table model from Base metadata.
 
     Args:
-        Base: SQLAlchemy DeclarativeBase.
+        base: SQLAlchemy DeclarativeBase.
 
     Returns:
         Table object or None.
     """
-    return Base.metadata.tables.get("discussions")
+    return base.metadata.tables.get("discussions")
 
 
-def get_channel_members_model(Base):
+def get_channel_members_model(base):
     """Get the members table model from Base metadata.
 
     Args:
-        Base: SQLAlchemy DeclarativeBase.
+        base: SQLAlchemy DeclarativeBase.
 
     Returns:
         Table object or None.
     """
-    return Base.metadata.tables.get("members")
+    return base.metadata.tables.get("members")
 
 
-def get_channel_links_model(Base):
+def get_channel_links_model(base):
     """Get the links table model from Base metadata.
 
     Args:
-        Base: SQLAlchemy DeclarativeBase.
+        base: SQLAlchemy DeclarativeBase.
 
     Returns:
         Table object or None.
     """
-    return Base.metadata.tables.get("links")
+    return base.metadata.tables.get("links")

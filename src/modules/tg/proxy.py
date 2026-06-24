@@ -33,7 +33,7 @@ def parse_proxies_text(text: str) -> list[tuple]:
                 if server and secret:
                     proxies.append(("mtproto", server, port, secret, None))
                 continue
-            except:
+            except Exception:
                 continue
 
         proxy_type = "socks5"
@@ -133,7 +133,7 @@ def test_proxy(proxy) -> bool:
         sock.connect((str(addr), int(port)))
         sock.close()
         return True
-    except:
+    except Exception:
         return False
 
 

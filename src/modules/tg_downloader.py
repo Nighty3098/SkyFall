@@ -102,7 +102,7 @@ class TgDownloader:
 
         provided_api_id, provided_api_hash = self._get_env_creds()
         session_path = os.path.join(os.path.abspath(self.path), SESSION_NAME)
-        session_exists = os.path.exists(session_path)
+        os.path.exists(session_path)
 
         if not provided_api_id or not provided_api_hash:
             self.log_callback(
@@ -1161,12 +1161,9 @@ class TgDownloader:
         )
 
         try:
-            total_discussion = (
-                await client.get_messages(discussion_chat, limit=0)
-            ).total
+            (await client.get_messages(discussion_chat, limit=0)).total
         except Exception as e:
             self.log_callback(f"Could not get total discussion count: {e}")
-            total_discussion = None
 
         limit = 100
         offset_id = 0

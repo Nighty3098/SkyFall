@@ -1248,6 +1248,190 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="githubTab">
+         <attribute name="title">
+          <string>GITHUB</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="githubHorizontalLayout">
+          <item>
+           <widget class="QSplitter" name="githubSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="githubSettingsSection">
+             <layout class="QVBoxLayout" name="githubSettingsLayout">
+              <item>
+               <widget class="QLineEdit" name="githubUserEdit">
+                <property name="placeholderText">
+                 <string>GitHub Username</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="githubUserSearchBtn">
+                <property name="text">
+                 <string>User Info</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="githubRepoEdit">
+                <property name="placeholderText">
+                 <string>Search Repositories</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="githubRepoSearchBtn">
+                <property name="text">
+                 <string>Search Repos</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="githubEmailEdit">
+                <property name="placeholderText">
+                 <string>Email search (org/domain/repo)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="githubEmailSearchBtn">
+                <property name="text">
+                 <string>Search Emails</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="githubCommitEdit">
+                <property name="placeholderText">
+                 <string>Commit search (user/repo)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="githubCommitSearchBtn">
+                <property name="text">
+                 <string>Search Commits</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="githubSecretEdit">
+                <property name="placeholderText">
+                 <string>Secret scan (org/repo)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="githubSecretSearchBtn">
+                <property name="text">
+                 <string>Scan Secrets</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="githubDorkGroup">
+                <property name="title">
+                 <string>GitHub Dorking</string>
+                </property>
+                <layout class="QVBoxLayout" name="githubDorkLayout">
+                 <item>
+                  <widget class="QLineEdit" name="githubDorkEdit">
+                   <property name="placeholderText">
+                    <string>Dork query</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <layout class="QHBoxLayout" name="githubDorkTypeLayout">
+                   <item>
+                    <widget class="QCheckBox" name="githubDorkCodeCheck">
+                     <property name="text">
+                      <string>Code</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="githubDorkCommitsCheck">
+                     <property name="text">
+                      <string>Commits</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="githubDorkIssuesCheck">
+                     <property name="text">
+                      <string>Issues</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="githubDorkReposCheck">
+                     <property name="text">
+                      <string>Repos</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item>
+                    <widget class="QCheckBox" name="githubDorkUsersCheck">
+                     <property name="text">
+                      <string>Users</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="githubDorkSearchBtn">
+                   <property name="text">
+                    <string>Dork</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="githubVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="githubProgress">
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="githubDebugSection">
+             <layout class="QVBoxLayout" name="githubDebugLayout">
+              <item>
+               <widget class="QPlainTextEdit" name="githubDebug">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="settingsTab">
          <attribute name="title">
           <string>SETTINGS</string>
@@ -1334,6 +1518,13 @@
              <widget class="QLineEdit" name="ipinfoApiKeyEdit">
               <property name="placeholderText">
                <string>IpInfo</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="githubTokenEdit">
+              <property name="placeholderText">
+               <string>GitHub Token</string>
               </property>
              </widget>
             </item>

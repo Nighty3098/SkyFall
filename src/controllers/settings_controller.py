@@ -23,6 +23,7 @@ DEFAULT_SETTINGS = {
     "virustotal_api_key": "",
     "google_safe_api_key": "",
     "ipinfo_api_key": "",
+    "github_token": "",
     "light_theme": False,
 }
 
@@ -35,6 +36,7 @@ FIELD_MAP = {
     "virustotal_api_key": "virustotalApiKeyEdit",
     "google_safe_api_key": "googleSafeApiKeyEdit",
     "ipinfo_api_key": "ipinfoApiKeyEdit",
+    "github_token": "githubTokenEdit",
 }
 
 
@@ -51,6 +53,7 @@ class Settings:
         self.virustotal_api_key = ""
         self.ipinfo_api_key = ""
         self.google_safe_api_key = ""
+        self.github_token = ""
         self.light_theme = False
 
         self._load()

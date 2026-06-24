@@ -862,6 +862,143 @@ class Ui_MainWindow(object):
         self.verticalLayout_3.addWidget(self.saveProxiesButton)
 
         self.mainStackedWidget.addTab(self.proxyTab, "")
+        self.githubTab = QWidget()
+        self.githubTab.setObjectName(u"githubTab")
+        self.githubHorizontalLayout = QHBoxLayout(self.githubTab)
+        self.githubHorizontalLayout.setObjectName(u"githubHorizontalLayout")
+        self.githubSplitter = QSplitter(self.githubTab)
+        self.githubSplitter.setObjectName(u"githubSplitter")
+        self.githubSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.githubSettingsSection = QWidget(self.githubSplitter)
+        self.githubSettingsSection.setObjectName(u"githubSettingsSection")
+        self.githubSettingsLayout = QVBoxLayout(self.githubSettingsSection)
+        self.githubSettingsLayout.setObjectName(u"githubSettingsLayout")
+        self.githubSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.githubUserEdit = QLineEdit(self.githubSettingsSection)
+        self.githubUserEdit.setObjectName(u"githubUserEdit")
+
+        self.githubSettingsLayout.addWidget(self.githubUserEdit)
+
+        self.githubUserSearchBtn = QPushButton(self.githubSettingsSection)
+        self.githubUserSearchBtn.setObjectName(u"githubUserSearchBtn")
+
+        self.githubSettingsLayout.addWidget(self.githubUserSearchBtn)
+
+        self.githubRepoEdit = QLineEdit(self.githubSettingsSection)
+        self.githubRepoEdit.setObjectName(u"githubRepoEdit")
+
+        self.githubSettingsLayout.addWidget(self.githubRepoEdit)
+
+        self.githubRepoSearchBtn = QPushButton(self.githubSettingsSection)
+        self.githubRepoSearchBtn.setObjectName(u"githubRepoSearchBtn")
+
+        self.githubSettingsLayout.addWidget(self.githubRepoSearchBtn)
+
+        self.githubEmailEdit = QLineEdit(self.githubSettingsSection)
+        self.githubEmailEdit.setObjectName(u"githubEmailEdit")
+
+        self.githubSettingsLayout.addWidget(self.githubEmailEdit)
+
+        self.githubEmailSearchBtn = QPushButton(self.githubSettingsSection)
+        self.githubEmailSearchBtn.setObjectName(u"githubEmailSearchBtn")
+
+        self.githubSettingsLayout.addWidget(self.githubEmailSearchBtn)
+
+        self.githubCommitEdit = QLineEdit(self.githubSettingsSection)
+        self.githubCommitEdit.setObjectName(u"githubCommitEdit")
+
+        self.githubSettingsLayout.addWidget(self.githubCommitEdit)
+
+        self.githubCommitSearchBtn = QPushButton(self.githubSettingsSection)
+        self.githubCommitSearchBtn.setObjectName(u"githubCommitSearchBtn")
+
+        self.githubSettingsLayout.addWidget(self.githubCommitSearchBtn)
+
+        self.githubSecretEdit = QLineEdit(self.githubSettingsSection)
+        self.githubSecretEdit.setObjectName(u"githubSecretEdit")
+
+        self.githubSettingsLayout.addWidget(self.githubSecretEdit)
+
+        self.githubSecretSearchBtn = QPushButton(self.githubSettingsSection)
+        self.githubSecretSearchBtn.setObjectName(u"githubSecretSearchBtn")
+
+        self.githubSettingsLayout.addWidget(self.githubSecretSearchBtn)
+
+        self.githubDorkGroup = QGroupBox(self.githubSettingsSection)
+        self.githubDorkGroup.setObjectName(u"githubDorkGroup")
+        self.githubDorkLayout = QVBoxLayout(self.githubDorkGroup)
+        self.githubDorkLayout.setObjectName(u"githubDorkLayout")
+        self.githubDorkEdit = QLineEdit(self.githubDorkGroup)
+        self.githubDorkEdit.setObjectName(u"githubDorkEdit")
+
+        self.githubDorkLayout.addWidget(self.githubDorkEdit)
+
+        self.githubDorkTypeLayout = QHBoxLayout()
+        self.githubDorkTypeLayout.setObjectName(u"githubDorkTypeLayout")
+        self.githubDorkCodeCheck = QCheckBox(self.githubDorkGroup)
+        self.githubDorkCodeCheck.setObjectName(u"githubDorkCodeCheck")
+        self.githubDorkCodeCheck.setChecked(True)
+
+        self.githubDorkTypeLayout.addWidget(self.githubDorkCodeCheck)
+
+        self.githubDorkCommitsCheck = QCheckBox(self.githubDorkGroup)
+        self.githubDorkCommitsCheck.setObjectName(u"githubDorkCommitsCheck")
+
+        self.githubDorkTypeLayout.addWidget(self.githubDorkCommitsCheck)
+
+        self.githubDorkIssuesCheck = QCheckBox(self.githubDorkGroup)
+        self.githubDorkIssuesCheck.setObjectName(u"githubDorkIssuesCheck")
+
+        self.githubDorkTypeLayout.addWidget(self.githubDorkIssuesCheck)
+
+        self.githubDorkReposCheck = QCheckBox(self.githubDorkGroup)
+        self.githubDorkReposCheck.setObjectName(u"githubDorkReposCheck")
+
+        self.githubDorkTypeLayout.addWidget(self.githubDorkReposCheck)
+
+        self.githubDorkUsersCheck = QCheckBox(self.githubDorkGroup)
+        self.githubDorkUsersCheck.setObjectName(u"githubDorkUsersCheck")
+
+        self.githubDorkTypeLayout.addWidget(self.githubDorkUsersCheck)
+
+
+        self.githubDorkLayout.addLayout(self.githubDorkTypeLayout)
+
+        self.githubDorkSearchBtn = QPushButton(self.githubDorkGroup)
+        self.githubDorkSearchBtn.setObjectName(u"githubDorkSearchBtn")
+
+        self.githubDorkLayout.addWidget(self.githubDorkSearchBtn)
+
+
+        self.githubSettingsLayout.addWidget(self.githubDorkGroup)
+
+        self.githubVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.githubSettingsLayout.addItem(self.githubVerticalSpacer)
+
+        self.githubProgress = QProgressBar(self.githubSettingsSection)
+        self.githubProgress.setObjectName(u"githubProgress")
+        self.githubProgress.setValue(0)
+
+        self.githubSettingsLayout.addWidget(self.githubProgress)
+
+        self.githubSplitter.addWidget(self.githubSettingsSection)
+        self.githubDebugSection = QWidget(self.githubSplitter)
+        self.githubDebugSection.setObjectName(u"githubDebugSection")
+        self.githubDebugLayout = QVBoxLayout(self.githubDebugSection)
+        self.githubDebugLayout.setObjectName(u"githubDebugLayout")
+        self.githubDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.githubDebug = QPlainTextEdit(self.githubDebugSection)
+        self.githubDebug.setObjectName(u"githubDebug")
+        self.githubDebug.setReadOnly(True)
+
+        self.githubDebugLayout.addWidget(self.githubDebug)
+
+        self.githubSplitter.addWidget(self.githubDebugSection)
+
+        self.githubHorizontalLayout.addWidget(self.githubSplitter)
+
+        self.mainStackedWidget.addTab(self.githubTab, "")
         self.settingsTab = QWidget()
         self.settingsTab.setObjectName(u"settingsTab")
         self.horizontalLayout = QHBoxLayout(self.settingsTab)
@@ -915,6 +1052,11 @@ class Ui_MainWindow(object):
         self.ipinfoApiKeyEdit.setObjectName(u"ipinfoApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.ipinfoApiKeyEdit)
+
+        self.githubTokenEdit = QLineEdit(self.settingsTab)
+        self.githubTokenEdit.setObjectName(u"githubTokenEdit")
+
+        self.verticalLayout_4.addWidget(self.githubTokenEdit)
 
         self.lightThemeCheck = QCheckBox(self.settingsTab)
         self.lightThemeCheck.setObjectName(u"lightThemeCheck")
@@ -1063,6 +1205,25 @@ class Ui_MainWindow(object):
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.proxyTab), QCoreApplication.translate("MainWindow", u"PROXY", None))
+        self.githubUserEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Username", None))
+        self.githubUserSearchBtn.setText(QCoreApplication.translate("MainWindow", u"User Info", None))
+        self.githubRepoEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search Repositories", None))
+        self.githubRepoSearchBtn.setText(QCoreApplication.translate("MainWindow", u"Search Repos", None))
+        self.githubEmailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Email search (org/domain/repo)", None))
+        self.githubEmailSearchBtn.setText(QCoreApplication.translate("MainWindow", u"Search Emails", None))
+        self.githubCommitEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Commit search (user/repo)", None))
+        self.githubCommitSearchBtn.setText(QCoreApplication.translate("MainWindow", u"Search Commits", None))
+        self.githubSecretEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Secret scan (org/repo)", None))
+        self.githubSecretSearchBtn.setText(QCoreApplication.translate("MainWindow", u"Scan Secrets", None))
+        self.githubDorkGroup.setTitle(QCoreApplication.translate("MainWindow", u"GitHub Dorking", None))
+        self.githubDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dork query", None))
+        self.githubDorkCodeCheck.setText(QCoreApplication.translate("MainWindow", u"Code", None))
+        self.githubDorkCommitsCheck.setText(QCoreApplication.translate("MainWindow", u"Commits", None))
+        self.githubDorkIssuesCheck.setText(QCoreApplication.translate("MainWindow", u"Issues", None))
+        self.githubDorkReposCheck.setText(QCoreApplication.translate("MainWindow", u"Repos", None))
+        self.githubDorkUsersCheck.setText(QCoreApplication.translate("MainWindow", u"Users", None))
+        self.githubDorkSearchBtn.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.githubTab), QCoreApplication.translate("MainWindow", u"GITHUB", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))
@@ -1071,6 +1232,7 @@ class Ui_MainWindow(object):
         self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
         self.googleSafeApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Google Safe API KEY", None))
         self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
+        self.githubTokenEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Token", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))

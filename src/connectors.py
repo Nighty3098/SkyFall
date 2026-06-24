@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
+    from src.controllers.github_controller import GitHubController
     from src.controllers.intelx_controller import IntelxController
     from src.controllers.proxy_controller import Proxy
     from src.controllers.settings_controller import Settings
@@ -132,4 +133,25 @@ def setup_tg_analyzer_connectors(controller: "TgAnalyzerController"):
         lambda: asyncio.ensure_future(
             controller.run_analysis(controller.build_analysis_params())
         )
+    )
+
+
+def setup_github_connectors(controller: "GitHubController"):
+    controller.ui.githubUserSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_user())
+    )
+    controller.ui.githubRepoSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_repos())
+    )
+    controller.ui.githubEmailSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_emails())
+    )
+    controller.ui.githubCommitSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_commits())
+    )
+    controller.ui.githubSecretSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_secrets())
+    )
+    controller.ui.githubDorkSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_dork())
     )

@@ -14,6 +14,7 @@ from logger_setup import setup_logging
 from src.connectors import (
     setup_domain_connectors,
     setup_dorking_connectors,
+    setup_github_connectors,
     setup_intelx_connectors,
     setup_metadata_connectors,
     setup_proxies_connectors,
@@ -25,6 +26,7 @@ from src.connectors import (
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
+from src.controllers.github_controller import GitHubController
 from src.controllers.intelx_controller import IntelxController
 from src.controllers.proxy_controller import Proxy
 from src.controllers.settings_controller import Settings
@@ -34,6 +36,7 @@ from src.controllers.username_search_controller import UsernameController
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
+from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
 from src.modules.maigret_search import MaigretSearch
@@ -106,6 +109,7 @@ class MainWindow(QMainWindow):
 
     def _init_modules(self):
         logger.debug("Init modules")
+
         self.settings = Settings(self.ui)
         self.proxy = Proxy(self.ui)
         from pathlib import Path
@@ -113,6 +117,7 @@ class MainWindow(QMainWindow):
         tg_data_path = str(Path.home() / ".skyfall" / "data")
         self.dorksSearchEngine = DorksSearchEngine()
         self.googleDorksDB = GoogleDorksDB()
+        self.githubSearch = GitHubSearch(self.settings.github_token)
         self.usernameSearch = UsernameSearch()
         self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
@@ -153,6 +158,7 @@ class MainWindow(QMainWindow):
             self.ui, self.tgDownloader, self.proxy
         )
         self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
+        self.githubController = GitHubController(self.ui, self.githubSearch)
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
@@ -163,6 +169,7 @@ class MainWindow(QMainWindow):
         setup_tg_downloader_connectors(self.tgDownloaderController)
         setup_tg_analyzer_connectors(self.tgAnalyzerController)
         setup_proxies_connectors(self.proxy)
+        setup_github_connectors(self.githubController)
 
 
 if __name__ == "__main__":

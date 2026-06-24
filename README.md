@@ -30,41 +30,39 @@
   - [x] Malware reputation (VirusTotal, Google Safe Browsing, CRDF Labs)
   - [x] NMAP (vuln scripts)
 - [x] Dorking via duckduckgo
-- [ ] Telegram OSINT
-  - [ ] User Data Collection
-    - [ ] Complete user profiles: ID, username, first name, last name, phone (if available)
-    - [ ] Statuses and flags: verification, Telegram Premium, bots, scam/fake accounts
-    - [ ] Activity: online/offline status, last seen timestamp
-    - [ ] Additional information: bio, language, profile photo
-    - [ ] Relationships: mutual contacts, presence in your contacts
-  - [ ] Channel Members Collection
-    - [ ] Retrieval of all channel/group members
-    - [ ] Saving membership data (join date, status)
-    - [ ] Integration with global user database
-  - [ ] Link Extraction
-    - [ ] Automatic extraction of all URLs from messages
-    - [ ] Support for Telegram links (t.me, @username)
-    - [ ] Saving link context (surrounding text)
-    - [ ] Link classification by type (telegram, http, https)
-  - [ ] Interaction Graph Analysis
-    - [ ] Build interaction graphs from collected data
-    - [ ] Nodes: users, channels, domains
-    - [ ] Edges: membership, replies, forwards, link mentions
-    - [ ] Export to multiple formats (GraphML, GEXF, JSON, CSV, PNG)
-    - [ ] Filter by date, minimum reply count
-    - [ ] Graph statistics (node/edge types, degrees, bot/premium counts)
-- [ ] Creating an interactive subscription graph for user communication in telegram
-- [ ] Search for email information (which resources were registered on)
+- [x] Telegram OSINT
+  - [x] User Data Collection
+    - [x] Complete user profiles: ID, username, first name, last name, phone (if available)
+    - [x] Statuses and flags: verification, Telegram Premium, bots, scam/fake accounts
+    - [x] Activity: online/offline status, last seen timestamp
+    - [x] Additional information: bio, language, profile photo
+    - [x] Relationships: mutual contacts, presence in your contacts
+  - [x] Channel Members Collection
+    - [x] Retrieval of all channel/group members
+    - [x] Saving membership data (join date, status)
+    - [x] Integration with global user database
+  - [x] Link Extraction
+    - [x] Automatic extraction of all URLs from messages
+    - [x] Support for Telegram links (t.me, @username)
+    - [x] Saving link context (surrounding text)
+    - [x] Link classification by type (telegram, http, https)
+  - [x] Interaction Graph Analysis
+    - [x] Build interaction graphs from collected data
+    - [x] Nodes: users, channels, domains
+    - [x] Edges: membership, replies, forwards, link mentions
+    - [x] Export to multiple formats (GraphML, GEXF, JSON, CSV, PNG)
+    - [x] Filter by date, minimum reply count
+    - [x] Graph statistics (node/edge types, degrees, bot/premium counts)
+- [x] Interactive subscription / communication graph for telegram
+- [x] Exporting graphs to JSON, GraphML, GEXF, CSV, PNG, HTML
+- [x] Search for email information (which resources were registered on)
   - [x] intelx.io
-  - [ ] ddg dorking
-- [x] Username search (sherlock project db)
-- File analyzer:
-  - [x] Extract metadata from file
-  - [x] Analyze file via VirusTotal
-  - [x] Clean file metadata
-  - [x] Extract strings from file
-- [ ] Creating interactive graphs of communication with various data
-- [ ] Exporting graphs to JSON or SQL DB
+- [x] Username search (sherlock project db + maigret)
+- [x] GitHub OSINT
+  - [x] User / repository search
+  - [x] Email search in commits
+  - [x] Secret scanning (API keys, tokens, passwords)
+  - [x] Code dorking (code, commits, issues, repos, users)
 - [ ] Reverse Image Search With Yandex and Google
 
 ## `SETUP SEARXNG`

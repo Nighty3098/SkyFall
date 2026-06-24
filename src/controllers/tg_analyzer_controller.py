@@ -30,9 +30,7 @@ class TgAnalyzerController:
         self._bridge.log_signal.connect(self.ui.telegramAnalyzerDebug.appendPlainText)
         self._bridge.progress_signal.connect(self.ui.telegramAnalyzerProgress.setValue)
         self._bridge.finished_signal.connect(
-            lambda: self.ui.telegramAnalyzerDebug.appendPlainText(
-                "Analysis completed."
-            )
+            lambda: self.ui.telegramAnalyzerDebug.appendPlainText("Analysis completed.")
         )
 
     def load_channels(self, db_path: str):
@@ -50,11 +48,11 @@ class TgAnalyzerController:
 
     def build_analysis_params(self) -> dict:
         from pathlib import Path
+
         db_path = str(Path.home() / ".skyfall" / "data")
 
         selected_channels = [
-            item.text()
-            for item in self.ui.telegramChannelsList.selectedItems()
+            item.text() for item in self.ui.telegramChannelsList.selectedItems()
         ]
         loaded_channels = [
             self.ui.telegramChannelsList.item(i).text()
@@ -62,9 +60,7 @@ class TgAnalyzerController:
         ]
         loaded_channels = [ch for ch in loaded_channels if ch != "All Channels"]
 
-        start_date = self.ui.telegramAnalyzerStartDate.dateTime().toString(
-            "yyyy-MM-dd"
-        )
+        start_date = self.ui.telegramAnalyzerStartDate.dateTime().toString("yyyy-MM-dd")
         end_date = self.ui.telegramAnalyzerEndDate.dateTime().toString("yyyy-MM-dd")
 
         params = {
@@ -72,7 +68,9 @@ class TgAnalyzerController:
             "channels": (
                 loaded_channels
                 if "All Channels" in selected_channels
-                else selected_channels if selected_channels else loaded_channels
+                else selected_channels
+                if selected_channels
+                else loaded_channels
             ),
             "min_replies": self.ui.telegramAnalyzerMinReplies.value(),
             "include_forwarded": self.ui.includeForwardingCheck.isChecked(),

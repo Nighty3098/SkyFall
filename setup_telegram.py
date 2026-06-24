@@ -46,7 +46,9 @@ def load_mtproto_proxy() -> tuple | None:
 
 async def main():
     parser = argparse.ArgumentParser(description="Telegram session setup")
-    parser.add_argument("--path", default=os.getcwd(), help="Storage path for session file")
+    parser.add_argument(
+        "--path", default=os.getcwd(), help="Storage path for session file"
+    )
     parser.add_argument("--api-id", help="Telegram API ID")
     parser.add_argument("--api-hash", help="Telegram API hash")
     args = parser.parse_args()

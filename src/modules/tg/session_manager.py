@@ -1,9 +1,6 @@
 import os
 import random
 
-from loguru import logger
-from telethon import TelegramClient
-
 
 def load_multi_acc_sessions(path: str) -> list:
     sessions = []

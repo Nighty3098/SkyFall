@@ -28,9 +28,9 @@ class _DownloaderBridge(QObject):
 class TgDownloaderController:
     def __init__(
         self,
-        ui: "QMainWindow",
-        tg_downloader: "TgDownloader",
-        proxy: "Proxy | None" = None,
+        ui: QMainWindow,
+        tg_downloader: TgDownloader,
+        proxy: Proxy | None = None,
     ):
         logger.debug("Init: TgDownloaderController")
 
@@ -84,6 +84,7 @@ class TgDownloaderController:
 
     def build_collection_config(self) -> dict:
         from pathlib import Path
+
         tg_data_path = str(Path.home() / ".skyfall" / "data")
         return {
             "api_id": self.ui.tgApiKeyEdit.text(),

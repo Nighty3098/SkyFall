@@ -2,8 +2,8 @@ import logging
 
 from loguru import logger
 from maigret import search as maigret_search
-from maigret.sites import MaigretDatabase
 from maigret.db_updater import BUNDLED_DB_PATH
+from maigret.sites import MaigretDatabase
 
 _maigret_logger = logging.getLogger("maigret")
 _maigret_logger.setLevel(logging.WARNING)

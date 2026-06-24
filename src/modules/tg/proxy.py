@@ -53,9 +53,7 @@ def parse_proxies_text(text: str) -> list[tuple]:
             else:
                 parts = connection_string.split(":")
                 if len(parts) >= 3:
-                    proxies.append(
-                        ("mtproto", parts[0], int(parts[1]), parts[2], None)
-                    )
+                    proxies.append(("mtproto", parts[0], int(parts[1]), parts[2], None))
                 elif len(parts) == 2:
                     proxies.append(("mtproto", parts[0], int(parts[1]), "", None))
             continue
@@ -63,9 +61,7 @@ def parse_proxies_text(text: str) -> list[tuple]:
         if "@" in connection_string:
             auth, host_port = connection_string.split("@")
             user, password = auth.split(":", 1) if ":" in auth else (auth, "")
-            host, port = (
-                host_port.split(":") if ":" in host_port else (host_port, 1080)
-            )
+            host, port = host_port.split(":") if ":" in host_port else (host_port, 1080)
             proxies.append((proxy_type, host, int(port), user, password))
         else:
             if ":" in connection_string:

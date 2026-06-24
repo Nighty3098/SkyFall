@@ -11,6 +11,7 @@ from networkx.readwrite import json_graph
 
 try:
     from pyvis.network import Network
+
     PYVIS_AVAILABLE = True
 except ImportError:
     Network = None
@@ -53,7 +54,10 @@ class TgAnalyzer:
         conn = self._get_connection(db_path)
         try:
             cursor = conn.cursor()
-            cursor.execute("SELECT channel_id FROM channels WHERE username = ?", (channel_username,))
+            cursor.execute(
+                "SELECT channel_id FROM channels WHERE username = ?",
+                (channel_username,),
+            )
             result = cursor.fetchone()
             return result[0] if result else None
         except sqlite3.OperationalError:
@@ -274,8 +278,15 @@ class TgAnalyzer:
         log_callback=print,
     ):
         return self._build_graph_impl(
-            db_path, channels, min_replies, include_forwarded, include_links,
-            start_date, end_date, include_cross_channel, include_discussion_replies,
+            db_path,
+            channels,
+            min_replies,
+            include_forwarded,
+            include_links,
+            start_date,
+            end_date,
+            include_cross_channel,
+            include_discussion_replies,
             log_callback,
         )
 
@@ -326,11 +337,15 @@ class TgAnalyzer:
         for channel in channels:
             numeric_id = channel_id_map.get(channel)
             channel_node = f"channel:{channel}"
-            graph.add_node(channel_node, node_type="channel", label=channel, numeric_id=numeric_id)
+            graph.add_node(
+                channel_node, node_type="channel", label=channel, numeric_id=numeric_id
+            )
 
             posts = self.get_posts(db_path, channel, start_date, end_date)
             discussions = self.get_discussions(db_path, channel, start_date, end_date)
-            log_callback(f"Channel '{channel}': {len(posts)} posts, {len(discussions)} discussions (filtered)")
+            log_callback(
+                f"Channel '{channel}': {len(posts)} posts, {len(discussions)} discussions (filtered)"
+            )
 
             members = self.get_channel_members(db_path, channel)
             log_callback(f"Channel '{channel}': {len(members)} members found")
@@ -339,7 +354,11 @@ class TgAnalyzer:
             for user_id, minfo in members.items():
                 if user_id is None:
                     continue
-                if isinstance(user_id, int) and user_id < 0 and str(user_id).startswith("-100"):
+                if (
+                    isinstance(user_id, int)
+                    and user_id < 0
+                    and str(user_id).startswith("-100")
+                ):
                     continue
                 if str(user_id) == str(numeric_id):
                     continue
@@ -347,15 +366,18 @@ class TgAnalyzer:
                 target_node = channel_node
                 if target_node is None:
                     continue
-                member_edges_batch.append((
-                    user_node, target_node,
-                    {
-                        "edge_type": "member",
-                        "member_type": minfo.get("member_type", "member"),
-                        "joined_at": minfo.get("member_joined_at"),
-                        "member_date": minfo.get("member_date"),
-                    },
-                ))
+                member_edges_batch.append(
+                    (
+                        user_node,
+                        target_node,
+                        {
+                            "edge_type": "member",
+                            "member_type": minfo.get("member_type", "member"),
+                            "joined_at": minfo.get("member_joined_at"),
+                            "member_date": minfo.get("member_date"),
+                        },
+                    )
+                )
             graph.add_edges_from(member_edges_batch)
 
             post_author = {}
@@ -370,7 +392,12 @@ class TgAnalyzer:
                 user_id = p.get("user_id")
                 if post_id and user_id:
                     post_author[post_id] = user_id
-                if include_forwarded and p.get("is_forwarded") and p.get("forwarded_from_id") and user_id:
+                if (
+                    include_forwarded
+                    and p.get("is_forwarded")
+                    and p.get("forwarded_from_id")
+                    and user_id
+                ):
                     src = p["forwarded_from_id"]
                     dst = user_id
                     if src in all_users and src != dst:
@@ -382,7 +409,11 @@ class TgAnalyzer:
                 d_user_id = d.get("user_id")
                 if not d_user_id:
                     continue
-                if isinstance(d_user_id, int) and d_user_id < 0 and str(d_user_id).startswith("-100"):
+                if (
+                    isinstance(d_user_id, int)
+                    and d_user_id < 0
+                    and str(d_user_id).startswith("-100")
+                ):
                     continue
                 post_id = d.get("post_id")
                 if post_id in post_author:
@@ -421,11 +452,22 @@ class TgAnalyzer:
                         author = d.get("user_id")
                         target_author = discussion_authors[reply_to]
                         if author and target_author and author != target_author:
-                            if isinstance(author, int) and author < 0 and str(author).startswith("-100"):
+                            if (
+                                isinstance(author, int)
+                                and author < 0
+                                and str(author).startswith("-100")
+                            ):
                                 continue
-                            if isinstance(target_author, int) and target_author < 0 and str(target_author).startswith("-100"):
+                            if (
+                                isinstance(target_author, int)
+                                and target_author < 0
+                                and str(target_author).startswith("-100")
+                            ):
                                 continue
-                            if str(author) not in channel_id_map.values() and str(target_author) not in channel_id_map.values():
+                            if (
+                                str(author) not in channel_id_map.values()
+                                and str(target_author) not in channel_id_map.values()
+                            ):
                                 discussion_reply_pairs[(author, target_author)] += 1
                                 replier_users.add(author)
                                 replier_users.add(target_author)
@@ -444,46 +486,83 @@ class TgAnalyzer:
                 for u2, cnt in reps.items():
                     if cnt >= min_replies:
                         if str(u1) == str(numeric_id):
-                            edge_batch.append((
-                                channel_node, f"user:{u2}",
-                                {"edge_type": "replier", "weight": cnt, "is_channel_reply": True},
-                            ))
+                            edge_batch.append(
+                                (
+                                    channel_node,
+                                    f"user:{u2}",
+                                    {
+                                        "edge_type": "replier",
+                                        "weight": cnt,
+                                        "is_channel_reply": True,
+                                    },
+                                )
+                            )
                         elif str(u2) == str(numeric_id):
-                            edge_batch.append((
-                                channel_node, f"user:{u1}",
-                                {"edge_type": "replier", "weight": cnt, "is_channel_reply": True},
-                            ))
+                            edge_batch.append(
+                                (
+                                    channel_node,
+                                    f"user:{u1}",
+                                    {
+                                        "edge_type": "replier",
+                                        "weight": cnt,
+                                        "is_channel_reply": True,
+                                    },
+                                )
+                            )
                         else:
-                            edge_batch.append((
-                                f"user:{u1}", f"user:{u2}",
-                                {"edge_type": "replier", "weight": cnt},
-                            ))
+                            edge_batch.append(
+                                (
+                                    f"user:{u1}",
+                                    f"user:{u2}",
+                                    {"edge_type": "replier", "weight": cnt},
+                                )
+                            )
 
             if include_forwarded:
                 for src, tgts in forward_counter.items():
                     for dst, cnt in tgts.items():
                         if str(src) == str(numeric_id):
-                            edge_batch.append((
-                                channel_node, f"user:{dst}",
-                                {"edge_type": "forwarded", "weight": cnt, "is_channel_forward": True},
-                            ))
+                            edge_batch.append(
+                                (
+                                    channel_node,
+                                    f"user:{dst}",
+                                    {
+                                        "edge_type": "forwarded",
+                                        "weight": cnt,
+                                        "is_channel_forward": True,
+                                    },
+                                )
+                            )
                         elif str(dst) == str(numeric_id):
-                            edge_batch.append((
-                                channel_node, f"user:{src}",
-                                {"edge_type": "forwarded", "weight": cnt, "is_channel_forward": True},
-                            ))
+                            edge_batch.append(
+                                (
+                                    channel_node,
+                                    f"user:{src}",
+                                    {
+                                        "edge_type": "forwarded",
+                                        "weight": cnt,
+                                        "is_channel_forward": True,
+                                    },
+                                )
+                            )
                         else:
-                            edge_batch.append((
-                                f"user:{src}", f"user:{dst}",
-                                {"edge_type": "forwarded", "weight_forward": cnt},
-                            ))
+                            edge_batch.append(
+                                (
+                                    f"user:{src}",
+                                    f"user:{dst}",
+                                    {"edge_type": "forwarded", "weight_forward": cnt},
+                                )
+                            )
 
             for (u1, u2), cnt in discussion_reply_pairs.items():
                 if cnt >= min_replies:
-                    edge_batch.append((
-                        f"user:{u1}", f"user:{u2}",
-                        {"edge_type": "discussion_reply", "weight": cnt},
-                    ))
+                    edge_batch.append(
+                        (
+                            f"user:{u1}",
+                            f"user:{u2}",
+                            {"edge_type": "discussion_reply", "weight": cnt},
+                        )
+                    )
 
             graph.add_edges_from(edge_batch)
 
@@ -492,6 +571,7 @@ class TgAnalyzer:
                 log_callback(f"Channel '{channel}': {len(links)} links found")
 
                 from urllib.parse import urlparse
+
                 user_domains = defaultdict(set)
                 for link in links:
                     url = link.get("url")
@@ -506,14 +586,22 @@ class TgAnalyzer:
 
                 link_edges_batch = []
                 for user_id, domains in user_domains.items():
-                    if isinstance(user_id, int) and user_id < 0 and str(user_id).startswith("-100"):
+                    if (
+                        isinstance(user_id, int)
+                        and user_id < 0
+                        and str(user_id).startswith("-100")
+                    ):
                         continue
                     user_node = self._ensure_user_node(graph, user_id, all_users)
                     for domain in domains:
                         domain_node = f"domain:{domain}"
                         if domain_node not in graph:
-                            graph.add_node(domain_node, node_type="domain", label=domain)
-                        link_edges_batch.append((user_node, domain_node, {"edge_type": "mentions"}))
+                            graph.add_node(
+                                domain_node, node_type="domain", label=domain
+                            )
+                        link_edges_batch.append(
+                            (user_node, domain_node, {"edge_type": "mentions"})
+                        )
                 graph.add_edges_from(link_edges_batch)
 
         if len(channels) > 1 and include_cross_channel:
@@ -524,8 +612,10 @@ class TgAnalyzer:
                     ch2_node = f"channel:{ch2}"
                     if graph.has_node(ch1_node) and graph.has_node(ch2_node):
                         graph.add_edge(
-                            ch1_node, ch2_node,
-                            edge_type="shared_members", weight=len(shared_users),
+                            ch1_node,
+                            ch2_node,
+                            edge_type="shared_members",
+                            weight=len(shared_users),
                             shared_users=list(shared_users)[:10],
                         )
 
@@ -552,16 +642,30 @@ class TgAnalyzer:
         for t, cnt in edge_types.items():
             log_callback(f"  {t}: {cnt}")
 
-        user_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "user"]
+        user_nodes = [
+            n for n, d in graph.nodes(data=True) if d.get("node_type") == "user"
+        ]
         if user_nodes:
             degrees = [d for n, d in graph.degree(user_nodes)]
             if degrees:
                 log_callback(
                     f"\nUser node degree: min={min(degrees)}, max={max(degrees)}, avg={sum(degrees) / len(degrees):.2f}"
                 )
-            bot_count = sum(1 for n, d in graph.nodes(data=True) if d.get("node_type") == "user" and d.get("bot"))
-            verified_count = sum(1 for n, d in graph.nodes(data=True) if d.get("node_type") == "user" and d.get("verified"))
-            premium_count = sum(1 for n, d in graph.nodes(data=True) if d.get("node_type") == "user" and d.get("premium"))
+            bot_count = sum(
+                1
+                for n, d in graph.nodes(data=True)
+                if d.get("node_type") == "user" and d.get("bot")
+            )
+            verified_count = sum(
+                1
+                for n, d in graph.nodes(data=True)
+                if d.get("node_type") == "user" and d.get("verified")
+            )
+            premium_count = sum(
+                1
+                for n, d in graph.nodes(data=True)
+                if d.get("node_type") == "user" and d.get("premium")
+            )
             log_callback(f"  Bots: {bot_count}")
             log_callback(f"  Verified: {verified_count}")
             log_callback(f"  Premium: {premium_count}")
@@ -621,6 +725,7 @@ class TgAnalyzer:
 
         if "csv-nodes" in formats:
             import csv
+
             with open(base + "_nodes.csv", "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 attr_keys = set()
@@ -635,6 +740,7 @@ class TgAnalyzer:
 
         if "csv-edges" in formats:
             import csv
+
             with open(base + "_edges.csv", "w", newline="", encoding="utf-8") as f:
                 writer = csv.writer(f)
                 attr_keys = set()
@@ -648,15 +754,20 @@ class TgAnalyzer:
             log_callback(f"CSV edges saved to {base}_edges.csv")
 
         if "html" in formats:
-            self.visualize_interactive(graph_clean, output_path, log_callback=log_callback)
+            self.visualize_interactive(
+                graph_clean, output_path, log_callback=log_callback
+            )
 
         if "obsidian" in formats and db_path:
             self.export_to_obsidian(
-                db_path, output_path,
-                channels=channels, min_replies=min_replies,
+                db_path,
+                output_path,
+                channels=channels,
+                min_replies=min_replies,
                 include_forwarded=include_forwarded,
                 include_discussion_replies=include_discussion_replies,
-                start_date=start_date, end_date=end_date,
+                start_date=start_date,
+                end_date=end_date,
                 log_callback=log_callback,
             )
 
@@ -701,7 +812,9 @@ class TgAnalyzer:
             lines.append("## Basic Info")
             lines.append(f"- **User ID**: {info.get('user_id', 'N/A')}")
             username = info.get("username")
-            lines.append(f"- **Username**: @{username}" if username else "- **Username**: N/A")
+            lines.append(
+                f"- **Username**: @{username}" if username else "- **Username**: N/A"
+            )
             first_name = info.get("first_name")
             if first_name:
                 lines.append(f"- **First Name**: {first_name}")
@@ -722,7 +835,15 @@ class TgAnalyzer:
                 lines.append(f"- **Bio**: {about}")
 
             flags = []
-            for flag in ("bot", "verified", "premium", "scam", "fake", "deleted", "restricted"):
+            for flag in (
+                "bot",
+                "verified",
+                "premium",
+                "scam",
+                "fake",
+                "deleted",
+                "restricted",
+            ):
                 if info.get(flag):
                     flags.append(flag.capitalize())
             if flags:
@@ -736,7 +857,21 @@ class TgAnalyzer:
             birthday_m = info.get("birthday_month")
             birthday_y = info.get("birthday_year")
             if birthday_d and birthday_m:
-                month_names = ["", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
+                month_names = [
+                    "",
+                    "Jan",
+                    "Feb",
+                    "Mar",
+                    "Apr",
+                    "May",
+                    "Jun",
+                    "Jul",
+                    "Aug",
+                    "Sep",
+                    "Oct",
+                    "Nov",
+                    "Dec",
+                ]
                 bday_str = f"{birthday_d} {month_names[birthday_m]}"
                 if birthday_y:
                     bday_str += f" {birthday_y}"
@@ -765,7 +900,9 @@ class TgAnalyzer:
 
             if connections:
                 lines.append("## Connections")
-                other_users = [c for c in connections if c.get("user_id") != info.get("user_id")]
+                other_users = [
+                    c for c in connections if c.get("user_id") != info.get("user_id")
+                ]
                 if other_users:
                     lines.append("Interacts with:")
                     for conn in other_users[:20]:
@@ -777,7 +914,9 @@ class TgAnalyzer:
             avatar_paths = info.get("avatar_paths")
             if avatar_paths:
                 lines.append("## Media")
-                paths = avatar_paths.split("|") if "|" in avatar_paths else [avatar_paths]
+                paths = (
+                    avatar_paths.split("|") if "|" in avatar_paths else [avatar_paths]
+                )
                 for p in paths[:5]:
                     if p:
                         lines.append(f"![avatar]({p})")
@@ -785,9 +924,15 @@ class TgAnalyzer:
 
             return "\n".join(lines)
 
-        def format_channel_markdown(channel_info, members, posts_count, discussions_count):
+        def format_channel_markdown(
+            channel_info, members, posts_count, discussions_count
+        ):
             lines = []
-            title = channel_info.get("title") or channel_info.get("username") or "Unknown Channel"
+            title = (
+                channel_info.get("title")
+                or channel_info.get("username")
+                or "Unknown Channel"
+            )
             lines.append(f"# {title}\n")
             lines.append("## Channel Info")
             lines.append(f"- **Channel ID**: {channel_info.get('channel_id', 'N/A')}")
@@ -858,14 +1003,20 @@ class TgAnalyzer:
                 )
                 discussions_count = cursor.fetchone()[0] or 0
 
-                channel_md = format_channel_markdown(channel_info, members, posts_count, discussions_count)
-                with open(os.path.join(channel_dir, f"{channel}.md"), "w", encoding="utf-8") as f:
+                channel_md = format_channel_markdown(
+                    channel_info, members, posts_count, discussions_count
+                )
+                with open(
+                    os.path.join(channel_dir, f"{channel}.md"), "w", encoding="utf-8"
+                ) as f:
                     f.write(channel_md)
                 log_callback(f"Created: {os.path.join(channel_dir, f'{channel}.md')}")
 
                 member_dict = {m.get("user_id"): m for m in members if m.get("user_id")}
                 posts = self.get_posts(db_path, channel, start_date, end_date)
-                discussions = self.get_discussions(db_path, channel, start_date, end_date)
+                discussions = self.get_discussions(
+                    db_path, channel, start_date, end_date
+                )
 
                 post_author = {}
                 reply_counter = defaultdict(lambda: defaultdict(int))
@@ -878,7 +1029,12 @@ class TgAnalyzer:
                     user_id = p.get("user_id")
                     if post_id and user_id:
                         post_author[post_id] = user_id
-                    if include_forwarded and p.get("is_forwarded") and p.get("forwarded_from_id") and user_id:
+                    if (
+                        include_forwarded
+                        and p.get("is_forwarded")
+                        and p.get("forwarded_from_id")
+                        and user_id
+                    ):
                         src = p["forwarded_from_id"]
                         dst = user_id
                         if src != dst:
@@ -936,9 +1092,15 @@ class TgAnalyzer:
                             connections.append(all_users[uid])
 
                     user_md = format_user_markdown(member, connections, channel)
-                    with open(os.path.join(channel_dir, f"{link_name}.md"), "w", encoding="utf-8") as f:
+                    with open(
+                        os.path.join(channel_dir, f"{link_name}.md"),
+                        "w",
+                        encoding="utf-8",
+                    ) as f:
                         f.write(user_md)
-                    log_callback(f"Created: {os.path.join(channel_dir, f'{link_name}.md')}")
+                    log_callback(
+                        f"Created: {os.path.join(channel_dir, f'{link_name}.md')}"
+                    )
 
             conn.close()
             log_callback(f"Obsidian export completed! Files saved to: {graph_dir}")
@@ -946,6 +1108,7 @@ class TgAnalyzer:
         except Exception as e:
             log_callback(f"Error exporting to Obsidian: {e}")
             import traceback
+
             traceback.print_exc()
             return False
 
@@ -955,21 +1118,34 @@ class TgAnalyzer:
             return
 
         net = Network(
-            height="100vh", width="100%",
-            bgcolor="#011627", cdn_resources="in_line",
+            height="100vh",
+            width="100%",
+            bgcolor="#011627",
+            cdn_resources="in_line",
         )
 
         physics_options = {
             "physics": {
-                "enabled": True, "solver": "repulsion",
+                "enabled": True,
+                "solver": "repulsion",
                 "repulsion": {
-                    "nodeDistance": 250, "centralGravity": 0.5,
-                    "springLength": 300, "springConstant": 0.05, "damping": 0.09,
+                    "nodeDistance": 250,
+                    "centralGravity": 0.5,
+                    "springLength": 300,
+                    "springConstant": 0.05,
+                    "damping": 0.09,
                 },
-                "stabilization": {"enabled": True, "iterations": 200, "updateInterval": 25},
+                "stabilization": {
+                    "enabled": True,
+                    "iterations": 200,
+                    "updateInterval": 25,
+                },
             },
             "interaction": {
-                "dragNodes": True, "dragView": True, "zoomView": True, "hoverConnectedEdges": True,
+                "dragNodes": True,
+                "dragView": True,
+                "zoomView": True,
+                "hoverConnectedEdges": True,
             },
         }
         net.set_options(json.dumps(physics_options))
@@ -1005,7 +1181,11 @@ class TgAnalyzer:
                 }
             elif node_type == "channel":
                 channel_name = node.split(":")[1] if ":" in node else node
-                info = {"type": "channel", "channel_id": attrs.get("numeric_id") or channel_name, "name": label}
+                info = {
+                    "type": "channel",
+                    "channel_id": attrs.get("numeric_id") or channel_name,
+                    "name": label,
+                }
             elif node_type == "domain":
                 info = {"type": "domain", "domain": label}
             elif node_type == "discussion_chat":
@@ -1019,7 +1199,9 @@ class TgAnalyzer:
                 size, color = 50, "#7caf7c"
             elif node_type == "user":
                 color = "#e74c3c" if attrs.get("bot", False) else "#82aaff"
-                size = 15 + 5 * (bool(attrs.get("bot", False)) or bool(attrs.get("verified", False)))
+                size = 15 + 5 * (
+                    bool(attrs.get("bot", False)) or bool(attrs.get("verified", False))
+                )
             elif node_type == "domain":
                 size, color = 20, "#bdc1c6"
             elif node_type == "discussion_chat":
@@ -1028,7 +1210,10 @@ class TgAnalyzer:
                 size, color = 10, "#12293C"
 
             net.add_node(
-                node, label=label, size=size, color=color,
+                node,
+                label=label,
+                size=size,
+                color=color,
                 font={"color": "#bdc1c6", "strokeWidth": 0},
             )
 
@@ -1045,7 +1230,9 @@ class TgAnalyzer:
 
         for src, dst, attrs in graph.edges(data=True):
             edge_type = attrs.get("edge_type", "unknown")
-            is_channel_edge = attrs.get("is_channel_reply") or attrs.get("is_channel_forward")
+            is_channel_edge = attrs.get("is_channel_reply") or attrs.get(
+                "is_channel_forward"
+            )
             dashes = False
             if edge_type == "member":
                 color, width = "#6c7a89", 1
@@ -1230,49 +1417,181 @@ class TgAnalyzer:
         else:
             pos = nx.spring_layout(graph, k=2, iterations=50)
 
-        channel_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "channel"]
-        user_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "user"]
-        domain_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "domain"]
-        discussion_nodes = [n for n, d in graph.nodes(data=True) if d.get("node_type") == "discussion_chat"]
+        channel_nodes = [
+            n for n, d in graph.nodes(data=True) if d.get("node_type") == "channel"
+        ]
+        user_nodes = [
+            n for n, d in graph.nodes(data=True) if d.get("node_type") == "user"
+        ]
+        domain_nodes = [
+            n for n, d in graph.nodes(data=True) if d.get("node_type") == "domain"
+        ]
+        discussion_nodes = [
+            n
+            for n, d in graph.nodes(data=True)
+            if d.get("node_type") == "discussion_chat"
+        ]
 
         if channel_nodes:
-            nx.draw_networkx_nodes(graph, pos, nodelist=channel_nodes, node_color="#3c8c3c", node_size=800, label="Channels")
+            nx.draw_networkx_nodes(
+                graph,
+                pos,
+                nodelist=channel_nodes,
+                node_color="#3c8c3c",
+                node_size=800,
+                label="Channels",
+            )
         if user_nodes:
             bot_nodes = [n for n in user_nodes if graph.nodes[n].get("bot", False)]
-            normal_nodes = [n for n in user_nodes if not graph.nodes[n].get("bot", False)]
+            normal_nodes = [
+                n for n in user_nodes if not graph.nodes[n].get("bot", False)
+            ]
             if normal_nodes:
-                nx.draw_networkx_nodes(graph, pos, nodelist=normal_nodes, node_color="#7caf7c", node_size=300, label="Users")
+                nx.draw_networkx_nodes(
+                    graph,
+                    pos,
+                    nodelist=normal_nodes,
+                    node_color="#7caf7c",
+                    node_size=300,
+                    label="Users",
+                )
             if bot_nodes:
-                nx.draw_networkx_nodes(graph, pos, nodelist=bot_nodes, node_color="#e74c3c", node_size=250, label="Bots")
+                nx.draw_networkx_nodes(
+                    graph,
+                    pos,
+                    nodelist=bot_nodes,
+                    node_color="#e74c3c",
+                    node_size=250,
+                    label="Bots",
+                )
         if domain_nodes:
-            nx.draw_networkx_nodes(graph, pos, nodelist=domain_nodes, node_color="#e6b800", node_size=200, label="Domains")
+            nx.draw_networkx_nodes(
+                graph,
+                pos,
+                nodelist=domain_nodes,
+                node_color="#e6b800",
+                node_size=200,
+                label="Domains",
+            )
         if discussion_nodes:
-            nx.draw_networkx_nodes(graph, pos, nodelist=discussion_nodes, node_color="#f39c12", node_size=400, label="Discussion Chats")
+            nx.draw_networkx_nodes(
+                graph,
+                pos,
+                nodelist=discussion_nodes,
+                node_color="#f39c12",
+                node_size=400,
+                label="Discussion Chats",
+            )
 
-        member_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("edge_type") == "member"]
-        replier_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("edge_type") == "replier"]
-        forwarded_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("edge_type") == "forwarded"]
-        mention_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("edge_type") == "mentions"]
-        discussion_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("edge_type") == "discussion_reply"]
-        linked_edges = [(u, v) for u, v, d in graph.edges(data=True) if d.get("edge_type") == "linked_chat"]
+        member_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if d.get("edge_type") == "member"
+        ]
+        replier_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if d.get("edge_type") == "replier"
+        ]
+        forwarded_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if d.get("edge_type") == "forwarded"
+        ]
+        mention_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if d.get("edge_type") == "mentions"
+        ]
+        discussion_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if d.get("edge_type") == "discussion_reply"
+        ]
+        linked_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if d.get("edge_type") == "linked_chat"
+        ]
 
         if member_edges:
-            nx.draw_networkx_edges(graph, pos, edgelist=member_edges, edge_color="#4a4a4a", width=1, alpha=0.6)
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=member_edges,
+                edge_color="#4a4a4a",
+                width=1,
+                alpha=0.6,
+            )
         if replier_edges:
-            nx.draw_networkx_edges(graph, pos, edgelist=replier_edges, edge_color="#7caf7c", width=1, alpha=0.7, label="Replies")
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=replier_edges,
+                edge_color="#7caf7c",
+                width=1,
+                alpha=0.7,
+                label="Replies",
+            )
         if forwarded_edges:
-            nx.draw_networkx_edges(graph, pos, edgelist=forwarded_edges, edge_color="#9b59b6", width=1, alpha=0.6, label="Forwards")
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=forwarded_edges,
+                edge_color="#9b59b6",
+                width=1,
+                alpha=0.6,
+                label="Forwards",
+            )
         if mention_edges:
-            nx.draw_networkx_edges(graph, pos, edgelist=mention_edges, edge_color="#f1c40f", width=1, alpha=0.5, style="dashed", label="Mentions")
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=mention_edges,
+                edge_color="#f1c40f",
+                width=1,
+                alpha=0.5,
+                style="dashed",
+                label="Mentions",
+            )
         if discussion_edges:
-            nx.draw_networkx_edges(graph, pos, edgelist=discussion_edges, edge_color="#e67e22", width=1, alpha=0.6, style="dashed", label="Discussion Replies")
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=discussion_edges,
+                edge_color="#e67e22",
+                width=1,
+                alpha=0.6,
+                style="dashed",
+                label="Discussion Replies",
+            )
         if linked_edges:
-            nx.draw_networkx_edges(graph, pos, edgelist=linked_edges, edge_color="#f39c12", width=1, alpha=0.8, style="dashed", label="Linked Chat")
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=linked_edges,
+                edge_color="#f39c12",
+                width=1,
+                alpha=0.8,
+                style="dashed",
+                label="Linked Chat",
+            )
 
         labels = {n: d.get("label", n) for n, d in graph.nodes(data=True)}
-        nx.draw_networkx_labels(graph, pos, labels, font_size=8, font_family="Courier New", font_color="#7caf7c")
+        nx.draw_networkx_labels(
+            graph,
+            pos,
+            labels,
+            font_size=8,
+            font_family="Courier New",
+            font_color="#7caf7c",
+        )
 
-        plt.title("Telegram Channel Interaction Graph", color="#7caf7c", fontfamily="Courier New")
+        plt.title(
+            "Telegram Channel Interaction Graph",
+            color="#7caf7c",
+            fontfamily="Courier New",
+        )
         plt.legend(facecolor="black", edgecolor="#3c8c3c", labelcolor="#7caf7c")
         plt.axis("off")
         plt.tight_layout()
@@ -1300,9 +1619,13 @@ class TgAnalyzer:
 
         log_callback("Building graph...")
         graph = self.build_graph(
-            db_path=db_path, channels=channels, min_replies=min_replies,
-            include_forwarded=include_forwarded, include_links=include_links,
-            start_date=start_date, end_date=end_date,
+            db_path=db_path,
+            channels=channels,
+            min_replies=min_replies,
+            include_forwarded=include_forwarded,
+            include_links=include_links,
+            start_date=start_date,
+            end_date=end_date,
             log_callback=log_callback,
         )
 
@@ -1317,10 +1640,17 @@ class TgAnalyzer:
         export_formats = [f for f in formats if f != "png"]
         if export_formats:
             self.export_graph(
-                graph, output_dir, export_formats, log_callback=log_callback,
-                db_path=db_path, channels=channels, min_replies=min_replies,
-                include_forwarded=include_forwarded, include_discussion_replies=True,
-                start_date=start_date, end_date=end_date,
+                graph,
+                output_dir,
+                export_formats,
+                log_callback=log_callback,
+                db_path=db_path,
+                channels=channels,
+                min_replies=min_replies,
+                include_forwarded=include_forwarded,
+                include_discussion_replies=True,
+                start_date=start_date,
+                end_date=end_date,
             )
 
         if progress_callback:

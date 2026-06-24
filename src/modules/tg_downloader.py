@@ -411,11 +411,7 @@ class TgDownloader:
                         f"[debug] proxy type={ptype} host={host} port={port}"
                     )
                     if secret:
-                        display = (
-                            secret[:12] + "..."
-                            if len(secret) > 16
-                            else secret
-                        )
+                        display = secret[:12] + "..." if len(secret) > 16 else secret
                         self.log_callback(
                             f"[debug] proxy secret={display} "
                             f"(len={len(secret) if isinstance(secret, str) else 'binary'})"
@@ -494,10 +490,8 @@ class TgDownloader:
                 )
                 connected = True
                 break
-            except asyncio.TimeoutError:
-                self.log_callback(
-                    "Connection timed out after 120 seconds"
-                )
+            except TimeoutError:
+                self.log_callback("Connection timed out after 120 seconds")
                 if self.state.use_proxy:
                     self.state.remove_current_proxy()
                     self.state.rotate_proxy()

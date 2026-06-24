@@ -63,6 +63,10 @@
   - [x] Email search in commits
   - [x] Secret scanning (API keys, tokens, passwords)
   - [x] Code dorking (code, commits, issues, repos, users)
+- [x] Phone number OSINT
+  - [x] Parse & Validate (phonenumbers): country, region, carrier, line type, timezone
+  - [x] Reverse Lookup (NumVerify / AbstractAPI APIs)
+  - [x] Leak check via IntelX
 - [ ] Reverse Image Search With Yandex and Google
 
 ## `SETUP SEARXNG`

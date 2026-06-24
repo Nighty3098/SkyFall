@@ -2,6 +2,11 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import (
+    end_of,
+    error,
+)
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -50,7 +55,7 @@ class UsernameController:
 
             found = sum(1 for r in results if r["status"] == "Claimed")
             self.ui.usernameScriptDebug.appendPlainText(
-                f"\n--- Search completed: {found} found ---"
+                end_of(f"Search completed: {found} found")
             )
         except Exception as e:
-            self.ui.usernameScriptDebug.appendPlainText(f"\n--- Error: {e} ---")
+            self.ui.usernameScriptDebug.appendPlainText(error(f"Error: {e}"))

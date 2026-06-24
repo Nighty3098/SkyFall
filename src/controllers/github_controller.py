@@ -2,6 +2,11 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import (
+    end_of,
+    error,
+)
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -21,7 +26,7 @@ class GitHubController:
     async def search_user(self):
         username = self.ui.githubUserEdit.text().strip()
         if not username:
-            self.ui.githubDebug.appendPlainText("[!] Enter a username")
+            self.ui.githubDebug.appendPlainText(error("Enter a username"))
             return
 
         self.ui.githubDebug.clear()
@@ -33,9 +38,9 @@ class GitHubController:
                 username,
                 on_result=lambda line: self.ui.githubDebug.appendPlainText(line),
             )
-            self.ui.githubDebug.appendPlainText("\n--- End of user search ---")
+            self.ui.githubDebug.appendPlainText(end_of("user search"))
         except Exception as e:
-            self.ui.githubDebug.appendPlainText(f"\n[!] Error: {e}")
+            self.ui.githubDebug.appendPlainText(error(f"Error: {e}"))
         finally:
             self.ui.githubProgress.setRange(0, 100)
             self.ui.githubProgress.setValue(100)
@@ -43,7 +48,7 @@ class GitHubController:
     async def search_repos(self):
         query = self.ui.githubRepoEdit.text().strip()
         if not query:
-            self.ui.githubDebug.appendPlainText("[!] Enter a search query")
+            self.ui.githubDebug.appendPlainText(error("Enter a search query"))
             return
 
         self.ui.githubDebug.clear()
@@ -58,9 +63,9 @@ class GitHubController:
                     f"[Page {p}] Rate: {r}/{lim}"
                 ),
             )
-            self.ui.githubDebug.appendPlainText("\n--- End of repo search ---")
+            self.ui.githubDebug.appendPlainText(end_of("repo search"))
         except Exception as e:
-            self.ui.githubDebug.appendPlainText(f"\n[!] Error: {e}")
+            self.ui.githubDebug.appendPlainText(error(f"Error: {e}"))
         finally:
             self.ui.githubProgress.setRange(0, 100)
             self.ui.githubProgress.setValue(100)
@@ -68,7 +73,7 @@ class GitHubController:
     async def search_emails(self):
         query = self.ui.githubEmailEdit.text().strip()
         if not query:
-            self.ui.githubDebug.appendPlainText("[!] Enter a search query")
+            self.ui.githubDebug.appendPlainText(error("Enter a search query"))
             return
 
         self.ui.githubDebug.clear()
@@ -80,9 +85,9 @@ class GitHubController:
                 query,
                 on_result=lambda line: self.ui.githubDebug.appendPlainText(line),
             )
-            self.ui.githubDebug.appendPlainText("\n--- End of email search ---")
+            self.ui.githubDebug.appendPlainText(end_of("email search"))
         except Exception as e:
-            self.ui.githubDebug.appendPlainText(f"\n[!] Error: {e}")
+            self.ui.githubDebug.appendPlainText(error(f"Error: {e}"))
         finally:
             self.ui.githubProgress.setRange(0, 100)
             self.ui.githubProgress.setValue(100)
@@ -90,7 +95,7 @@ class GitHubController:
     async def search_commits(self):
         query = self.ui.githubCommitEdit.text().strip()
         if not query:
-            self.ui.githubDebug.appendPlainText("[!] Enter a search query")
+            self.ui.githubDebug.appendPlainText(error("Enter a search query"))
             return
 
         self.ui.githubDebug.clear()
@@ -110,9 +115,9 @@ class GitHubController:
             )
             if not has_results:
                 self.ui.githubDebug.appendPlainText(result)
-            self.ui.githubDebug.appendPlainText("\n--- End of commit search ---")
+            self.ui.githubDebug.appendPlainText(end_of("commit search"))
         except Exception as e:
-            self.ui.githubDebug.appendPlainText(f"\n[!] Error: {e}")
+            self.ui.githubDebug.appendPlainText(error(f"Error: {e}"))
         finally:
             self.ui.githubProgress.setRange(0, 100)
             self.ui.githubProgress.setValue(100)
@@ -120,7 +125,7 @@ class GitHubController:
     async def search_secrets(self):
         query = self.ui.githubSecretEdit.text().strip()
         if not query:
-            self.ui.githubDebug.appendPlainText("[!] Enter a search query")
+            self.ui.githubDebug.appendPlainText(error("Enter a search query"))
             return
 
         self.ui.githubDebug.clear()
@@ -145,9 +150,9 @@ class GitHubController:
             )
             if not has_results:
                 self.ui.githubDebug.appendPlainText(result)
-            self.ui.githubDebug.appendPlainText("\n--- End of secret scan ---")
+            self.ui.githubDebug.appendPlainText(end_of("secret scan"))
         except Exception as e:
-            self.ui.githubDebug.appendPlainText(f"\n[!] Error: {e}")
+            self.ui.githubDebug.appendPlainText(error(f"Error: {e}"))
         finally:
             self.ui.githubProgress.setRange(0, 100)
             self.ui.githubProgress.setValue(100)
@@ -155,7 +160,7 @@ class GitHubController:
     async def search_dork(self):
         query = self.ui.githubDorkEdit.text().strip()
         if not query:
-            self.ui.githubDebug.appendPlainText("[!] Enter a dork query")
+            self.ui.githubDebug.appendPlainText(error("Enter a dork query"))
             return
 
         self.ui.githubDebug.clear()
@@ -178,9 +183,9 @@ class GitHubController:
                 dork_type=dork_type,
                 on_result=lambda line: self.ui.githubDebug.appendPlainText(line),
             )
-            self.ui.githubDebug.appendPlainText("\n--- End of dork search ---")
+            self.ui.githubDebug.appendPlainText(end_of("dork search"))
         except Exception as e:
-            self.ui.githubDebug.appendPlainText(f"\n[!] Error: {e}")
+            self.ui.githubDebug.appendPlainText(error(f"Error: {e}"))
         finally:
             self.ui.githubProgress.setRange(0, 100)
             self.ui.githubProgress.setValue(100)

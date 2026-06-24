@@ -4,6 +4,8 @@ import json
 import requests
 from loguru import logger
 
+from src.ui.output_formatter import bullet, divider, error, kv, section, title
+
 
 class IntelxSearchEngine:
     def __init__(self, api_key):
@@ -82,7 +84,7 @@ class IntelxSearchEngine:
     async def get_data(self, email):
         search_id = await self._send_request(email)
         if not search_id:
-            return "[!] Failed to initialize search task."
+            return error("Failed to initialize search task.")
 
         databases = set()
         records_with_data = []
@@ -172,28 +174,28 @@ class IntelxSearchEngine:
                     logger.error(f"Error fetching results (attempt {i + 1}): {e}")
                     break
 
-            result = "\n" + "-" * 45 + "\n"
+            result = f"\n{divider()}\n"
 
             if databases:
-                result += f"[+] Found ({len(databases)}) databases:\n"
+                result += f"{title(f'Found ({len(databases)}) databases:')}\n"
                 for db in sorted(databases):
-                    result += f"  - {db}\n"
+                    result += f"{bullet(db)}\n"
 
                 if records_with_data:
-                    result += "\n" + "-" * 45 + "\n"
-                    result += "[+] Data:\n"
+                    result += f"\n{divider()}\n"
+                    result += f"{title('Data:')}\n"
                     for idx, record in enumerate(records_with_data, 1):
-                        result += f"\n--- #{idx} ---\n"
-                        result += f"DB: {record['name']}\n"
-                        result += f"Bucket ID: {record['bucket_id']}\n"
+                        result += f"\n{section(f'#{idx}')}\n"
+                        result += f"{kv('DB', record['name'])}\n"
+                        result += f"{kv('Bucket ID', record['bucket_id'])}\n"
                         if record.get("date"):
-                            result += f"Date: {record['date']}\n"
+                            result += f"{kv('Date', record['date'])}\n"
                         if record.get("size"):
-                            result += f"Size: {record['size']}\n"
+                            result += f"{kv('Size', record['size'])}\n"
                         if record.get("source"):
-                            result += f"Source: {record['source']}\n"
+                            result += f"{kv('Source', record['source'])}\n"
                         if record.get("tags"):
-                            result += f"Tags: {', '.join(record['tags'])}\n"
+                            result += f"{kv('Tags', ', '.join(record['tags']))}\n"
 
                         content = record["content"]
                         result += "Content:\n"
@@ -202,7 +204,7 @@ class IntelxSearchEngine:
                                 if isinstance(value, list):
                                     result += f"  {key}:\n"
                                     for item in value:
-                                        result += f"    - {item}\n"
+                                        result += f"{bullet(item, indent=4)}\n"
                                 else:
                                     result += f"  {key}: {value}\n"
                         elif isinstance(content, list):
@@ -211,18 +213,18 @@ class IntelxSearchEngine:
                                     for k, v in item.items():
                                         result += f"  {k}: {v}\n"
                                 else:
-                                    result += f"  - {item}\n"
+                                    result += f"{bullet(item)}\n"
                         else:
                             result += f"  {content}\n"
             else:
                 result += "Not found\n"
 
-            result += "-" * 45
+            result += divider()
             return result
 
         except Exception as e:
             logger.error(f"Critical error in get_data: {e}")
-            return "[!] Critical error occurred while processing data."
+            return error("Critical error occurred while processing data.")
 
     async def get_bucket_by_id(self, bucket_id):
         return await self._get_bucket_content(bucket_id)

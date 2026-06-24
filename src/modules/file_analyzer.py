@@ -15,6 +15,15 @@ from hachoir.metadata import extractMetadata
 from hachoir.parser import createParser
 from loguru import logger
 
+from src.ui.output_formatter import (
+    divider,
+    error,
+    info,
+    kv,
+    line,
+    section,
+)
+
 _hconfig.quiet = True
 
 _hms.DATETIME_REGEX1 = _re.compile(
@@ -140,26 +149,28 @@ class FileAnalyzer:
                 return None
 
     def get_virustotal_info(self, stats, results=None):
-        result = "-" * 45 + "\n"
-        result += f"Malicious: {stats.get('malicious', 0)}\n"
-        result += f"Suspicious: {stats.get('suspicious', 0)}\n"
-        result += f"Harmless: {stats.get('harmless', 0)}\n"
-        result += f"Undetected: {stats.get('undetected', 0)}\n"
-        result += "-" * 45 + "\n"
+        result = divider() + "\n"
+        result += kv("Malicious", stats.get("malicious", 0)) + "\n"
+        result += kv("Suspicious", stats.get("suspicious", 0)) + "\n"
+        result += kv("Harmless", stats.get("harmless", 0)) + "\n"
+        result += kv("Undetected", stats.get("undetected", 0)) + "\n"
+        result += divider() + "\n"
 
         if results:
-            result += "Detected:\n"
+            result += section("Detected") + "\n"
             found_threats = False
             for engine, details in results.items():
                 category = details.get("category")
                 if category in ["malicious", "suspicious"]:
                     found_threats = True
                     result_name = details.get("result", "Unknown Threat")
-                    result += f"  [{category.upper()}] {engine}: {result_name}\n"
+                    result += (
+                        line(f"[{category.upper()}] {engine}: {result_name}") + "\n"
+                    )
 
             if not found_threats:
-                result += "Not found\n"
-            result += "-" * 45 + "\n"
+                result += info("Not found") + "\n"
+            result += divider() + "\n"
 
         return result
 
@@ -203,7 +214,7 @@ class FileAnalyzer:
         try:
             mime = magic.Magic(mime=True)
             file_type = mime.from_file(str(path))
-            return f"{file_type}\n"
+            return line(file_type, indent=0) + "\n"
         except Exception as e:
             return str(e)
 
@@ -223,8 +234,8 @@ class FileAnalyzer:
         return await asyncio.to_thread(_hashes, path)
 
     async def check_tail_data(self, path):
-        result = "-" * 45 + "\n"
-        result += "Append / Tail Data:\n"
+        result = divider() + "\n"
+        result += section("Append / Tail Data") + "\n"
 
         data = await self._read_file_bytes(path)
 
@@ -234,11 +245,11 @@ class FileAnalyzer:
         if idx != -1:
             tail = data[idx + len(png_eof) :]
             if len(tail) > 0:
-                result += (
-                    f"Hidden data discovered after EOF! Size: {len(tail)} bytes.\n"
-                )
-        result += "Clean\n"
-        result += "-" * 45 + "\n"
+                result += info(
+                    f"Hidden data discovered after EOF! Size: {len(tail)} bytes."
+                ) + "\n"
+        result += line("Clean", indent=0) + "\n"
+        result += divider() + "\n"
 
         return result
 
@@ -247,7 +258,7 @@ class FileAnalyzer:
         result = ""
 
         if not path.exists():
-            result += f"Error: File '{path}' not found."
+            result += error(f"File '{path}' not found.")
             return result
 
         file_stat = path.stat()
@@ -261,18 +272,18 @@ class FileAnalyzer:
 
         file_permissions = stat.filemode(file_stat.st_mode)
 
-        result += f"File: {path.name}\n"
+        result += kv("File", path.name) + "\n"
         size_kb = file_stat.st_size / 1024
-        result += f"Size: {size_kb:.2f} KB ({file_stat.st_size} bytes)\n"
+        result += kv("Size", f"{size_kb:.2f} KB ({file_stat.st_size} bytes)") + "\n"
 
-        result += f"Created (OS): {created_time}\n"
-        result += f"Modified (OS): {modified_time}\n"
-        result += f"Accessed (OS): {accessed_time}\n"
-        result += f"Permissions: {file_permissions}\n"
+        result += kv("Created (OS)", created_time) + "\n"
+        result += kv("Modified (OS)", modified_time) + "\n"
+        result += kv("Accessed (OS)", accessed_time) + "\n"
+        result += kv("Permissions", file_permissions) + "\n"
 
         hashes = await self._get_file_hashes(path)
-        result += f"MD5 Hash: {hashes['md5']}\n"
-        result += f"SHA-256 Hash: {hashes['sha256']}\n"
+        result += kv("MD5 Hash", hashes["md5"]) + "\n"
+        result += kv("SHA-256 Hash", hashes["sha256"]) + "\n"
 
         try:
 
@@ -281,12 +292,12 @@ class FileAnalyzer:
                 return mime.from_file(str(path))
 
             file_type = await asyncio.to_thread(_mime, path)
-            result += f"MIME type: {file_type}\n"
+            result += kv("MIME type", file_type) + "\n"
         except Exception as e:
-            result += f"Could not determine MIME type: {e}\n"
+            result += line(f"Could not determine MIME type: {e}", indent=0) + "\n"
 
-        result += "-" * 45 + "\n"
-        result += "Internal Metadata (Hachoir):\n"
+        result += divider() + "\n"
+        result += section("Internal Metadata (Hachoir)") + "\n"
 
         def _parse_metadata(path):
             parser = createParser(str(path))
@@ -305,17 +316,17 @@ class FileAnalyzer:
         try:
             text_data = await asyncio.to_thread(_parse_metadata, path)
             if text_data is None:
-                result += "  Hachoir could not parse this format.\n"
-                result += "-" * 45 + "\n"
+                result += line("Hachoir could not parse this format.") + "\n"
+                result += divider() + "\n"
                 return result
 
             if text_data:
-                for line in text_data:
-                    result += f"  {line}\n"
+                for md_line in text_data:
+                    result += line(md_line) + "\n"
             else:
-                result += "  No internal metadata found in file.\n"
+                result += line("No internal metadata found in file.") + "\n"
         except Exception as e:
-            result += f"  Error reading metadata: {e}\n"
+            result += line(f"Error reading metadata: {e}") + "\n"
 
         return result
 

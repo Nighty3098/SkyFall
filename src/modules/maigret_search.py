@@ -5,6 +5,13 @@ from maigret import search as maigret_search
 from maigret.db_updater import BUNDLED_DB_PATH
 from maigret.sites import MaigretDatabase
 
+from src.ui.output_formatter import (
+    bullet,
+    info,
+    kv,
+    title,
+)
+
 _maigret_logger = logging.getLogger("maigret")
 _maigret_logger.setLevel(logging.WARNING)
 
@@ -56,7 +63,7 @@ class MaigretSearch:
         from maigret.result import MaigretCheckStatus
 
         output_lines = []
-        output_lines.append(f"Searching: {username}\n")
+        output_lines.append(title(f"Searching: {username}") + "\n")
 
         matches = []
         not_found = []
@@ -90,31 +97,37 @@ class MaigretSearch:
                 unknown.append(site_name)
 
         if matches:
-            output_lines.append(f"Found accounts: {len(matches)}")
+            output_lines.append(info(f"Found accounts: {len(matches)}"))
             for match in matches:
                 output_lines.append(
-                    f"  - {match['site']}: {match['url_user']} (Status: {match['status']})"
+                    bullet(
+                        f"{match['site']}: {match['url_user']} (Status: {match['status']})"
+                    )
                 )
                 if match["ids"]:
                     for k, v in match["ids"].items():
-                        output_lines.append(f"    {k}: {v}")
+                        output_lines.append(kv(k, v))
             output_lines.append("")
         else:
-            output_lines.append("No accounts found.\n")
+            output_lines.append(info("No accounts found.") + "\n")
 
         if not_found:
             display = not_found[:50]
             suffix = "..." if len(not_found) > 50 else ""
-            output_lines.append(f"Not found on: {', '.join(display)}{suffix}")
+            output_lines.append(info(f"Not found on: {', '.join(display)}{suffix}"))
 
         if disabled:
             display = disabled[:30]
             suffix = "..." if len(disabled) > 30 else ""
-            output_lines.append(f"Skipped (disabled): {', '.join(display)}{suffix}")
+            output_lines.append(
+                info(f"Skipped (disabled): {', '.join(display)}{suffix}")
+            )
 
         if unknown:
             display = [str(s) for s in unknown[:20]]
             suffix = "..." if len(unknown) > 20 else ""
-            output_lines.append(f"Unknown/Error on: {', '.join(display)}{suffix}")
+            output_lines.append(
+                info(f"Unknown/Error on: {', '.join(display)}{suffix}")
+            )
 
         return "\n".join(output_lines)

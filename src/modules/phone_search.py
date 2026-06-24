@@ -7,6 +7,14 @@ import phonenumbers
 from loguru import logger
 from phonenumbers import carrier, geocoder, timezone
 
+from src.ui.output_formatter import (
+    error,
+    info,
+    kv,
+    section,
+    title,
+)
+
 
 class PhoneSearch:
     def __init__(self):
@@ -18,19 +26,22 @@ class PhoneSearch:
         default_region: str = None,
         on_result: Callable | None = None,
     ) -> str:
-        lines = []
+        lines = [title(f"Phone: {phone}"), section("Parse & Validate")]
+        if on_result:
+            on_result(lines[-1])
+
         try:
             num = phonenumbers.parse(phone, default_region)
         except phonenumbers.NumberParseException as e:
-            return f"[!] Parse error: {e}"
+            return error(f"Parse error: {e}")
 
         valid = phonenumbers.is_valid_number(num)
         possible = phonenumbers.is_possible_number(num)
 
-        lines.append(f"{'Valid':20} {'Yes' if valid else 'No'}")
+        lines.append(kv("Valid", "Yes" if valid else "No"))
         if on_result:
             on_result(lines[-1])
-        lines.append(f"{'Possible':20} {'Yes' if possible else 'No'}")
+        lines.append(kv("Possible", "Yes" if possible else "No"))
         if on_result:
             on_result(lines[-1])
 
@@ -44,39 +55,37 @@ class PhoneSearch:
             e164 = phonenumbers.format_number(
                 num, phonenumbers.PhoneNumberFormat.E164
             )
-            lines.append(f"{'International':20} {intl}")
+            lines.append(kv("International", intl))
             if on_result:
                 on_result(lines[-1])
-            lines.append(f"{'National':20} {national}")
+            lines.append(kv("National", national))
             if on_result:
                 on_result(lines[-1])
-            lines.append(f"{'E.164':20} {e164}")
+            lines.append(kv("E.164", e164))
             if on_result:
                 on_result(lines[-1])
 
-            country_code = num.country_code
-            national_number = num.national_number
-            lines.append(f"{'Country Code':20} +{country_code}")
+            lines.append(kv("Country Code", f"+{num.country_code}"))
             if on_result:
                 on_result(lines[-1])
-            lines.append(f"{'National Num':20} {national_number}")
+            lines.append(kv("National Num", num.national_number))
             if on_result:
                 on_result(lines[-1])
 
             region_code = phonenumbers.region_code_for_number(num)
-            lines.append(f"{'Region':20} {region_code}")
+            lines.append(kv("Region", region_code))
             if on_result:
                 on_result(lines[-1])
 
             type_name = self._number_type_name(num)
-            lines.append(f"{'Line Type':20} {type_name}")
+            lines.append(kv("Line Type", type_name))
             if on_result:
                 on_result(lines[-1])
 
             try:
                 carrier_name = carrier.name_for_number(num, "en")
                 if carrier_name:
-                    lines.append(f"{'Carrier':20} {carrier_name}")
+                    lines.append(kv("Carrier", carrier_name))
                     if on_result:
                         on_result(lines[-1])
             except Exception:
@@ -85,7 +94,7 @@ class PhoneSearch:
             try:
                 location = geocoder.description_for_number(num, "en")
                 if location:
-                    lines.append(f"{'Location':20} {location}")
+                    lines.append(kv("Location", location))
                     if on_result:
                         on_result(lines[-1])
             except Exception:
@@ -94,16 +103,16 @@ class PhoneSearch:
             try:
                 tzs = timezone.time_zones_for_number(num)
                 if tzs:
-                    lines.append(f"{'Timezones':20} {', '.join(tzs)}")
+                    lines.append(kv("Timezones", ", ".join(tzs)))
                     if on_result:
                         on_result(lines[-1])
             except Exception:
                 pass
 
-        if not lines:
-            return "[!] No information available for this number."
+        if len(lines) <= 2:
+            return info("No information available for this number.")
 
-        return f"[+] Phone info for {phone}:\n" + "\n".join(lines)
+        return "\n".join(lines)
 
     async def reverse_lookup(
         self,
@@ -112,10 +121,19 @@ class PhoneSearch:
         abstractapi_key: str = "",
         on_result: Callable | None = None,
     ) -> str:
-        lines = []
+        if not numverify_key and not abstractapi_key:
+            msg = info(
+                "No API keys configured. "
+                "Add NumVerify or AbstractAPI key in settings."
+            )
+            if on_result:
+                on_result(msg)
+            return msg
+
+        lines = [title(f"Phone: {phone}")]
 
         if numverify_key:
-            lines.append("--- NumVerify ---")
+            lines.append(section("NumVerify"))
             if on_result:
                 on_result(lines[-1])
             try:
@@ -130,28 +148,21 @@ class PhoneSearch:
                 if resp.status_code == 200:
                     data = resp.json()
                     for key, val in data.items():
-                        line = f"  {key:20} {val}"
+                        line = kv(key, val)
                         lines.append(line)
                         if on_result:
                             on_result(line)
                 elif resp.status_code == 404:
-                    line = "  [i] Invalid access key or subscription required"
-                    lines.append(line)
-                    if on_result:
-                        on_result(line)
+                    lines.append(
+                        info("Invalid access key or subscription required")
+                    )
                 else:
-                    line = f"  [i] API error {resp.status_code}"
-                    lines.append(line)
-                    if on_result:
-                        on_result(line)
+                    lines.append(info(f"API error {resp.status_code}"))
             except httpx.RequestError as e:
-                line = f"  [i] Request failed: {e}"
-                lines.append(line)
-                if on_result:
-                    on_result(line)
+                lines.append(info(f"Request failed: {e}"))
 
         if abstractapi_key:
-            lines.append("--- AbstractAPI ---")
+            lines.append(section("AbstractAPI"))
             if on_result:
                 on_result(lines[-1])
             try:
@@ -166,39 +177,23 @@ class PhoneSearch:
                 if resp.status_code == 200:
                     data = resp.json()
                     for key, val in data.items():
-                        line = f"  {key:20} {val}"
+                        line = kv(key, val)
                         lines.append(line)
                         if on_result:
                             on_result(line)
                 elif resp.status_code == 422:
-                    line = "  [i] Invalid phone number or missing API key"
-                    lines.append(line)
-                    if on_result:
-                        on_result(line)
+                    lines.append(
+                        info("Invalid phone number or missing API key")
+                    )
                 else:
-                    line = f"  [i] API error {resp.status_code}"
-                    lines.append(line)
-                    if on_result:
-                        on_result(line)
+                    lines.append(info(f"API error {resp.status_code}"))
             except httpx.RequestError as e:
-                line = f"  [i] Request failed: {e}"
-                lines.append(line)
-                if on_result:
-                    on_result(line)
+                lines.append(info(f"Request failed: {e}"))
 
-        if not numverify_key and not abstractapi_key:
-            msg = (
-                "[i] No API keys configured. "
-                "Add NumVerify or AbstractAPI key in settings."
-            )
-            if on_result:
-                on_result(msg)
-            return msg
+        if len(lines) <= 1:
+            return info("No data returned.")
 
-        if not lines:
-            return "No data returned."
-
-        return f"[+] Reverse lookup for {phone}:\n" + "\n".join(lines)
+        return "\n".join(lines)
 
     async def check_leaks(
         self,
@@ -206,12 +201,15 @@ class PhoneSearch:
         intelx_key: str = "",
         on_result: Callable | None = None,
     ) -> str:
-        lines = []
-
         if not intelx_key:
-            return "[i] IntelX API key not configured. Add it in settings."
+            msg = info("IntelX API key not configured. Add it in settings.")
+            if on_result:
+                on_result(msg)
+            return msg
 
-        lines.append("--- IntelX Search ---")
+        lines = [title(f"Phone: {phone}"), section("IntelX Search")]
+        if on_result:
+            on_result(lines[-1])
 
         headers = {
             "x-key": intelx_key,
@@ -239,17 +237,13 @@ class PhoneSearch:
                 )
 
             if init_resp.status_code != 200:
-                line = f"  [i] API error {init_resp.status_code}"
-                lines.append(line)
-                if on_result:
-                    on_result(line)
-                return f"[+] Leak check for {phone}:\n" + "\n".join(lines)
+                lines.append(info(f"API error {init_resp.status_code}"))
+                return "\n".join(lines)
 
             search_id = init_resp.json().get("id")
-            line = f"  Search ID: {search_id}"
-            lines.append(line)
+            lines.append(kv("Search ID", search_id))
             if on_result:
-                on_result(line)
+                on_result(lines[-1])
 
             await asyncio.sleep(3)
 
@@ -263,10 +257,9 @@ class PhoneSearch:
             if res_resp.status_code == 200:
                 data = res_resp.json()
                 records = data.get("records") or []
-                line = f"  Found {len(records)} records"
-                lines.append(line)
+                lines.append(kv("Records", len(records)))
                 if on_result:
-                    on_result(line)
+                    on_result(lines[-1])
 
                 for item in records[:20]:
                     name = (
@@ -280,11 +273,12 @@ class PhoneSearch:
                         or item.get("bucket")
                         or item.get("bucketId")
                     )
-                    line = f"\n  [{name}]"
+                    parts = [f"\n    Source: {name}"]
                     if date:
-                        line += f" ({date})"
+                        parts.append(f"Date: {date}")
                     if bucket_id:
-                        line += f"\n    Bucket: {bucket_id}"
+                        parts.append(f"Bucket: {bucket_id}")
+                    line = " | ".join(parts)
                     lines.append(line)
                     if on_result:
                         on_result(line)
@@ -302,33 +296,26 @@ class PhoneSearch:
                                 dumped = json.dumps(
                                     content, indent=6, ensure_ascii=False
                                 )
-                                content_line = f"    Content: {dumped[:500]}"
-                                lines.append(content_line)
+                                cline = kv("Content", dumped[:500])
+                                lines.append(cline)
                                 if on_result:
-                                    on_result(content_line)
+                                    on_result(cline)
                         except httpx.RequestError:
                             pass
             else:
-                line = f"  [i] API error {res_resp.status_code}"
-                lines.append(line)
-                if on_result:
-                    on_result(line)
+                lines.append(
+                    info(f"API error {res_resp.status_code}")
+                )
 
         except httpx.RequestError as e:
-            line = f"  [i] Request failed: {e}"
-            lines.append(line)
-            if on_result:
-                on_result(line)
+            lines.append(info(f"Request failed: {e}"))
         except Exception as e:
-            line = f"  [i] Error: {e}"
-            lines.append(line)
-            if on_result:
-                on_result(line)
+            lines.append(info(f"Error: {e}"))
 
-        if not lines:
-            return "No leak data found."
+        if len(lines) <= 2:
+            return info("No leak data found.")
 
-        return f"[+] Leak check for {phone}:\n" + "\n".join(lines)
+        return "\n".join(lines)
 
     def _number_type_name(self, num) -> str:
         ntype = phonenumbers.number_type(num)

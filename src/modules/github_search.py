@@ -3,6 +3,8 @@ from collections.abc import Callable
 import httpx
 from loguru import logger
 
+from src.ui.output_formatter import error, kv, section, title
+
 SECRET_PATTERNS = [
     "api_key",
     "api-key",
@@ -97,10 +99,12 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    results.append("\n[!] Rate limited. Add GitHub token in settings.")
+                    results.append(
+                        f"\n{error('Rate limited. Add GitHub token in settings.')}"
+                    )
                     break
                 if resp.status_code != 200:
-                    results.append(f"\n[!] API error {resp.status_code}")
+                    results.append(f"\n{error(f'API error {resp.status_code}')}")
                     break
 
                 data = resp.json()
@@ -116,23 +120,23 @@ class GitHubSearch:
                     repo = item["repository"]["full_name"]
                     path = item["path"]
                     url = item["html_url"]
-                    line = f"[{repo}] {path}\n  {url}"
-                    results.append(line)
+                    entry = f"[{repo}] {path}\n  {url}"
+                    results.append(entry)
                     if on_result:
-                        on_result(line)
+                        on_result(entry)
 
                 page += 1
                 if data.get("total_count", 0) < page * per_page:
                     break
 
             except httpx.RequestError as e:
-                results.append(f"\n[!] Request failed: {e}")
+                results.append(f"\n{error(f'Request failed: {e}')}")
                 break
 
         if not results:
             return "No email results found."
 
-        header = f"[+] Email search results for '{query}':\n"
+        header = f"{title(f'Email search results for {query!r}:')}\n"
         return header + "\n".join(results)
 
     async def search_secrets(
@@ -163,7 +167,8 @@ class GitHubSearch:
 
                 if resp.status_code == 401:
                     results.append(
-                        "\n[!] Bad credentials. Check your GitHub token in settings."
+                        "\n"
+                        + error("Bad credentials. Check your GitHub token in settings.")
                     )
                     if on_result:
                         on_result(results[-1])
@@ -171,7 +176,7 @@ class GitHubSearch:
                 if resp.status_code == 403:
                     body = resp.json()
                     msg = body.get("message", "Rate limited")
-                    results.append(f"\n[!] {msg}")
+                    results.append(f"\n{error(msg)}")
                     if on_result:
                         on_result(results[-1])
                     break
@@ -183,18 +188,18 @@ class GitHubSearch:
                 if not items:
                     continue
 
-                results.append(f"\n--- {pattern} ---")
+                results.append(f"\n{section(pattern)}")
                 if on_result:
-                    on_result(f"\n--- {pattern} ---")
+                    on_result(f"\n{section(pattern)}")
 
                 for item in items[:3]:
                     repo = item["repository"]["full_name"]
                     path = item["path"]
                     url = item["html_url"]
-                    line = f"  [{repo}] {path}\n    {url}"
-                    results.append(line)
+                    entry = f"  [{repo}] {path}\n    {url}"
+                    results.append(entry)
                     if on_result:
-                        on_result(line)
+                        on_result(entry)
 
             except httpx.RequestError:
                 continue
@@ -202,7 +207,7 @@ class GitHubSearch:
         if not results:
             return "No secrets found."
 
-        return f"[+] Secret scan results for '{query}':" + "\n".join(results)
+        return f"{title(f'Secret scan results for {query!r}:')}" + "\n".join(results)
 
     async def search_commits(
         self,
@@ -228,13 +233,13 @@ class GitHubSearch:
                         )
 
                     if resp.status_code == 403:
-                        results.append("\n[!] Rate limited.")
+                        results.append(f"\n{error('Rate limited.')}")
                         break
                     if resp.status_code == 404:
-                        results.append(f"\n[!] Repo '{q}' not found.")
+                        results.append(f"\n{error(f'Repo {q!r} not found.')}")
                         break
                     if resp.status_code != 200:
-                        results.append(f"\n[!] API error {resp.status_code}")
+                        results.append(f"\n{error(f'API error {resp.status_code}')}")
                         break
 
                     items = resp.json()
@@ -252,12 +257,12 @@ class GitHubSearch:
                         msg = item.get("commit", {}).get("message", "").split("\n")[0]
                         sha = item["sha"][:8]
                         url = item["html_url"]
-                        line = (
+                        entry = (
                             f"[{sha}] {date} {name} <{email}>\n  {msg} | {q}\n  {url}"
                         )
-                        results.append(line)
+                        results.append(entry)
                         if on_result:
-                            on_result(line)
+                            on_result(entry)
 
                     page += 1
                     params["page"] = page
@@ -267,7 +272,7 @@ class GitHubSearch:
                         break
 
                 except httpx.RequestError as e:
-                    results.append(f"\n[!] Request failed: {e}")
+                    results.append(f"\n{error(f'Request failed: {e}')}")
                     break
         else:
             if "repo:" not in q and "org:" not in q and "user:" not in q:
@@ -290,10 +295,10 @@ class GitHubSearch:
                         )
 
                     if resp.status_code == 403:
-                        results.append("\n[!] Rate limited.")
+                        results.append(f"\n{error('Rate limited.')}")
                         break
                     if resp.status_code != 200:
-                        results.append(f"\n[!] API error {resp.status_code}")
+                        results.append(f"\n{error(f'API error {resp.status_code}')}")
                         break
 
                     data = resp.json()
@@ -314,26 +319,28 @@ class GitHubSearch:
                         repo = item["repository"]["full_name"]
                         sha = item["sha"][:8]
                         url = item["html_url"]
-                        line = (
+                        entry = (
                             f"[{sha}] {date} {name} <{email}>\n"
                             f"  {msg} | {repo}\n  {url}"
                         )
-                        results.append(line)
+                        results.append(entry)
                         if on_result:
-                            on_result(line)
+                            on_result(entry)
 
                     page += 1
                     if data.get("total_count", 0) < page * per_page:
                         break
 
                 except httpx.RequestError as e:
-                    results.append(f"\n[!] Request failed: {e}")
+                    results.append(f"\n{error(f'Request failed: {e}')}")
                     break
 
         if not results:
             return "No commits found."
 
-        return f"[+] Commit search results for '{query}':\n" + "\n".join(results)
+        return f"{title(f'Commit search results for {query!r}:')}\n" + "\n".join(
+            results
+        )
 
     async def search_repos(
         self,
@@ -355,10 +362,10 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    results.append("\n[!] Rate limited.")
+                    results.append(f"\n{error('Rate limited.')}")
                     break
                 if resp.status_code != 200:
-                    results.append(f"\n[!] API error {resp.status_code}")
+                    results.append(f"\n{error(f'API error {resp.status_code}')}")
                     break
 
                 data = resp.json()
@@ -377,25 +384,27 @@ class GitHubSearch:
                     forks = item["forks_count"]
                     lang = item.get("language") or "N/A"
                     url = item["html_url"]
-                    line = (
+                    entry = (
                         f"[{full_name}] {lang} | {stars}★ {forks}⑃\n  {desc}\n  {url}"
                     )
-                    results.append(line)
+                    results.append(entry)
                     if on_result:
-                        on_result(line)
+                        on_result(entry)
 
                 page += 1
                 if data.get("total_count", 0) < page * per_page:
                     break
 
             except httpx.RequestError as e:
-                results.append(f"\n[!] Request failed: {e}")
+                results.append(f"\n{error(f'Request failed: {e}')}")
                 break
 
         if not results:
             return "No repositories found."
 
-        return f"[+] Repository search results for '{query}':\n" + "\n".join(results)
+        return f"{title(f'Repository search results for {query!r}:')}\n" + "\n".join(
+            results
+        )
 
     async def search_user(
         self,
@@ -412,11 +421,11 @@ class GitHubSearch:
                 )
 
                 if resp.status_code == 403:
-                    return "[!] Rate limited."
+                    return error("Rate limited.")
                 if resp.status_code == 404:
-                    return f"[!] User '{username}' not found."
+                    return error(f"User '{username}' not found.")
                 if resp.status_code != 200:
-                    return f"[!] API error {resp.status_code}"
+                    return error(f"API error {resp.status_code}")
 
                 data = resp.json()
                 fields = [
@@ -438,10 +447,10 @@ class GitHubSearch:
                 for label, key in fields:
                     val = data.get(key)
                     if val is not None and val != "":
-                        line = f"{label:20} {val}"
-                        lines.append(line)
+                        entry = kv(label, val)
+                        lines.append(entry)
                         if on_result:
-                            on_result(line)
+                            on_result(entry)
 
                 resp2 = await client.get(
                     f"{self._base}/users/{username}/repos",
@@ -451,17 +460,21 @@ class GitHubSearch:
                 if resp2.status_code == 200:
                     repos = resp2.json()
                     if repos:
-                        lines.append(f"\n--- Recent repos ({len(repos)} shown) ---")
+                        lines.append(
+                            f"\n{section(f'Recent repos ({len(repos)} shown)')}"
+                        )
                         if on_result:
-                            on_result(f"\n--- Recent repos ({len(repos)} shown) ---")
+                            on_result(
+                                f"\n{section(f'Recent repos ({len(repos)} shown)')}"
+                            )
                         for r in repos[:15]:
-                            line = f"  {r['full_name']} ({r.get('language') or 'N/A'})"
-                            lines.append(line)
+                            entry = f"  {r['full_name']} ({r.get('language') or 'N/A'})"
+                            lines.append(entry)
                             if on_result:
-                                on_result(line)
+                                on_result(entry)
 
         except httpx.RequestError as e:
-            return f"[!] Request failed: {e}"
+            return error(f"Request failed: {e}")
 
         return "\n".join(lines)
 
@@ -499,10 +512,12 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    results.append("\n[!] Rate limited. Add GitHub token in settings.")
+                    results.append(
+                        f"\n{error('Rate limited. Add GitHub token in settings.')}"
+                    )
                     break
                 if resp.status_code != 200:
-                    results.append(f"\n[!] API error {resp.status_code}")
+                    results.append(f"\n{error(f'API error {resp.status_code}')}")
                     break
 
                 data = resp.json()
@@ -519,7 +534,7 @@ class GitHubSearch:
                         repo = item["repository"]["full_name"]
                         path = item["path"]
                         url = item["html_url"]
-                        line = f"[{repo}] {path}\n  {url}"
+                        entry = f"[{repo}] {path}\n  {url}"
                     elif dork_type == "commits":
                         author = item.get("commit", {}).get("author", {})
                         email = author.get("email", "N/A")
@@ -528,31 +543,31 @@ class GitHubSearch:
                         repo = item["repository"]["full_name"]
                         sha = item["sha"][:8]
                         url = item["html_url"]
-                        line = f"[{sha}] {name} <{email}> | {repo}\n  {msg}\n  {url}"
+                        entry = f"[{sha}] {name} <{email}> | {repo}\n  {msg}\n  {url}"
                     elif dork_type == "issues":
                         repo = item["repository"]["full_name"]
                         title = item["title"]
                         state = item["state"]
                         url = item["html_url"]
-                        line = f"[{repo}] [{state}] {title}\n  {url}"
+                        entry = f"[{repo}] [{state}] {title}\n  {url}"
                     elif dork_type == "repositories":
                         full_name = item["full_name"]
                         desc = item.get("description") or "No description"
                         stars = item["stargazers_count"]
                         lang = item.get("language") or "N/A"
                         url = item["html_url"]
-                        line = f"[{full_name}] {lang} | {stars}★\n  {desc}\n  {url}"
+                        entry = f"[{full_name}] {lang} | {stars}★\n  {desc}\n  {url}"
                     elif dork_type == "users":
                         login = item["login"]
                         uid = item["id"]
                         url = item["html_url"]
-                        line = f"[{login}] (id: {uid})\n  {url}"
+                        entry = f"[{login}] (id: {uid})\n  {url}"
                     else:
-                        line = str(item)
+                        entry = str(item)
 
-                    results.append(line)
+                    results.append(entry)
                     if on_result:
-                        on_result(line)
+                        on_result(entry)
 
                 page += 1
                 total = data.get("total_count", 0)
@@ -560,10 +575,12 @@ class GitHubSearch:
                     break
 
             except httpx.RequestError as e:
-                results.append(f"\n[!] Request failed: {e}")
+                results.append(f"\n{error(f'Request failed: {e}')}")
                 break
 
         if not results:
             return "No results found."
 
-        return f"[+] Dork results for '{query}' ({dork_type}):\n" + "\n".join(results)
+        return f"{title(f'Dork results for {query!r} ({dork_type}):')}\n" + "\n".join(
+            results
+        )

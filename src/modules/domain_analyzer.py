@@ -12,6 +12,8 @@ from ddgs import DDGS
 from fake_useragent import UserAgent
 from loguru import logger
 
+from src.ui.output_formatter import info, kv, line
+
 
 class DomainAnalyzer:
     def __init__(self, virustotal_api_key, google_safe_api_key, ipinfo_api_key) -> None:
@@ -417,12 +419,15 @@ class DomainAnalyzer:
             lines = []
             for cookie in response.cookies:
                 http_only = cookie.has_nonstandard_attr("HttpOnly")
+                lines.append(kv(cookie.name, cookie.value))
                 lines.append(
-                    f"{cookie.name}: {cookie.value}"
-                    f"  (domain={cookie.domain}, path={cookie.path},"
-                    f" secure={cookie.secure}, httpOnly={http_only})"
+                    line(
+                        f"domain={cookie.domain}, path={cookie.path},"
+                        f" secure={cookie.secure}, httpOnly={http_only}",
+                        indent=4,
+                    )
                 )
-            return "\n".join(lines) if lines else "No cookies"
+            return "\n".join(lines) if lines else info("No cookies")
         except Exception as e:
             logger.error(f"Cookies: Error: {e}")
             return str(e)
@@ -446,8 +451,8 @@ class DomainAnalyzer:
                     tags[key] = meta.get("content", "")
 
             if not tags:
-                return "Not Found"
-            return "\n".join(f"{k}: {v}" for k, v in tags.items())
+                return info("Not found")
+            return "\n".join(kv(k, v) for k, v in tags.items())
         except Exception as e:
             logger.error(f"Social tags: Error: {e}")
             return str(e)

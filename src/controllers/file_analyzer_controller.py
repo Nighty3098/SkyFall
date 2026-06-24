@@ -2,6 +2,10 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import (
+    info,
+)
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -21,19 +25,19 @@ class FileAnalyzeController:
 
     async def start_file_analyzer(self, path):
         if self.ui.fileMetadataCheck.isChecked():
-            self.ui.metadataDebug.setPlainText("Loading...")
+            self.ui.metadataDebug.setPlainText(info("Loading..."))
             result = await self.file_analyzer.get_metadata(path)
             result += "\n\n"
             result += await self.file_analyzer.check_tail_data(path)
             self.ui.metadataDebug.setPlainText(result)
 
         if self.ui.fileStringsCheck.isChecked():
-            self.ui.stringsFileDebug.setPlainText("Loading...")
+            self.ui.stringsFileDebug.setPlainText(info("Loading..."))
             strings_result = await self.file_analyzer.get_strings(path)
             self.ui.stringsFileDebug.setPlainText("\n".join(strings_result))
 
         if self.ui.fileVirustotalCheck.isChecked():
-            self.ui.virustotalFileDebug.setPlainText("Loading...")
+            self.ui.virustotalFileDebug.setPlainText(info("Loading..."))
             virustotal_result = await self.file_analyzer.virustotal_analyze(path)
             self.ui.virustotalFileDebug.setPlainText(virustotal_result)
 

@@ -103,6 +103,7 @@ class TgDownloaderController:
     def _handle_progress(self, value):
         if isinstance(value, tuple):
             stage, progress = value
+            logger.debug("_handle_progress: stage={}, progress={}", stage, progress)
             if stage == "done":
                 self.ui.telegramDownloadProgress.setValue(100)
             elif stage != self.ui.current_stage:

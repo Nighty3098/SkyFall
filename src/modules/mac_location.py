@@ -256,7 +256,10 @@ class MacLocation:
             fd = bytes([0x12, len(fc)]) + fc
             fl = bytes([0x22, len(fd)]) + fd
             v = bytes([0x0A, 4]) + b"2021"
-            pv = b"android/LEAGOO/full_wf562g_leagoo/wf562g_leagoo:6.0/MRA58K/1511161770:user/release-keys"
+            pv = (
+                b"android/LEAGOO/full_wf562g_leagoo/"
+                b"wf562g_leagoo:6.0/MRA58K/1511161770:user/release-keys"
+            )
             p = bytes([0x12, len(pv)]) + pv
             le = b"en_US"
             lf = bytes([0x2A, len(le)]) + le
@@ -297,7 +300,6 @@ class MacLocation:
                 while off < len(d):
                     t = d[off]
                     off += 1
-                    f = t >> 3
                     w = t & 7
                     if w == 0:
                         _, off = self._decode_varint(d, off)

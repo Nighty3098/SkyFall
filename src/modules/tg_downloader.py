@@ -1323,6 +1323,9 @@ class TgDownloader:
         processed = 0
 
         while True:
+            logger.debug(
+                "_fetch_discussion_messages: fetching batch, offset_id={}", offset_id
+            )
             try:
                 messages = await asyncio.wait_for(
                     client.get_messages(
@@ -1330,7 +1333,11 @@ class TgDownloader:
                     ),
                     timeout=30,
                 )
+                logger.debug(
+                    "_fetch_discussion_messages: got {} messages", len(messages or [])
+                )
                 if not messages:
+                    logger.debug("_fetch_discussion_messages: no messages, breaking")
                     break
 
                 for msg in messages:

@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>11</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -187,19 +187,19 @@
                      <string>Username</string>
                     </property>
                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QLineEdit" name="telegramAccountInfo">
-                      <property name="placeholderText">
-                       <string>Account (auto after download)</string>
-                      </property>
-                      <property name="readOnly">
-                       <bool>true</bool>
-                      </property>
-                     </widget>
-                   </item>
-                   <item>
-                    <widget class="QCheckBox" name="telegramUseProxyCheck">
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="telegramAccountInfo">
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                    <property name="placeholderText">
+                     <string>Account (auto after download)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QCheckBox" name="telegramUseProxyCheck">
                     <property name="text">
                      <string>Use Proxy</string>
                     </property>
@@ -315,23 +315,23 @@
                     </property>
                    </widget>
                   </item>
-                   <item>
-                    <widget class="QProgressBar" name="telegramDownloadProgress">
-                     <property name="value">
-                      <number>0</number>
-                     </property>
-                    </widget>
-                   </item>
-                   <item>
-                    <widget class="QPushButton" name="telegramDownloadAvatarsBtn">
-                     <property name="text">
-                      <string>Download Avatars</string>
-                     </property>
-                    </widget>
-                   </item>
-                  </layout>
-                 </widget>
-                 <widget class="QWidget" name="downloaderDebugSection">
+                  <item>
+                   <widget class="QProgressBar" name="telegramDownloadProgress">
+                    <property name="value">
+                     <number>0</number>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QPushButton" name="telegramDownloadAvatarsBtn">
+                    <property name="text">
+                     <string>Download Avatars</string>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="downloaderDebugSection">
                  <layout class="QVBoxLayout" name="verticalLayout_6">
                   <property name="leftMargin">
                    <number>0</number>
@@ -426,14 +426,14 @@
                         <widget class="QDateTimeEdit" name="telegramAnalyzerStartDate"/>
                        </item>
                        <item row="6" column="0">
-                         <widget class="QCheckBox" name="includeForwardingCheck">
-                          <property name="text">
-                           <string>Include Forwarding</string>
-                          </property>
-                          <property name="checked">
-                           <bool>true</bool>
-                          </property>
-                         </widget>
+                        <widget class="QCheckBox" name="includeForwardingCheck">
+                         <property name="text">
+                          <string>Include Forwarding</string>
+                         </property>
+                         <property name="checked">
+                          <bool>true</bool>
+                         </property>
+                        </widget>
                        </item>
                       </layout>
                      </item>
@@ -1628,7 +1628,7 @@
             <item>
              <widget class="QLineEdit" name="githubTokenEdit">
               <property name="placeholderText">
-               <string>GitHub Token</string>
+               <string>GitHub Token split by ;</string>
               </property>
              </widget>
             </item>

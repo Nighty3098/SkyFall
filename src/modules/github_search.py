@@ -64,14 +64,45 @@ SEARCH_QUERIES = {
 class GitHubSearch:
     def __init__(self, token: str = ""):
         logger.debug("Init: GitHubSearch")
-        self._token = token
+        self._token_list = token.split(";")
         self._base = "https://api.github.com"
         self._headers = {
             "Accept": "application/vnd.github.v3+json",
             "User-Agent": "SkyFall-OSINT/1.0",
         }
-        if token:
-            self._headers["Authorization"] = f"Bearer {token}"
+        self._current_token_index = 0
+        self._token = self._token_list[0]
+        if self._token:
+            self._headers["Authorization"] = f"Bearer {self._token}"
+
+    def _switch_to_next_token(self) -> bool:
+        if self._current_token_index + 1 < len(self._token_list):
+            self._current_token_index += 1
+            self._token = self._token_list[self._current_token_index]
+            self._headers["Authorization"] = f"Bearer {self._token}"
+            logger.info(
+                f"Switch to: {self._current_token_index + 1}/{len(self._token_list)}"
+            )
+            return True
+        else:
+            logger.warning("All tokens exhausted")
+            return False
+
+    def _handle_rate_limit(
+        self, results: list, on_result: Callable | None = None
+    ) -> bool:
+        if self._switch_to_next_token():
+            msg = f"Rate limited. Switching to token {self._current_token_index + 1}"
+            results.append(f"\n{error(msg)}")
+            if on_result:
+                on_result(results[-1])
+            return True
+        else:
+            msg = "Rate limited. All tokens exhausted."
+            results.append(f"\n{error(msg)}")
+            if on_result:
+                on_result(results[-1])
+            return False
 
     def _rate_limit_remaining(self, resp: httpx.Response) -> tuple[int, int]:
         remaining = int(resp.headers.get("X-RateLimit-Remaining", 0))
@@ -99,10 +130,11 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    results.append(
-                        f"\n{error('Rate limited. Add GitHub token in settings.')}"
-                    )
-                    break
+                    if self._handle_rate_limit(results, on_result):
+                        continue
+                    else:
+                        break
+
                 if resp.status_code != 200:
                     results.append(f"\n{error(f'API error {resp.status_code}')}")
                     break
@@ -157,52 +189,66 @@ class GitHubSearch:
             if on_progress:
                 on_progress(done, total, pattern)
 
-            try:
-                async with httpx.AsyncClient(timeout=30) as client:
-                    resp = await client.get(
-                        f"{self._base}/search/code",
-                        params={"q": q, "per_page": 5},
-                        headers=self._headers,
-                    )
+            max_retries = len(self._token_list) if self._token_list else 1
+            for attempt in range(max_retries):
+                try:
+                    async with httpx.AsyncClient(timeout=30) as client:
+                        resp = await client.get(
+                            f"{self._base}/search/code",
+                            params={"q": q, "per_page": 5},
+                            headers=self._headers,
+                        )
 
-                if resp.status_code == 401:
-                    results.append(
-                        "\n"
-                        + error("Bad credentials. Check your GitHub token in settings.")
-                    )
+                    if resp.status_code == 401:
+                        results.append(
+                            "\n"
+                            + error(
+                                "Bad credentials. Check your GitHub token in settings."
+                            )
+                        )
+                        if on_result:
+                            on_result(results[-1])
+                        break
+
+                    if resp.status_code == 403:
+                        if self._switch_to_next_token():
+                            logger.info(
+                                f"Rate limited on pattern '{pattern}', retrying with"
+                                "next token"
+                            )
+                            continue
+                        else:
+                            results.append(
+                                f"\n{error('Rate limited. All tokens exhausted.')}"
+                            )
+                            if on_result:
+                                on_result(results[-1])
+                            break
+
+                    if resp.status_code != 200:
+                        break
+
+                    data = resp.json()
+                    items = data.get("items", [])
+                    if not items:
+                        break
+
+                    results.append(f"\n{section(pattern)}")
                     if on_result:
-                        on_result(results[-1])
+                        on_result(f"\n{section(pattern)}")
+
+                    for item in items[:3]:
+                        repo = item["repository"]["full_name"]
+                        path = item["path"]
+                        url = item["html_url"]
+                        entry = f"  [{repo}] {path}\n    {url}"
+                        results.append(entry)
+                        if on_result:
+                            on_result(entry)
                     break
-                if resp.status_code == 403:
-                    body = resp.json()
-                    msg = body.get("message", "Rate limited")
-                    results.append(f"\n{error(msg)}")
-                    if on_result:
-                        on_result(results[-1])
-                    break
-                if resp.status_code != 200:
+
+                except httpx.RequestError:
                     continue
-
-                data = resp.json()
-                items = data.get("items", [])
-                if not items:
-                    continue
-
-                results.append(f"\n{section(pattern)}")
-                if on_result:
-                    on_result(f"\n{section(pattern)}")
-
-                for item in items[:3]:
-                    repo = item["repository"]["full_name"]
-                    path = item["path"]
-                    url = item["html_url"]
-                    entry = f"  [{repo}] {path}\n    {url}"
-                    results.append(entry)
-                    if on_result:
-                        on_result(entry)
-
-            except httpx.RequestError:
-                continue
 
         if not results:
             return "No secrets found."
@@ -512,10 +558,21 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    results.append(
-                        f"\n{error('Rate limited. Add GitHub token in settings.')}"
-                    )
-                    break
+                    if self._switch_to_next_token():
+                        results.append(
+                            f"\n{error('Rate limited. Switching to new token')}"
+                        )
+                        if on_result:
+                            on_result(results[-1])
+                        continue
+                    else:
+                        results.append(
+                            f"\n{error('Rate limited. All tokens exhausted.')}"
+                        )
+                        if on_result:
+                            on_result(results[-1])
+                        break
+
                 if resp.status_code != 200:
                     results.append(f"\n{error(f'API error {resp.status_code}')}")
                     break

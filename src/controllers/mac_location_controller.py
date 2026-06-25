@@ -16,14 +16,15 @@ LEAFLET_HTML = """<!DOCTYPE html>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; }}
-  #map {{ width: 100%; height: 100vh; }}
+  body {{ margin: 0; padding: 0; background: #0A0A0A; }}
+  #mapWrap {{ border-radius: 15px; overflow: hidden; width: 100%; height: 100vh; }}
+  #map {{ width: 100%; height: 100%; }}
 </style>
 </head>
 <body>
-<div id="map"></div>
+<div id="mapWrap"><div id="map"></div></div>
 <script>
-var map = L.map('map').setView([{lat}, {lng}], 5);
+var map = L.map('map', {{ zoomControl: false }}).setView([{lat}, {lng}], 5);
 L.tileLayer('https://{{s}}.tile.openstreetmap.org/{{z}}/{{x}}/{{y}}.png', {{
   maxZoom: 18,
   attribution: '&copy; OpenStreetMap'

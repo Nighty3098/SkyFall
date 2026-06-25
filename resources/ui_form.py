@@ -113,6 +113,12 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.telegramUsernameEdit)
 
+        self.telegramAccountInfo = QLineEdit(self.downloaderSettingsSection)
+        self.telegramAccountInfo.setObjectName(u"telegramAccountInfo")
+        self.telegramAccountInfo.setReadOnly(True)
+
+        self.verticalLayout_5.addWidget(self.telegramAccountInfo)
+
         self.telegramUseProxyCheck = QCheckBox(self.downloaderSettingsSection)
         self.telegramUseProxyCheck.setObjectName(u"telegramUseProxyCheck")
 
@@ -212,6 +218,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_5.addWidget(self.telegramDownloadProgress)
 
+        self.telegramDownloadAvatarsBtn = QPushButton(self.downloaderSettingsSection)
+        self.telegramDownloadAvatarsBtn.setObjectName(u"telegramDownloadAvatarsBtn")
+
+        self.verticalLayout_5.addWidget(self.telegramDownloadAvatarsBtn)
+
         self.downloaderSplitter.addWidget(self.downloaderSettingsSection)
         self.downloaderDebugSection = QWidget(self.downloaderSplitter)
         self.downloaderDebugSection.setObjectName(u"downloaderDebugSection")
@@ -296,6 +307,7 @@ class Ui_MainWindow(object):
 
         self.includeForwardingCheck = QCheckBox(self.groupBox_3)
         self.includeForwardingCheck.setObjectName(u"includeForwardingCheck")
+        self.includeForwardingCheck.setChecked(True)
 
         self.gridLayout_3.addWidget(self.includeForwardingCheck, 6, 0, 1, 1)
 
@@ -842,26 +854,6 @@ class Ui_MainWindow(object):
         self.verticalLayout_13.addLayout(self.gridLayout_6)
 
         self.mainStackedWidget.addTab(self.graphTab, "")
-        self.proxyTab = QWidget()
-        self.proxyTab.setObjectName(u"proxyTab")
-        self.verticalLayout_3 = QVBoxLayout(self.proxyTab)
-        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.proxyListEdit = QPlainTextEdit(self.proxyTab)
-        self.proxyListEdit.setObjectName(u"proxyListEdit")
-
-        self.horizontalLayout_2.addWidget(self.proxyListEdit)
-
-
-        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
-
-        self.saveProxiesButton = QPushButton(self.proxyTab)
-        self.saveProxiesButton.setObjectName(u"saveProxiesButton")
-
-        self.verticalLayout_3.addWidget(self.saveProxiesButton)
-
-        self.mainStackedWidget.addTab(self.proxyTab, "")
         self.githubTab = QWidget()
         self.githubTab.setObjectName(u"githubTab")
         self.githubHorizontalLayout = QHBoxLayout(self.githubTab)
@@ -999,6 +991,91 @@ class Ui_MainWindow(object):
         self.githubHorizontalLayout.addWidget(self.githubSplitter)
 
         self.mainStackedWidget.addTab(self.githubTab, "")
+        self.phoneTab = QWidget()
+        self.phoneTab.setObjectName(u"phoneTab")
+        self.phoneHorizontalLayout = QHBoxLayout(self.phoneTab)
+        self.phoneHorizontalLayout.setObjectName(u"phoneHorizontalLayout")
+        self.phoneSplitter = QSplitter(self.phoneTab)
+        self.phoneSplitter.setObjectName(u"phoneSplitter")
+        self.phoneSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.phoneSettingsSection = QWidget(self.phoneSplitter)
+        self.phoneSettingsSection.setObjectName(u"phoneSettingsSection")
+        self.phoneSettingsLayout = QVBoxLayout(self.phoneSettingsSection)
+        self.phoneSettingsLayout.setObjectName(u"phoneSettingsLayout")
+        self.phoneSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.phoneNumberEdit = QLineEdit(self.phoneSettingsSection)
+        self.phoneNumberEdit.setObjectName(u"phoneNumberEdit")
+
+        self.phoneSettingsLayout.addWidget(self.phoneNumberEdit)
+
+        self.phoneRegionEdit = QLineEdit(self.phoneSettingsSection)
+        self.phoneRegionEdit.setObjectName(u"phoneRegionEdit")
+
+        self.phoneSettingsLayout.addWidget(self.phoneRegionEdit)
+
+        self.phoneParseBtn = QPushButton(self.phoneSettingsSection)
+        self.phoneParseBtn.setObjectName(u"phoneParseBtn")
+
+        self.phoneSettingsLayout.addWidget(self.phoneParseBtn)
+
+        self.phoneLookupBtn = QPushButton(self.phoneSettingsSection)
+        self.phoneLookupBtn.setObjectName(u"phoneLookupBtn")
+
+        self.phoneSettingsLayout.addWidget(self.phoneLookupBtn)
+
+        self.phoneLeakBtn = QPushButton(self.phoneSettingsSection)
+        self.phoneLeakBtn.setObjectName(u"phoneLeakBtn")
+
+        self.phoneSettingsLayout.addWidget(self.phoneLeakBtn)
+
+        self.phoneVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.phoneSettingsLayout.addItem(self.phoneVerticalSpacer)
+
+        self.phoneProgress = QProgressBar(self.phoneSettingsSection)
+        self.phoneProgress.setObjectName(u"phoneProgress")
+        self.phoneProgress.setValue(0)
+
+        self.phoneSettingsLayout.addWidget(self.phoneProgress)
+
+        self.phoneSplitter.addWidget(self.phoneSettingsSection)
+        self.phoneDebugSection = QWidget(self.phoneSplitter)
+        self.phoneDebugSection.setObjectName(u"phoneDebugSection")
+        self.phoneDebugLayout = QVBoxLayout(self.phoneDebugSection)
+        self.phoneDebugLayout.setObjectName(u"phoneDebugLayout")
+        self.phoneDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.phoneDebug = QPlainTextEdit(self.phoneDebugSection)
+        self.phoneDebug.setObjectName(u"phoneDebug")
+        self.phoneDebug.setReadOnly(True)
+
+        self.phoneDebugLayout.addWidget(self.phoneDebug)
+
+        self.phoneSplitter.addWidget(self.phoneDebugSection)
+
+        self.phoneHorizontalLayout.addWidget(self.phoneSplitter)
+
+        self.mainStackedWidget.addTab(self.phoneTab, "")
+        self.macAddrTab = QWidget()
+        self.macAddrTab.setObjectName(u"macAddrTab")
+        self.gridLayout_9 = QGridLayout(self.macAddrTab)
+        self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.checkMacAddrButton = QPushButton(self.macAddrTab)
+        self.checkMacAddrButton.setObjectName(u"checkMacAddrButton")
+        self.checkMacAddrButton.setMinimumSize(QSize(150, 0))
+
+        self.gridLayout_9.addWidget(self.checkMacAddrButton, 0, 1, 1, 1)
+
+        self.macAddrEdit = QLineEdit(self.macAddrTab)
+        self.macAddrEdit.setObjectName(u"macAddrEdit")
+
+        self.gridLayout_9.addWidget(self.macAddrEdit, 0, 0, 1, 1)
+
+        self.macAddrLocationDebug = QPlainTextEdit(self.macAddrTab)
+        self.macAddrLocationDebug.setObjectName(u"macAddrLocationDebug")
+
+        self.gridLayout_9.addWidget(self.macAddrLocationDebug, 1, 0, 1, 2)
+
+        self.mainStackedWidget.addTab(self.macAddrTab, "")
         self.settingsTab = QWidget()
         self.settingsTab.setObjectName(u"settingsTab")
         self.horizontalLayout = QHBoxLayout(self.settingsTab)
@@ -1058,6 +1135,16 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.githubTokenEdit)
 
+        self.numverifyApiKeyEdit = QLineEdit(self.settingsTab)
+        self.numverifyApiKeyEdit.setObjectName(u"numverifyApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.numverifyApiKeyEdit)
+
+        self.abstractapiApiKeyEdit = QLineEdit(self.settingsTab)
+        self.abstractapiApiKeyEdit.setObjectName(u"abstractapiApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.abstractapiApiKeyEdit)
+
         self.lightThemeCheck = QCheckBox(self.settingsTab)
         self.lightThemeCheck.setObjectName(u"lightThemeCheck")
 
@@ -1084,6 +1171,26 @@ class Ui_MainWindow(object):
         self.horizontalLayout.addItem(self.horizontalSpacer_5)
 
         self.mainStackedWidget.addTab(self.settingsTab, "")
+        self.proxyTab = QWidget()
+        self.proxyTab.setObjectName(u"proxyTab")
+        self.verticalLayout_3 = QVBoxLayout(self.proxyTab)
+        self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.proxyListEdit = QPlainTextEdit(self.proxyTab)
+        self.proxyListEdit.setObjectName(u"proxyListEdit")
+
+        self.horizontalLayout_2.addWidget(self.proxyListEdit)
+
+
+        self.verticalLayout_3.addLayout(self.horizontalLayout_2)
+
+        self.saveProxiesButton = QPushButton(self.proxyTab)
+        self.saveProxiesButton.setObjectName(u"saveProxiesButton")
+
+        self.verticalLayout_3.addWidget(self.saveProxiesButton)
+
+        self.mainStackedWidget.addTab(self.proxyTab, "")
 
         self.horizontalLayout_6.addWidget(self.mainStackedWidget)
 
@@ -1094,8 +1201,8 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(9)
-        self.tabWidget.setCurrentIndex(1)
+        self.mainStackedWidget.setCurrentIndex(10)
+        self.tabWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1107,6 +1214,7 @@ class Ui_MainWindow(object):
         self.winTitle.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))
         self.telegramUsernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
+        self.telegramAccountInfo.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Account (auto after download)", None))
         self.telegramUseProxyCheck.setText(QCoreApplication.translate("MainWindow", u"Use Proxy", None))
         self.groupBox_2.setTitle(QCoreApplication.translate("MainWindow", u"Safety Delays", None))
         self.label_3.setText(QCoreApplication.translate("MainWindow", u"Member Delay(S)", None))
@@ -1119,6 +1227,7 @@ class Ui_MainWindow(object):
         self.telegramCollectLinksCheck.setText(QCoreApplication.translate("MainWindow", u"Collect Links", None))
         self.telegramMultiAccCheck.setText(QCoreApplication.translate("MainWindow", u"Multi-Acc Mode", None))
         self.telegramDownloadStart.setText(QCoreApplication.translate("MainWindow", u"Run", None))
+        self.telegramDownloadAvatarsBtn.setText(QCoreApplication.translate("MainWindow", u"Download Avatars", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_downloader_tab), QCoreApplication.translate("MainWindow", u"DOWNLOADER", None))
         self.telegramAnalyzerLoadChannelsButton.setText(QCoreApplication.translate("MainWindow", u"Load Channels", None))
 
@@ -1203,8 +1312,6 @@ class Ui_MainWindow(object):
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
-        self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
-        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.proxyTab), QCoreApplication.translate("MainWindow", u"PROXY", None))
         self.githubUserEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Username", None))
         self.githubUserSearchBtn.setText(QCoreApplication.translate("MainWindow", u"User Info", None))
         self.githubRepoEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search Repositories", None))
@@ -1224,6 +1331,15 @@ class Ui_MainWindow(object):
         self.githubDorkUsersCheck.setText(QCoreApplication.translate("MainWindow", u"Users", None))
         self.githubDorkSearchBtn.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.githubTab), QCoreApplication.translate("MainWindow", u"GITHUB", None))
+        self.phoneNumberEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Phone number (+1234567890)", None))
+        self.phoneRegionEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Region code (US, RU, DE... optional)", None))
+        self.phoneParseBtn.setText(QCoreApplication.translate("MainWindow", u"Parse / Validate", None))
+        self.phoneLookupBtn.setText(QCoreApplication.translate("MainWindow", u"Reverse Lookup", None))
+        self.phoneLeakBtn.setText(QCoreApplication.translate("MainWindow", u"Check Leaks", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.phoneTab), QCoreApplication.translate("MainWindow", u"PHONE", None))
+        self.checkMacAddrButton.setText(QCoreApplication.translate("MainWindow", u"Check", None))
+        self.macAddrEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mac Addr", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.macAddrTab), QCoreApplication.translate("MainWindow", u"MAC ADDR", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))
@@ -1232,9 +1348,13 @@ class Ui_MainWindow(object):
         self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
         self.googleSafeApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Google Safe API KEY", None))
         self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
-        self.githubTokenEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Token", None))
+        self.githubTokenEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Token split by ;", None))
+        self.numverifyApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"NumVerify API Key", None))
+        self.abstractapiApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"AbstractAPI API Key", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
+        self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.proxyTab), QCoreApplication.translate("MainWindow", u"PROXY", None))
     # retranslateUi
 

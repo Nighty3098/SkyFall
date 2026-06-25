@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>11</number>
+         <number>10</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1247,27 +1247,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="proxyTab">
-         <attribute name="title">
-          <string>PROXY</string>
-         </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_3">
-          <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <item>
-             <widget class="QPlainTextEdit" name="proxyListEdit"/>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QPushButton" name="saveProxiesButton">
-            <property name="text">
-             <string>Save Proxies</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </widget>
         <widget class="QWidget" name="githubTab">
          <attribute name="title">
           <string>GITHUB</string>
@@ -1536,6 +1515,36 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="macAddrTab">
+         <attribute name="title">
+          <string>MAC ADDR</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="0" column="1">
+           <widget class="QPushButton" name="checkMacAddrButton">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Check</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLineEdit" name="macAddrEdit">
+            <property name="placeholderText">
+             <string>Mac Addr</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="settingsTab">
          <attribute name="title">
           <string>SETTINGS</string>
@@ -1703,6 +1712,27 @@
              </size>
             </property>
            </spacer>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="proxyTab">
+         <attribute name="title">
+          <string>PROXY</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_3">
+          <item>
+           <layout class="QHBoxLayout" name="horizontalLayout_2">
+            <item>
+             <widget class="QPlainTextEdit" name="proxyListEdit"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="QPushButton" name="saveProxiesButton">
+            <property name="text">
+             <string>Save Proxies</string>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>

@@ -26,6 +26,11 @@ class TgAnalyzer:
         self._conn = None
 
     def _get_connection(self, db_path):
+        original = db_path
+        if os.path.isdir(db_path):
+            db_path = os.path.join(db_path, "SkyFall_TG.db")
+            logger.debug("_get_connection: {} is a dir, resolved to {}", original, db_path)
+        logger.debug("_get_connection: connecting to {}", db_path)
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
         return conn
@@ -40,17 +45,35 @@ class TgAnalyzer:
         return row[key] if key in row.keys() else default
 
     def get_channels(self, db_path):
+        logger.debug("get_channels: db_path={}", db_path)
         conn = self._get_connection(db_path)
         channels = []
         try:
             cursor = conn.cursor()
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='channels'"
+            )
+            table_exists = cursor.fetchone()
+            if not table_exists:
+                logger.warning("get_channels: 'channels' table does not exist in DB")
+                conn.close()
+                return []
+            cursor.execute("SELECT COUNT(*) FROM channels")
+            count = cursor.fetchone()[0]
+            logger.debug("get_channels: total rows in channels table: {}", count)
             cursor.execute("SELECT username FROM channels WHERE username IS NOT NULL")
-            channels = [row[0] for row in cursor.fetchall()]
+            rows = cursor.fetchall()
+            logger.debug("get_channels: rows with non-null username: {}", len(rows))
+            for r in rows:
+                logger.debug("get_channels: found channel username='{}'", r[0])
+            channels = [row[0] for row in rows]
         except sqlite3.OperationalError as e:
-            logger.warning(f"Could not query channels table: {e}")
+            logger.warning("Could not query channels table: {}", e)
         finally:
             conn.close()
-        return sorted(set(channels))
+        result = sorted(set(channels))
+        logger.debug("get_channels: returning {} unique channels", len(result))
+        return result
 
     def get_channel_id(self, db_path, channel_username):
         conn = self._get_connection(db_path)
@@ -109,6 +132,24 @@ class TgAnalyzer:
         posts = []
         try:
             cursor = conn.cursor()
+            cursor.execute(
+                "SELECT channel_id FROM channels WHERE username = ?",
+                (channel,),
+            )
+            ch_row = cursor.fetchone()
+            channel_id_from_channels = dict(ch_row)["channel_id"] if ch_row else None
+            cursor.execute("SELECT COUNT(*) FROM posts")
+            total_posts = cursor.fetchone()[0]
+            cursor.execute(
+                "SELECT DISTINCT channel_id FROM posts LIMIT 20"
+            )
+            post_channel_ids = [r[0] for r in cursor.fetchall()]
+            cursor.execute("SELECT COUNT(*) FROM posts WHERE date IS NULL")
+            null_dates = cursor.fetchone()[0]
+            logger.debug(
+                "get_posts: channel='{}', channel_id={}, total_posts_in_db={}, null_dates={}, post_channel_ids={}",
+                channel, channel_id_from_channels, total_posts, null_dates, post_channel_ids,
+            )
             query = """
                 SELECT p.* FROM posts p
                 JOIN channels c ON p.channel_id = c.channel_id
@@ -116,14 +157,15 @@ class TgAnalyzer:
             """
             params = [channel]
             if start_date:
-                query += " AND p.date >= ?"
+                query += " AND (p.date IS NULL OR p.date >= ?)"
                 params.append(start_date)
             if end_date:
-                query += " AND p.date <= ?"
+                query += " AND (p.date IS NULL OR p.date <= ?)"
                 params.append(end_date)
             cursor.execute(query, params)
             for row in cursor.fetchall():
                 posts.append(dict(row))
+            logger.debug("get_posts: query returned {} posts", len(posts))
         except sqlite3.OperationalError as e:
             logger.warning(f"Could not query posts: {e}")
         finally:
@@ -135,6 +177,16 @@ class TgAnalyzer:
         discussions = []
         try:
             cursor = conn.cursor()
+            cursor.execute("SELECT COUNT(*) FROM discussions")
+            total = cursor.fetchone()[0]
+            cursor.execute("SELECT DISTINCT channel_id FROM discussions LIMIT 20")
+            disc_channel_ids = [r[0] for r in cursor.fetchall()]
+            cursor.execute("SELECT COUNT(*) FROM discussions WHERE date IS NULL")
+            null_dates = cursor.fetchone()[0]
+            logger.debug(
+                "get_discussions: channel='{}', total_discussions_in_db={}, null_dates={}, disc_channel_ids={}",
+                channel, total, null_dates, disc_channel_ids,
+            )
             query = """
                 SELECT d.* FROM discussions d
                 JOIN channels c ON d.channel_id = c.channel_id
@@ -142,14 +194,15 @@ class TgAnalyzer:
             """
             params = [channel]
             if start_date:
-                query += " AND d.date >= ?"
+                query += " AND (d.date IS NULL OR d.date >= ?)"
                 params.append(start_date)
             if end_date:
-                query += " AND d.date <= ?"
+                query += " AND (d.date IS NULL OR d.date <= ?)"
                 params.append(end_date)
             cursor.execute(query, params)
             for row in cursor.fetchall():
                 discussions.append(dict(row))
+            logger.debug("get_discussions: query returned {} discussions", len(discussions))
         except sqlite3.OperationalError as e:
             logger.warning(f"Could not query discussions: {e}")
         finally:
@@ -168,10 +221,10 @@ class TgAnalyzer:
             """
             params = [channel]
             if start_date:
-                query += " AND l.date >= ?"
+                query += " AND (l.date IS NULL OR l.date >= ?)"
                 params.append(start_date)
             if end_date:
-                query += " AND l.date <= ?"
+                query += " AND (l.date IS NULL OR l.date <= ?)"
                 params.append(end_date)
             cursor.execute(query, params)
             for row in cursor.fetchall():
@@ -257,6 +310,7 @@ class TgAnalyzer:
             "birthday_day": info.get("birthday_day"),
             "birthday_month": info.get("birthday_month"),
             "birthday_year": info.get("birthday_year"),
+            "avatar_path": info.get("avatar_path"),
         }
 
     def _ensure_user_node(self, graph, user_id, all_users):
@@ -324,7 +378,8 @@ class TgAnalyzer:
 
         channel_id_map = {}
         try:
-            conn = sqlite3.connect(db_path)
+            db_file = db_path if not os.path.isdir(db_path) else os.path.join(db_path, "SkyFall_TG.db")
+            conn = sqlite3.connect(db_file)
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
             cursor.execute("SELECT username, channel_id FROM channels")
@@ -392,8 +447,11 @@ class TgAnalyzer:
             for p in posts:
                 post_id = p.get("post_id")
                 user_id = p.get("user_id")
-                if post_id and user_id:
-                    post_author[post_id] = user_id
+                if post_id:
+                    if user_id:
+                        post_author[post_id] = user_id
+                    elif numeric_id:
+                        post_author[post_id] = numeric_id
                 if (
                     include_forwarded
                     and p.get("is_forwarded")
@@ -488,29 +546,33 @@ class TgAnalyzer:
                 for u2, cnt in reps.items():
                     if cnt >= min_replies:
                         if str(u1) == str(numeric_id):
-                            edge_batch.append(
-                                (
-                                    channel_node,
-                                    f"user:{u2}",
-                                    {
+                            edge_nodes = (channel_node, f"user:{u2}")
+                            if graph.has_edge(*edge_nodes):
+                                old = graph.get_edge_data(*edge_nodes)
+                                old["reply_weight"] = old.get("reply_weight", 0) + cnt
+                                old["is_channel_reply"] = True
+                            else:
+                                edge_batch.append(
+                                    (*edge_nodes, {
                                         "edge_type": "replier",
                                         "weight": cnt,
                                         "is_channel_reply": True,
-                                    },
+                                    })
                                 )
-                            )
                         elif str(u2) == str(numeric_id):
-                            edge_batch.append(
-                                (
-                                    channel_node,
-                                    f"user:{u1}",
-                                    {
+                            edge_nodes = (channel_node, f"user:{u1}")
+                            if graph.has_edge(*edge_nodes):
+                                old = graph.get_edge_data(*edge_nodes)
+                                old["reply_weight"] = old.get("reply_weight", 0) + cnt
+                                old["is_channel_reply"] = True
+                            else:
+                                edge_batch.append(
+                                    (*edge_nodes, {
                                         "edge_type": "replier",
                                         "weight": cnt,
                                         "is_channel_reply": True,
-                                    },
+                                    })
                                 )
-                            )
                         else:
                             edge_batch.append(
                                 (
@@ -620,6 +682,29 @@ class TgAnalyzer:
                             weight=len(shared_users),
                             shared_users=list(shared_users)[:10],
                         )
+
+        # debug: count edge types
+        edge_types = defaultdict(int)
+        for _, _, d in graph.edges(data=True):
+            edge_types[d.get("edge_type", "unknown")] += 1
+        user2user = 0
+        channel2user = 0
+        for u, v, d in graph.edges(data=True):
+            if d.get("edge_type") in ("replier", "forwarded", "discussion_reply"):
+                if u.startswith("user:") and v.startswith("user:"):
+                    user2user += 1
+                else:
+                    channel2user += 1
+        logger.debug(
+            "_build_graph_impl: edges total={} member={} replier={} forwarded={} discussion_reply={} user2user={} channel2user={}",
+            graph.number_of_edges(),
+            edge_types.get("member", 0),
+            edge_types.get("replier", 0),
+            edge_types.get("forwarded", 0),
+            edge_types.get("discussion_reply", 0),
+            user2user,
+            channel2user,
+        )
 
         return graph
 
@@ -970,7 +1055,8 @@ class TgAnalyzer:
             else:
                 channels = [ch for ch in channels if ch in all_channels]
 
-            conn = sqlite3.connect(db_path)
+            db_file = db_path if not os.path.isdir(db_path) else os.path.join(db_path, "SkyFall_TG.db")
+            conn = sqlite3.connect(db_file)
             conn.row_factory = sqlite3.Row
 
             for channel in channels:
@@ -1159,6 +1245,17 @@ class TgAnalyzer:
             label = attrs.get("label", str(node))
 
             if node_type == "user":
+                avatar_url = None
+                avatar_path = attrs.get("avatar_path")
+                if avatar_path and os.path.isfile(avatar_path):
+                    try:
+                        with open(avatar_path, "rb") as f:
+                            import base64
+                            b64 = base64.b64encode(f.read()).decode()
+                            ext = os.path.splitext(avatar_path)[1].lstrip(".") or "jpg"
+                            avatar_url = f"data:image/{ext};base64,{b64}"
+                    except Exception:
+                        pass
                 info = {
                     "type": "user",
                     "user_id": node.split(":")[1] if ":" in node else node,
@@ -1180,6 +1277,7 @@ class TgAnalyzer:
                     "birthday_day": attrs.get("birthday_day"),
                     "birthday_month": attrs.get("birthday_month"),
                     "birthday_year": attrs.get("birthday_year"),
+                    "avatar_url": avatar_url,
                 }
             elif node_type == "channel":
                 channel_name = node.split(":")[1] if ":" in node else node
@@ -1228,6 +1326,8 @@ class TgAnalyzer:
                 if src_is_user and dst_is_user:
                     weight = attrs.get("weight_forward", attrs.get("weight", 0))
                     message_counts.append(weight)
+            elif edge_type == "member" and attrs.get("is_channel_reply"):
+                message_counts.append(attrs.get("reply_weight", 0))
         max_message_count = max(message_counts) if message_counts else 0
 
         for src, dst, attrs in graph.edges(data=True):
@@ -1237,7 +1337,13 @@ class TgAnalyzer:
             )
             dashes = False
             if edge_type == "member":
-                color, width = "#6c7a89", 1
+                if attrs.get("is_channel_reply"):
+                    rw = attrs.get("reply_weight", 0)
+                    pct = rw / max_message_count if max_message_count > 0 else 0
+                    color = "#5dade2" if pct < 0.2 else "#f7dc6f" if pct < 0.5 else "#ff7675"
+                    width = 1
+                else:
+                    color, width = "#6c7a89", 1
             elif edge_type in ("replier", "forwarded", "discussion_reply"):
                 if edge_type == "forwarded":
                     weight = attrs.get("weight_forward", attrs.get("weight", 0))
@@ -1347,6 +1453,9 @@ class TgAnalyzer:
             var html = '';
             var typeLabel = info.type === 'user' ? 'USER' : info.type === 'channel' ? 'CHANNEL' : info.type === 'domain' ? 'DOMAIN' : info.type === 'discussion_chat' ? 'DISCUSSION CHAT' : 'NODE';
             html += '<div style="margin-bottom: 12px; font-weight: bold; color: #82aaff; font-size: 10pt;">' + typeLabel + '</div>';
+            if (info.avatar_url) {{
+                html += '<div style="text-align: center; margin-bottom: 16px;"><img src="' + info.avatar_url + '" style="width: 80px; height: 80px; border-radius: 50%; border: 2px solid #82aaff; object-fit: cover;" alt="avatar"></div>';
+            }}
             var fields = [];
             if (info.type === 'user') {{
                 fields = [
@@ -1613,8 +1722,21 @@ class TgAnalyzer:
         end_date = params.get("end_date")
         formats = params.get("formats", ["graphml", "png"])
 
-        output_dir = os.path.dirname(db_path) or "."
+        logger.debug(
+            "run_analysis: params={}",
+            {k: v for k, v in params.items() if k not in ("formats",)},
+        )
+        logger.debug("run_analysis: db_path={}, channels={}", db_path, channels)
+        if os.path.isdir(db_path):
+            resolved = os.path.join(db_path, "SkyFall_TG.db")
+            logger.debug("run_analysis: resolved dir to db file: {}", resolved)
+
+        if os.path.isdir(db_path):
+            output_dir = db_path
+        else:
+            output_dir = os.path.dirname(db_path) or "."
         Path(output_dir).mkdir(exist_ok=True)
+        logger.debug("run_analysis: output_dir='{}'", output_dir)
 
         if progress_callback:
             progress_callback(5)

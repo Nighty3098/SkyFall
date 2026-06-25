@@ -50,6 +50,8 @@ class TgDownloaderController:
         )
 
     async def start_collection(self, config: dict):
+        safe_config = {k: v for k, v in config.items() if k != "api_hash"}
+        logger.debug("start_collection: config={}", safe_config)
         self.ui.telegramDownloaderDebug.clear()
         self.ui.telegramDownloadProgress.setValue(0)
         self.ui.current_stage = None
@@ -64,8 +66,38 @@ class TgDownloaderController:
         self._task = loop.run_in_executor(None, lambda: asyncio.run(downloader.run()))
         try:
             await self._task
+            logger.debug("start_collection: finished successfully")
+            self._bridge.finished_signal.emit()
+            phone = getattr(downloader, "account_phone", None)
+            logger.debug("start_collection: phone_available={}", bool(phone))
+            if phone:
+                self.ui.telegramAccountInfo.setText(phone)
+        except Exception as e:
+            logger.error("start_collection: exception: {}", e)
+            self._bridge.log_signal.emit(f"Error: {e}")
+
+    async def start_avatar_download(self):
+        config = self.build_collection_config()
+        logger.debug("start_avatar_download: path={}", config.get("path"))
+        self.ui.telegramDownloaderDebug.clear()
+        self.ui.telegramDownloadProgress.setValue(0)
+
+        downloader = self.tg_downloader.__class__(
+            config,
+            log_callback=lambda msg: self._bridge.log_signal.emit(_strip_ansi(msg)),
+            progress_callback=lambda val: self._bridge.progress_signal.emit(val),
+        )
+
+        loop = asyncio.get_running_loop()
+        self._task = loop.run_in_executor(
+            None, lambda: asyncio.run(downloader.download_avatars())
+        )
+        try:
+            await self._task
+            logger.debug("start_avatar_download: finished successfully")
             self._bridge.finished_signal.emit()
         except Exception as e:
+            logger.error("start_avatar_download: exception: {}", e)
             self._bridge.log_signal.emit(f"Error: {e}")
 
     def _handle_progress(self, value):

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import os
+from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -34,16 +35,38 @@ class TgAnalyzerController:
         )
 
     def load_channels(self, db_path: str):
-        if not db_path or not os.path.exists(db_path):
+        logger.debug("load_channels: raw db_path='{}'", db_path)
+        if not db_path:
+            db_path = str(Path.home() / ".skyfall" / "data")
+            logger.debug("load_channels: using default path '{}'", db_path)
+
+        if not os.path.exists(db_path):
+            logger.warning("load_channels: path does not exist: '{}'", db_path)
             return False, "Database file not found"
+
+        resolved = db_path
+        if os.path.isdir(db_path):
+            resolved = os.path.join(db_path, "SkyFall_TG.db")
+            logger.debug("load_channels: resolved dir to file: '{}'", resolved)
+
+        if not os.path.exists(resolved):
+            logger.warning(
+                "load_channels: DB file does not exist: '{}'. "
+                "Run TG downloader first to create the database.",
+                resolved,
+            )
+            return False, f"Database file not found: {resolved}"
 
         try:
             channels = self.tg_analyzer.get_channels(db_path)
+            logger.debug("load_channels: got {} channels", len(channels))
             self.ui.telegramChannelsList.clear()
             self.ui.telegramChannelsList.addItems(channels)
             self.ui.telegramChannelsList.addItem("All Channels")
+            logger.debug("load_channels: added {} items to list", len(channels) + 1)
             return True, None
         except Exception as e:
+            logger.error("load_channels: exception: {}", e)
             return False, str(e)
 
     def build_analysis_params(self) -> dict:
@@ -60,8 +83,18 @@ class TgAnalyzerController:
         ]
         loaded_channels = [ch for ch in loaded_channels if ch != "All Channels"]
 
-        start_date = self.ui.telegramAnalyzerStartDate.dateTime().toString("yyyy-MM-dd")
-        end_date = self.ui.telegramAnalyzerEndDate.dateTime().toString("yyyy-MM-dd")
+        start_date_str = self.ui.telegramAnalyzerStartDate.dateTime().toString(
+            "yyyy-MM-dd"
+        )
+        end_date_str = self.ui.telegramAnalyzerEndDate.dateTime().toString(
+            "yyyy-MM-dd"
+        )
+        if start_date_str == "2000-01-01" and end_date_str == "2000-01-01":
+            start_date = None
+            end_date = None
+        else:
+            start_date = start_date_str
+            end_date = end_date_str
 
         params = {
             "db_path": db_path,

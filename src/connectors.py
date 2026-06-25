@@ -124,9 +124,24 @@ def setup_tg_downloader_connectors(controller: "TgDownloaderController"):
             controller.start_collection(controller.build_collection_config())
         )
     )
+    controller.ui.telegramDownloadAvatarsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.start_avatar_download()
+        )
+    )
 
 
 def setup_tg_analyzer_connectors(controller: "TgAnalyzerController"):
+    from datetime import datetime, timedelta
+
+    from PySide6.QtCore import QDateTime
+
+    controller.ui.telegramAnalyzerStartDate.setDateTime(
+        QDateTime(datetime.now() - timedelta(days=365))
+    )
+    controller.ui.telegramAnalyzerEndDate.setDateTime(QDateTime(datetime.now()))
+    controller.ui.telegramAnalyzerMinReplies.setValue(1)
+
     controller.ui.telegramAnalyzerLoadChannelsButton.clicked.connect(
         lambda: controller.load_channels(controller.ui.pathToStorageEdit.text())
     )

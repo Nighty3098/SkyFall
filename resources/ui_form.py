@@ -15,6 +15,7 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QFont, QFontDatabase, QGradient, QIcon,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSpinBox,
     QGridLayout, QGroupBox, QHBoxLayout, QLabel,
     QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
@@ -1063,17 +1064,30 @@ class Ui_MainWindow(object):
         self.checkMacAddrButton.setObjectName(u"checkMacAddrButton")
         self.checkMacAddrButton.setMinimumSize(QSize(150, 0))
 
-        self.gridLayout_9.addWidget(self.checkMacAddrButton, 0, 1, 1, 1)
+        self.gridLayout_9.addWidget(self.checkMacAddrButton, 0, 2, 1, 1)
 
         self.macAddrEdit = QLineEdit(self.macAddrTab)
         self.macAddrEdit.setObjectName(u"macAddrEdit")
 
         self.gridLayout_9.addWidget(self.macAddrEdit, 0, 0, 1, 1)
 
+        self.horizontalLayout_10 = QHBoxLayout()
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.horizontalLayout_10.setContentsMargins(-1, 0, -1, -1)
         self.macAddrLocationDebug = QPlainTextEdit(self.macAddrTab)
         self.macAddrLocationDebug.setObjectName(u"macAddrLocationDebug")
 
-        self.gridLayout_9.addWidget(self.macAddrLocationDebug, 1, 0, 1, 2)
+        self.horizontalLayout_10.addWidget(self.macAddrLocationDebug)
+
+        self.macLocationMapView = QWebEngineView(self.macAddrTab)
+        self.macLocationMapView.setObjectName(u"macLocationMapView")
+        self.macLocationMapView.setStyleSheet(u"border-radius: 15px;")
+        self.macLocationMapView.setUrl(QUrl(u"about:blank"))
+
+        self.horizontalLayout_10.addWidget(self.macLocationMapView)
+
+
+        self.gridLayout_9.addLayout(self.horizontalLayout_10, 1, 0, 1, 3)
 
         self.mainStackedWidget.addTab(self.macAddrTab, "")
         self.settingsTab = QWidget()

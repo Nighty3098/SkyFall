@@ -1,3 +1,4 @@
+import asyncio
 import os
 
 from telethon.tl.functions.users import GetFullUserRequest
@@ -13,10 +14,12 @@ async def get_cached_entity(client, entity_id, entity_type="user"):
     if cached:
         return cached
     try:
-        entity = await client.get_entity(entity_id)
+        entity = await asyncio.wait_for(
+            client.get_entity(entity_id), timeout=15
+        )
         api_cache.set(cache_key, entity)
         return entity
-    except ValueError:
+    except (ValueError, TimeoutError):
         return None
 
 
@@ -32,7 +35,9 @@ async def fetch_and_save_full_user(
 
     try:
         if isinstance(user, TgUser):
-            full_user = await client(GetFullUserRequest(user))
+            full_user = await asyncio.wait_for(
+                client(GetFullUserRequest(user)), timeout=15
+            )
     except Exception:
         pass
 
@@ -43,7 +48,9 @@ async def fetch_and_save_full_user(
             os.makedirs(profile_dir, exist_ok=True)
             avatar_path = os.path.join(profile_dir, f"{user_id}.jpg")
             if not os.path.exists(avatar_path):
-                photo = await client.download_profile_photo(user, file=avatar_path)
+                photo = await asyncio.wait_for(
+                    client.download_profile_photo(user, file=avatar_path), timeout=30
+                )
                 if photo:
                     avatar_paths = avatar_path
                 else:

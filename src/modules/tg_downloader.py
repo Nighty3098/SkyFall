@@ -88,6 +88,7 @@ class TgDownloader:
         self.channel_media_dir = None
         self.MEDIA_DIR = None
         self.MAX_CONCURRENT_DOWNLOADS = 2
+        self._seen_user_ids: set[int] = set()
 
     def _get_env_creds(self):
         env_api_id = os.getenv("API_ID", "")
@@ -98,6 +99,7 @@ class TgDownloader:
 
     async def run(self):
         self.state.reset()
+        self._seen_user_ids.clear()
 
         logger.info("Starting data collection...")
 
@@ -1051,29 +1053,34 @@ class TgDownloader:
                     reply_last_name = None
 
                     if reply.sender_id:
-                        try:
-                            reply_sender = await get_cached_entity(
-                                client, reply.sender_id, "user"
-                            )
-                            if isinstance(reply_sender, TgUser):
-                                reply_user_id = await fetch_and_save_full_user(
-                                    client,
-                                    session,
-                                    telegram_user_model,
-                                    reply_sender,
-                                    media_dir=self.channel_media_dir,
+                        if reply.sender_id in self._seen_user_ids:
+                            reply_user_id = reply.sender_id
+                        else:
+                            try:
+                                reply_sender = await get_cached_entity(
+                                    client, reply.sender_id, "user"
                                 )
-                                reply_username = getattr(reply_sender, "username", None)
-                                reply_first_name = getattr(
-                                    reply_sender, "first_name", None
+                                if isinstance(reply_sender, TgUser):
+                                    reply_user_id = await fetch_and_save_full_user(
+                                        client,
+                                        session,
+                                        telegram_user_model,
+                                        reply_sender,
+                                        media_dir=self.channel_media_dir,
+                                    )
+                                    reply_username = getattr(reply_sender, "username", None)
+                                    reply_first_name = getattr(
+                                        reply_sender, "first_name", None
+                                    )
+                                    reply_last_name = getattr(
+                                        reply_sender, "last_name", None
+                                    )
+                            except (ValueError, TypeError) as e:
+                                self.log_callback(
+                                    f"Error getting sender for reply {reply.id}: {e}"
                                 )
-                                reply_last_name = getattr(
-                                    reply_sender, "last_name", None
-                                )
-                        except (ValueError, TypeError) as e:
-                            self.log_callback(
-                                f"Error getting sender for reply {reply.id}: {e}"
-                            )
+                        if reply_user_id:
+                            self._seen_user_ids.add(reply_user_id)
 
                     if not reply_user_id and reply.sender_id:
                         reply_user_id = reply.sender_id
@@ -1347,25 +1354,30 @@ class TgDownloader:
                         first_name = None
                         last_name = None
                         if msg.sender_id:
-                            try:
-                                sender = await get_cached_entity(
-                                    client, msg.sender_id, "user"
-                                )
-                                if isinstance(sender, TgUser):
-                                    user_id = await fetch_and_save_full_user(
-                                        client,
-                                        session,
-                                        telegram_user_model,
-                                        sender,
-                                        media_dir=self.channel_media_dir,
+                            if msg.sender_id in self._seen_user_ids:
+                                user_id = msg.sender_id
+                            else:
+                                try:
+                                    sender = await get_cached_entity(
+                                        client, msg.sender_id, "user"
                                     )
-                                    username = getattr(sender, "username", None)
-                                    first_name = getattr(sender, "first_name", None)
-                                    last_name = getattr(sender, "last_name", None)
-                            except Exception as e:
-                                self.log_callback(
-                                    f"Error getting sender for discussion message {msg.id}: {e}"
-                                )
+                                    if isinstance(sender, TgUser):
+                                        user_id = await fetch_and_save_full_user(
+                                            client,
+                                            session,
+                                            telegram_user_model,
+                                            sender,
+                                            media_dir=self.channel_media_dir,
+                                        )
+                                        username = getattr(sender, "username", None)
+                                        first_name = getattr(sender, "first_name", None)
+                                        last_name = getattr(sender, "last_name", None)
+                                except Exception as e:
+                                    self.log_callback(
+                                        f"Error getting sender for discussion message {msg.id}: {e}"
+                                    )
+                                if user_id:
+                                    self._seen_user_ids.add(user_id)
 
                         if not user_id and msg.sender_id:
                             user_id = msg.sender_id

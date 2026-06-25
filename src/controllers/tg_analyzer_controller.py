@@ -86,9 +86,7 @@ class TgAnalyzerController:
         start_date_str = self.ui.telegramAnalyzerStartDate.dateTime().toString(
             "yyyy-MM-dd"
         )
-        end_date_str = self.ui.telegramAnalyzerEndDate.dateTime().toString(
-            "yyyy-MM-dd"
-        )
+        end_date_str = self.ui.telegramAnalyzerEndDate.dateTime().toString("yyyy-MM-dd")
         if start_date_str == "2000-01-01" and end_date_str == "2000-01-01":
             start_date = None
             end_date = None

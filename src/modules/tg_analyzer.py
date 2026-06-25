@@ -29,7 +29,9 @@ class TgAnalyzer:
         original = db_path
         if os.path.isdir(db_path):
             db_path = os.path.join(db_path, "SkyFall_TG.db")
-            logger.debug("_get_connection: {} is a dir, resolved to {}", original, db_path)
+            logger.debug(
+                "_get_connection: {} is a dir, resolved to {}", original, db_path
+            )
         logger.debug("_get_connection: connecting to {}", db_path)
         conn = sqlite3.connect(db_path)
         conn.row_factory = sqlite3.Row
@@ -140,15 +142,17 @@ class TgAnalyzer:
             channel_id_from_channels = dict(ch_row)["channel_id"] if ch_row else None
             cursor.execute("SELECT COUNT(*) FROM posts")
             total_posts = cursor.fetchone()[0]
-            cursor.execute(
-                "SELECT DISTINCT channel_id FROM posts LIMIT 20"
-            )
+            cursor.execute("SELECT DISTINCT channel_id FROM posts LIMIT 20")
             post_channel_ids = [r[0] for r in cursor.fetchall()]
             cursor.execute("SELECT COUNT(*) FROM posts WHERE date IS NULL")
             null_dates = cursor.fetchone()[0]
             logger.debug(
                 "get_posts: channel='{}', channel_id={}, total_posts_in_db={}, null_dates={}, post_channel_ids={}",
-                channel, channel_id_from_channels, total_posts, null_dates, post_channel_ids,
+                channel,
+                channel_id_from_channels,
+                total_posts,
+                null_dates,
+                post_channel_ids,
             )
             query = """
                 SELECT p.* FROM posts p
@@ -185,7 +189,10 @@ class TgAnalyzer:
             null_dates = cursor.fetchone()[0]
             logger.debug(
                 "get_discussions: channel='{}', total_discussions_in_db={}, null_dates={}, disc_channel_ids={}",
-                channel, total, null_dates, disc_channel_ids,
+                channel,
+                total,
+                null_dates,
+                disc_channel_ids,
             )
             query = """
                 SELECT d.* FROM discussions d
@@ -202,7 +209,9 @@ class TgAnalyzer:
             cursor.execute(query, params)
             for row in cursor.fetchall():
                 discussions.append(dict(row))
-            logger.debug("get_discussions: query returned {} discussions", len(discussions))
+            logger.debug(
+                "get_discussions: query returned {} discussions", len(discussions)
+            )
         except sqlite3.OperationalError as e:
             logger.warning(f"Could not query discussions: {e}")
         finally:
@@ -378,7 +387,11 @@ class TgAnalyzer:
 
         channel_id_map = {}
         try:
-            db_file = db_path if not os.path.isdir(db_path) else os.path.join(db_path, "SkyFall_TG.db")
+            db_file = (
+                db_path
+                if not os.path.isdir(db_path)
+                else os.path.join(db_path, "SkyFall_TG.db")
+            )
             conn = sqlite3.connect(db_file)
             conn.row_factory = sqlite3.Row
             cursor = conn.cursor()
@@ -553,11 +566,14 @@ class TgAnalyzer:
                                 old["is_channel_reply"] = True
                             else:
                                 edge_batch.append(
-                                    (*edge_nodes, {
-                                        "edge_type": "replier",
-                                        "weight": cnt,
-                                        "is_channel_reply": True,
-                                    })
+                                    (
+                                        *edge_nodes,
+                                        {
+                                            "edge_type": "replier",
+                                            "weight": cnt,
+                                            "is_channel_reply": True,
+                                        },
+                                    )
                                 )
                         elif str(u2) == str(numeric_id):
                             edge_nodes = (channel_node, f"user:{u1}")
@@ -567,11 +583,14 @@ class TgAnalyzer:
                                 old["is_channel_reply"] = True
                             else:
                                 edge_batch.append(
-                                    (*edge_nodes, {
-                                        "edge_type": "replier",
-                                        "weight": cnt,
-                                        "is_channel_reply": True,
-                                    })
+                                    (
+                                        *edge_nodes,
+                                        {
+                                            "edge_type": "replier",
+                                            "weight": cnt,
+                                            "is_channel_reply": True,
+                                        },
+                                    )
                                 )
                         else:
                             edge_batch.append(
@@ -736,7 +755,10 @@ class TgAnalyzer:
             degrees = [d for n, d in graph.degree(user_nodes)]
             if degrees:
                 log_callback(
-                    "\n" + line(f"User node degree: min={min(degrees)}, max={max(degrees)}, avg={sum(degrees) / len(degrees):.2f}")
+                    "\n"
+                    + line(
+                        f"User node degree: min={min(degrees)}, max={max(degrees)}, avg={sum(degrees) / len(degrees):.2f}"
+                    )
                 )
             bot_count = sum(
                 1
@@ -1055,7 +1077,11 @@ class TgAnalyzer:
             else:
                 channels = [ch for ch in channels if ch in all_channels]
 
-            db_file = db_path if not os.path.isdir(db_path) else os.path.join(db_path, "SkyFall_TG.db")
+            db_file = (
+                db_path
+                if not os.path.isdir(db_path)
+                else os.path.join(db_path, "SkyFall_TG.db")
+            )
             conn = sqlite3.connect(db_file)
             conn.row_factory = sqlite3.Row
 
@@ -1251,6 +1277,7 @@ class TgAnalyzer:
                     try:
                         with open(avatar_path, "rb") as f:
                             import base64
+
                             b64 = base64.b64encode(f.read()).decode()
                             ext = os.path.splitext(avatar_path)[1].lstrip(".") or "jpg"
                             avatar_url = f"data:image/{ext};base64,{b64}"
@@ -1340,7 +1367,13 @@ class TgAnalyzer:
                 if attrs.get("is_channel_reply"):
                     rw = attrs.get("reply_weight", 0)
                     pct = rw / max_message_count if max_message_count > 0 else 0
-                    color = "#5dade2" if pct < 0.2 else "#f7dc6f" if pct < 0.5 else "#ff7675"
+                    color = (
+                        "#5dade2"
+                        if pct < 0.2
+                        else "#f7dc6f"
+                        if pct < 0.5
+                        else "#ff7675"
+                    )
                     width = 1
                 else:
                     color, width = "#6c7a89", 1

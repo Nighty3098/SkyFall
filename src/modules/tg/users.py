@@ -14,9 +14,7 @@ async def get_cached_entity(client, entity_id, entity_type="user"):
     if cached:
         return cached
     try:
-        entity = await asyncio.wait_for(
-            client.get_entity(entity_id), timeout=15
-        )
+        entity = await asyncio.wait_for(client.get_entity(entity_id), timeout=15)
         api_cache.set(cache_key, entity)
         return entity
     except (ValueError, TimeoutError):

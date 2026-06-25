@@ -126,8 +126,6 @@ class MaigretSearch:
         if unknown:
             display = [str(s) for s in unknown[:20]]
             suffix = "..." if len(unknown) > 20 else ""
-            output_lines.append(
-                info(f"Unknown/Error on: {', '.join(display)}{suffix}")
-            )
+            output_lines.append(info(f"Unknown/Error on: {', '.join(display)}{suffix}"))
 
         return "\n".join(output_lines)

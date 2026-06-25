@@ -125,9 +125,7 @@ def setup_tg_downloader_connectors(controller: "TgDownloaderController"):
         )
     )
     controller.ui.telegramDownloadAvatarsBtn.clicked.connect(
-        lambda: asyncio.ensure_future(
-            controller.start_avatar_download()
-        )
+        lambda: asyncio.ensure_future(controller.start_avatar_download())
     )
 
 

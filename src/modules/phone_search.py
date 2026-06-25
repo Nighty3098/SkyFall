@@ -52,9 +52,7 @@ class PhoneSearch:
             national = phonenumbers.format_number(
                 num, phonenumbers.PhoneNumberFormat.NATIONAL
             )
-            e164 = phonenumbers.format_number(
-                num, phonenumbers.PhoneNumberFormat.E164
-            )
+            e164 = phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164)
             lines.append(kv("International", intl))
             if on_result:
                 on_result(lines[-1])
@@ -123,8 +121,7 @@ class PhoneSearch:
     ) -> str:
         if not numverify_key and not abstractapi_key:
             msg = info(
-                "No API keys configured. "
-                "Add NumVerify or AbstractAPI key in settings."
+                "No API keys configured. Add NumVerify or AbstractAPI key in settings."
             )
             if on_result:
                 on_result(msg)
@@ -153,9 +150,7 @@ class PhoneSearch:
                         if on_result:
                             on_result(line)
                 elif resp.status_code == 404:
-                    lines.append(
-                        info("Invalid access key or subscription required")
-                    )
+                    lines.append(info("Invalid access key or subscription required"))
                 else:
                     lines.append(info(f"API error {resp.status_code}"))
             except httpx.RequestError as e:
@@ -182,9 +177,7 @@ class PhoneSearch:
                         if on_result:
                             on_result(line)
                 elif resp.status_code == 422:
-                    lines.append(
-                        info("Invalid phone number or missing API key")
-                    )
+                    lines.append(info("Invalid phone number or missing API key"))
                 else:
                     lines.append(info(f"API error {resp.status_code}"))
             except httpx.RequestError as e:
@@ -262,11 +255,7 @@ class PhoneSearch:
                     on_result(lines[-1])
 
                 for item in records[:20]:
-                    name = (
-                        item.get("name")
-                        or item.get("description")
-                        or "N/A"
-                    )
+                    name = item.get("name") or item.get("description") or "N/A"
                     date = item.get("date", "")
                     bucket_id = (
                         item.get("bucketid")
@@ -303,9 +292,7 @@ class PhoneSearch:
                         except httpx.RequestError:
                             pass
             else:
-                lines.append(
-                    info(f"API error {res_resp.status_code}")
-                )
+                lines.append(info(f"API error {res_resp.status_code}"))
 
         except httpx.RequestError as e:
             lines.append(info(f"Request failed: {e}"))

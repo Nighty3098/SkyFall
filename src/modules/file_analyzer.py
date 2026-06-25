@@ -245,9 +245,10 @@ class FileAnalyzer:
         if idx != -1:
             tail = data[idx + len(png_eof) :]
             if len(tail) > 0:
-                result += info(
-                    f"Hidden data discovered after EOF! Size: {len(tail)} bytes."
-                ) + "\n"
+                result += (
+                    info(f"Hidden data discovered after EOF! Size: {len(tail)} bytes.")
+                    + "\n"
+                )
         result += line("Clean", indent=0) + "\n"
         result += divider() + "\n"
 

@@ -147,9 +147,7 @@ class TgDownloader:
             channel_model,
         ) = init_db(self.path, self.channel_name)
 
-        logger.debug(
-            "run: DB initialized, tables should exist at: {}", db_full
-        )
+        logger.debug("run: DB initialized, tables should exist at: {}", db_full)
 
         self.client = await self._create_client(
             session_path, provided_api_id, provided_api_hash
@@ -241,7 +239,9 @@ class TgDownloader:
                 ).total
                 self.log_callback(f"Total messages in channel: {total_messages}")
                 logger.debug(
-                    "run: total_messages={}, channel.id={}", total_messages, self.channel.id
+                    "run: total_messages={}, channel.id={}",
+                    total_messages,
+                    self.channel.id,
                 )
                 self.log_callback("Starting to parse channel messages...")
                 if self.progress_callback:
@@ -253,7 +253,8 @@ class TgDownloader:
                 )
                 logger.debug(
                     "run: last_post_id from DB={}, last_post_id from state={}",
-                    last_post_id_db, last_post_id,
+                    last_post_id_db,
+                    last_post_id,
                 )
                 if last_post_id == 0 and last_post_id_db > 0:
                     self.log_callback(f"Resuming from post ID: {last_post_id_db}")
@@ -398,7 +399,9 @@ class TgDownloader:
 
         provided_api_id, provided_api_hash = self._get_env_creds()
         session_path = os.path.join(os.path.abspath(self.path), SESSION_NAME)
-        logger.debug("download_avatars: path={}, session_path={}", self.path, session_path)
+        logger.debug(
+            "download_avatars: path={}, session_path={}", self.path, session_path
+        )
 
         if not provided_api_id or not provided_api_hash:
             self.log_callback("API_ID and API_HASH are required.")
@@ -410,14 +413,26 @@ class TgDownloader:
         db_full = os.path.join(os.path.abspath(self.path), "SkyFall_TG.db")
         logger.debug("download_avatars: DB at {}", db_full)
 
-        (engine, session_local, telegram_user_model, post_model,
-         discussion_model, member_model, link_model, channel_model) = init_db(self.path)
+        (
+            engine,
+            session_local,
+            telegram_user_model,
+            post_model,
+            discussion_model,
+            member_model,
+            link_model,
+            channel_model,
+        ) = init_db(self.path)
 
-        self.client = await self._create_client(session_path, provided_api_id, provided_api_hash)
+        self.client = await self._create_client(
+            session_path, provided_api_id, provided_api_hash
+        )
         if self.client is None:
             return
 
-        connected = await self._connect_with_rotation(session_path, provided_api_id, provided_api_hash)
+        connected = await self._connect_with_rotation(
+            session_path, provided_api_id, provided_api_hash
+        )
         if not connected:
             self.log_callback("Failed to connect.")
             return
@@ -431,9 +446,11 @@ class TgDownloader:
         async with self.client:
             db_session = session_local()
             try:
-                users_no_avatar = db_session.query(telegram_user_model).filter(
-                    telegram_user_model.avatar_path.is_(None)
-                ).all()
+                users_no_avatar = (
+                    db_session.query(telegram_user_model)
+                    .filter(telegram_user_model.avatar_path.is_(None))
+                    .all()
+                )
                 total = len(users_no_avatar)
                 self.log_callback(f"Found {total} users without avatars.")
                 if self.progress_callback:
@@ -445,22 +462,32 @@ class TgDownloader:
                     try:
                         entity = await get_cached_entity(self.client, user_id, "user")
                         if entity is None or not isinstance(entity, TgUser):
-                            logger.debug("download_avatars: user {} not resolvable, skipping", user_id)
+                            logger.debug(
+                                "download_avatars: user {} not resolvable, skipping",
+                                user_id,
+                            )
                             progress = int((i / total) * 100) if total > 0 else 100
                             if self.progress_callback:
                                 self.progress_callback(("avatars", progress))
                             continue
                         await fetch_and_save_full_user(
-                            self.client, db_session, telegram_user_model, entity,
+                            self.client,
+                            db_session,
+                            telegram_user_model,
+                            entity,
                             media_dir=self.MEDIA_DIR,
                         )
                         downloaded += 1
                         progress = int((i / total) * 100) if total > 0 else 100
                         if self.progress_callback:
                             self.progress_callback(("avatars", progress))
-                        self.log_callback(f"[{i}/{total}] Avatar saved for user {user_id}")
+                        self.log_callback(
+                            f"[{i}/{total}] Avatar saved for user {user_id}"
+                        )
                     except Exception as e:
-                        logger.debug("download_avatars: error for user {}: {}", user_id, e)
+                        logger.debug(
+                            "download_avatars: error for user {}: {}", user_id, e
+                        )
                         progress = int((i / total) * 100) if total > 0 else 100
                         if self.progress_callback:
                             self.progress_callback(("avatars", progress))
@@ -472,6 +499,7 @@ class TgDownloader:
             except Exception as e:
                 self.log_callback(f"Error: {e}")
                 import traceback
+
                 traceback.print_exc()
             finally:
                 db_session.close()
@@ -613,7 +641,9 @@ class TgDownloader:
 
         for rotation in range(max_proxy_rotations):
             logger.debug(
-                "_connect_with_rotation: attempt {}/{}", rotation + 1, max_proxy_rotations
+                "_connect_with_rotation: attempt {}/{}",
+                rotation + 1,
+                max_proxy_rotations,
             )
             try:
                 await asyncio.wait_for(
@@ -1068,7 +1098,9 @@ class TgDownloader:
                                         reply_sender,
                                         media_dir=self.channel_media_dir,
                                     )
-                                    reply_username = getattr(reply_sender, "username", None)
+                                    reply_username = getattr(
+                                        reply_sender, "username", None
+                                    )
                                     reply_first_name = getattr(
                                         reply_sender, "first_name", None
                                     )
@@ -1182,7 +1214,8 @@ class TgDownloader:
     ):
         logger.debug(
             "_process_message: msg_id={}, channel_id={}",
-            getattr(message, "id", "N/A"), channel_id,
+            getattr(message, "id", "N/A"),
+            channel_id,
         )
         media_path = await self._download_media_with_semaphore(
             message, client, channel_media_dir, semaphore
@@ -1304,7 +1337,8 @@ class TgDownloader:
     ):
         logger.debug(
             "_fetch_discussion_messages: channel_id={}, chat_id={}",
-            channel_id, getattr(discussion_chat, "id", "N/A"),
+            channel_id,
+            getattr(discussion_chat, "id", "N/A"),
         )
         self.log_callback(
             f"Fetching messages from discussion chat: {getattr(discussion_chat, 'title', 'Unknown')}"
@@ -1439,7 +1473,9 @@ class TgDownloader:
                                 f"Processed {message_counter}/{total} discussion messages..."
                             )
                             if self.progress_callback and total > 0:
-                                progress = min(int((message_counter / total) * 100), 100)
+                                progress = min(
+                                    int((message_counter / total) * 100), 100
+                                )
                                 self.progress_callback(("discussion", progress))
 
                         if message_counter % 5 == 0:

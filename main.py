@@ -16,6 +16,7 @@ from src.connectors import (
     setup_dorking_connectors,
     setup_github_connectors,
     setup_intelx_connectors,
+    setup_mac_location_connectors,
     setup_metadata_connectors,
     setup_phone_connectors,
     setup_proxies_connectors,
@@ -29,6 +30,7 @@ from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
 from src.controllers.intelx_controller import IntelxController
+from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
 from src.controllers.settings_controller import Settings
@@ -41,6 +43,7 @@ from src.modules.file_analyzer import FileAnalyzer
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
 from src.modules.intelx_search_engine import IntelxSearchEngine
+from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
 from src.modules.phone_search import PhoneSearch
 from src.modules.tg_analyzer import TgAnalyzer
@@ -123,6 +126,7 @@ class MainWindow(QMainWindow):
         self.githubSearch = GitHubSearch(self.settings.github_token)
         self.phoneSearch = PhoneSearch()
         self.usernameSearch = UsernameSearch()
+        self.macLocation = MacLocation()
         self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
             self.settings.virustotal_api_key,
@@ -158,6 +162,7 @@ class MainWindow(QMainWindow):
         self.usernameController = UsernameController(
             self.ui, self.usernameSearch, self.maigretSearch
         )
+        self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.tgDownloaderController = TgDownloaderController(
             self.ui, self.tgDownloader, self.proxy
         )
@@ -182,6 +187,7 @@ class MainWindow(QMainWindow):
         setup_proxies_connectors(self.proxy)
         setup_github_connectors(self.githubController)
         setup_phone_connectors(self.phoneController)
+        setup_mac_location_connectors(self.macLocationController)
 
 
 if __name__ == "__main__":

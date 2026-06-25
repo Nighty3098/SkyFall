@@ -12,6 +12,7 @@ if TYPE_CHECKING:
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.github_controller import GitHubController
     from src.controllers.intelx_controller import IntelxController
+    from src.controllers.mac_location_controller import MacLocationController
     from src.controllers.phone_controller import PhoneController
     from src.controllers.proxy_controller import Proxy
     from src.controllers.settings_controller import Settings
@@ -180,4 +181,10 @@ def setup_phone_connectors(controller: "PhoneController"):
     )
     controller.ui.phoneLeakBtn.clicked.connect(
         lambda: asyncio.ensure_future(controller.check_leaks())
+    )
+
+
+def setup_mac_location_connectors(controller: "MacLocationController"):
+    controller.ui.checkMacAddrButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.start_searching())
     )

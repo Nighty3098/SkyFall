@@ -1324,8 +1324,11 @@ class TgDownloader:
 
         while True:
             try:
-                messages = await client.get_messages(
-                    discussion_chat, limit=limit, offset_id=offset_id, reverse=False
+                messages = await asyncio.wait_for(
+                    client.get_messages(
+                        discussion_chat, limit=limit, offset_id=offset_id, reverse=False
+                    ),
+                    timeout=30,
                 )
                 if not messages:
                     break
@@ -1456,6 +1459,10 @@ class TgDownloader:
                     f"FloodWait fetching discussion. Waiting {wait_time}s..."
                 )
                 await asyncio.sleep(wait_time)
+                continue
+            except TimeoutError:
+                self.log_callback("Timeout fetching discussion messages, retrying...")
+                await asyncio.sleep(10)
                 continue
             except Exception as e:
                 self.log_callback(f"Error fetching discussion messages: {e}")

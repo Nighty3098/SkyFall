@@ -1515,36 +1515,97 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="macAddrTab">
-         <attribute name="title">
-          <string>MAC ADDR</string>
-         </attribute>
-         <layout class="QGridLayout" name="gridLayout_9">
-          <item row="0" column="1">
-           <widget class="QPushButton" name="checkMacAddrButton">
-            <property name="minimumSize">
-             <size>
-              <width>150</width>
-              <height>0</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Check</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="QLineEdit" name="macAddrEdit">
-            <property name="placeholderText">
-             <string>Mac Addr</string>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0" colspan="2">
-           <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
-          </item>
-         </layout>
-        </widget>
+         <widget class="QWidget" name="macAddrTab">
+          <attribute name="title">
+           <string>MAC ADDR</string>
+          </attribute>
+          <layout class="QHBoxLayout" name="macHorizontalLayout">
+           <item>
+            <widget class="QSplitter" name="macSplitter">
+             <property name="orientation">
+              <enum>Qt::Orientation::Horizontal</enum>
+             </property>
+             <widget class="QWidget" name="macSettingsSection">
+              <layout class="QVBoxLayout" name="macSettingsLayout">
+               <property name="contentsMargins">
+                <number>0</number>
+                <number>0</number>
+                <number>0</number>
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QLineEdit" name="macAddrEdit">
+                 <property name="placeholderText">
+                  <string>Mac Addr</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="checkMacAddrButton">
+                 <property name="minimumSize">
+                  <size>
+                   <width>150</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="text">
+                  <string>Check</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="macVerticalSpacer">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Vertical</enum>
+                 </property>
+                 <property name="sizeHint" stdset="0">
+                  <size>
+                   <width>20</width>
+                   <height>40</height>
+                  </size>
+                 </property>
+                </spacer>
+               </item>
+              </layout>
+             </widget>
+             <widget class="QWidget" name="macContentSection">
+              <layout class="QVBoxLayout" name="macContentLayout">
+               <property name="contentsMargins">
+                <number>0</number>
+                <number>0</number>
+                <number>0</number>
+                <number>0</number>
+               </property>
+               <item>
+                <widget class="QSplitter" name="macContentSplitter">
+                 <property name="orientation">
+                  <enum>Qt::Orientation::Vertical</enum>
+                 </property>
+                 <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
+                 <widget class="QWebEngineView" name="macLocationMapView">
+                  <property name="minimumSize">
+                   <size>
+                    <width>300</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="styleSheet">
+                   <string notr="true">border-radius: 15px;</string>
+                  </property>
+                  <property name="url">
+                   <url>
+                    <string>about:blank</string>
+                   </url>
+                  </property>
+                 </widget>
+                </widget>
+               </item>
+              </layout>
+             </widget>
+            </widget>
+           </item>
+          </layout>
+         </widget>
         <widget class="QWidget" name="settingsTab">
          <attribute name="title">
           <string>SETTINGS</string>
@@ -1744,6 +1805,11 @@
   </widget>
  </widget>
  <customwidgets>
+  <customwidget>
+   <class>QWebEngineView</class>
+   <extends>QWidget</extends>
+   <header location="global">QtWebEngineWidgets/QWebEngineView</header>
+  </customwidget>
   <customwidget>
    <class>DropWidget</class>
    <extends>QWidget</extends>

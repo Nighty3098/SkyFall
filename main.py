@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtUiTools import QUiLoader
+from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
 
@@ -58,6 +59,10 @@ class Loader(QUiLoader):
     def createWidget(self, class_name, parent=None, name=""):
         if class_name == "DropWidget":
             widget = DropWidget(parent)
+            widget.setObjectName(name)
+            return widget
+        if class_name == "QWebEngineView":
+            widget = QWebEngineView(parent)
             widget.setObjectName(name)
             return widget
         return super().createWidget(class_name, parent, name)

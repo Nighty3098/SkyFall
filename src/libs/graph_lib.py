@@ -88,7 +88,8 @@ class NodeItem(QGraphicsItem):
 
         rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
         painter.setBrush(QBrush(c["card_bg"]))
-        painter.setPen(QPen(c["card_border"], 2))
+        border_width = 3 if self.isSelected() else 1.5
+        painter.setPen(QPen(c["card_border"] if not self.isSelected() else c["port_output"], border_width))
         painter.drawRoundedRect(rect, 10, 10)
 
         painter.setPen(c["card_title"])

@@ -7,7 +7,6 @@ from PySide6.QtGui import (
     QBrush,
     QColor,
     QFont,
-    QLinearGradient,
     QPainter,
     QPainterPath,
     QPen,
@@ -45,14 +44,13 @@ def _theme_colors(dark=None):
         ss = QApplication.instance().styleSheet()
         dark = "#0A0A0A" in ss
     return {
-        "card_bg_start": QColor("#2a2a3e") if dark else QColor("#f0f4fc"),
-        "card_bg_end": QColor("#1a1a2e") if dark else QColor("#d9e2f0"),
-        "card_border": QColor("#5555aa") if dark else QColor("#3b5998"),
-        "card_title": QColor("#e0e0f0") if dark else QColor("#1a1a2e"),
-        "card_content": QColor("#a0a0c0") if dark else QColor("#333355"),
-        "port_input": QColor("#ff6b6b"),
-        "port_output": QColor("#4ecdc4"),
-        "edge_color": QColor("#8888cc") if dark else QColor("#2c3e50"),
+        "card_bg": QColor("#161616" if dark else "#E8E8E8"),
+        "card_border": QColor("#262626" if dark else "#D0D0D0"),
+        "card_title": QColor("#C1C1C1" if dark else "#3A3A3A"),
+        "card_content": QColor("#888888"),
+        "port_input": QColor("#C1C1C1" if dark else "#3A3A3A"),
+        "port_output": QColor("#82aaff"),
+        "edge_color": QColor("#262626" if dark else "#D0D0D0"),
     }
 
 
@@ -89,10 +87,7 @@ class NodeItem(QGraphicsItem):
         c = _theme_colors()
 
         rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
-        gradient = QLinearGradient(0, 0, 0, self._height)
-        gradient.setColorAt(0, c["card_bg_start"])
-        gradient.setColorAt(1, c["card_bg_end"])
-        painter.setBrush(QBrush(gradient))
+        painter.setBrush(QBrush(c["card_bg"]))
         painter.setPen(QPen(c["card_border"], 2))
         painter.drawRoundedRect(rect, 10, 10)
 

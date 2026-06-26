@@ -17,20 +17,31 @@
 ## `FUNCTIONAL`
 
 - [x] Collecting all information about web resources or ip addresses
-  - [x] IP info
-  - [x] SSL / TLS
-  - [x] DNS
+  - [x] IP info (ipapi.co, ip-api.com, ipinfo.io)
+  - [x] SSL / TLS (version, cipher, issuer, subject, expiry)
+  - [x] DNS (A, MX, TXT, NS, CNAME, SOA with NS_IP resolution)
   - [x] Headers
   - [x] Server Location
-  - [x] Associated Hosts
+  - [x] Associated Hosts (www, mail, dev, api, test subdomains)
   - [x] Open ports (nmap scan 1–65535)
   - [x] WHOIS (registrar, creation/expiration dates, name servers)
   - [x] Web stack (HTTP headers, web server, WAF, detected tech — Nginx, Apache, WordPress, Bitrix, jQuery)
-  - [x] WAF
+  - [x] WAF (Cloudflare, Sucuri detection)
   - [x] Malware reputation (VirusTotal, Google Safe Browsing, CRDF Labs)
   - [x] NMAP (vuln scripts)
-- [x] Dorking via duckduckgo
+  - [x] robots.txt fetching
+  - [x] security.txt (/.well-known/security.txt)
+  - [x] Subdomain discovery via DuckDuckGo dorking
+  - [x] Cookies analysis (extraction with attributes)
+  - [x] Social tags (Open Graph, Twitter Cards)
+- [x] Dorking via DuckDuckGo / SearXNG
+  - [x] 7974 dorks from Exploit-DB GHDB, organized by categories
+  - [x] Custom dork input and editing (right-click context menu)
+  - [x] Result text search with highlighting
 - [x] Telegram OSINT
+  - [x] Multi-account support (auto-rotation of session files)
+  - [x] Proxy support (SOCKS4/5, HTTP, MTProto — auto-testing and rotation)
+  - [x] Flood-wait handling with exponential backoff
   - [x] User Data Collection
     - [x] Complete user profiles: ID, username, first name, last name, phone (if available)
     - [x] Statuses and flags: verification, Telegram Premium, bots, scam/fake accounts
@@ -41,6 +52,9 @@
     - [x] Retrieval of all channel/group members
     - [x] Saving membership data (join date, status)
     - [x] Integration with global user database
+    - [x] Incremental sync support
+  - [x] Avatar Download (separate profile photo download)
+  - [x] Media Download (photos, videos, audio, documents with concurrency)
   - [x] Link Extraction
     - [x] Automatic extraction of all URLs from messages
     - [x] Support for Telegram links (t.me, @username)
@@ -50,18 +64,41 @@
     - [x] Build interaction graphs from collected data
     - [x] Nodes: users, channels, domains
     - [x] Edges: membership, replies, forwards, link mentions
-    - [x] Export to multiple formats (GraphML, GEXF, JSON, CSV, PNG)
-    - [x] Filter by date, minimum reply count
-    - [x] Graph statistics (node/edge types, degrees, bot/premium counts)
-- [x] Interactive subscription / communication graph for telegram
-- [x] Exporting graphs to JSON, GraphML, GEXF, CSV, PNG, HTML
+    - [x] Discussion reply analysis (post-author and discussion chain replies)
+    - [x] Cross-channel member analysis (shared members)
+    - [x] Filter by date, minimum reply count, forwarded messages, link inclusion
+    - [x] Graph statistics (node/edge types, degrees, bot/verified/premium counts)
+  - [x] Graph export formats: GraphML, GEXF, JSON, CSV, PNG, HTML (pyvis.js interactive), Obsidian Markdown ([[wikilinks]])
+- [x] File Analysis
+  - [x] Metadata extraction (MIME, hashes MD5/SHA-256, file stats, Hachoir internals)
+  - [x] ASCII string extraction (min length configurable)
+  - [x] VirusTotal file scan (hash lookup + upload up to 650 MB)
+  - [x] Tail data detection (hidden data after PNG IEND marker)
+  - [x] Drag-and-drop file selection
+- [x] Metadata Cleaning (EXIF / metadata stripper)
+  - [x] JPEG (EXIF stripping via piexif / Pillow)
+  - [x] PNG, GIF, BMP, TIFF (re-encode via Pillow)
+  - [x] PDF (rewrite without doc info via PyPDF2)
+  - [x] DOCX, XLSX, PPTX (clear core properties)
+  - [x] ODT, ODS (remove `<office:meta>` via odfpy)
+  - [x] EPUB (strip OPF metadata)
+  - [x] RTF (remove `\info` block)
+  - [x] MP3 (ID3 tags via mutagen), FLAC (tags via mutagen)
+  - [x] ZIP (recursive unzip → clean → re-zip)
+- [x] MAC Address / BSSID Location
+  - [x] 5 geolocation providers: Yandex, Apple, Google, Microsoft, Mylnikov
+  - [x] Interactive Leaflet.js map via QWebEngineView
+  - [x] Multi-MAC lookup support
 - [x] Search for email information (which resources were registered on)
-  - [x] intelx.io
-- [x] Username search (sherlock project db + maigret)
+  - [x] intelx.io (search, bucket content, record details)
+- [x] Username search
+  - [x] Sherlock-style local search (~3307 sites, regex validation, WAF detection)
+  - [x] Maigret search (~510 sites, chunked async, rich reporting)
 - [x] GitHub OSINT
   - [x] User / repository search
   - [x] Email search in commits
-  - [x] Secret scanning (API keys, tokens, passwords)
+  - [x] Secret scanning (270+ patterns across 17 categories: generic, SSH, AWS, Azure, GCP, DB URLs, Stripe, GitHub/GitLab tokens, Slack, AI services, communication APIs, Docker/K8s, CI/CD, message brokers, cloud storage, JWT/OAuth)
+  - [x] Multi-token support (semicolon-separated, auto-rotation on rate-limit)
   - [x] Code dorking (code, commits, issues, repos, users)
 - [x] Phone number OSINT
   - [x] Parse & Validate (phonenumbers): country, region, carrier, line type, timezone

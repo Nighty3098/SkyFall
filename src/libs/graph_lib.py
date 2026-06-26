@@ -15,16 +15,17 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QApplication,
     QDialog,
-    QDialogButtonBox,
-    QFormLayout,
     QGraphicsDropShadowEffect,
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsScene,
     QGraphicsView,
+    QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMenu,
     QPlainTextEdit,
+    QPushButton,
     QVBoxLayout,
 )
 
@@ -334,24 +335,30 @@ class NodeEditDialog(QDialog):
         """)
 
         layout = QVBoxLayout(self)
+        layout.setSpacing(8)
 
-        form_layout = QFormLayout()
+        label_title = QLabel("Title:")
+        label_title.setObjectName("formLabel")
+        layout.addWidget(label_title)
         self.title_edit = QLineEdit(title)
-        self.title_edit.setMinimumWidth(250)
-        form_layout.addRow("Title:", self.title_edit)
+        layout.addWidget(self.title_edit)
 
+        label_content = QLabel("Content:")
+        label_content.setObjectName("formLabel")
+        layout.addWidget(label_content)
         self.content_edit = QPlainTextEdit(content)
         self.content_edit.setMinimumHeight(120)
-        form_layout.addRow("Content:", self.content_edit)
+        layout.addWidget(self.content_edit)
 
-        layout.addLayout(form_layout)
-
-        button_box = QDialogButtonBox(
-            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
-        )
-        button_box.accepted.connect(self.accept)
-        button_box.rejected.connect(self.reject)
-        layout.addWidget(button_box)
+        btn_layout = QHBoxLayout()
+        btn_layout.setContentsMargins(0, 0, 0, 0)
+        btn_save = QPushButton("Save")
+        btn_save.clicked.connect(self.accept)
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.clicked.connect(self.reject)
+        btn_layout.addWidget(btn_save)
+        btn_layout.addWidget(btn_cancel)
+        layout.addLayout(btn_layout)
 
     def get_data(self):
         return self.title_edit.text(), self.content_edit.toPlainText()

@@ -55,6 +55,7 @@
     - [x] Incremental sync support
   - [x] Avatar Download (separate profile photo download)
   - [x] Media Download (photos, videos, audio, documents with concurrency)
+  - [ ] Automatic extraction and saving of file metadata to DB (MIME, size, dimensions, duration)
   - [x] Link Extraction
     - [x] Automatic extraction of all URLs from messages
     - [x] Support for Telegram links (t.me, @username)
@@ -69,6 +70,7 @@
     - [x] Filter by date, minimum reply count, forwarded messages, link inclusion
     - [x] Graph statistics (node/edge types, degrees, bot/verified/premium counts)
   - [x] Graph export formats: GraphML, GEXF, JSON, CSV, PNG, HTML (pyvis.js interactive), Obsidian Markdown ([[wikilinks]])
+  - [ ] Search and save to DB: cryptocurrency wallets (BTC, ETH, etc.) and phone numbers from messages
 - [x] File Analysis
   - [x] Metadata extraction (MIME, hashes MD5/SHA-256, file stats, Hachoir internals)
   - [x] ASCII string extraction (min length configurable)

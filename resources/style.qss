@@ -361,3 +361,102 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     background: transparent;
     width: 0px;
 }
+
+
+GraphWidget, QGraphicsView {
+    background-color: #0A0A0A;
+    border: 1px solid #262626;
+    border-radius: 10px;
+    padding: 0px;
+}
+
+QMenu {
+    background-color: #161616;
+    border: 1px solid #262626;
+    border-radius: 10px;
+    padding: 4px;
+    color: #C1C1C1;
+}
+
+QMenu::item {
+    background-color: transparent;
+    padding: 6px 20px;
+    margin: 2px 4px;
+    border-radius: 6px;
+    color: #C1C1C1;
+}
+
+QMenu::item:selected {
+    background-color: #262626;
+    color: #C1C1C1;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #262626;
+    margin: 4px 8px;
+}
+
+NodeEditDialog {
+    background-color: #0A0A0A;
+    color: #C1C1C1;
+    border: 1px solid #262626;
+    border-radius: 10px;
+}
+
+NodeEditDialog QLabel {
+    background: transparent;
+    color: #C1C1C1;
+    font-weight: bold;
+}
+
+NodeEditDialog QLineEdit,
+NodeEditDialog QPlainTextEdit {
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background-color: #161616;
+    color: #C1C1C1;
+    padding: 5px;
+    selection-background-color: #C1C1C1;
+    selection-color: #0A0A0A;
+}
+
+NodeEditDialog QLineEdit:focus,
+NodeEditDialog QPlainTextEdit:focus {
+    border: 1px solid #C1C1C1;
+}
+
+NodeEditDialog QPushButton {
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background-color: #161616;
+    color: #C1C1C1;
+    padding: 6px 16px;
+    min-height: 24px;
+}
+
+NodeEditDialog QPushButton:hover {
+    background-color: #262626;
+    color: #C1C1C1;
+    border-color: #888888;
+}
+
+NodeEditDialog QPushButton:pressed {
+    background-color: #C1C1C1;
+    color: #0A0A0A;
+}
+
+QPushButton#addNodeButton {
+    border-radius: 10px;
+    border: 1px solid #262626;
+    background-color: #161616;
+    color: #C1C1C1;
+    padding: 5px;
+    min-height: 30px;
+    font-size: 1rem;
+}
+
+QPushButton#addNodeButton:hover {
+    background-color: #262626;
+    border-color: #888888;
+}

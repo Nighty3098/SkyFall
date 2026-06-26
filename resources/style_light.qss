@@ -361,3 +361,99 @@ QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
     background: transparent;
     width: 0px;
 }
+
+GraphWidget, QGraphicsView {
+    background-color: #F5F5F5;
+    border: 1px solid #D0D0D0;
+    border-radius: 10px;
+    padding: 0px;
+}
+
+QMenu {
+    background-color: #E8E8E8;
+    border: 1px solid #D0D0D0;
+    border-radius: 10px;
+    padding: 4px;
+    color: #3A3A3A;
+}
+
+QMenu::item {
+    background-color: transparent;
+    padding: 6px 20px;
+    margin: 2px 4px;
+    border-radius: 6px;
+    color: #3A3A3A;
+}
+
+QMenu::item:selected {
+    background-color: #D0D0D0;
+    color: #3A3A3A;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: #D0D0D0;
+    margin: 4px 8px;
+}
+
+NodeEditDialog {
+    background-color: #F5F5F5;
+    color: #3A3A3A;
+    border: 1px solid #D0D0D0;
+    border-radius: 10px;
+}
+
+NodeEditDialog QLabel {
+    background: transparent;
+    color: #3A3A3A;
+    font-weight: bold;
+}
+
+NodeEditDialog QLineEdit,
+NodeEditDialog QPlainTextEdit {
+    border-radius: 10px;
+    border: 1px solid #D0D0D0;
+    background-color: #E8E8E8;
+    color: #3A3A3A;
+    padding: 5px;
+    selection-background-color: #3A3A3A;
+    selection-color: #F5F5F5;
+}
+
+NodeEditDialog QLineEdit:focus,
+NodeEditDialog QPlainTextEdit:focus {
+    border: 1px solid #3A3A3A;
+}
+
+NodeEditDialog QPushButton {
+    border-radius: 10px;
+    border: 1px solid #D0D0D0;
+    background-color: #E8E8E8;
+    color: #3A3A3A;
+    padding: 6px 16px;
+    min-height: 24px;
+}
+
+NodeEditDialog QPushButton:hover {
+    background-color: #D0D0D0;
+    color: #3A3A3A;
+    border-color: #888888;
+}
+
+NodeEditDialog QPushButton:pressed {
+    background-color: #3A3A3A;
+    color: #F5F5F5;
+}
+
+QPushButton#addNodeButton {
+    border-radius: 10px;
+    border: 1px solid #D0D0D0;
+    background-color: #E8E8E8;
+    color: #3A3A3A;
+    padding: 5px;
+    min-height: 30px;
+}
+QPushButton#addNodeButton:hover {
+    background-color: #D0D0D0;
+    border-color: #888888;
+}

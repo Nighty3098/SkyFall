@@ -214,7 +214,7 @@ class EdgeItem(QGraphicsPathItem):
         self.target = target
         self.source_port = source_port
         self.target_port = target_port
-        self.setPen(QPen(_theme_colors()["edge_color"], 2.5))
+        self.setPen(QPen(_theme_colors()["edge_color"], 4))
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.adjust()
@@ -241,7 +241,7 @@ class EdgeItem(QGraphicsPathItem):
         c = _theme_colors()
         pen = QPen(
             c["edge_color"],
-            2.5,
+            4,
             Qt.PenStyle.SolidLine,
             Qt.PenCapStyle.RoundCap,
             Qt.PenJoinStyle.RoundJoin,

@@ -10,6 +10,7 @@ from PySide6.QtGui import (
     QLinearGradient,
     QPainter,
     QPainterPath,
+    QPalette,
     QPen,
     QTextOption,
 )
@@ -38,6 +39,22 @@ PORT_DIR = {
 
 INPUT_PORTS = {"left", "top"}
 OUTPUT_PORTS = {"right", "bottom"}
+
+
+def _theme_colors():
+    palette = QApplication.palette()
+    bg = palette.color(QPalette.ColorRole.Window)
+    dark = bg.lightness() < 128
+    return {
+        "card_bg_start": QColor("#2a2a3e") if dark else QColor("#f0f4fc"),
+        "card_bg_end": QColor("#1a1a2e") if dark else QColor("#d9e2f0"),
+        "card_border": QColor("#5555aa") if dark else QColor("#3b5998"),
+        "card_title": QColor("#e0e0f0") if dark else QColor("#1a1a2e"),
+        "card_content": QColor("#a0a0c0") if dark else QColor("#333355"),
+        "port_input": QColor("#ff6b6b"),
+        "port_output": QColor("#4ecdc4"),
+        "edge_color": QColor("#8888cc") if dark else QColor("#2c3e50"),
+    }
 
 
 class NodeItem(QGraphicsItem):
@@ -70,16 +87,17 @@ class NodeItem(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        c = _theme_colors()
 
         rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
         gradient = QLinearGradient(0, 0, 0, self._height)
-        gradient.setColorAt(0, QColor("#f0f4fc"))
-        gradient.setColorAt(1, QColor("#d9e2f0"))
+        gradient.setColorAt(0, c["card_bg_start"])
+        gradient.setColorAt(1, c["card_bg_end"])
         painter.setBrush(QBrush(gradient))
-        painter.setPen(QPen(QColor("#3b5998"), 2))
+        painter.setPen(QPen(c["card_border"], 2))
         painter.drawRoundedRect(rect, 10, 10)
 
-        painter.setPen(QColor("#1a1a2e"))
+        painter.setPen(c["card_title"])
         font_title = QFont("Segoe UI", 10, QFont.Weight.Bold)
         painter.setFont(font_title)
         title_rect = QRectF(10, 8, self._width - 20, 20)
@@ -90,7 +108,7 @@ class NodeItem(QGraphicsItem):
         )
 
         if self.content:
-            painter.setPen(QColor("#333355"))
+            painter.setPen(c["card_content"])
             font_content = QFont("Segoe UI", 8)
             painter.setFont(font_content)
             content_rect = QRectF(10, 32, self._width - 20, self._height - 40)
@@ -100,7 +118,7 @@ class NodeItem(QGraphicsItem):
 
         painter.setPen(Qt.PenStyle.NoPen)
         for name, pos in self._ports().items():
-            painter.setBrush(QBrush(QColor("#ff6b6b") if name in INPUT_PORTS else QColor("#4ecdc4")))
+            painter.setBrush(QBrush(c["port_input"] if name in INPUT_PORTS else c["port_output"]))
             painter.drawEllipse(pos, self._port_radius, self._port_radius)
 
     def _ports(self):
@@ -202,15 +220,7 @@ class EdgeItem(QGraphicsPathItem):
         self.target = target
         self.source_port = source_port
         self.target_port = target_port
-        self.setPen(
-            QPen(
-                QColor("#2c3e50"),
-                2.5,
-                Qt.PenStyle.SolidLine,
-                Qt.PenCapStyle.RoundCap,
-                Qt.PenJoinStyle.RoundJoin,
-            )
-        )
+        self.setPen(QPen(_theme_colors()["edge_color"], 2.5))
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.adjust()
@@ -234,7 +244,15 @@ class EdgeItem(QGraphicsPathItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        painter.setPen(self.pen())
+        c = _theme_colors()
+        pen = QPen(
+            c["edge_color"],
+            2.5,
+            Qt.PenStyle.SolidLine,
+            Qt.PenCapStyle.RoundCap,
+            Qt.PenJoinStyle.RoundJoin,
+        )
+        painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(self.path())
 
@@ -254,7 +272,7 @@ class EdgeItem(QGraphicsPathItem):
             painter.translate(last_pt)
             painter.rotate(angle)
             arrow_size = 12
-            painter.setBrush(QBrush(self.pen().color()))
+            painter.setBrush(QBrush(c["edge_color"]))
             painter.setPen(Qt.PenStyle.NoPen)
             arrow_path = QPainterPath()
             arrow_path.moveTo(0, 0)

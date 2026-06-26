@@ -81,7 +81,7 @@ class NodeItem(QGraphicsItem):
 
     def boundingRect(self):
         m = self._port_radius + 2
-        return QRectF(-m, -m, self._width + 2*m, self._height + 2*m)
+        return QRectF(-m, -m, self._width + 2 * m, self._height + 2 * m)
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
@@ -90,7 +90,12 @@ class NodeItem(QGraphicsItem):
         rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
         painter.setBrush(QBrush(c["card_bg"]))
         border_width = 3 if self.isSelected() else 1.5
-        painter.setPen(QPen(c["card_border"] if not self.isSelected() else c["port_output"], border_width))
+        painter.setPen(
+            QPen(
+                c["card_border"] if not self.isSelected() else c["port_output"],
+                border_width,
+            )
+        )
         painter.drawRoundedRect(rect, 10, 10)
 
         painter.setPen(c["card_title"])
@@ -114,7 +119,9 @@ class NodeItem(QGraphicsItem):
 
         painter.setPen(Qt.PenStyle.NoPen)
         for name, pos in self._ports().items():
-            painter.setBrush(QBrush(c["port_input"] if name in INPUT_PORTS else c["port_output"]))
+            painter.setBrush(
+                QBrush(c["port_input"] if name in INPUT_PORTS else c["port_output"])
+            )
             painter.drawEllipse(pos, self._port_radius, self._port_radius)
 
     def _ports(self):
@@ -174,7 +181,9 @@ class NodeItem(QGraphicsItem):
             dx, dy = PORT_DIR[self._drag_port]
             path = QPainterPath()
             path.moveTo(start)
-            offset = max(abs(end.x() - start.x()) * 0.4, abs(end.y() - start.y()) * 0.4, 30)
+            offset = max(
+                abs(end.x() - start.x()) * 0.4, abs(end.y() - start.y()) * 0.4, 30
+            )
             ctrl1 = QPointF(start.x() + dx * offset, start.y() + dy * offset)
             ctrl2 = QPointF(end.x(), end.y())
             path.cubicTo(ctrl1, ctrl2, end)
@@ -202,15 +211,28 @@ class NodeItem(QGraphicsItem):
                         target, _ = (target_node, None)
                         if self._drag_port in INPUT_PORTS:
                             source, target = target, self
-                            source_port = target._port_at_pos(target.mapFromScene(event.scenePos())) or "left"
+                            source_port = (
+                                target._port_at_pos(
+                                    target.mapFromScene(event.scenePos())
+                                )
+                                or "left"
+                            )
                         view.add_edge(source, target, source_port)
                         break
             self._drag_port = None
         else:
             super().mouseReleaseEvent(event)
 
+
 class EdgeItem(QGraphicsPathItem):
-    def __init__(self, source: NodeItem, target: NodeItem, source_port="right", target_port="left", parent=None):
+    def __init__(
+        self,
+        source: NodeItem,
+        target: NodeItem,
+        source_port="right",
+        target_port="left",
+        parent=None,
+    ):
         super().__init__(parent)
         self.source = source
         self.target = target
@@ -277,6 +299,7 @@ class EdgeItem(QGraphicsPathItem):
             arrow_path.closeSubpath()
             painter.drawPath(arrow_path)
             painter.restore()
+
 
 class NodeEditDialog(QDialog):
     def __init__(self, title="", content="", parent=None):
@@ -362,6 +385,7 @@ class NodeEditDialog(QDialog):
 
     def get_data(self):
         return self.title_edit.text(), self.content_edit.toPlainText()
+
 
 class GraphWidget(QGraphicsView):
     nodeAdded = Signal(dict)
@@ -504,12 +528,14 @@ class GraphWidget(QGraphicsView):
                     }
                 )
             elif isinstance(item, EdgeItem):
-                edges.append({
-                    "source": item.source.id,
-                    "target": item.target.id,
-                    "source_port": item.source_port,
-                    "target_port": item.target_port,
-                })
+                edges.append(
+                    {
+                        "source": item.source.id,
+                        "target": item.target.id,
+                        "source_port": item.source_port,
+                        "target_port": item.target_port,
+                    }
+                )
         return {"nodes": nodes, "edges": edges}
 
     def from_dict(self, data):
@@ -543,16 +569,24 @@ class GraphWidget(QGraphicsView):
                 tp = e.get("target_port", "left")
                 edge = EdgeItem(src, tgt, sp, tp)
                 self._scene.addItem(edge)
-                self.graph_data["edges"].append({"source": src.id, "target": tgt.id, "source_port": sp, "target_port": tp})
+                self.graph_data["edges"].append(
+                    {
+                        "source": src.id,
+                        "target": tgt.id,
+                        "source_port": sp,
+                        "target_port": tp,
+                    }
+                )
 
     def save_to_json(self, filepath):
         with open(filepath, "w", encoding="utf-8") as f:
             json.dump(self.to_dict(), f, indent=2, ensure_ascii=False)
 
     def load_from_json(self, filepath):
-        with open(filepath, "r", encoding="utf-8") as f:
+        with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
         self.from_dict(data)
+
 
 if __name__ == "__main__":
     import os

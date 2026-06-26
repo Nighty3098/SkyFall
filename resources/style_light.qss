@@ -372,7 +372,6 @@ GraphWidget, QGraphicsView {
 QMenu {
     background-color: #E8E8E8;
     border: 1px solid #D0D0D0;
-    border-radius: 10px;
     padding: 4px;
     color: #3A3A3A;
 }
@@ -382,7 +381,7 @@ QMenu::item {
     padding: 6px 20px;
     margin: 2px 4px;
     border-radius: 6px;
-    color: #3A3A3A;
+    color: #D0D0D0;
 }
 
 QMenu::item:selected {

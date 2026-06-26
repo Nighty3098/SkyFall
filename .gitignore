@@ -83,3 +83,4 @@ CMakeLists.txt.user*
 /build*/
 /.qtcreator/
 modules/test.py
+src/libs/graph.json

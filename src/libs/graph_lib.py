@@ -284,6 +284,55 @@ class NodeEditDialog(QDialog):
         self.setModal(True)
         self.resize(400, 300)
 
+        ss = QApplication.instance().styleSheet()
+        dark = "#0A0A0A" in ss
+        bg = "#0A0A0A" if dark else "#F5F5F5"
+        surface = "#161616" if dark else "#E8E8E8"
+        border = "#262626" if dark else "#D0D0D0"
+        text = "#C1C1C1" if dark else "#3A3A3A"
+
+        self.setStyleSheet(f"""
+            NodeEditDialog {{
+                background-color: {bg};
+                color: {text};
+                border: 1px solid {border};
+                border-radius: 10px;
+            }}
+            NodeEditDialog QLabel {{
+                background: transparent;
+                color: {text};
+                font-weight: bold;
+            }}
+            NodeEditDialog QLineEdit, NodeEditDialog QPlainTextEdit {{
+                border-radius: 10px;
+                border: 1px solid {border};
+                background-color: {surface};
+                color: {text};
+                padding: 5px;
+                selection-background-color: {text};
+                selection-color: {bg};
+            }}
+            NodeEditDialog QLineEdit:focus, NodeEditDialog QPlainTextEdit:focus {{
+                border: 1px solid {text};
+            }}
+            NodeEditDialog QPushButton {{
+                border-radius: 10px;
+                border: 1px solid {border};
+                background-color: {surface};
+                color: {text};
+                padding: 6px 16px;
+                min-height: 24px;
+            }}
+            NodeEditDialog QPushButton:hover {{
+                background-color: {border};
+                color: {text};
+            }}
+            NodeEditDialog QPushButton:pressed {{
+                background-color: {text};
+                color: {bg};
+            }}
+        """)
+
         layout = QVBoxLayout(self)
 
         form_layout = QFormLayout()

@@ -39,6 +39,7 @@ from src.controllers.settings_controller import Settings
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
+from src.libs.graph_lib import GraphWidget
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
@@ -52,7 +53,6 @@ from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
 from src.shortcuts import ShortcutManager
-from src.libs.graph_lib import GraphWidget
 from src.ui.drop_widget import DropWidget
 from src.ui.setup_ui import setup_ui
 

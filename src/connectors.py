@@ -197,12 +197,16 @@ def setup_graph_connectors(ui):
     data_dir = str(Path.home() / ".skyfall" / "data")
 
     def export_graph():
-        path, _ = QFileDialog.getSaveFileName(ui, "Export Graph", data_dir, "JSON (*.json)")
+        path, _ = QFileDialog.getSaveFileName(
+            ui, "Export Graph", data_dir, "JSON (*.json)"
+        )
         if path:
             ui.graphWidget.save_to_json(path)
 
     def import_graph():
-        path, _ = QFileDialog.getOpenFileName(ui, "Import Graph", data_dir, "JSON (*.json)")
+        path, _ = QFileDialog.getOpenFileName(
+            ui, "Import Graph", data_dir, "JSON (*.json)"
+        )
         if path:
             ui.graphWidget.load_from_json(path)
 

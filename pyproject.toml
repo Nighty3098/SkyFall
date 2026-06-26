@@ -58,6 +58,7 @@ select = ["E", "F", "I", "N", "W", "UP"]
 
 [tool.ruff.lint.per-file-ignores]
 "main.py" = ["N802"]
+"src/libs/graph_lib.py" = ["N802", "N815"]
 "src/ui/drop_widget.py" = ["N802"]
 "src/modules/tg_analyzer.py" = ["E501"]
 "src/modules/tg_downloader.py" = ["E501"]

@@ -41,8 +41,9 @@ INPUT_PORTS = {"left", "top"}
 OUTPUT_PORTS = {"right", "bottom"}
 
 
-def _theme_colors():
-    palette = QApplication.palette()
+def _theme_colors(palette=None):
+    if palette is None:
+        palette = QApplication.palette()
     bg = palette.color(QPalette.ColorRole.Window)
     dark = bg.lightness() < 128
     return {
@@ -55,6 +56,12 @@ def _theme_colors():
         "port_output": QColor("#4ecdc4"),
         "edge_color": QColor("#8888cc") if dark else QColor("#2c3e50"),
     }
+
+
+def _widget_palette(item):
+    if item.scene() and item.scene().views():
+        return item.scene().views()[0].palette()
+    return QApplication.palette()
 
 
 class NodeItem(QGraphicsItem):
@@ -87,7 +94,7 @@ class NodeItem(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        c = _theme_colors()
+        c = _theme_colors(_widget_palette(self))
 
         rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
         gradient = QLinearGradient(0, 0, 0, self._height)
@@ -244,7 +251,7 @@ class EdgeItem(QGraphicsPathItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        c = _theme_colors()
+        c = _theme_colors(_widget_palette(self))
         pen = QPen(
             c["edge_color"],
             2.5,
@@ -469,9 +476,9 @@ class GraphWidget(QGraphicsView):
             node = NodeItem(
                 title=n.get("title", "Node"),
                 content=n.get("content", ""),
-                node_id=n["id"],
+                node_id=n.get("id", id(n)),
             )
-            node.setPos(n["x"], n["y"])
+            node.setPos(n.get("x", 0), n.get("y", 0))
             self._scene.addItem(node)
             node_map[n["id"]] = node
             self.graph_data["nodes"].append(

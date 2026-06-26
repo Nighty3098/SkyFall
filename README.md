@@ -106,6 +106,17 @@
   - [x] Parse & Validate (phonenumbers): country, region, carrier, line type, timezone
   - [x] Reverse Lookup (NumVerify / AbstractAPI APIs)
   - [x] Leak check via IntelX
+- [x] Interactive Graph Editor
+  - [x] Draggable nodes with title and content
+  - [x] 4 connection ports per node (left, right, top, bottom)
+  - [x] Directed edges with cubic bezier curves and arrowheads
+  - [x] Drag-to-connect from any port
+  - [x] Context menu: add, edit, delete nodes and edges
+  - [x] Rubber band selection, Delete key removal
+  - [x] Mouse wheel zoom
+  - [x] JSON save/load via file dialog (default ~/.skyfall/data/)
+  - [x] Theme-aware colors from QSS (dark/light)
+  - [x] Node selection highlighting (accent border)
 - [ ] Reverse Image Search With Yandex and Google
 
 ## `SETUP SEARXNG`

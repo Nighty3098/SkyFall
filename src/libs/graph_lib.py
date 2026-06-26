@@ -10,7 +10,6 @@ from PySide6.QtGui import (
     QLinearGradient,
     QPainter,
     QPainterPath,
-    QPalette,
     QPen,
     QTextOption,
 )
@@ -41,11 +40,10 @@ INPUT_PORTS = {"left", "top"}
 OUTPUT_PORTS = {"right", "bottom"}
 
 
-def _theme_colors(palette=None):
-    if palette is None:
-        palette = QApplication.palette()
-    bg = palette.color(QPalette.ColorRole.Window)
-    dark = bg.lightness() < 128
+def _theme_colors(dark=None):
+    if dark is None:
+        ss = QApplication.instance().styleSheet()
+        dark = "#0A0A0A" in ss
     return {
         "card_bg_start": QColor("#2a2a3e") if dark else QColor("#f0f4fc"),
         "card_bg_end": QColor("#1a1a2e") if dark else QColor("#d9e2f0"),
@@ -56,12 +54,6 @@ def _theme_colors(palette=None):
         "port_output": QColor("#4ecdc4"),
         "edge_color": QColor("#8888cc") if dark else QColor("#2c3e50"),
     }
-
-
-def _widget_palette(item):
-    if item.scene() and item.scene().views():
-        return item.scene().views()[0].palette()
-    return QApplication.palette()
 
 
 class NodeItem(QGraphicsItem):
@@ -94,7 +86,7 @@ class NodeItem(QGraphicsItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        c = _theme_colors(_widget_palette(self))
+        c = _theme_colors()
 
         rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
         gradient = QLinearGradient(0, 0, 0, self._height)
@@ -251,7 +243,7 @@ class EdgeItem(QGraphicsPathItem):
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        c = _theme_colors(_widget_palette(self))
+        c = _theme_colors()
         pen = QPen(
             c["edge_color"],
             2.5,
@@ -472,15 +464,16 @@ class GraphWidget(QGraphicsView):
         self._scene.clear()
         self.graph_data = {"nodes": [], "edges": []}
         node_map = {}
-        for n in data["nodes"]:
+        for n in data.get("nodes", []):
+            nid = n.get("id", id(n))
             node = NodeItem(
                 title=n.get("title", "Node"),
                 content=n.get("content", ""),
-                node_id=n.get("id", id(n)),
+                node_id=nid,
             )
             node.setPos(n.get("x", 0), n.get("y", 0))
             self._scene.addItem(node)
-            node_map[n["id"]] = node
+            node_map[nid] = node
             self.graph_data["nodes"].append(
                 {
                     "id": node.id,
@@ -490,9 +483,9 @@ class GraphWidget(QGraphicsView):
                     "y": node.pos().y(),
                 }
             )
-        for e in data["edges"]:
-            src = node_map.get(e["source"])
-            tgt = node_map.get(e["target"])
+        for e in data.get("edges", []):
+            src = node_map.get(e.get("source"))
+            tgt = node_map.get(e.get("target"))
             if src and tgt:
                 sp = e.get("source_port", "right")
                 tp = e.get("target_port", "left")

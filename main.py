@@ -16,6 +16,7 @@ from src.connectors import (
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_github_connectors,
+    setup_graph_connectors,
     setup_intelx_connectors,
     setup_mac_location_connectors,
     setup_metadata_connectors,
@@ -51,6 +52,7 @@ from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
 from src.shortcuts import ShortcutManager
+from src.libs.graph_lib import GraphWidget
 from src.ui.drop_widget import DropWidget
 from src.ui.setup_ui import setup_ui
 
@@ -59,6 +61,10 @@ class Loader(QUiLoader):
     def createWidget(self, class_name, parent=None, name=""):
         if class_name == "DropWidget":
             widget = DropWidget(parent)
+            widget.setObjectName(name)
+            return widget
+        if class_name == "GraphWidget":
+            widget = GraphWidget(parent)
             widget.setObjectName(name)
             return widget
         if class_name == "QWebEngineView":
@@ -193,6 +199,7 @@ class MainWindow(QMainWindow):
         setup_github_connectors(self.githubController)
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
+        setup_graph_connectors(self.ui)
 
 
 if __name__ == "__main__":

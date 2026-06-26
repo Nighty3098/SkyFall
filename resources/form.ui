@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>10</number>
+         <number>7</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1229,19 +1229,19 @@
             <item row="1" column="0">
              <widget class="QPushButton" name="exportGraphButton">
               <property name="text">
-               <string>Export from DB</string>
+               <string>Export To JSON</string>
               </property>
              </widget>
             </item>
             <item row="1" column="1">
              <widget class="QPushButton" name="importGraphButton">
               <property name="text">
-               <string>Import to DB</string>
+               <string>Import From JSON</string>
               </property>
              </widget>
             </item>
-            <item row="0" column="0">
-             <widget class="QWidget" name="widget" native="true"/>
+            <item row="0" column="0" colspan="2">
+             <widget class="GraphWidget" name="graphWidget"/>
             </item>
            </layout>
           </item>
@@ -1515,57 +1515,57 @@
           </item>
          </layout>
         </widget>
-         <widget class="QWidget" name="macAddrTab">
-          <attribute name="title">
-           <string>MAC ADDR</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_9">
-           <item row="0" column="2">
-            <widget class="QPushButton" name="checkMacAddrButton">
+        <widget class="QWidget" name="macAddrTab">
+         <attribute name="title">
+          <string>MAC ADDR</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_9">
+          <item row="0" column="2">
+           <widget class="QPushButton" name="checkMacAddrButton">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Check</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QLineEdit" name="macAddrEdit">
+            <property name="placeholderText">
+             <string>Mac Addr</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="3">
+           <widget class="QSplitter" name="macSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
+            <widget class="QWebEngineView" name="macLocationMapView">
              <property name="minimumSize">
               <size>
-               <width>150</width>
+               <width>300</width>
                <height>0</height>
               </size>
              </property>
-             <property name="text">
-              <string>Check</string>
+             <property name="styleSheet">
+              <string notr="true">border-radius: 15px;</string>
+             </property>
+             <property name="url">
+              <url>
+               <string>about:blank</string>
+              </url>
              </property>
             </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLineEdit" name="macAddrEdit">
-             <property name="placeholderText">
-              <string>Mac Addr</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" colspan="3">
-            <widget class="QSplitter" name="macSplitter">
-             <property name="orientation">
-              <enum>Qt::Orientation::Horizontal</enum>
-             </property>
-             <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
-             <widget class="QWebEngineView" name="macLocationMapView">
-              <property name="minimumSize">
-               <size>
-                <width>300</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">border-radius: 15px;</string>
-              </property>
-              <property name="url">
-               <url>
-                <string>about:blank</string>
-               </url>
-              </property>
-             </widget>
-            </widget>
-           </item>
-          </layout>
-         </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="settingsTab">
          <attribute name="title">
           <string>SETTINGS</string>
@@ -1775,6 +1775,11 @@
    <extends>QWidget</extends>
    <header location="global">src/ui/drop_widget</header>
    <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>GraphWidget</class>
+   <extends>QGraphicsView</extends>
+   <header location="global">src.libs.graph_lib</header>
   </customwidget>
  </customwidgets>
  <resources/>

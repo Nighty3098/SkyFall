@@ -1,5 +1,8 @@
 import asyncio
+from pathlib import Path
 from typing import TYPE_CHECKING
+
+from PySide6.QtWidgets import QFileDialog
 
 from src.context_menus import open_dorks_list_menu
 from src.controllers.username_search_controller import UsernameController
@@ -188,3 +191,20 @@ def setup_mac_location_connectors(controller: "MacLocationController"):
     controller.ui.checkMacAddrButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.start_searching())
     )
+
+
+def setup_graph_connectors(ui):
+    data_dir = str(Path.home() / ".skyfall" / "data")
+
+    def export_graph():
+        path, _ = QFileDialog.getSaveFileName(ui, "Export Graph", data_dir, "JSON (*.json)")
+        if path:
+            ui.graphWidget.save_to_json(path)
+
+    def import_graph():
+        path, _ = QFileDialog.getOpenFileName(ui, "Import Graph", data_dir, "JSON (*.json)")
+        if path:
+            ui.graphWidget.load_from_json(path)
+
+    ui.exportGraphButton.clicked.connect(export_graph)
+    ui.importGraphButton.clicked.connect(import_graph)

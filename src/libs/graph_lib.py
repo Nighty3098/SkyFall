@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsView,
     QHBoxLayout,
-    QInputDialog,
     QLabel,
     QLineEdit,
     QListWidget,
@@ -463,6 +462,10 @@ class NodeEditDialog(QDialog):
         self.evidence_list.setSelectionMode(
             QAbstractItemView.SelectionMode.ExtendedSelection
         )
+        self.evidence_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+        self.evidence_list.customContextMenuRequested.connect(
+            self._evidence_context_menu
+        )
         self.evidence_list.itemDoubleClicked.connect(self._open_evidence)
         evidence = evidence or []
         for ev_path in evidence:
@@ -493,18 +496,88 @@ class NodeEditDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def _add_file(self):
-        files, _ = QFileDialog.getOpenFiles(self, "Select Evidence Files")
+        files, _ = QFileDialog.getOpenFileNames(self, "Select Evidence Files")
         for f in files:
             self.evidence_list.addItem(f"{os.path.basename(f)}\n{f}")
 
     def _add_url(self):
-        url, ok = QInputDialog.getText(self, "Add URL", "Enter URL:")
-        if ok and url.strip():
-            self.evidence_list.addItem(f"{url.strip()}\n{url.strip()}")
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Add URL")
+        ss = QApplication.instance().styleSheet()
+        dark = "#0A0A0A" in ss
+        bg = "#0A0A0A" if dark else "#F5F5F5"
+        surface = "#161616" if dark else "#E8E8E8"
+        border = "#262626" if dark else "#D0D0D0"
+        text = "#C1C1C1" if dark else "#3A3A3A"
+        dialog.setStyleSheet(f"""
+            QDialog {{
+                background-color: {bg};
+                color: {text};
+                border: 1px solid {border};
+                border-radius: 10px;
+            }}
+            QLineEdit {{
+                border-radius: 10px;
+                border: 1px solid {border};
+                background-color: {surface};
+                color: {text};
+                padding: 5px;
+                selection-background-color: {text};
+                selection-color: {bg};
+            }}
+            QPushButton {{
+                border-radius: 10px;
+                border: 1px solid {border};
+                background-color: {surface};
+                color: {text};
+                padding: 6px 16px;
+                min-height: 24px;
+            }}
+            QPushButton:hover {{
+                background-color: {border};
+                color: {text};
+            }}
+            QPushButton:pressed {{
+                background-color: {text};
+                color: {bg};
+            }}
+        """)
+        layout = QVBoxLayout(dialog)
+        line_edit = QLineEdit()
+        line_edit.setPlaceholderText("https://example.com/file.pdf")
+        layout.addWidget(line_edit)
+        btn_layout = QHBoxLayout()
+        btn_ok = QPushButton("OK")
+        btn_ok.clicked.connect(dialog.accept)
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.clicked.connect(dialog.reject)
+        btn_layout.addWidget(btn_ok)
+        btn_layout.addWidget(btn_cancel)
+        layout.addLayout(btn_layout)
+        if dialog.exec() == QDialog.DialogCode.Accepted and line_edit.text().strip():
+            self.evidence_list.addItem(
+                f"{line_edit.text().strip()}\n{line_edit.text().strip()}"
+            )
 
     def _remove_evidence(self):
         for item in self.evidence_list.selectedItems():
             self.evidence_list.takeItem(self.evidence_list.row(item))
+
+    def _evidence_context_menu(self, pos):
+        item = self.evidence_list.itemAt(pos)
+        if not item:
+            return
+        menu = QMenu(self)
+        delete_act = QAction("Delete", self)
+        delete_act.triggered.connect(lambda: self._remove_evidence())
+        menu.addAction(delete_act)
+        menu.exec(self.evidence_list.viewport().mapToGlobal(pos))
+
+    def keyPressEvent(self, event):
+        if event.key() == Qt.Key.Key_Delete and self.evidence_list.hasFocus():
+            self._remove_evidence()
+        else:
+            super().keyPressEvent(event)
 
     def _open_evidence(self, item):
         path = item.text().split("\n", 1)[-1]

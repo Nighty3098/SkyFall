@@ -1,12 +1,14 @@
 import json
+import os
 import sys
 import uuid
 
-from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, Signal
+from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import (
     QAction,
     QBrush,
     QColor,
+    QDesktopServices,
     QFont,
     QPainter,
     QPainterPath,
@@ -14,17 +16,21 @@ from PySide6.QtGui import (
     QTextOption,
 )
 from PySide6.QtWidgets import (
+    QAbstractItemView,
     QApplication,
     QComboBox,
     QDialog,
+    QFileDialog,
     QGraphicsDropShadowEffect,
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsScene,
     QGraphicsView,
     QHBoxLayout,
+    QInputDialog,
     QLabel,
     QLineEdit,
+    QListWidget,
     QMenu,
     QPlainTextEdit,
     QPushButton,
@@ -53,6 +59,7 @@ PORT_DIR = {
     "bottom": (0, 1),
 }
 
+
 def _theme_colors(dark=None):
     if dark is None:
         ss = QApplication.instance().styleSheet()
@@ -68,14 +75,16 @@ def _theme_colors(dark=None):
 
 
 class NodeItem(QGraphicsItem):
-    def __init__(self, title="Node", content="", entity_type="Custom", node_id=None, parent=None):
+    def __init__(
+        self, title="Node", content="", entity_type="Custom", node_id=None, parent=None
+    ):
         super().__init__(parent)
         self.id = node_id if node_id is not None else uuid.uuid4().hex
         self.title = title
         self.content = content
         self.entity_type = entity_type if entity_type in ENTITY_NAMES else "Custom"
+        self.evidence = []
         self._width = 160
-        self._height = 100
         self._port_radius = 6
         self._dragging_edge = False
         self._drag_port = None
@@ -92,15 +101,20 @@ class NodeItem(QGraphicsItem):
         shadow.setColor(QColor(0, 0, 0, 80))
         self.setGraphicsEffect(shadow)
 
+    def _get_height(self):
+        if self.entity_type == "Evidence":
+            return 130 + max(0, len(self.evidence) - 1) * 18
+        return 100
+
     def boundingRect(self):
         m = self._port_radius + 2
-        return QRectF(-m, -m, self._width + 2 * m, self._height + 2 * m)
+        return QRectF(-m, -m, self._width + 2 * m, self._get_height() + 2 * m)
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         c = _theme_colors()
 
-        rect = QRectF(0, 0, self._width, self._height).adjusted(1, 1, -1, -1)
+        rect = QRectF(0, 0, self._width, self._get_height()).adjusted(1, 1, -1, -1)
         painter.setBrush(QBrush(c["card_bg"]))
         border_width = 3 if self.isSelected() else 1.5
         painter.setPen(
@@ -135,14 +149,46 @@ class NodeItem(QGraphicsItem):
             self.title,
         )
 
-        if self.content:
+        y_offset = 48
+
+        if self.entity_type == "Evidence" and self.evidence:
+            painter.setPen(c["card_content"])
+            font_item = QFont("Segoe UI", 8)
+            painter.setFont(font_item)
+            for i, ev_path in enumerate(self.evidence):
+                label = (
+                    os.path.basename(ev_path) if os.path.exists(ev_path) else ev_path
+                )
+                if len(label) > 22:
+                    label = label[:19] + "..."
+                item_rect = QRectF(12, y_offset, self._width - 24, 16)
+                painter.drawText(
+                    item_rect,
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                    f"• {label}",
+                )
+                y_offset += 18
+        elif self.content:
             painter.setPen(c["card_content"])
             font_content = QFont("Segoe UI", 8)
             painter.setFont(font_content)
-            content_rect = QRectF(10, 48, self._width - 20, self._height - 56)
+            ch = self._get_height() - y_offset - 8
+            content_rect = QRectF(10, y_offset, self._width - 20, ch)
             opt = QTextOption()
             opt.setWrapMode(QTextOption.WrapMode.WordWrap)
             painter.drawText(content_rect, self.content, opt)
+
+        if self.evidence:
+            emoji = "📎"
+            clip_rect = QRectF(self._width - 26, 7, 18, 16)
+            painter.setPen(QColor("#ffffff"))
+            font_clip = QFont("Segoe UI", 9)
+            painter.setFont(font_clip)
+            painter.drawText(
+                clip_rect,
+                Qt.AlignmentFlag.AlignCenter,
+                emoji,
+            )
 
         painter.setPen(Qt.PenStyle.NoPen)
         for _, pos in self._ports().items():
@@ -150,11 +196,12 @@ class NodeItem(QGraphicsItem):
             painter.drawEllipse(pos, self._port_radius, self._port_radius)
 
     def _ports(self):
+        h = self._get_height()
         return {
-            "left": QPointF(0, self._height / 2),
-            "right": QPointF(self._width, self._height / 2),
+            "left": QPointF(0, h / 2),
+            "right": QPointF(self._width, h / 2),
             "top": QPointF(self._width / 2, 0),
-            "bottom": QPointF(self._width / 2, self._height),
+            "bottom": QPointF(self._width / 2, h),
         }
 
     def port_pos(self, name):
@@ -184,7 +231,9 @@ class NodeItem(QGraphicsItem):
         return None
 
     def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton and not self._port_at_pos(event.pos()):
+        if event.button() == Qt.MouseButton.LeftButton and not self._port_at_pos(
+            event.pos()
+        ):
             for view in self.scene().views():
                 if isinstance(view, GraphWidget):
                     view.edit_node(self)
@@ -240,9 +289,12 @@ class NodeItem(QGraphicsItem):
             if target_node:
                 for view in self.scene().views():
                     if isinstance(view, GraphWidget):
-                        tp = target_node._port_at_pos(
-                            target_node.mapFromScene(event.scenePos())
-                        ) or "left"
+                        tp = (
+                            target_node._port_at_pos(
+                                target_node.mapFromScene(event.scenePos())
+                            )
+                            or "left"
+                        )
                         view.add_edge(self, target_node, self._drag_port, tp)
                         break
             self._drag_port = None
@@ -328,7 +380,9 @@ class EdgeItem(QGraphicsPathItem):
 
 
 class NodeEditDialog(QDialog):
-    def __init__(self, title="", content="", entity_type="Custom", parent=None):
+    def __init__(
+        self, title="", content="", entity_type="Custom", evidence=None, parent=None
+    ):
         super().__init__(parent)
         self.setWindowTitle("Edit Node")
         self.setModal(True)
@@ -360,7 +414,8 @@ class NodeEditDialog(QDialog):
             NodeEditDialog QLineEdit:focus, NodeEditDialog QPlainTextEdit:focus {{
                 border: 1px solid {text};
             }}
-            NodeEditDialog QLineEdit::placeholder, NodeEditDialog QPlainTextEdit::placeholder {{
+            NodeEditDialog QLineEdit::placeholder,
+            NodeEditDialog QPlainTextEdit::placeholder {{
                 color: {border};
             }}
             NodeEditDialog QPushButton {{
@@ -390,7 +445,7 @@ class NodeEditDialog(QDialog):
 
         self.content_edit = QPlainTextEdit(content)
         self.content_edit.setPlaceholderText("Content")
-        self.content_edit.setMinimumHeight(120)
+        self.content_edit.setMinimumHeight(80)
         layout.addWidget(self.content_edit)
 
         type_layout = QHBoxLayout()
@@ -402,6 +457,32 @@ class NodeEditDialog(QDialog):
         type_layout.addWidget(self.type_combo)
         layout.addLayout(type_layout)
 
+        evidence_label = QLabel("Evidence:")
+        layout.addWidget(evidence_label)
+
+        self.evidence_list = QListWidget()
+        self.evidence_list.setSelectionMode(
+            QAbstractItemView.SelectionMode.ExtendedSelection
+        )
+        self.evidence_list.itemDoubleClicked.connect(self._open_evidence)
+        evidence = evidence or []
+        for ev_path in evidence:
+            label = os.path.basename(ev_path) if os.path.exists(ev_path) else ev_path
+            self.evidence_list.addItem(f"{label}\n{ev_path}")
+        layout.addWidget(self.evidence_list)
+
+        ev_btn_layout = QHBoxLayout()
+        btn_add_file = QPushButton("Add File")
+        btn_add_file.clicked.connect(self._add_file)
+        btn_add_url = QPushButton("Add URL")
+        btn_add_url.clicked.connect(self._add_url)
+        btn_remove_ev = QPushButton("Remove Selected")
+        btn_remove_ev.clicked.connect(self._remove_evidence)
+        ev_btn_layout.addWidget(btn_add_file)
+        ev_btn_layout.addWidget(btn_add_url)
+        ev_btn_layout.addWidget(btn_remove_ev)
+        layout.addLayout(ev_btn_layout)
+
         btn_layout = QHBoxLayout()
         btn_layout.setContentsMargins(0, 0, 0, 0)
         btn_save = QPushButton("Save")
@@ -412,8 +493,36 @@ class NodeEditDialog(QDialog):
         btn_layout.addWidget(btn_cancel)
         layout.addLayout(btn_layout)
 
+    def _add_file(self):
+        files, _ = QFileDialog.getOpenFiles(self, "Select Evidence Files")
+        for f in files:
+            self.evidence_list.addItem(f"{os.path.basename(f)}\n{f}")
+
+    def _add_url(self):
+        url, ok = QInputDialog.getText(self, "Add URL", "Enter URL:")
+        if ok and url.strip():
+            self.evidence_list.addItem(f"{url.strip()}\n{url.strip()}")
+
+    def _remove_evidence(self):
+        for item in self.evidence_list.selectedItems():
+            self.evidence_list.takeItem(self.evidence_list.row(item))
+
+    def _open_evidence(self, item):
+        path = item.text().split("\n", 1)[-1]
+        url = QUrl.fromLocalFile(path) if os.path.exists(path) else QUrl(path)
+        QDesktopServices.openUrl(url)
+
     def get_data(self):
-        return self.title_edit.text(), self.content_edit.toPlainText(), self.type_combo.currentText()
+        evidence = []
+        for i in range(self.evidence_list.count()):
+            path = self.evidence_list.item(i).text().split("\n", 1)[-1]
+            evidence.append(path)
+        return (
+            self.title_edit.text(),
+            self.content_edit.toPlainText(),
+            self.type_combo.currentText(),
+            evidence,
+        )
 
 
 class GraphWidget(QGraphicsView):
@@ -452,6 +561,9 @@ class GraphWidget(QGraphicsView):
             edit_action = QAction("Edit", self)
             edit_action.triggered.connect(lambda: self.edit_node(item))
             menu.addAction(edit_action)
+            attach_action = QAction("Attach Evidence", self)
+            attach_action.triggered.connect(lambda: self.edit_node(item))
+            menu.addAction(attach_action)
             menu.addSeparator()
             delete_action = QAction("Delete Node", self)
             delete_action.triggered.connect(lambda: self.remove_node(item))
@@ -460,25 +572,32 @@ class GraphWidget(QGraphicsView):
             add_menu = QMenu("Add", self)
             for etype in ENTITY_NAMES:
                 act = QAction(etype, self)
-                act.triggered.connect(lambda checked, t=etype: self.add_node(scene_pos, t))
+                act.triggered.connect(
+                    lambda checked, t=etype: self.add_node(scene_pos, t)
+                )
                 add_menu.addAction(act)
             menu.addMenu(add_menu)
 
         menu.exec(self.viewport().mapToGlobal(pos))
 
     def edit_node(self, node: NodeItem):
-        dialog = NodeEditDialog(node.title, node.content, node.entity_type, self)
+        dialog = NodeEditDialog(
+            node.title, node.content, node.entity_type, node.evidence, self
+        )
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            new_title, new_content, new_type = dialog.get_data()
+            new_title, new_content, new_type, new_evidence = dialog.get_data()
             node.title = new_title
             node.content = new_content
             node.entity_type = new_type
+            node.evidence = new_evidence
+            node.prepareGeometryChange()
             node.update()
             for n_data in self.graph_data["nodes"]:
                 if n_data["id"] == node.id:
                     n_data["title"] = new_title
                     n_data["content"] = new_content
                     n_data["entity_type"] = new_type
+                    n_data["evidence"] = new_evidence
                     break
 
     def add_node(self, scene_pos, entity_type="Custom"):
@@ -490,6 +609,7 @@ class GraphWidget(QGraphicsView):
             "title": node.title,
             "content": node.content,
             "entity_type": node.entity_type,
+            "evidence": node.evidence,
             "x": scene_pos.x(),
             "y": scene_pos.y(),
         }
@@ -497,7 +617,9 @@ class GraphWidget(QGraphicsView):
         self.nodeAdded.emit(node_data)
         return node
 
-    def add_edge(self, source_node, target_node, source_port="right", target_port="left"):
+    def add_edge(
+        self, source_node, target_node, source_port="right", target_port="left"
+    ):
         edge = EdgeItem(source_node, target_node, source_port, target_port)
         self._scene.addItem(edge)
         edge_data = {
@@ -557,6 +679,7 @@ class GraphWidget(QGraphicsView):
                         "title": item.title,
                         "content": item.content,
                         "entity_type": item.entity_type,
+                        "evidence": item.evidence,
                         "x": item.pos().x(),
                         "y": item.pos().y(),
                     }
@@ -584,6 +707,7 @@ class GraphWidget(QGraphicsView):
                 entity_type=n.get("entity_type", "Custom"),
                 node_id=nid,
             )
+            node.evidence = n.get("evidence", [])
             node.setPos(n.get("x", 0), n.get("y", 0))
             self._scene.addItem(node)
             node_map[nid] = node
@@ -593,6 +717,7 @@ class GraphWidget(QGraphicsView):
                     "title": node.title,
                     "content": node.content,
                     "entity_type": node.entity_type,
+                    "evidence": node.evidence,
                     "x": node.pos().x(),
                     "y": node.pos().y(),
                 }

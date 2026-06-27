@@ -12,6 +12,7 @@ from PySide6.QtGui import (
     QFont,
     QPainter,
     QPainterPath,
+    QPainterPathStroker,
     QPen,
     QTextOption,
 )
@@ -340,6 +341,11 @@ class EdgeItem(QGraphicsPathItem):
         path.cubicTo(ctrl1, ctrl2, tgt)
 
         self.setPath(path)
+
+    def shape(self):
+        stroker = QPainterPathStroker()
+        stroker.setWidth(24)
+        return stroker.createStroke(self.path())
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)

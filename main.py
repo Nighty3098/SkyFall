@@ -40,6 +40,7 @@ from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
 from src.libs.graph_lib import GraphWidget
+from src.libs.graph_panel import PropertiesPanel
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
@@ -103,6 +104,23 @@ class MainWindow(QMainWindow):
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
+
+        self._properties_panel = PropertiesPanel(self)
+        self.ui.graphWidget.selectionChanged.connect(self._properties_panel.show_node)
+        self.addDockWidget(
+            Qt.DockWidgetArea.RightDockWidgetArea, self._properties_panel
+        )
+
+        def _on_tab_changed(index):
+            page = self.ui.mainStackedWidget.widget(index)
+            has_graph = page.findChild(GraphWidget) is not None
+            self._properties_panel.setVisible(has_graph)
+            if not has_graph:
+                self._properties_panel.clear()
+
+        self.ui.mainStackedWidget.currentChanged.connect(_on_tab_changed)
+        _on_tab_changed(self.ui.mainStackedWidget.currentIndex())
+
         self.init_font("resources/Caveat-VariableFont_wght.ttf")
         self.init_font("resources/IosevkaCharonMono-Regular.ttf")
 

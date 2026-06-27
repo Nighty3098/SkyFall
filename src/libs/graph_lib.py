@@ -87,7 +87,7 @@ class NodeItem(QGraphicsItem):
         border_width = 3 if self.isSelected() else 1.5
         painter.setPen(
             QPen(
-                c["card_border"] if not self.isSelected() else c["port_output"],
+                c["card_border"] if not self.isSelected() else c["port_color"],
                 border_width,
             )
         )

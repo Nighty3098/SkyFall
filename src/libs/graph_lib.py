@@ -185,6 +185,22 @@ class NodeItem(QGraphicsItem):
             opt = QTextOption()
             opt.setWrapMode(QTextOption.WrapMode.WordWrap)
             painter.drawText(content_rect, self.content, opt)
+        elif self.evidence:
+            painter.setPen(c["card_content"])
+            font_content = QFont("Segoe UI", 8)
+            painter.setFont(font_content)
+            first = self.evidence[0]
+            label = os.path.basename(first) if os.path.exists(first) else first
+            if len(label) > 24:
+                label = label[:21] + "..."
+            content_rect = QRectF(
+                10, y_offset, self._width - 20, self._get_height() - y_offset - 8
+            )
+            painter.drawText(
+                content_rect,
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop,
+                f"📎 {label}",
+            )
 
         if self.evidence:
             emoji = "📎"

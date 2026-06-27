@@ -386,7 +386,6 @@ class NodeEditDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Edit Node")
         self.setModal(True)
-        self.resize(400, 300)
 
         ss = QApplication.instance().styleSheet()
         dark = "#0A0A0A" in ss

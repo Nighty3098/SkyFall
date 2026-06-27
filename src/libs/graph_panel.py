@@ -6,7 +6,6 @@ from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QDialog,
-    QDockWidget,
     QFileDialog,
     QGroupBox,
     QHBoxLayout,
@@ -23,19 +22,13 @@ from PySide6.QtWidgets import (
 from src.libs.graph_lib import ENTITY_NAMES
 
 
-class PropertiesPanel(QDockWidget):
+class PropertiesPanel(QWidget):
     def __init__(self, parent=None):
-        super().__init__("", parent)
-        self.setAllowedAreas(
-            Qt.DockWidgetArea.RightDockWidgetArea | Qt.DockWidgetArea.LeftDockWidgetArea
-        )
-        self.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
-        self.setTitleBarWidget(QWidget())
+        super().__init__(parent)
         self.setMinimumWidth(250)
 
         self._node = None
-        widget = QWidget()
-        layout = QVBoxLayout(widget)
+        layout = QVBoxLayout(self)
         layout.setContentsMargins(2, 2, 2, 2)
 
         info_group = QGroupBox("Node Info")
@@ -92,7 +85,6 @@ class PropertiesPanel(QDockWidget):
         layout.addWidget(evidence_group)
 
         layout.addStretch()
-        self.setWidget(widget)
 
     def show_node(self, node):
         if node is None:

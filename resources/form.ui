@@ -1542,7 +1542,7 @@
          <attribute name="title">
           <string>GRAPH</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_13">
+         <layout class="QHBoxLayout" name="horizontalLayout_10">
           <item>
            <layout class="QGridLayout" name="gridLayout_6">
             <item row="1" column="0">
@@ -1562,6 +1562,9 @@
             <item row="0" column="0" colspan="2">
              <widget class="GraphWidget" name="graphWidget"/>
             </item>
+             <item row="0" column="2" rowspan="2">
+              <widget class="PropertiesPanel" name="nodeEditPanel" native="true"/>
+             </item>
            </layout>
           </item>
          </layout>
@@ -1776,12 +1779,17 @@
    <header location="global">src/ui/drop_widget</header>
    <container>1</container>
   </customwidget>
-  <customwidget>
-   <class>GraphWidget</class>
-   <extends>QGraphicsView</extends>
-   <header location="global">src.libs.graph_lib</header>
-  </customwidget>
- </customwidgets>
+   <customwidget>
+    <class>GraphWidget</class>
+    <extends>QGraphicsView</extends>
+    <header location="global">src.libs.graph_lib</header>
+   </customwidget>
+   <customwidget>
+    <class>PropertiesPanel</class>
+    <extends>QWidget</extends>
+    <header location="global">src.libs.graph_panel</header>
+   </customwidget>
+  </customwidgets>
  <resources/>
  <connections/>
 </ui>

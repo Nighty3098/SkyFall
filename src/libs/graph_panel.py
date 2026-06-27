@@ -7,7 +7,6 @@ from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
     QFileDialog,
-    QGroupBox,
     QHBoxLayout,
     QLabel,
     QLineEdit,
@@ -31,45 +30,33 @@ class PropertiesPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(2, 2, 2, 2)
 
-        info_group = QGroupBox("Node Info")
-        info_layout = QVBoxLayout()
-        info_layout.setContentsMargins(4, 4, 4, 4)
-
-        info_layout.addWidget(QLabel("Title:"))
+        layout.addWidget(QLabel("Title:"))
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("Title")
         self.title_edit.textChanged.connect(self._on_title_changed)
-        info_layout.addWidget(self.title_edit)
+        layout.addWidget(self.title_edit)
 
-        info_layout.addWidget(QLabel("Type:"))
+        layout.addWidget(QLabel("Type:"))
         self.type_combo = QComboBox()
         self.type_combo.addItems(ENTITY_NAMES)
         self.type_combo.currentTextChanged.connect(self._on_type_changed)
-        info_layout.addWidget(self.type_combo)
+        layout.addWidget(self.type_combo)
 
-        info_group.setLayout(info_layout)
-        layout.addWidget(info_group)
-
-        content_group = QGroupBox("Content")
-        content_layout = QVBoxLayout()
-        content_layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(QLabel("Content:"))
         self.content_edit = QPlainTextEdit()
         self.content_edit.setPlaceholderText("Content")
         self.content_edit.textChanged.connect(self._on_content_changed)
-        content_layout.addWidget(self.content_edit)
-        content_group.setLayout(content_layout)
-        layout.addWidget(content_group)
+        layout.addWidget(self.content_edit)
 
-        evidence_group = QGroupBox("Evidence")
-        evidence_layout = QVBoxLayout()
-        evidence_layout.setContentsMargins(4, 4, 4, 4)
+        layout.addWidget(QLabel("Evidence:"))
         self.evidence_list = QListWidget()
         self.evidence_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.evidence_list.customContextMenuRequested.connect(
             self._evidence_context_menu
         )
         self.evidence_list.itemDoubleClicked.connect(self._open_evidence)
-        evidence_layout.addWidget(self.evidence_list)
+        layout.addWidget(self.evidence_list)
+
         ev_btn_layout = QHBoxLayout()
         btn_add_file = QPushButton("Add File")
         btn_add_file.clicked.connect(self._add_file)
@@ -80,9 +67,7 @@ class PropertiesPanel(QWidget):
         ev_btn_layout.addWidget(btn_add_file)
         ev_btn_layout.addWidget(btn_add_url)
         ev_btn_layout.addWidget(btn_remove)
-        evidence_layout.addLayout(ev_btn_layout)
-        evidence_group.setLayout(evidence_layout)
-        layout.addWidget(evidence_group)
+        layout.addLayout(ev_btn_layout)
 
         layout.addStretch()
 

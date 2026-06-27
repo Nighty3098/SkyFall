@@ -50,6 +50,9 @@ class PropertiesPanel(QDockWidget):
         self.setWidget(widget)
 
     def show_node(self, node):
+        if node is None:
+            self.clear()
+            return
         self._node = node
         self.title_label.setText(node.title)
         self.type_label.setText(node.entity_type)

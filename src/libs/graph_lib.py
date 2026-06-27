@@ -1,5 +1,6 @@
 import json
 import sys
+import uuid
 
 from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, Signal
 from PySide6.QtGui import (
@@ -52,7 +53,7 @@ def _theme_colors(dark=None):
 class NodeItem(QGraphicsItem):
     def __init__(self, title="Node", content="", node_id=None, parent=None):
         super().__init__(parent)
-        self.id = node_id if node_id is not None else id(self)
+        self.id = node_id if node_id is not None else uuid.uuid4().hex
         self.title = title
         self.content = content
         self._width = 160
@@ -520,7 +521,7 @@ class GraphWidget(QGraphicsView):
         self.graph_data = {"nodes": [], "edges": []}
         node_map = {}
         for n in data.get("nodes", []):
-            nid = n.get("id", id(n))
+            nid = str(n.get("id", uuid.uuid4().hex))
             node = NodeItem(
                 title=n.get("title", "Node"),
                 content=n.get("content", ""),
@@ -539,8 +540,8 @@ class GraphWidget(QGraphicsView):
                 }
             )
         for e in data.get("edges", []):
-            src = node_map.get(e.get("source"))
-            tgt = node_map.get(e.get("target"))
+            src = node_map.get(str(e.get("source", "")))
+            tgt = node_map.get(str(e.get("target", "")))
             if src and tgt:
                 sp = e.get("source_port", "right")
                 tp = e.get("target_port", "left")

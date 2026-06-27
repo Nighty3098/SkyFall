@@ -50,6 +50,9 @@ ENTITY_TYPES = [
     ("Username", "#00b894"),
     ("Crypto", "#f39c12"),
     ("Organization", "#e17055"),
+    ("Passport", "#e84393"),
+    ("Photo", "#a29bfe"),
+    ("Geolocation", "#55efc4"),
     ("Custom", "#636e72"),
 ]
 

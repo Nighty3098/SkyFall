@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QDockWidget,
     QFileDialog,
-    QFormLayout,
     QGroupBox,
     QHBoxLayout,
     QLabel,
@@ -39,19 +38,19 @@ class PropertiesPanel(QDockWidget):
         layout = QVBoxLayout(widget)
 
         info_group = QGroupBox("Node Info")
-        info_layout = QFormLayout()
+        info_layout = QVBoxLayout()
 
+        info_layout.addWidget(QLabel("Title:"))
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("Title")
         self.title_edit.textChanged.connect(self._on_title_changed)
+        info_layout.addWidget(self.title_edit)
+
+        info_layout.addWidget(QLabel("Type:"))
         self.type_combo = QComboBox()
         self.type_combo.addItems(ENTITY_NAMES)
         self.type_combo.currentTextChanged.connect(self._on_type_changed)
-        self.id_label = QLabel("-")
-
-        info_layout.addRow("Title:", self.title_edit)
-        info_layout.addRow("Type:", self.type_combo)
-        info_layout.addRow("ID:", self.id_label)
+        info_layout.addWidget(self.type_combo)
 
         info_group.setLayout(info_layout)
         layout.addWidget(info_group)
@@ -107,7 +106,6 @@ class PropertiesPanel(QDockWidget):
         )
         self.type_combo.setCurrentIndex(idx)
         self.type_combo.blockSignals(False)
-        self.id_label.setText(node.id[:8] + "...")
         self.content_edit.blockSignals(True)
         self.content_edit.setPlainText(node.content)
         self.content_edit.blockSignals(False)
@@ -124,7 +122,6 @@ class PropertiesPanel(QDockWidget):
         self.type_combo.blockSignals(True)
         self.type_combo.setCurrentIndex(0)
         self.type_combo.blockSignals(False)
-        self.id_label.setText("-")
         self.content_edit.blockSignals(True)
         self.content_edit.setPlainText("")
         self.content_edit.blockSignals(False)

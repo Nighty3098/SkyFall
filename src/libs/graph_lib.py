@@ -36,10 +36,6 @@ PORT_DIR = {
     "bottom": (0, 1),
 }
 
-INPUT_PORTS = {"left", "top"}
-OUTPUT_PORTS = {"right", "bottom"}
-
-
 def _theme_colors(dark=None):
     if dark is None:
         ss = QApplication.instance().styleSheet()
@@ -49,8 +45,7 @@ def _theme_colors(dark=None):
         "card_border": QColor("#262626" if dark else "#D0D0D0"),
         "card_title": QColor("#C1C1C1" if dark else "#3A3A3A"),
         "card_content": QColor("#888888"),
-        "port_input": QColor("#C1C1C1" if dark else "#3A3A3A"),
-        "port_output": QColor("#82aaff"),
+        "port_color": QColor("#C1C1C1" if dark else "#3A3A3A"),
         "edge_color": QColor("#262626" if dark else "#D0D0D0"),
     }
 
@@ -118,10 +113,8 @@ class NodeItem(QGraphicsItem):
             painter.drawText(content_rect, self.content, opt)
 
         painter.setPen(Qt.PenStyle.NoPen)
-        for name, pos in self._ports().items():
-            painter.setBrush(
-                QBrush(c["port_input"] if name in INPUT_PORTS else c["port_output"])
-            )
+        for _, pos in self._ports().items():
+            painter.setBrush(QBrush(c["port_color"]))
             painter.drawEllipse(pos, self._port_radius, self._port_radius)
 
     def _ports(self):
@@ -207,17 +200,10 @@ class NodeItem(QGraphicsItem):
             if target_node:
                 for view in self.scene().views():
                     if isinstance(view, GraphWidget):
-                        source, source_port = (self, self._drag_port)
-                        target, _ = (target_node, None)
-                        if self._drag_port in INPUT_PORTS:
-                            source, target = target, self
-                            source_port = (
-                                target._port_at_pos(
-                                    target.mapFromScene(event.scenePos())
-                                )
-                                or "left"
-                            )
-                        view.add_edge(source, target, source_port)
+                        tp = target_node._port_at_pos(
+                            target_node.mapFromScene(event.scenePos())
+                        ) or "left"
+                        view.add_edge(self, target_node, self._drag_port, tp)
                         break
             self._drag_port = None
         else:
@@ -462,9 +448,7 @@ class GraphWidget(QGraphicsView):
         self.nodeAdded.emit(node_data)
         return node
 
-    def add_edge(self, source_node, target_node, source_port="right", target_port=None):
-        if target_port is None:
-            target_port = "left" if source_port in OUTPUT_PORTS else "right"
+    def add_edge(self, source_node, target_node, source_port="right", target_port="left"):
         edge = EdgeItem(source_node, target_node, source_port, target_port)
         self._scene.addItem(edge)
         edge_data = {

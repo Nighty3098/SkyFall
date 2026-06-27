@@ -36,9 +36,11 @@ class PropertiesPanel(QDockWidget):
         self._node = None
         widget = QWidget()
         layout = QVBoxLayout(widget)
+        layout.setContentsMargins(2, 2, 2, 2)
 
         info_group = QGroupBox("Node Info")
         info_layout = QVBoxLayout()
+        info_layout.setContentsMargins(4, 4, 4, 4)
 
         info_layout.addWidget(QLabel("Title:"))
         self.title_edit = QLineEdit()
@@ -57,6 +59,7 @@ class PropertiesPanel(QDockWidget):
 
         content_group = QGroupBox("Content")
         content_layout = QVBoxLayout()
+        content_layout.setContentsMargins(4, 4, 4, 4)
         self.content_edit = QPlainTextEdit()
         self.content_edit.setPlaceholderText("Content")
         self.content_edit.textChanged.connect(self._on_content_changed)
@@ -66,6 +69,7 @@ class PropertiesPanel(QDockWidget):
 
         evidence_group = QGroupBox("Evidence")
         evidence_layout = QVBoxLayout()
+        evidence_layout.setContentsMargins(4, 4, 4, 4)
         self.evidence_list = QListWidget()
         self.evidence_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.evidence_list.customContextMenuRequested.connect(

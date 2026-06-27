@@ -390,10 +390,10 @@ class EdgeItem(QGraphicsPathItem):
                 text_w = fm.horizontalAdvance(self.label) + 12
                 text_h = fm.height() + 6
                 bg = QRectF(mid.x() - text_w / 2, mid.y() - text_h / 2, text_w, text_h)
-                painter.setBrush(QBrush(QColor(0, 0, 0, 180)))
+                painter.setBrush(QBrush(c["card_title"]))
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawRoundedRect(bg, 4, 4)
-                painter.setPen(QPen(c["card_title"]))
+                painter.setPen(QPen(c["card_bg"]))
                 painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, self.label)
                 painter.restore()
 
@@ -688,13 +688,61 @@ class GraphWidget(QGraphicsView):
             node.update()
 
     def edit_edge_label(self, edge: EdgeItem):
-        from PySide6.QtWidgets import QInputDialog
-
-        label, ok = QInputDialog.getText(
-            self, "Edit Edge Label", "Label:", text=edge.label
-        )
-        if ok:
-            edge.label = label
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Edit Edge Label")
+        ss = QApplication.instance().styleSheet()
+        dark = "#0A0A0A" in ss
+        bg = "#0A0A0A" if dark else "#F5F5F5"
+        surface = "#161616" if dark else "#E8E8E8"
+        border = "#262626" if dark else "#D0D0D0"
+        text = "#C1C1C1" if dark else "#3A3A3A"
+        dialog.setStyleSheet(f"""
+            QDialog {{
+                background-color: {bg};
+                color: {text};
+                border: 1px solid {border};
+                border-radius: 10px;
+            }}
+            QLineEdit {{
+                border-radius: 10px;
+                border: 1px solid {border};
+                background-color: {surface};
+                color: {text};
+                padding: 5px;
+                selection-background-color: {text};
+                selection-color: {bg};
+            }}
+            QPushButton {{
+                border-radius: 10px;
+                border: 1px solid {border};
+                background-color: {surface};
+                color: {text};
+                padding: 6px 16px;
+                min-height: 24px;
+            }}
+            QPushButton:hover {{
+                background-color: {border};
+                color: {text};
+            }}
+            QPushButton:pressed {{
+                background-color: {text};
+                color: {bg};
+            }}
+        """)
+        layout = QVBoxLayout(dialog)
+        line_edit = QLineEdit(edge.label)
+        line_edit.setPlaceholderText("owns, registered, communicates...")
+        layout.addWidget(line_edit)
+        btn_layout = QHBoxLayout()
+        btn_ok = QPushButton("OK")
+        btn_ok.clicked.connect(dialog.accept)
+        btn_cancel = QPushButton("Cancel")
+        btn_cancel.clicked.connect(dialog.reject)
+        btn_layout.addWidget(btn_ok)
+        btn_layout.addWidget(btn_cancel)
+        layout.addLayout(btn_layout)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            edge.label = line_edit.text()
             edge.update()
 
     def add_node(self, scene_pos, entity_type="Custom"):

@@ -26,10 +26,13 @@ from src.libs.graph_lib import ENTITY_NAMES
 
 class PropertiesPanel(QDockWidget):
     def __init__(self, parent=None):
-        super().__init__("Properties", parent)
+        super().__init__("", parent)
         self.setAllowedAreas(
             Qt.DockWidgetArea.RightDockWidgetArea | Qt.DockWidgetArea.LeftDockWidgetArea
         )
+        self.setFeatures(QDockWidget.DockWidgetFeature.NoDockWidgetFeatures)
+        self.setTitleBarWidget(QWidget())
+        self.setMinimumWidth(250)
 
         self._node = None
         widget = QWidget()

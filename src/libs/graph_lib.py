@@ -83,6 +83,7 @@ class NodeItem(QGraphicsItem):
         self.content = content
         self.entity_type = entity_type if entity_type in ENTITY_NAMES else "Custom"
         self.evidence = []
+        self._edges = []
         self._width = 160
         self._port_radius = 6
         self._dragging_edge = False
@@ -212,15 +213,16 @@ class NodeItem(QGraphicsItem):
                 edge.adjust()
         return super().itemChange(change, value)
 
+    def add_edge_ref(self, edge):
+        if edge not in self._edges:
+            self._edges.append(edge)
+
+    def remove_edge_ref(self, edge):
+        if edge in self._edges:
+            self._edges.remove(edge)
+
     def _connected_edges(self):
-        edges = []
-        if self.scene():
-            for item in self.scene().items():
-                if isinstance(item, EdgeItem) and (
-                    item.source == self or item.target == self
-                ):
-                    edges.append(item)
-        return edges
+        return list(self._edges)
 
     def _port_at_pos(self, pos):
         r = self._port_radius + 4
@@ -308,6 +310,7 @@ class EdgeItem(QGraphicsPathItem):
         target: NodeItem,
         source_port="right",
         target_port="left",
+        label="",
         parent=None,
     ):
         super().__init__(parent)
@@ -315,6 +318,7 @@ class EdgeItem(QGraphicsPathItem):
         self.target = target
         self.source_port = source_port
         self.target_port = target_port
+        self.label = label
         self.setPen(QPen(_theme_colors()["edge_color"], 4))
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -376,6 +380,22 @@ class EdgeItem(QGraphicsPathItem):
             arrow_path.closeSubpath()
             painter.drawPath(arrow_path)
             painter.restore()
+
+        if self.label:
+            path_length = self.path().length()
+            if path_length > 40:
+                mid = self.path().pointAtPercent(0.5)
+                painter.save()
+                fm = painter.fontMetrics()
+                text_w = fm.horizontalAdvance(self.label) + 12
+                text_h = fm.height() + 6
+                bg = QRectF(mid.x() - text_w / 2, mid.y() - text_h / 2, text_w, text_h)
+                painter.setBrush(QBrush(QColor(0, 0, 0, 180)))
+                painter.setPen(Qt.PenStyle.NoPen)
+                painter.drawRoundedRect(bg, 4, 4)
+                painter.setPen(QPen(c["card_title"]))
+                painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, self.label)
+                painter.restore()
 
 
 class NodeEditDialog(QDialog):
@@ -598,8 +618,8 @@ class NodeEditDialog(QDialog):
 
 
 class GraphWidget(QGraphicsView):
-    nodeAdded = Signal(dict)
-    edgeAdded = Signal(dict)
+    nodeAdded = Signal(object)
+    edgeAdded = Signal(object)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -615,8 +635,6 @@ class GraphWidget(QGraphicsView):
         self._scene.setSceneRect(-5000, -5000, 10000, 10000)
         self.setScene(self._scene)
 
-        self.graph_data = {"nodes": [], "edges": []}
-
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
 
@@ -626,6 +644,10 @@ class GraphWidget(QGraphicsView):
         menu = QMenu(self)
 
         if isinstance(item, EdgeItem):
+            label_action = QAction("Edit Label", self)
+            label_action.triggered.connect(lambda: self.edit_edge_label(item))
+            menu.addAction(label_action)
+            menu.addSeparator()
             delete_action = QAction("Delete Edge", self)
             delete_action.triggered.connect(lambda: self.remove_edge(item))
             menu.addAction(delete_action)
@@ -664,29 +686,22 @@ class GraphWidget(QGraphicsView):
             node.evidence = new_evidence
             node.prepareGeometryChange()
             node.update()
-            for n_data in self.graph_data["nodes"]:
-                if n_data["id"] == node.id:
-                    n_data["title"] = new_title
-                    n_data["content"] = new_content
-                    n_data["entity_type"] = new_type
-                    n_data["evidence"] = new_evidence
-                    break
+
+    def edit_edge_label(self, edge: EdgeItem):
+        from PySide6.QtWidgets import QInputDialog
+
+        label, ok = QInputDialog.getText(
+            self, "Edit Edge Label", "Label:", text=edge.label
+        )
+        if ok:
+            edge.label = label
+            edge.update()
 
     def add_node(self, scene_pos, entity_type="Custom"):
         node = NodeItem(title="New node", entity_type=entity_type)
         node.setPos(scene_pos)
         self._scene.addItem(node)
-        node_data = {
-            "id": node.id,
-            "title": node.title,
-            "content": node.content,
-            "entity_type": node.entity_type,
-            "evidence": node.evidence,
-            "x": scene_pos.x(),
-            "y": scene_pos.y(),
-        }
-        self.graph_data["nodes"].append(node_data)
-        self.nodeAdded.emit(node_data)
+        self.nodeAdded.emit(node)
         return node
 
     def add_edge(
@@ -694,37 +709,20 @@ class GraphWidget(QGraphicsView):
     ):
         edge = EdgeItem(source_node, target_node, source_port, target_port)
         self._scene.addItem(edge)
-        edge_data = {
-            "source": source_node.id,
-            "target": target_node.id,
-            "source_port": source_port,
-            "target_port": target_port,
-        }
-        self.graph_data["edges"].append(edge_data)
-        self.edgeAdded.emit(edge_data)
+        source_node.add_edge_ref(edge)
+        target_node.add_edge_ref(edge)
+        self.edgeAdded.emit(edge)
         return edge
 
     def remove_node(self, node: NodeItem):
         for edge in node._connected_edges():
-            self.remove_edge(edge, remove_from_data=True)
+            self.remove_edge(edge)
         self._scene.removeItem(node)
-        self.graph_data["nodes"] = [
-            n for n in self.graph_data["nodes"] if n["id"] != node.id
-        ]
 
-    def remove_edge(self, edge: EdgeItem, remove_from_data=True):
+    def remove_edge(self, edge: EdgeItem):
+        edge.source.remove_edge_ref(edge)
+        edge.target.remove_edge_ref(edge)
         self._scene.removeItem(edge)
-        if remove_from_data:
-            self.graph_data["edges"] = [
-                e
-                for e in self.graph_data["edges"]
-                if not (
-                    e["source"] == edge.source.id
-                    and e["target"] == edge.target.id
-                    and e.get("source_port") == edge.source_port
-                    and e.get("target_port") == edge.target_port
-                )
-            ]
 
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
@@ -763,13 +761,13 @@ class GraphWidget(QGraphicsView):
                         "target": item.target.id,
                         "source_port": item.source_port,
                         "target_port": item.target_port,
+                        "label": item.label,
                     }
                 )
         return {"nodes": nodes, "edges": edges}
 
     def from_dict(self, data):
         self._scene.clear()
-        self.graph_data = {"nodes": [], "edges": []}
         node_map = {}
         for n in data.get("nodes", []):
             nid = str(n.get("id", uuid.uuid4().hex))
@@ -783,33 +781,16 @@ class GraphWidget(QGraphicsView):
             node.setPos(n.get("x", 0), n.get("y", 0))
             self._scene.addItem(node)
             node_map[nid] = node
-            self.graph_data["nodes"].append(
-                {
-                    "id": node.id,
-                    "title": node.title,
-                    "content": node.content,
-                    "entity_type": node.entity_type,
-                    "evidence": node.evidence,
-                    "x": node.pos().x(),
-                    "y": node.pos().y(),
-                }
-            )
         for e in data.get("edges", []):
             src = node_map.get(str(e.get("source", "")))
             tgt = node_map.get(str(e.get("target", "")))
             if src and tgt:
                 sp = e.get("source_port", "right")
                 tp = e.get("target_port", "left")
-                edge = EdgeItem(src, tgt, sp, tp)
+                edge = EdgeItem(src, tgt, sp, tp, label=e.get("label", ""))
                 self._scene.addItem(edge)
-                self.graph_data["edges"].append(
-                    {
-                        "source": src.id,
-                        "target": tgt.id,
-                        "source_port": sp,
-                        "target_port": tp,
-                    }
-                )
+                src.add_edge_ref(edge)
+                tgt.add_edge_ref(edge)
 
     def save_to_json(self, filepath):
         with open(filepath, "w", encoding="utf-8") as f:

@@ -183,6 +183,14 @@ class NodeItem(QGraphicsItem):
                 return name
         return None
 
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton and not self._port_at_pos(event.pos()):
+            for view in self.scene().views():
+                if isinstance(view, GraphWidget):
+                    view.edit_node(self)
+                    break
+        super().mouseDoubleClickEvent(event)
+
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
             port = self._port_at_pos(event.pos())

@@ -8,7 +8,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QListWidget,
     QMenu,
@@ -30,25 +29,21 @@ class PropertiesPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(2, 2, 2, 2)
 
-        layout.addWidget(QLabel("Title:"))
         self.title_edit = QLineEdit()
         self.title_edit.setPlaceholderText("Title")
         self.title_edit.textChanged.connect(self._on_title_changed)
         layout.addWidget(self.title_edit)
 
-        layout.addWidget(QLabel("Type:"))
         self.type_combo = QComboBox()
         self.type_combo.addItems(ENTITY_NAMES)
         self.type_combo.currentTextChanged.connect(self._on_type_changed)
         layout.addWidget(self.type_combo)
 
-        layout.addWidget(QLabel("Content:"))
         self.content_edit = QPlainTextEdit()
         self.content_edit.setPlaceholderText("Content")
         self.content_edit.textChanged.connect(self._on_content_changed)
         layout.addWidget(self.content_edit)
 
-        layout.addWidget(QLabel("Evidence:"))
         self.evidence_list = QListWidget()
         self.evidence_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.evidence_list.customContextMenuRequested.connect(

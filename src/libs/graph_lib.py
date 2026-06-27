@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsView,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QMenu,
     QPlainTextEdit,
@@ -308,11 +307,6 @@ class NodeEditDialog(QDialog):
                 border: 1px solid {border};
                 border-radius: 10px;
             }}
-            NodeEditDialog QLabel {{
-                background: transparent;
-                color: {text};
-                font-weight: bold;
-            }}
             NodeEditDialog QLineEdit, NodeEditDialog QPlainTextEdit {{
                 border-radius: 10px;
                 border: 1px solid {border};
@@ -324,6 +318,9 @@ class NodeEditDialog(QDialog):
             }}
             NodeEditDialog QLineEdit:focus, NodeEditDialog QPlainTextEdit:focus {{
                 border: 1px solid {text};
+            }}
+            NodeEditDialog QLineEdit::placeholder, NodeEditDialog QPlainTextEdit::placeholder {{
+                color: {border};
             }}
             NodeEditDialog QPushButton {{
                 border-radius: 10px;
@@ -346,16 +343,12 @@ class NodeEditDialog(QDialog):
         layout = QVBoxLayout(self)
         layout.setSpacing(8)
 
-        label_title = QLabel("Title:")
-        label_title.setObjectName("formLabel")
-        layout.addWidget(label_title)
         self.title_edit = QLineEdit(title)
+        self.title_edit.setPlaceholderText("Title")
         layout.addWidget(self.title_edit)
 
-        label_content = QLabel("Content:")
-        label_content.setObjectName("formLabel")
-        layout.addWidget(label_content)
         self.content_edit = QPlainTextEdit(content)
+        self.content_edit.setPlaceholderText("Content")
         self.content_edit.setMinimumHeight(120)
         layout.addWidget(self.content_edit)
 

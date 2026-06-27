@@ -15,6 +15,7 @@ from PySide6.QtGui import (
 )
 from PySide6.QtWidgets import (
     QApplication,
+    QComboBox,
     QDialog,
     QGraphicsDropShadowEffect,
     QGraphicsItem,
@@ -22,12 +23,28 @@ from PySide6.QtWidgets import (
     QGraphicsScene,
     QGraphicsView,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QMenu,
     QPlainTextEdit,
     QPushButton,
     QVBoxLayout,
 )
+
+ENTITY_TYPES = [
+    ("Person", "#4ecdc4"),
+    ("Domain", "#45b7d1"),
+    ("IP", "#f9ca24"),
+    ("Email", "#6c5ce7"),
+    ("Phone", "#fd79a8"),
+    ("Username", "#00b894"),
+    ("Crypto", "#f39c12"),
+    ("Organization", "#e17055"),
+    ("Custom", "#636e72"),
+]
+
+ENTITY_NAMES = [e[0] for e in ENTITY_TYPES]
+ENTITY_COLORS = {e[0]: e[1] for e in ENTITY_TYPES}
 
 PORT_DIR = {
     "left": (-1, 0),
@@ -51,13 +68,14 @@ def _theme_colors(dark=None):
 
 
 class NodeItem(QGraphicsItem):
-    def __init__(self, title="Node", content="", node_id=None, parent=None):
+    def __init__(self, title="Node", content="", entity_type="Custom", node_id=None, parent=None):
         super().__init__(parent)
         self.id = node_id if node_id is not None else uuid.uuid4().hex
         self.title = title
         self.content = content
+        self.entity_type = entity_type if entity_type in ENTITY_NAMES else "Custom"
         self._width = 160
-        self._height = 90
+        self._height = 100
         self._port_radius = 6
         self._dragging_edge = False
         self._drag_port = None
@@ -93,10 +111,24 @@ class NodeItem(QGraphicsItem):
         )
         painter.drawRoundedRect(rect, 10, 10)
 
+        type_color = QColor(ENTITY_COLORS.get(self.entity_type, "#636e72"))
+        badge_rect = QRectF(10, 6, self._width - 20, 16)
+        painter.setBrush(QBrush(type_color))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(badge_rect, 4, 4)
+        painter.setPen(QColor("#ffffff"))
+        font_badge = QFont("Segoe UI", 7, QFont.Weight.Bold)
+        painter.setFont(font_badge)
+        painter.drawText(
+            badge_rect,
+            Qt.AlignmentFlag.AlignCenter,
+            self.entity_type.upper(),
+        )
+
         painter.setPen(c["card_title"])
         font_title = QFont("Segoe UI", 10, QFont.Weight.Bold)
         painter.setFont(font_title)
-        title_rect = QRectF(10, 8, self._width - 20, 20)
+        title_rect = QRectF(10, 26, self._width - 20, 20)
         painter.drawText(
             title_rect,
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
@@ -107,7 +139,7 @@ class NodeItem(QGraphicsItem):
             painter.setPen(c["card_content"])
             font_content = QFont("Segoe UI", 8)
             painter.setFont(font_content)
-            content_rect = QRectF(10, 32, self._width - 20, self._height - 40)
+            content_rect = QRectF(10, 48, self._width - 20, self._height - 56)
             opt = QTextOption()
             opt.setWrapMode(QTextOption.WrapMode.WordWrap)
             painter.drawText(content_rect, self.content, opt)
@@ -288,7 +320,7 @@ class EdgeItem(QGraphicsPathItem):
 
 
 class NodeEditDialog(QDialog):
-    def __init__(self, title="", content="", parent=None):
+    def __init__(self, title="", content="", entity_type="Custom", parent=None):
         super().__init__(parent)
         self.setWindowTitle("Edit Node")
         self.setModal(True)
@@ -353,6 +385,15 @@ class NodeEditDialog(QDialog):
         self.content_edit.setMinimumHeight(120)
         layout.addWidget(self.content_edit)
 
+        type_layout = QHBoxLayout()
+        type_layout.addWidget(QLabel("Type:"))
+        self.type_combo = QComboBox()
+        self.type_combo.addItems(ENTITY_NAMES)
+        if entity_type in ENTITY_NAMES:
+            self.type_combo.setCurrentIndex(ENTITY_NAMES.index(entity_type))
+        type_layout.addWidget(self.type_combo)
+        layout.addLayout(type_layout)
+
         btn_layout = QHBoxLayout()
         btn_layout.setContentsMargins(0, 0, 0, 0)
         btn_save = QPushButton("Save")
@@ -364,7 +405,7 @@ class NodeEditDialog(QDialog):
         layout.addLayout(btn_layout)
 
     def get_data(self):
-        return self.title_edit.text(), self.content_edit.toPlainText()
+        return self.title_edit.text(), self.content_edit.toPlainText(), self.type_combo.currentText()
 
 
 class GraphWidget(QGraphicsView):
@@ -408,33 +449,39 @@ class GraphWidget(QGraphicsView):
             delete_action.triggered.connect(lambda: self.remove_node(item))
             menu.addAction(delete_action)
         else:
-            add_action = QAction("Add Node", self)
-            add_action.triggered.connect(lambda: self.add_node(scene_pos))
-            menu.addAction(add_action)
+            add_menu = QMenu("Add", self)
+            for etype in ENTITY_NAMES:
+                act = QAction(etype, self)
+                act.triggered.connect(lambda checked, t=etype: self.add_node(scene_pos, t))
+                add_menu.addAction(act)
+            menu.addMenu(add_menu)
 
         menu.exec(self.viewport().mapToGlobal(pos))
 
     def edit_node(self, node: NodeItem):
-        dialog = NodeEditDialog(node.title, node.content, self)
+        dialog = NodeEditDialog(node.title, node.content, node.entity_type, self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            new_title, new_content = dialog.get_data()
+            new_title, new_content, new_type = dialog.get_data()
             node.title = new_title
             node.content = new_content
+            node.entity_type = new_type
             node.update()
             for n_data in self.graph_data["nodes"]:
                 if n_data["id"] == node.id:
                     n_data["title"] = new_title
                     n_data["content"] = new_content
+                    n_data["entity_type"] = new_type
                     break
 
-    def add_node(self, scene_pos):
-        node = NodeItem(title="New node")
+    def add_node(self, scene_pos, entity_type="Custom"):
+        node = NodeItem(title="New node", entity_type=entity_type)
         node.setPos(scene_pos)
         self._scene.addItem(node)
         node_data = {
             "id": node.id,
             "title": node.title,
             "content": node.content,
+            "entity_type": node.entity_type,
             "x": scene_pos.x(),
             "y": scene_pos.y(),
         }
@@ -501,6 +548,7 @@ class GraphWidget(QGraphicsView):
                         "id": item.id,
                         "title": item.title,
                         "content": item.content,
+                        "entity_type": item.entity_type,
                         "x": item.pos().x(),
                         "y": item.pos().y(),
                     }
@@ -525,6 +573,7 @@ class GraphWidget(QGraphicsView):
             node = NodeItem(
                 title=n.get("title", "Node"),
                 content=n.get("content", ""),
+                entity_type=n.get("entity_type", "Custom"),
                 node_id=nid,
             )
             node.setPos(n.get("x", 0), n.get("y", 0))
@@ -535,6 +584,7 @@ class GraphWidget(QGraphicsView):
                     "id": node.id,
                     "title": node.title,
                     "content": node.content,
+                    "entity_type": node.entity_type,
                     "x": node.pos().x(),
                     "y": node.pos().y(),
                 }

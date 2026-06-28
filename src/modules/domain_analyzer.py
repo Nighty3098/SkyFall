@@ -439,7 +439,9 @@ class DomainAnalyzer:
             scraper = cloudscraper.create_scraper()
             url = f"https://crt.sh/?q={domain}&output=json"
             response = await asyncio.to_thread(
-                scraper.get, url, timeout=30,
+                scraper.get,
+                url,
+                timeout=30,
                 headers={"User-Agent": self.ua.random},
             )
             if response.status_code != 200:
@@ -458,14 +460,16 @@ class DomainAnalyzer:
                     unique_domains.add(n.strip().lower())
                 issuer = entry.get("issuer_name", "")
                 unique_issuers.add(issuer)
-                certs.append({
-                    "id": entry.get("id"),
-                    "issuer": issuer,
-                    "common_name": entry.get("common_name", ""),
-                    "not_before": entry.get("not_before", ""),
-                    "not_after": entry.get("not_after", ""),
-                    "serial": entry.get("serial_number", ""),
-                })
+                certs.append(
+                    {
+                        "id": entry.get("id"),
+                        "issuer": issuer,
+                        "common_name": entry.get("common_name", ""),
+                        "not_before": entry.get("not_before", ""),
+                        "not_after": entry.get("not_after", ""),
+                        "serial": entry.get("serial_number", ""),
+                    }
+                )
 
             lines = [
                 "[Certificate Transparency]",

@@ -23,6 +23,8 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSp
     QSpacerItem, QSpinBox, QSplitter, QTabWidget,
     QVBoxLayout, QWidget)
 
+from src.libs.graph_lib import GraphWidget
+from src.libs.graph_panel import PropertiesPanel
 from src.ui.drop_widget import DropWidget
 
 class Ui_MainWindow(object):
@@ -830,31 +832,6 @@ class Ui_MainWindow(object):
         self.gridLayout_7.addWidget(self.stringsFileDebug, 1, 3, 4, 1)
 
         self.mainStackedWidget.addTab(self.metadataTab, "")
-        self.graphTab = QWidget()
-        self.graphTab.setObjectName(u"graphTab")
-        self.verticalLayout_13 = QVBoxLayout(self.graphTab)
-        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
-        self.gridLayout_6 = QGridLayout()
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
-        self.exportGraphButton = QPushButton(self.graphTab)
-        self.exportGraphButton.setObjectName(u"exportGraphButton")
-
-        self.gridLayout_6.addWidget(self.exportGraphButton, 1, 0, 1, 1)
-
-        self.importGraphButton = QPushButton(self.graphTab)
-        self.importGraphButton.setObjectName(u"importGraphButton")
-
-        self.gridLayout_6.addWidget(self.importGraphButton, 1, 1, 1, 1)
-
-        self.widget = QWidget(self.graphTab)
-        self.widget.setObjectName(u"widget")
-
-        self.gridLayout_6.addWidget(self.widget, 0, 0, 1, 1)
-
-
-        self.verticalLayout_13.addLayout(self.gridLayout_6)
-
-        self.mainStackedWidget.addTab(self.graphTab, "")
         self.githubTab = QWidget()
         self.githubTab.setObjectName(u"githubTab")
         self.githubHorizontalLayout = QHBoxLayout(self.githubTab)
@@ -1087,6 +1064,36 @@ class Ui_MainWindow(object):
         self.gridLayout_9.addWidget(self.macSplitter, 1, 0, 1, 3)
 
         self.mainStackedWidget.addTab(self.macAddrTab, "")
+        self.graphTab = QWidget()
+        self.graphTab.setObjectName(u"graphTab")
+        self.horizontalLayout_10 = QHBoxLayout(self.graphTab)
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.gridLayout_6 = QGridLayout()
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.exportGraphButton = QPushButton(self.graphTab)
+        self.exportGraphButton.setObjectName(u"exportGraphButton")
+
+        self.gridLayout_6.addWidget(self.exportGraphButton, 1, 0, 1, 1)
+
+        self.importGraphButton = QPushButton(self.graphTab)
+        self.importGraphButton.setObjectName(u"importGraphButton")
+
+        self.gridLayout_6.addWidget(self.importGraphButton, 1, 1, 1, 1)
+
+        self.graphWidget = GraphWidget(self.graphTab)
+        self.graphWidget.setObjectName(u"graphWidget")
+
+        self.gridLayout_6.addWidget(self.graphWidget, 0, 0, 1, 2)
+
+        self.nodeEditPanel = PropertiesPanel(self.graphTab)
+        self.nodeEditPanel.setObjectName(u"nodeEditPanel")
+
+        self.gridLayout_6.addWidget(self.nodeEditPanel, 0, 2, 2, 1)
+
+
+        self.horizontalLayout_10.addLayout(self.gridLayout_6)
+
+        self.mainStackedWidget.addTab(self.graphTab, "")
         self.settingsTab = QWidget()
         self.settingsTab.setObjectName(u"settingsTab")
         self.horizontalLayout = QHBoxLayout(self.settingsTab)
@@ -1212,7 +1219,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(10)
+        self.mainStackedWidget.setCurrentIndex(5)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -1320,9 +1327,6 @@ class Ui_MainWindow(object):
         self.virustotalFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"VIRUSTOTAL", None))
         self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE ANALYZE", None))
-        self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export from DB", None))
-        self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import to DB", None))
-        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
         self.githubUserEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Username", None))
         self.githubUserSearchBtn.setText(QCoreApplication.translate("MainWindow", u"User Info", None))
         self.githubRepoEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search Repositories", None))
@@ -1351,6 +1355,9 @@ class Ui_MainWindow(object):
         self.checkMacAddrButton.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.macAddrEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mac Addr", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.macAddrTab), QCoreApplication.translate("MainWindow", u"MAC ADDR", None))
+        self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
+        self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import From JSON", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))

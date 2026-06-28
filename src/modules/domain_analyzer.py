@@ -3,6 +3,7 @@ import socket
 import ssl
 from urllib.parse import urlparse
 
+import cloudscraper
 import dns.resolver
 import nmap
 import requests
@@ -12,7 +13,7 @@ from ddgs import DDGS
 from fake_useragent import UserAgent
 from loguru import logger
 
-from src.ui.output_formatter import info, kv, line
+from src.ui.output_formatter import error, info, kv, line
 
 
 class DomainAnalyzer:
@@ -431,6 +432,72 @@ class DomainAnalyzer:
         except Exception as e:
             logger.error(f"Cookies: Error: {e}")
             return str(e)
+
+    async def get_certificate_transparency(self, domain):
+        logger.debug("Trying to get Certificate Transparency logs")
+        try:
+            scraper = cloudscraper.create_scraper()
+            url = f"https://crt.sh/?q={domain}&output=json"
+            response = await asyncio.to_thread(
+                scraper.get, url, timeout=30,
+                headers={"User-Agent": self.ua.random},
+            )
+            if response.status_code != 200:
+                return error(f"crt.sh returned {response.status_code}")
+
+            data = response.json()
+            if not data:
+                return info("No certificates found")
+
+            unique_domains = set()
+            unique_issuers = set()
+            certs = []
+            for entry in data[:100]:
+                names = entry.get("name_value", "")
+                for n in names.split("\n"):
+                    unique_domains.add(n.strip().lower())
+                issuer = entry.get("issuer_name", "")
+                unique_issuers.add(issuer)
+                certs.append({
+                    "id": entry.get("id"),
+                    "issuer": issuer,
+                    "common_name": entry.get("common_name", ""),
+                    "not_before": entry.get("not_before", ""),
+                    "not_after": entry.get("not_after", ""),
+                    "serial": entry.get("serial_number", ""),
+                })
+
+            lines = [
+                "[Certificate Transparency]",
+                f"Total certs found: {min(len(data), 100)}",
+                f"Unique domains: {len(unique_domains)}",
+                f"Unique issuers (CAs): {len(unique_issuers)}",
+                "",
+                "--- Discovered domains ---",
+            ]
+            for d in sorted(unique_domains):
+                lines.append(f"- {d}")
+            lines.append("")
+            lines.append("--- Recent certificates (up to 100) ---")
+            for c in certs[:20]:
+                lines.append(
+                    f"#{c['id']} | {c['common_name']} | "
+                    f"{c['not_before']} → {c['not_after']}"
+                )
+                lines.append(f"  issuer: {c['issuer']}")
+                lines.append(f"  serial: {c['serial']}")
+                lines.append("")
+
+            return "\n".join(lines)
+
+        except requests.exceptions.Timeout:
+            return error("crt.sh request timed out (30s)")
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Certificate Transparency request error: {e}")
+            return error(f"Certificate Transparency request error: {e}")
+        except Exception as e:
+            logger.error(f"Certificate Transparency error: {e}")
+            return error(f"Certificate Transparency error: {e}")
 
     async def get_social_tags(self, domain):
         logger.debug("Trying to get social tags")

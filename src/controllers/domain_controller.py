@@ -15,7 +15,7 @@ if TYPE_CHECKING:
     from src.modules.domain_analyzer import DomainAnalyzer
 
 
-STEPS = 12
+STEPS = 13
 
 
 def _val(v):
@@ -167,3 +167,10 @@ class DomainController:
                 await self.domain_analyzer.get_social_tags(self.domain)
             )
         self._update_progress(12)
+
+        if self.ui.certTrCheck.isChecked():
+            self.ui.certTrDebug.setPlainText(info("Loading..."))
+            self.ui.certTrDebug.setPlainText(
+                await self.domain_analyzer.get_certificate_transparency(self.domain)
+            )
+        self._update_progress(13)

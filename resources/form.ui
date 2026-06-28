@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1023</width>
-    <height>839</height>
+    <width>1516</width>
+    <height>792</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>10</number>
+         <number>5</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -853,25 +853,82 @@
           <string>WEB</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
-          <item row="5" column="1">
-           <widget class="QCheckBox" name="domainSSLCheck">
+          <item row="6" column="3">
+           <widget class="QPlainTextEdit" name="serverLocationDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="1">
+           <widget class="QCheckBox" name="domainSubdomainsCheck">
             <property name="text">
-             <string>SSL / TLS</string>
+             <string>Subdomains Dorking</string>
             </property>
             <property name="checked">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="4" column="3">
-           <widget class="QPlainTextEdit" name="serverNmapDebug">
+          <item row="8" column="2">
+           <widget class="QPlainTextEdit" name="serverRobotsDebug">
             <property name="placeholderText">
-             <string>OPEN PORTS</string>
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="1">
+           <widget class="QPlainTextEdit" name="serverTlsDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="1">
+           <widget class="QPlainTextEdit" name="serverWafDebug">
+            <property name="placeholderText">
+             <string/>
             </property>
            </widget>
           </item>
           <item row="10" column="2">
            <widget class="QPlainTextEdit" name="cookiesDebug"/>
+          </item>
+          <item row="5" column="3">
+           <widget class="QCheckBox" name="domainLocationCheck">
+            <property name="text">
+             <string>Server Location</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="1">
+           <widget class="QPlainTextEdit" name="securityTxtDebug"/>
+          </item>
+          <item row="3" column="2">
+           <widget class="QCheckBox" name="domainDNSCheck">
+            <property name="text">
+             <string>DNS</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="1">
+           <widget class="QPlainTextEdit" name="serverSubdomainsDebug">
+            <property name="documentTitle">
+             <string/>
+            </property>
+            <property name="plainText">
+             <string/>
+            </property>
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
           </item>
           <item row="7" column="1">
            <widget class="QCheckBox" name="domainHeadersCheck">
@@ -893,23 +950,6 @@
             </property>
            </widget>
           </item>
-          <item row="11" column="1" colspan="3">
-           <widget class="QProgressBar" name="domainProgress">
-            <property name="value">
-             <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="3">
-           <widget class="QCheckBox" name="socialTagsCheck">
-            <property name="text">
-             <string>Social Tags</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
           <item row="10" column="3">
            <widget class="QPlainTextEdit" name="socialTagsDebug"/>
           </item>
@@ -923,20 +963,10 @@
             </property>
            </widget>
           </item>
-          <item row="7" column="2">
-           <widget class="QCheckBox" name="domainRobotsCheck">
-            <property name="text">
-             <string>Robots</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QPlainTextEdit" name="serverTlsDebug">
+          <item row="4" column="3">
+           <widget class="QPlainTextEdit" name="serverNmapDebug">
             <property name="placeholderText">
-             <string>TLS</string>
+             <string/>
             </property>
            </widget>
           </item>
@@ -950,30 +980,6 @@
             </property>
            </widget>
           </item>
-          <item row="4" column="2">
-           <widget class="QPlainTextEdit" name="serverDnsAnalyzeDebug">
-            <property name="placeholderText">
-             <string>DNS</string>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="3">
-           <widget class="QCheckBox" name="domainLocationCheck">
-            <property name="text">
-             <string>Server Location</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="2">
-           <widget class="QPlainTextEdit" name="serverWhoisDebug">
-            <property name="placeholderText">
-             <string>WHOIS</string>
-            </property>
-           </widget>
-          </item>
           <item row="9" column="1">
            <widget class="QCheckBox" name="securityTxtCheck">
             <property name="text">
@@ -984,10 +990,41 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="1">
-           <widget class="QCheckBox" name="domainSubdomainsCheck">
+          <item row="5" column="1">
+           <widget class="QCheckBox" name="domainSSLCheck">
             <property name="text">
-             <string>Subdomains Dorking</string>
+             <string>SSL / TLS</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="2">
+           <widget class="QPlainTextEdit" name="serverDnsAnalyzeDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="2">
+           <widget class="QPlainTextEdit" name="serverWhoisDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="3">
+           <widget class="QPlainTextEdit" name="serverMalwareDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="3">
+           <widget class="QCheckBox" name="socialTagsCheck">
+            <property name="text">
+             <string>Social Tags</string>
             </property>
             <property name="checked">
              <bool>true</bool>
@@ -1004,61 +1041,27 @@
             </property>
            </widget>
           </item>
-          <item row="6" column="3">
-           <widget class="QPlainTextEdit" name="serverLocationDebug">
-            <property name="placeholderText">
-             <string>SERVER LOCATION</string>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="2">
-           <widget class="QCheckBox" name="domainDNSCheck">
+          <item row="7" column="2">
+           <widget class="QCheckBox" name="domainRobotsCheck">
             <property name="text">
-             <string>DNS</string>
+             <string>Robots</string>
             </property>
             <property name="checked">
              <bool>true</bool>
             </property>
            </widget>
           </item>
-          <item row="8" column="2">
-           <widget class="QPlainTextEdit" name="serverRobotsDebug">
-            <property name="placeholderText">
-             <string>ROBOTS</string>
+          <item row="3" column="4">
+           <widget class="QCheckBox" name="certTrCheck">
+            <property name="text">
+             <string>Certificate Transparency </string>
             </property>
            </widget>
           </item>
-          <item row="8" column="3">
-           <widget class="QPlainTextEdit" name="serverMalwareDebug">
-            <property name="placeholderText">
-             <string>MALWARE</string>
-            </property>
-           </widget>
+          <item row="4" column="4">
+           <widget class="QPlainTextEdit" name="certTrDebug"/>
           </item>
-          <item row="10" column="1">
-           <widget class="QPlainTextEdit" name="securityTxtDebug"/>
-          </item>
-          <item row="8" column="1">
-           <widget class="QPlainTextEdit" name="serverWafDebug">
-            <property name="placeholderText">
-             <string>HEADERS</string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QPlainTextEdit" name="serverSubdomainsDebug">
-            <property name="documentTitle">
-             <string/>
-            </property>
-            <property name="plainText">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string>SUBDOMAIN DORKING</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1" colspan="3">
+          <item row="0" column="1" colspan="4">
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <property name="topMargin">
              <number>0</number>
@@ -1084,6 +1087,13 @@
              </widget>
             </item>
            </layout>
+          </item>
+          <item row="11" column="1" colspan="4">
+           <widget class="QProgressBar" name="domainProgress">
+            <property name="value">
+             <number>0</number>
+            </property>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1562,9 +1572,9 @@
             <item row="0" column="0" colspan="2">
              <widget class="GraphWidget" name="graphWidget"/>
             </item>
-             <item row="0" column="2" rowspan="2">
-              <widget class="PropertiesPanel" name="nodeEditPanel" native="true"/>
-             </item>
+            <item row="0" column="2" rowspan="2">
+             <widget class="PropertiesPanel" name="nodeEditPanel" native="true"/>
+            </item>
            </layout>
           </item>
          </layout>
@@ -1779,17 +1789,17 @@
    <header location="global">src/ui/drop_widget</header>
    <container>1</container>
   </customwidget>
-   <customwidget>
-    <class>GraphWidget</class>
-    <extends>QGraphicsView</extends>
-    <header location="global">src.libs.graph_lib</header>
-   </customwidget>
-   <customwidget>
-    <class>PropertiesPanel</class>
-    <extends>QWidget</extends>
-    <header location="global">src.libs.graph_panel</header>
-   </customwidget>
-  </customwidgets>
+  <customwidget>
+   <class>GraphWidget</class>
+   <extends>QGraphicsView</extends>
+   <header location="global">src.libs.graph_lib</header>
+  </customwidget>
+  <customwidget>
+   <class>PropertiesPanel</class>
+   <extends>QWidget</extends>
+   <header location="global">src.libs.graph_panel</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

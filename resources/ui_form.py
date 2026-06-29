@@ -37,7 +37,56 @@ class Ui_MainWindow(object):
         self.verticalLayout_22 = QVBoxLayout(self.centralwidget)
         self.verticalLayout_22.setSpacing(0)
         self.verticalLayout_22.setObjectName(u"verticalLayout_22")
-        self.verticalLayout_22.setContentsMargins(6, 6, 6, 6)
+        self.verticalLayout_22.setContentsMargins(6, 0, 6, 6)
+        self.titleBar = QWidget(self.centralwidget)
+        self.titleBar.setObjectName(u"titleBar")
+        self.titleBar.setMinimumSize(QSize(0, 38))
+        self.titleBar.setMaximumSize(QSize(16777215, 38))
+        self.titleBarLayout = QHBoxLayout(self.titleBar)
+        self.titleBarLayout.setSpacing(6)
+        self.titleBarLayout.setObjectName(u"titleBarLayout")
+        self.titleBarLayout.setContentsMargins(5, 0, 10, 0)
+        self.trafficLights = QWidget(self.titleBar)
+        self.trafficLights.setObjectName(u"trafficLights")
+        self.trafficLights.setMinimumSize(QSize(72, 0))
+        self.trafficLights.setMaximumSize(QSize(72, 16777215))
+        self.trafficLightsLayout = QHBoxLayout(self.trafficLights)
+        self.trafficLightsLayout.setSpacing(6)
+        self.trafficLightsLayout.setObjectName(u"trafficLightsLayout")
+        self.trafficLightsLayout.setContentsMargins(0, 0, 0, 0)
+        self.windowCloseBtn = QPushButton(self.trafficLights)
+        self.windowCloseBtn.setObjectName(u"windowCloseBtn")
+        self.windowCloseBtn.setMinimumSize(QSize(14, 14))
+        self.windowCloseBtn.setMaximumSize(QSize(14, 14))
+
+        self.trafficLightsLayout.addWidget(self.windowCloseBtn)
+
+        self.windowMinimizeBtn = QPushButton(self.trafficLights)
+        self.windowMinimizeBtn.setObjectName(u"windowMinimizeBtn")
+        self.windowMinimizeBtn.setMinimumSize(QSize(14, 14))
+        self.windowMinimizeBtn.setMaximumSize(QSize(14, 14))
+
+        self.trafficLightsLayout.addWidget(self.windowMinimizeBtn)
+
+        self.windowMaximizeBtn = QPushButton(self.trafficLights)
+        self.windowMaximizeBtn.setObjectName(u"windowMaximizeBtn")
+        self.windowMaximizeBtn.setMinimumSize(QSize(14, 14))
+        self.windowMaximizeBtn.setMaximumSize(QSize(14, 14))
+
+        self.trafficLightsLayout.addWidget(self.windowMaximizeBtn)
+
+
+        self.titleBarLayout.addWidget(self.trafficLights)
+
+        self.windowTitleLabel = QLabel(self.titleBar)
+        self.windowTitleLabel.setObjectName(u"windowTitleLabel")
+        self.windowTitleLabel.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.titleBarLayout.addWidget(self.windowTitleLabel)
+
+
+        self.verticalLayout_22.addWidget(self.titleBar)
+
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
@@ -1268,7 +1317,7 @@ class Ui_MainWindow(object):
 
         self.nodeEditPanel = PropertiesPanel(self.graphTab)
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
-        self.nodeEditPanel.setMinimumSize(QSize(500, 0))
+        self.nodeEditPanel.setMinimumSize(QSize(400, 0))
         self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
         self.nodeEditLayout.setObjectName(u"nodeEditLayout")
         self.nodeEditLayout.setContentsMargins(0, 0, 0, 0)
@@ -1468,7 +1517,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(11)
+        self.mainStackedWidget.setCurrentIndex(7)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -1477,6 +1526,10 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.windowCloseBtn.setText("")
+        self.windowMinimizeBtn.setText("")
+        self.windowMaximizeBtn.setText("")
+        self.windowTitleLabel.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
         self.appIconLabel.setStyleSheet(QCoreApplication.translate("MainWindow", u"color: #82aaff;", None))
         self.winTitle.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))

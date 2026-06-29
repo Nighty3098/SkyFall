@@ -26,6 +26,11 @@ DEFAULT_SETTINGS = {
     "github_token": "",
     "numverify_api_key": "",
     "abstractapi_api_key": "",
+    "trongrid_api_key": "",
+    "etherscan_api_key": "",
+    "bscscan_api_key": "",
+    "tonapi_api_key": "",
+    "helius_api_key": "",
     "light_theme": False,
 }
 
@@ -41,6 +46,11 @@ FIELD_MAP = {
     "github_token": "githubTokenEdit",
     "numverify_api_key": "numverifyApiKeyEdit",
     "abstractapi_api_key": "abstractapiApiKeyEdit",
+    "trongrid_api_key": "trongridApiKeyEdit",
+    "etherscan_api_key": "etherscanApiKeyEdit",
+    "bscscan_api_key": "bscscanApiKeyEdit",
+    "tonapi_api_key": "tonapiApiKeyEdit",
+    "helius_api_key": "heliusApiKeyEdit",
 }
 
 
@@ -60,6 +70,11 @@ class Settings:
         self.github_token = ""
         self.numverify_api_key = ""
         self.abstractapi_api_key = ""
+        self.trongrid_api_key = ""
+        self.etherscan_api_key = ""
+        self.bscscan_api_key = ""
+        self.tonapi_api_key = ""
+        self.helius_api_key = ""
         self.light_theme = False
 
         self._load()

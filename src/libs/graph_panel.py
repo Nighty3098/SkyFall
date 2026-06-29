@@ -1,15 +1,25 @@
 import os
 
-from PySide6.QtCore import Qt, QUrl
-from PySide6.QtGui import QAction, QDesktopServices
+from PySide6.QtCore import QMimeData, Qt, QUrl
+from PySide6.QtGui import (
+    QAction,
+    QColor,
+    QDesktopServices,
+    QDrag,
+    QFont,
+    QPainter,
+    QPixmap,
+)
 from PySide6.QtWidgets import (
     QApplication,
     QComboBox,
     QDialog,
     QFileDialog,
     QHBoxLayout,
+    QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QMenu,
     QPlainTextEdit,
     QPushButton,
@@ -17,54 +27,80 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.libs.graph_lib import ENTITY_NAMES
+from src.libs.graph_lib import ENTITY_COLORS, ENTITY_NAMES, ENTITY_SYMBOLS
+
+
+class EntityPalette(QListWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setDragEnabled(True)
+        self.setMinimumWidth(160)
+        self.setMaximumWidth(200)
+        self.setSpacing(1)
+
+        for etype in ENTITY_NAMES:
+            sym = ENTITY_SYMBOLS.get(etype, "")
+            item = QListWidgetItem(f"  {sym}  {etype}")
+            item.setData(Qt.ItemDataRole.UserRole, etype)
+            self.addItem(item)
+
+    def set_filter(self, text: str):
+        text = text.lower().strip()
+        for i in range(self.count()):
+            item = self.item(i)
+            etype = item.data(Qt.ItemDataRole.UserRole)
+            item.setHidden(bool(text) and text not in etype.lower())
+
+    def startDrag(self, supportedActions):
+        item = self.currentItem()
+        if not item:
+            return
+        etype = item.data(Qt.ItemDataRole.UserRole)
+        mime = QMimeData()
+        mime.setText(etype)
+        drag = QDrag(self)
+        drag.setMimeData(mime)
+        ss = QApplication.instance().styleSheet()
+        dark = "#0A0A0A" in ss
+        bg = "#161616" if dark else "#E8E8E8"
+        text = "#C1C1C1" if dark else "#3A3A3A"
+        pix = QPixmap(120, 28)
+        pix.fill(QColor(bg))
+        painter = QPainter(pix)
+        painter.setPen(QColor(text))
+        painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        painter.drawText(pix.rect(), Qt.AlignmentFlag.AlignCenter, etype)
+        painter.end()
+        drag.setPixmap(pix)
+        drag.setHotSpot(pix.rect().center())
+        drag.exec(Qt.DropAction.CopyAction)
 
 
 class PropertiesPanel(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumWidth(250)
-
         self._node = None
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(2, 2, 2, 2)
 
-        self.title_edit = QLineEdit()
-        self.title_edit.setPlaceholderText("Title")
-        self.title_edit.textChanged.connect(self._on_title_changed)
-        layout.addWidget(self.title_edit)
+    def _find_children(self):
+        self.title_edit = self.findChild(QLineEdit, "nodeTitleEdit")
+        self.type_combo = self.findChild(QComboBox, "nodeTypeCombo")
+        self.content_edit = self.findChild(QPlainTextEdit, "nodeContentEdit")
+        self.evidence_list = self.findChild(QListWidget, "nodeEvidenceList")
+        btn_add_file = self.findChild(QPushButton, "nodeEvidenceAddFileBtn")
+        btn_add_url = self.findChild(QPushButton, "nodeEvidenceAddUrlBtn")
+        btn_remove = self.findChild(QPushButton, "nodeEvidenceRemoveBtn")
 
-        self.type_combo = QComboBox()
         self.type_combo.addItems(ENTITY_NAMES)
-        self.type_combo.currentTextChanged.connect(self._on_type_changed)
-        layout.addWidget(self.type_combo)
-
-        self.content_edit = QPlainTextEdit()
-        self.content_edit.setPlaceholderText("Content")
-        self.content_edit.textChanged.connect(self._on_content_changed)
-        layout.addWidget(self.content_edit)
-
-        self.evidence_list = QListWidget()
         self.evidence_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.evidence_list.customContextMenuRequested.connect(
-            self._evidence_context_menu
-        )
+        self.evidence_list.customContextMenuRequested.connect(self._evidence_context_menu)
         self.evidence_list.itemDoubleClicked.connect(self._open_evidence)
-        layout.addWidget(self.evidence_list)
 
-        ev_btn_layout = QHBoxLayout()
-        btn_add_file = QPushButton("Add File")
+        self.title_edit.textChanged.connect(self._on_title_changed)
+        self.type_combo.currentTextChanged.connect(self._on_type_changed)
+        self.content_edit.textChanged.connect(self._on_content_changed)
         btn_add_file.clicked.connect(self._add_file)
-        btn_add_url = QPushButton("Add URL")
         btn_add_url.clicked.connect(self._add_url)
-        btn_remove = QPushButton("Remove")
         btn_remove.clicked.connect(self._remove_evidence)
-        ev_btn_layout.addWidget(btn_add_file)
-        ev_btn_layout.addWidget(btn_add_url)
-        ev_btn_layout.addWidget(btn_remove)
-        layout.addLayout(ev_btn_layout)
-
-        layout.addStretch()
 
     def show_node(self, node):
         if node is None:

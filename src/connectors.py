@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QFileDialog
 
 from src.context_menus import open_dorks_list_menu
 from src.controllers.username_search_controller import UsernameController
+from src.libs.graph_lib import ENTITY_NAMES, NodeItem
 from src.modules.metadata_cleaner import remove_metadata
 from src.utils import filter_list, find_text
 
@@ -217,5 +218,39 @@ def setup_graph_connectors(ui):
         if path:
             ui.graphWidget.load_from_json(path)
 
+    def clear_graph():
+        ui.graphWidget._scene.clear()
+
+    def on_search_text_changed(text):
+        ui.graphWidget.set_filter(text)
+
+    def on_filter_combo_changed(text):
+        if text == "All Types":
+            for item in ui.graphWidget._scene.items():
+                if isinstance(item, NodeItem):
+                    item.setVisible(True)
+            ui.graphWidget._scene.update()
+            ui.graphSearchEdit.setText("")
+            return
+        for item in ui.graphWidget._scene.items():
+            if isinstance(item, NodeItem):
+                match = item.entity_type == text
+                item.setVisible(match)
+        ui.graphWidget._scene.update()
+
+    def on_clear_filter():
+        ui.graphSearchEdit.setText("")
+        ui.graphFilterCombo.setCurrentIndex(0)
+
     ui.exportGraphButton.clicked.connect(export_graph)
     ui.importGraphButton.clicked.connect(import_graph)
+    ui.graphClearButton.clicked.connect(clear_graph)
+    ui.graphSearchEdit.textChanged.connect(on_search_text_changed)
+    ui.graphClearFilterButton.clicked.connect(on_clear_filter)
+    ui.graphFilterCombo.currentTextChanged.connect(on_filter_combo_changed)
+
+    ui.graphFilterCombo.addItem("All Types")
+    for etype in ENTITY_NAMES:
+        ui.graphFilterCombo.addItem(etype)
+
+    ui.entitySearchEdit.textChanged.connect(ui.entityPalette.set_filter)

@@ -19,6 +19,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QCheckBox,
     QComboBox,
     QDialog,
     QDockWidget,
@@ -33,30 +34,33 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QListWidgetItem,
     QMenu,
     QPlainTextEdit,
     QPushButton,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
 
 ENTITY_TYPES = [
-    ("Person", "#4ecdc4"),
-    ("Domain", "#45b7d1"),
-    ("IP", "#f9ca24"),
-    ("Email", "#6c5ce7"),
-    ("Phone", "#fd79a8"),
-    ("Username", "#00b894"),
-    ("Crypto", "#f39c12"),
-    ("Organization", "#e17055"),
-    ("Passport", "#e84393"),
-    ("Photo", "#a29bfe"),
-    ("Geolocation", "#55efc4"),
-    ("Custom", "#636e72"),
+    ("Person", "#4ecdc4", "\U0001f464"),
+    ("Domain", "#45b7d1", "\U0001f310"),
+    ("IP", "#f9ca24", "\U0001f4e1"),
+    ("Email", "#6c5ce7", "\u2709\ufe0f"),
+    ("Phone", "#fd79a8", "\U0001f4f1"),
+    ("Username", "#00b894", "@"),
+    ("Crypto", "#f39c12", "\u20bf"),
+    ("Organization", "#e17055", "\U0001f3e2"),
+    ("Passport", "#e84393", "\U0001f4c4"),
+    ("Photo", "#a29bfe", "\U0001f5bc\ufe0f"),
+    ("Geolocation", "#55efc4", "\U0001f4cd"),
+    ("Custom", "#636e72", "\u2699\ufe0f"),
 ]
 
 ENTITY_NAMES = [e[0] for e in ENTITY_TYPES]
 ENTITY_COLORS = {e[0]: e[1] for e in ENTITY_TYPES}
+ENTITY_SYMBOLS = {e[0]: e[2] for e in ENTITY_TYPES}
 
 PORT_DIR = {
     "left": (-1, 0),
@@ -102,110 +106,86 @@ class NodeItem(QGraphicsItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
+    def symbol(self):
+        return ENTITY_SYMBOLS.get(self.entity_type, "\u2699\ufe0f")
+
     def _get_height(self):
-        if self.entity_type == "Evidence":
-            return 130 + max(0, len(self.evidence) - 1) * 18
-        return 100
+        return 120
 
     def boundingRect(self):
-        m = self._port_radius + 2
+        m = self._port_radius + 4
         return QRectF(-m, -m, self._width + 2 * m, self._get_height() + 2 * m)
 
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
         c = _theme_colors()
-
         rect = QRectF(0, 0, self._width, self._get_height()).adjusted(1, 1, -1, -1)
+        type_color = QColor(ENTITY_COLORS.get(self.entity_type, "#636e72"))
+
+        glow_color = QColor(type_color)
+        glow_color.setAlpha(40)
+        painter.setBrush(QBrush(glow_color))
+        painter.setPen(Qt.PenStyle.NoPen)
+        if self.isSelected():
+            glow_rect = rect.adjusted(-3, -3, 3, 3)
+            painter.drawRoundedRect(glow_rect, 12, 12)
+        painter.setBrush(QBrush(glow_color))
+        if self.isSelected():
+            glow_rect2 = rect.adjusted(-1, -1, 1, 1)
+            painter.drawRoundedRect(glow_rect2, 11, 11)
+
         painter.setBrush(QBrush(c["card_bg"]))
-        border_width = 3 if self.isSelected() else 1.5
-        painter.setPen(
-            QPen(
-                c["card_border"] if not self.isSelected() else c["port_color"],
-                border_width,
-            )
-        )
+        painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(rect, 10, 10)
 
-        type_color = QColor(ENTITY_COLORS.get(self.entity_type, "#636e72"))
-        badge_rect = QRectF(10, 6, self._width - 20, 16)
-        painter.setBrush(QBrush(type_color))
-        painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawRoundedRect(badge_rect, 4, 4)
-        painter.setPen(QColor("#ffffff"))
-        font_badge = QFont("Segoe UI", 7, QFont.Weight.Bold)
-        painter.setFont(font_badge)
-        painter.drawText(
-            badge_rect,
-            Qt.AlignmentFlag.AlignCenter,
-            self.entity_type.upper(),
-        )
+        border_color = c["port_color"] if self.isSelected() else c["card_border"]
+        border_width = 2 if self.isSelected() else 1
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(border_color, border_width))
+        painter.drawRoundedRect(rect, 10, 10)
 
+        title_y = 10
         painter.setPen(c["card_title"])
         font_title = QFont("Segoe UI", 10, QFont.Weight.Bold)
         painter.setFont(font_title)
-        title_rect = QRectF(10, 26, self._width - 20, 20)
+        title_rect = QRectF(10, title_y, self._width - 20, 20)
         painter.drawText(
             title_rect,
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
             self.title,
         )
 
-        y_offset = 48
+        y_offset = title_y + 22
+        content_area = self._get_height() - y_offset - 6
 
-        if self.entity_type == "Evidence" and self.evidence:
+        if self.content:
             painter.setPen(c["card_content"])
-            font_item = QFont("Segoe UI", 8)
-            painter.setFont(font_item)
-            for i, ev_path in enumerate(self.evidence):
-                label = (
-                    os.path.basename(ev_path) if os.path.exists(ev_path) else ev_path
-                )
-                if len(label) > 22:
-                    label = label[:19] + "..."
-                item_rect = QRectF(12, y_offset, self._width - 24, 16)
-                painter.drawText(
-                    item_rect,
-                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-                    f"• {label}",
-                )
-                y_offset += 18
-        elif self.content:
-            painter.setPen(c["card_content"])
-            font_content = QFont("Segoe UI", 8)
+            font_content = QFont("Segoe UI", 9)
             painter.setFont(font_content)
-            ch = self._get_height() - y_offset - 8
-            content_rect = QRectF(10, y_offset, self._width - 20, ch)
+            content_rect = QRectF(10, y_offset, self._width - 20, content_area)
             opt = QTextOption()
             opt.setWrapMode(QTextOption.WrapMode.WordWrap)
             painter.drawText(content_rect, self.content, opt)
         elif self.evidence:
             painter.setPen(c["card_content"])
-            font_content = QFont("Segoe UI", 8)
+            font_content = QFont("Segoe UI", 7)
             painter.setFont(font_content)
-            first = self.evidence[0]
-            label = os.path.basename(first) if os.path.exists(first) else first
-            if len(label) > 24:
-                label = label[:21] + "..."
-            content_rect = QRectF(
-                10, y_offset, self._width - 20, self._get_height() - y_offset - 8
-            )
-            painter.drawText(
-                content_rect,
-                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignTop,
-                f"📎 {label}",
-            )
-
-        if self.evidence:
-            emoji = "📎"
-            clip_rect = QRectF(self._width - 26, 7, 18, 16)
-            painter.setPen(QColor("#ffffff"))
-            font_clip = QFont("Segoe UI", 9)
-            painter.setFont(font_clip)
-            painter.drawText(
-                clip_rect,
-                Qt.AlignmentFlag.AlignCenter,
-                emoji,
-            )
+            max_items = min(len(self.evidence), 3)
+            for i in range(max_items):
+                ev_path = self.evidence[i]
+                label = (
+                    os.path.basename(ev_path) if os.path.exists(ev_path) else ev_path
+                )
+                if len(label) > 20:
+                    label = label[:17] + "..."
+                ev_rect = QRectF(12, y_offset, self._width - 24, 14)
+                painter.drawText(
+                    ev_rect,
+                    Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                    f"\u2022 {label}",
+                )
+                y_offset += 16
 
         painter.setPen(Qt.PenStyle.NoPen)
         for _, pos in self._ports().items():
@@ -872,9 +852,49 @@ class GraphWidget(QGraphicsView):
 
         self._panning = False
         self._pan_start = QPointF()
+        self._filter_text = ""
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
+
+        self._accept_drops = True
+        self.setAcceptDrops(True)
+
+    def dragEnterEvent(self, event):
+        if event.mimeData().hasText() and event.mimeData().text() in ENTITY_NAMES:
+            event.acceptProposedAction()
+        else:
+            super().dragEnterEvent(event)
+
+    def dragMoveEvent(self, event):
+        if event.mimeData().hasText() and event.mimeData().text() in ENTITY_NAMES:
+            event.acceptProposedAction()
+        else:
+            super().dragMoveEvent(event)
+
+    def dropEvent(self, event):
+        etype = event.mimeData().text()
+        if etype in ENTITY_NAMES:
+            scene_pos = self.mapToScene(event.position().toPoint())
+            node = self.add_node(scene_pos, etype)
+            node.title = f"New {etype}"
+            node.update()
+            event.acceptProposedAction()
+        else:
+            super().dropEvent(event)
+
+    def set_filter(self, text: str):
+        self._filter_text = text.lower().strip()
+        for item in self._scene.items():
+            if isinstance(item, NodeItem):
+                match = (
+                    not self._filter_text
+                    or self._filter_text in item.title.lower()
+                    or self._filter_text in item.entity_type.lower()
+                    or self._filter_text in item.content.lower()
+                )
+                item.setVisible(match)
+        self._scene.update()
 
     def _on_selection_changed(self):
         selected = self._scene.selectedItems()
@@ -904,13 +924,15 @@ class GraphWidget(QGraphicsView):
             attach_action.triggered.connect(lambda: self.edit_node(item))
             menu.addAction(attach_action)
             menu.addSeparator()
+
             delete_action = QAction("Delete Node", self)
             delete_action.triggered.connect(lambda: self.remove_node(item))
             menu.addAction(delete_action)
         else:
             add_menu = QMenu("Add", self)
             for etype in ENTITY_NAMES:
-                act = QAction(etype, self)
+                sym = ENTITY_SYMBOLS.get(etype, "")
+                act = QAction(f"{sym} {etype}", self)
                 act.triggered.connect(
                     lambda checked, t=etype: self.add_node(scene_pos, t)
                 )

@@ -16,22 +16,22 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWebEngineWidgets import QWebEngineView
-from PySide6.QtWidgets import (QApplication, QCheckBox, QDateTimeEdit, QDoubleSpinBox,
-    QGridLayout, QGroupBox, QHBoxLayout, QLabel,
-    QLineEdit, QListWidget, QListWidgetItem, QMainWindow,
-    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy,
-    QSpacerItem, QSpinBox, QSplitter, QTabWidget,
-    QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
+    QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
+    QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QMainWindow, QPlainTextEdit, QProgressBar, QPushButton,
+    QSizePolicy, QSpacerItem, QSpinBox, QSplitter,
+    QTabWidget, QVBoxLayout, QWidget)
 
 from src.libs.graph_lib import GraphWidget
-from src.libs.graph_panel import PropertiesPanel
+from src.libs.graph_panel import (EntityPalette, PropertiesPanel)
 from src.ui.drop_widget import DropWidget
 
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1023, 839)
+        MainWindow.resize(1516, 792)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_22 = QVBoxLayout(self.centralwidget)
@@ -599,21 +599,58 @@ class Ui_MainWindow(object):
         self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
         self.gridLayout_2 = QGridLayout(self.webAnalyzerTab)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.domainSSLCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainSSLCheck.setObjectName(u"domainSSLCheck")
-        self.domainSSLCheck.setChecked(True)
+        self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverLocationDebug.setObjectName(u"serverLocationDebug")
 
-        self.gridLayout_2.addWidget(self.domainSSLCheck, 5, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.serverLocationDebug, 6, 3, 1, 1)
 
-        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
+        self.domainSubdomainsCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainSubdomainsCheck.setObjectName(u"domainSubdomainsCheck")
+        self.domainSubdomainsCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.serverNmapDebug, 4, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.domainSubdomainsCheck, 3, 1, 1, 1)
+
+        self.serverRobotsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverRobotsDebug.setObjectName(u"serverRobotsDebug")
+
+        self.gridLayout_2.addWidget(self.serverRobotsDebug, 8, 2, 1, 1)
+
+        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
+
+        self.gridLayout_2.addWidget(self.serverTlsDebug, 6, 1, 1, 1)
+
+        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWafDebug.setObjectName(u"serverWafDebug")
+
+        self.gridLayout_2.addWidget(self.serverWafDebug, 8, 1, 1, 1)
 
         self.cookiesDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.cookiesDebug.setObjectName(u"cookiesDebug")
 
         self.gridLayout_2.addWidget(self.cookiesDebug, 10, 2, 1, 1)
+
+        self.domainLocationCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainLocationCheck.setObjectName(u"domainLocationCheck")
+        self.domainLocationCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainLocationCheck, 5, 3, 1, 1)
+
+        self.securityTxtDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.securityTxtDebug.setObjectName(u"securityTxtDebug")
+
+        self.gridLayout_2.addWidget(self.securityTxtDebug, 10, 1, 1, 1)
+
+        self.domainDNSCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainDNSCheck.setObjectName(u"domainDNSCheck")
+        self.domainDNSCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainDNSCheck, 3, 2, 1, 1)
+
+        self.serverSubdomainsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverSubdomainsDebug.setObjectName(u"serverSubdomainsDebug")
+
+        self.gridLayout_2.addWidget(self.serverSubdomainsDebug, 4, 1, 1, 1)
 
         self.domainHeadersCheck = QCheckBox(self.webAnalyzerTab)
         self.domainHeadersCheck.setObjectName(u"domainHeadersCheck")
@@ -627,18 +664,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainNmapCheck, 3, 3, 1, 1)
 
-        self.domainProgress = QProgressBar(self.webAnalyzerTab)
-        self.domainProgress.setObjectName(u"domainProgress")
-        self.domainProgress.setValue(0)
-
-        self.gridLayout_2.addWidget(self.domainProgress, 11, 1, 1, 3)
-
-        self.socialTagsCheck = QCheckBox(self.webAnalyzerTab)
-        self.socialTagsCheck.setObjectName(u"socialTagsCheck")
-        self.socialTagsCheck.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.socialTagsCheck, 9, 3, 1, 1)
-
         self.socialTagsDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.socialTagsDebug.setObjectName(u"socialTagsDebug")
 
@@ -650,16 +675,10 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainMalwareCheck, 7, 3, 1, 1)
 
-        self.domainRobotsCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainRobotsCheck.setObjectName(u"domainRobotsCheck")
-        self.domainRobotsCheck.setChecked(True)
+        self.serverNmapDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverNmapDebug.setObjectName(u"serverNmapDebug")
 
-        self.gridLayout_2.addWidget(self.domainRobotsCheck, 7, 2, 1, 1)
-
-        self.serverTlsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverTlsDebug.setObjectName(u"serverTlsDebug")
-
-        self.gridLayout_2.addWidget(self.serverTlsDebug, 6, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.serverNmapDebug, 4, 3, 1, 1)
 
         self.domainWhoisCheck = QCheckBox(self.webAnalyzerTab)
         self.domainWhoisCheck.setObjectName(u"domainWhoisCheck")
@@ -667,33 +686,38 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainWhoisCheck, 5, 2, 1, 1)
 
-        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
-
-        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 4, 2, 1, 1)
-
-        self.domainLocationCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainLocationCheck.setObjectName(u"domainLocationCheck")
-        self.domainLocationCheck.setChecked(True)
-
-        self.gridLayout_2.addWidget(self.domainLocationCheck, 5, 3, 1, 1)
-
-        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
-
-        self.gridLayout_2.addWidget(self.serverWhoisDebug, 6, 2, 1, 1)
-
         self.securityTxtCheck = QCheckBox(self.webAnalyzerTab)
         self.securityTxtCheck.setObjectName(u"securityTxtCheck")
         self.securityTxtCheck.setChecked(True)
 
         self.gridLayout_2.addWidget(self.securityTxtCheck, 9, 1, 1, 1)
 
-        self.domainSubdomainsCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainSubdomainsCheck.setObjectName(u"domainSubdomainsCheck")
-        self.domainSubdomainsCheck.setChecked(True)
+        self.domainSSLCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainSSLCheck.setObjectName(u"domainSSLCheck")
+        self.domainSSLCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.domainSubdomainsCheck, 3, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.domainSSLCheck, 5, 1, 1, 1)
+
+        self.serverDnsAnalyzeDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverDnsAnalyzeDebug.setObjectName(u"serverDnsAnalyzeDebug")
+
+        self.gridLayout_2.addWidget(self.serverDnsAnalyzeDebug, 4, 2, 1, 1)
+
+        self.serverWhoisDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverWhoisDebug.setObjectName(u"serverWhoisDebug")
+
+        self.gridLayout_2.addWidget(self.serverWhoisDebug, 6, 2, 1, 1)
+
+        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
+
+        self.gridLayout_2.addWidget(self.serverMalwareDebug, 8, 3, 1, 1)
+
+        self.socialTagsCheck = QCheckBox(self.webAnalyzerTab)
+        self.socialTagsCheck.setObjectName(u"socialTagsCheck")
+        self.socialTagsCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.socialTagsCheck, 9, 3, 1, 1)
 
         self.cookiesCheck = QCheckBox(self.webAnalyzerTab)
         self.cookiesCheck.setObjectName(u"cookiesCheck")
@@ -701,41 +725,21 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.cookiesCheck, 9, 2, 1, 1)
 
-        self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverLocationDebug.setObjectName(u"serverLocationDebug")
+        self.domainRobotsCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainRobotsCheck.setObjectName(u"domainRobotsCheck")
+        self.domainRobotsCheck.setChecked(True)
 
-        self.gridLayout_2.addWidget(self.serverLocationDebug, 6, 3, 1, 1)
+        self.gridLayout_2.addWidget(self.domainRobotsCheck, 7, 2, 1, 1)
 
-        self.domainDNSCheck = QCheckBox(self.webAnalyzerTab)
-        self.domainDNSCheck.setObjectName(u"domainDNSCheck")
-        self.domainDNSCheck.setChecked(True)
+        self.certTrCheck = QCheckBox(self.webAnalyzerTab)
+        self.certTrCheck.setObjectName(u"certTrCheck")
 
-        self.gridLayout_2.addWidget(self.domainDNSCheck, 3, 2, 1, 1)
+        self.gridLayout_2.addWidget(self.certTrCheck, 3, 4, 1, 1)
 
-        self.serverRobotsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverRobotsDebug.setObjectName(u"serverRobotsDebug")
+        self.certTrDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.certTrDebug.setObjectName(u"certTrDebug")
 
-        self.gridLayout_2.addWidget(self.serverRobotsDebug, 8, 2, 1, 1)
-
-        self.serverMalwareDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverMalwareDebug.setObjectName(u"serverMalwareDebug")
-
-        self.gridLayout_2.addWidget(self.serverMalwareDebug, 8, 3, 1, 1)
-
-        self.securityTxtDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.securityTxtDebug.setObjectName(u"securityTxtDebug")
-
-        self.gridLayout_2.addWidget(self.securityTxtDebug, 10, 1, 1, 1)
-
-        self.serverWafDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverWafDebug.setObjectName(u"serverWafDebug")
-
-        self.gridLayout_2.addWidget(self.serverWafDebug, 8, 1, 1, 1)
-
-        self.serverSubdomainsDebug = QPlainTextEdit(self.webAnalyzerTab)
-        self.serverSubdomainsDebug.setObjectName(u"serverSubdomainsDebug")
-
-        self.gridLayout_2.addWidget(self.serverSubdomainsDebug, 4, 1, 1, 1)
+        self.gridLayout_2.addWidget(self.certTrDebug, 4, 4, 1, 1)
 
         self.horizontalLayout_9 = QHBoxLayout()
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
@@ -752,7 +756,13 @@ class Ui_MainWindow(object):
         self.horizontalLayout_9.addWidget(self.runUrlScanButton)
 
 
-        self.gridLayout_2.addLayout(self.horizontalLayout_9, 0, 1, 1, 3)
+        self.gridLayout_2.addLayout(self.horizontalLayout_9, 0, 1, 1, 4)
+
+        self.domainProgress = QProgressBar(self.webAnalyzerTab)
+        self.domainProgress.setObjectName(u"domainProgress")
+        self.domainProgress.setValue(0)
+
+        self.gridLayout_2.addWidget(self.domainProgress, 11, 1, 1, 4)
 
         self.mainStackedWidget.addTab(self.webAnalyzerTab, "")
         self.metadataTab = QWidget()
@@ -1077,52 +1087,92 @@ class Ui_MainWindow(object):
         self.bcSettingsLayout.setObjectName(u"bcSettingsLayout")
         self.bcSettingsLayout.setContentsMargins(0, 0, 0, 0)
         self.bcNetworkCombo = QComboBox(self.bcSettingsSection)
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
+        self.bcNetworkCombo.addItem("")
         self.bcNetworkCombo.setObjectName(u"bcNetworkCombo")
-        self.bcNetworkCombo.addItems([
-            "TRON", "TON", "ETH", "BSC", "BASE",
-            "SOL", "BTC", "LTC", "DOGE", "BCH",
-        ])
+
         self.bcSettingsLayout.addWidget(self.bcNetworkCombo)
+
         self.bcCoinCombo = QComboBox(self.bcSettingsSection)
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
+        self.bcCoinCombo.addItem("")
         self.bcCoinCombo.setObjectName(u"bcCoinCombo")
-        self.bcCoinCombo.addItems([
-            "USDT", "USDC", "BTC", "ETH", "TON",
-            "SOL", "BNB", "LTC", "DOGE", "BCH",
-            "NOT", "RAY", "JUP",
-        ])
+
         self.bcSettingsLayout.addWidget(self.bcCoinCombo)
+
         self.bcDateEdit = QLineEdit(self.bcSettingsSection)
         self.bcDateEdit.setObjectName(u"bcDateEdit")
+
         self.bcSettingsLayout.addWidget(self.bcDateEdit)
+
         self.bcTimeEdit = QLineEdit(self.bcSettingsSection)
         self.bcTimeEdit.setObjectName(u"bcTimeEdit")
+
         self.bcSettingsLayout.addWidget(self.bcTimeEdit)
+
         self.bcTimeRangeCombo = QComboBox(self.bcSettingsSection)
+        self.bcTimeRangeCombo.addItem("")
+        self.bcTimeRangeCombo.addItem("")
+        self.bcTimeRangeCombo.addItem("")
+        self.bcTimeRangeCombo.addItem("")
+        self.bcTimeRangeCombo.addItem("")
         self.bcTimeRangeCombo.setObjectName(u"bcTimeRangeCombo")
-        self.bcTimeRangeCombo.addItems(["exact", "±1min", "±5min", "±15min", "custom"])
+
         self.bcSettingsLayout.addWidget(self.bcTimeRangeCombo)
+
         self.bcAmountEdit = QLineEdit(self.bcSettingsSection)
         self.bcAmountEdit.setObjectName(u"bcAmountEdit")
+
         self.bcSettingsLayout.addWidget(self.bcAmountEdit)
+
         self.bcToleranceSpin = QDoubleSpinBox(self.bcSettingsSection)
         self.bcToleranceSpin.setObjectName(u"bcToleranceSpin")
         self.bcToleranceSpin.setDecimals(2)
-        self.bcToleranceSpin.setMaximum(1.0)
-        self.bcToleranceSpin.setSingleStep(0.01)
-        self.bcToleranceSpin.setValue(0.01)
+        self.bcToleranceSpin.setMaximum(1.000000000000000)
+        self.bcToleranceSpin.setSingleStep(0.010000000000000)
+        self.bcToleranceSpin.setValue(0.010000000000000)
+
         self.bcSettingsLayout.addWidget(self.bcToleranceSpin)
+
         self.bcMemoEdit = QLineEdit(self.bcSettingsSection)
         self.bcMemoEdit.setObjectName(u"bcMemoEdit")
+
         self.bcSettingsLayout.addWidget(self.bcMemoEdit)
+
         self.bcSearchButton = QPushButton(self.bcSettingsSection)
         self.bcSearchButton.setObjectName(u"bcSearchButton")
+
         self.bcSettingsLayout.addWidget(self.bcSearchButton)
+
         self.bcVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
         self.bcSettingsLayout.addItem(self.bcVerticalSpacer)
+
         self.bcProgressBar = QProgressBar(self.bcSettingsSection)
         self.bcProgressBar.setObjectName(u"bcProgressBar")
         self.bcProgressBar.setValue(0)
+
         self.bcSettingsLayout.addWidget(self.bcProgressBar)
+
         self.bcSplitter.addWidget(self.bcSettingsSection)
         self.bcDebugSection = QWidget(self.bcSplitter)
         self.bcDebugSection.setObjectName(u"bcDebugSection")
@@ -1132,38 +1182,138 @@ class Ui_MainWindow(object):
         self.bcDebug = QPlainTextEdit(self.bcDebugSection)
         self.bcDebug.setObjectName(u"bcDebug")
         self.bcDebug.setReadOnly(True)
+
         self.bcDebugLayout.addWidget(self.bcDebug)
+
         self.bcSplitter.addWidget(self.bcDebugSection)
+
         self.bcHorizontalLayout.addWidget(self.bcSplitter)
+
         self.mainStackedWidget.addTab(self.blockchainTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
-        self.horizontalLayout_10 = QHBoxLayout(self.graphTab)
-        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
-        self.gridLayout_6 = QGridLayout()
-        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.graphMainLayout = QHBoxLayout(self.graphTab)
+        self.graphMainLayout.setObjectName(u"graphMainLayout")
+        self.verticalLayout_13 = QVBoxLayout()
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        self.verticalLayout_13.setContentsMargins(-1, -1, 0, -1)
+        self.entitySearchEdit = QLineEdit(self.graphTab)
+        self.entitySearchEdit.setObjectName(u"entitySearchEdit")
+
+        self.verticalLayout_13.addWidget(self.entitySearchEdit)
+
+        self.entityPalette = EntityPalette(self.graphTab)
+        self.entityPalette.setObjectName(u"entityPalette")
+        self.entityPalette.setMinimumSize(QSize(250, 0))
+        self.verticalLayout_23 = QVBoxLayout(self.entityPalette)
+        self.verticalLayout_23.setObjectName(u"verticalLayout_23")
+
+        self.verticalLayout_13.addWidget(self.entityPalette)
+
+
+        self.graphMainLayout.addLayout(self.verticalLayout_13)
+
+        self.graphCenterLayout = QVBoxLayout()
+        self.graphCenterLayout.setObjectName(u"graphCenterLayout")
+        self.graphButtonLayout = QHBoxLayout()
+        self.graphButtonLayout.setObjectName(u"graphButtonLayout")
         self.exportGraphButton = QPushButton(self.graphTab)
         self.exportGraphButton.setObjectName(u"exportGraphButton")
 
-        self.gridLayout_6.addWidget(self.exportGraphButton, 1, 0, 1, 1)
+        self.graphButtonLayout.addWidget(self.exportGraphButton)
 
         self.importGraphButton = QPushButton(self.graphTab)
         self.importGraphButton.setObjectName(u"importGraphButton")
 
-        self.gridLayout_6.addWidget(self.importGraphButton, 1, 1, 1, 1)
+        self.graphButtonLayout.addWidget(self.importGraphButton)
+
+        self.graphClearButton = QPushButton(self.graphTab)
+        self.graphClearButton.setObjectName(u"graphClearButton")
+
+        self.graphButtonLayout.addWidget(self.graphClearButton)
+
+
+        self.graphCenterLayout.addLayout(self.graphButtonLayout)
+
+        self.graphSearchLayout = QHBoxLayout()
+        self.graphSearchLayout.setObjectName(u"graphSearchLayout")
+        self.graphSearchEdit = QLineEdit(self.graphTab)
+        self.graphSearchEdit.setObjectName(u"graphSearchEdit")
+        self.graphSearchEdit.setClearButtonEnabled(True)
+
+        self.graphSearchLayout.addWidget(self.graphSearchEdit)
+
+        self.graphClearFilterButton = QPushButton(self.graphTab)
+        self.graphClearFilterButton.setObjectName(u"graphClearFilterButton")
+        self.graphClearFilterButton.setMinimumSize(QSize(150, 0))
+
+        self.graphSearchLayout.addWidget(self.graphClearFilterButton)
+
+        self.graphFilterCombo = QComboBox(self.graphTab)
+        self.graphFilterCombo.setObjectName(u"graphFilterCombo")
+        self.graphFilterCombo.setMinimumSize(QSize(150, 0))
+
+        self.graphSearchLayout.addWidget(self.graphFilterCombo)
+
+
+        self.graphCenterLayout.addLayout(self.graphSearchLayout)
 
         self.graphWidget = GraphWidget(self.graphTab)
         self.graphWidget.setObjectName(u"graphWidget")
 
-        self.gridLayout_6.addWidget(self.graphWidget, 0, 0, 1, 2)
+        self.graphCenterLayout.addWidget(self.graphWidget)
+
+
+        self.graphMainLayout.addLayout(self.graphCenterLayout)
 
         self.nodeEditPanel = PropertiesPanel(self.graphTab)
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
+        self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
+        self.nodeEditLayout.setObjectName(u"nodeEditLayout")
+        self.nodeEditLayout.setContentsMargins(4, 4, 4, 4)
+        self.nodeTitleEdit = QLineEdit(self.nodeEditPanel)
+        self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
 
-        self.gridLayout_6.addWidget(self.nodeEditPanel, 0, 2, 2, 1)
+        self.nodeEditLayout.addWidget(self.nodeTitleEdit)
+
+        self.nodeTypeCombo = QComboBox(self.nodeEditPanel)
+        self.nodeTypeCombo.setObjectName(u"nodeTypeCombo")
+
+        self.nodeEditLayout.addWidget(self.nodeTypeCombo)
+
+        self.nodeContentEdit = QPlainTextEdit(self.nodeEditPanel)
+        self.nodeContentEdit.setObjectName(u"nodeContentEdit")
+        self.nodeContentEdit.setMinimumSize(QSize(0, 60))
+
+        self.nodeEditLayout.addWidget(self.nodeContentEdit)
+
+        self.nodeEvidenceList = QListWidget(self.nodeEditPanel)
+        self.nodeEvidenceList.setObjectName(u"nodeEvidenceList")
+
+        self.nodeEditLayout.addWidget(self.nodeEvidenceList)
+
+        self.nodeEvidenceBtnLayout = QHBoxLayout()
+        self.nodeEvidenceBtnLayout.setObjectName(u"nodeEvidenceBtnLayout")
+        self.nodeEvidenceAddFileBtn = QPushButton(self.nodeEditPanel)
+        self.nodeEvidenceAddFileBtn.setObjectName(u"nodeEvidenceAddFileBtn")
+
+        self.nodeEvidenceBtnLayout.addWidget(self.nodeEvidenceAddFileBtn)
+
+        self.nodeEvidenceAddUrlBtn = QPushButton(self.nodeEditPanel)
+        self.nodeEvidenceAddUrlBtn.setObjectName(u"nodeEvidenceAddUrlBtn")
+
+        self.nodeEvidenceBtnLayout.addWidget(self.nodeEvidenceAddUrlBtn)
+
+        self.nodeEvidenceRemoveBtn = QPushButton(self.nodeEditPanel)
+        self.nodeEvidenceRemoveBtn.setObjectName(u"nodeEvidenceRemoveBtn")
+
+        self.nodeEvidenceBtnLayout.addWidget(self.nodeEvidenceRemoveBtn)
 
 
-        self.horizontalLayout_10.addLayout(self.gridLayout_6)
+        self.nodeEditLayout.addLayout(self.nodeEvidenceBtnLayout)
+
+
+        self.graphMainLayout.addWidget(self.nodeEditPanel)
 
         self.mainStackedWidget.addTab(self.graphTab, "")
         self.settingsTab = QWidget()
@@ -1316,7 +1466,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(5)
+        self.mainStackedWidget.setCurrentIndex(11)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -1387,29 +1537,30 @@ class Ui_MainWindow(object):
         self.useSearxngCheck.setText(QCoreApplication.translate("MainWindow", u"Use SearXNG", None))
         self.useCustomDorkCheck.setText(QCoreApplication.translate("MainWindow", u"Cusom Dork", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
-        self.domainSSLCheck.setText(QCoreApplication.translate("MainWindow", u"SSL / TLS", None))
-        self.serverNmapDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"OPEN PORTS", None))
-        self.domainHeadersCheck.setText(QCoreApplication.translate("MainWindow", u"Headers", None))
-        self.domainNmapCheck.setText(QCoreApplication.translate("MainWindow", u"Open Ports", None))
-        self.socialTagsCheck.setText(QCoreApplication.translate("MainWindow", u"Social Tags", None))
-        self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
-        self.domainRobotsCheck.setText(QCoreApplication.translate("MainWindow", u"Robots", None))
-        self.serverTlsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TLS", None))
-        self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
-        self.serverDnsAnalyzeDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"DNS", None))
-        self.domainLocationCheck.setText(QCoreApplication.translate("MainWindow", u"Server Location", None))
-        self.serverWhoisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"WHOIS", None))
-        self.securityTxtCheck.setText(QCoreApplication.translate("MainWindow", u"Security.txt", None))
+        self.serverLocationDebug.setPlaceholderText("")
         self.domainSubdomainsCheck.setText(QCoreApplication.translate("MainWindow", u"Subdomains Dorking", None))
-        self.cookiesCheck.setText(QCoreApplication.translate("MainWindow", u"Cookies", None))
-        self.serverLocationDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SERVER LOCATION", None))
+        self.serverRobotsDebug.setPlaceholderText("")
+        self.serverTlsDebug.setPlaceholderText("")
+        self.serverWafDebug.setPlaceholderText("")
+        self.domainLocationCheck.setText(QCoreApplication.translate("MainWindow", u"Server Location", None))
         self.domainDNSCheck.setText(QCoreApplication.translate("MainWindow", u"DNS", None))
-        self.serverRobotsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"ROBOTS", None))
-        self.serverMalwareDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"MALWARE", None))
-        self.serverWafDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HEADERS", None))
         self.serverSubdomainsDebug.setDocumentTitle("")
         self.serverSubdomainsDebug.setPlainText("")
-        self.serverSubdomainsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SUBDOMAIN DORKING", None))
+        self.serverSubdomainsDebug.setPlaceholderText("")
+        self.domainHeadersCheck.setText(QCoreApplication.translate("MainWindow", u"Headers", None))
+        self.domainNmapCheck.setText(QCoreApplication.translate("MainWindow", u"Open Ports", None))
+        self.domainMalwareCheck.setText(QCoreApplication.translate("MainWindow", u"Malware", None))
+        self.serverNmapDebug.setPlaceholderText("")
+        self.domainWhoisCheck.setText(QCoreApplication.translate("MainWindow", u"Whois", None))
+        self.securityTxtCheck.setText(QCoreApplication.translate("MainWindow", u"Security.txt", None))
+        self.domainSSLCheck.setText(QCoreApplication.translate("MainWindow", u"SSL / TLS", None))
+        self.serverDnsAnalyzeDebug.setPlaceholderText("")
+        self.serverWhoisDebug.setPlaceholderText("")
+        self.serverMalwareDebug.setPlaceholderText("")
+        self.socialTagsCheck.setText(QCoreApplication.translate("MainWindow", u"Social Tags", None))
+        self.cookiesCheck.setText(QCoreApplication.translate("MainWindow", u"Cookies", None))
+        self.domainRobotsCheck.setText(QCoreApplication.translate("MainWindow", u"Robots", None))
+        self.certTrCheck.setText(QCoreApplication.translate("MainWindow", u"Certificate Transparency ", None))
         self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
         self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
@@ -1452,14 +1603,54 @@ class Ui_MainWindow(object):
         self.checkMacAddrButton.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.macAddrEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mac Addr", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.macAddrTab), QCoreApplication.translate("MainWindow", u"MAC ADDR", None))
-        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.blockchainTab), QCoreApplication.translate("MainWindow", u"BLOCKCHAIN", None))
+        self.bcNetworkCombo.setItemText(0, QCoreApplication.translate("MainWindow", u"TRON", None))
+        self.bcNetworkCombo.setItemText(1, QCoreApplication.translate("MainWindow", u"TON", None))
+        self.bcNetworkCombo.setItemText(2, QCoreApplication.translate("MainWindow", u"ETH", None))
+        self.bcNetworkCombo.setItemText(3, QCoreApplication.translate("MainWindow", u"BSC", None))
+        self.bcNetworkCombo.setItemText(4, QCoreApplication.translate("MainWindow", u"BASE", None))
+        self.bcNetworkCombo.setItemText(5, QCoreApplication.translate("MainWindow", u"SOL", None))
+        self.bcNetworkCombo.setItemText(6, QCoreApplication.translate("MainWindow", u"BTC", None))
+        self.bcNetworkCombo.setItemText(7, QCoreApplication.translate("MainWindow", u"LTC", None))
+        self.bcNetworkCombo.setItemText(8, QCoreApplication.translate("MainWindow", u"DOGE", None))
+        self.bcNetworkCombo.setItemText(9, QCoreApplication.translate("MainWindow", u"BCH", None))
+
+        self.bcCoinCombo.setItemText(0, QCoreApplication.translate("MainWindow", u"USDT", None))
+        self.bcCoinCombo.setItemText(1, QCoreApplication.translate("MainWindow", u"USDC", None))
+        self.bcCoinCombo.setItemText(2, QCoreApplication.translate("MainWindow", u"BTC", None))
+        self.bcCoinCombo.setItemText(3, QCoreApplication.translate("MainWindow", u"ETH", None))
+        self.bcCoinCombo.setItemText(4, QCoreApplication.translate("MainWindow", u"TON", None))
+        self.bcCoinCombo.setItemText(5, QCoreApplication.translate("MainWindow", u"SOL", None))
+        self.bcCoinCombo.setItemText(6, QCoreApplication.translate("MainWindow", u"BNB", None))
+        self.bcCoinCombo.setItemText(7, QCoreApplication.translate("MainWindow", u"LTC", None))
+        self.bcCoinCombo.setItemText(8, QCoreApplication.translate("MainWindow", u"DOGE", None))
+        self.bcCoinCombo.setItemText(9, QCoreApplication.translate("MainWindow", u"BCH", None))
+        self.bcCoinCombo.setItemText(10, QCoreApplication.translate("MainWindow", u"NOT", None))
+        self.bcCoinCombo.setItemText(11, QCoreApplication.translate("MainWindow", u"RAY", None))
+        self.bcCoinCombo.setItemText(12, QCoreApplication.translate("MainWindow", u"JUP", None))
+
         self.bcDateEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Date DD.MM.YYYY or range DD.MM.YYYY-DD.MM.YYYY", None))
         self.bcTimeEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Time HH:MM (UTC)", None))
+        self.bcTimeRangeCombo.setItemText(0, QCoreApplication.translate("MainWindow", u"exact", None))
+        self.bcTimeRangeCombo.setItemText(1, QCoreApplication.translate("MainWindow", u"\u00b11min", None))
+        self.bcTimeRangeCombo.setItemText(2, QCoreApplication.translate("MainWindow", u"\u00b15min", None))
+        self.bcTimeRangeCombo.setItemText(3, QCoreApplication.translate("MainWindow", u"\u00b115min", None))
+        self.bcTimeRangeCombo.setItemText(4, QCoreApplication.translate("MainWindow", u"custom", None))
+
         self.bcAmountEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Amount or range (e.g. 800 or 500-800)", None))
         self.bcMemoEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Memo (optional)", None))
         self.bcSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.blockchainTab), QCoreApplication.translate("MainWindow", u"BLOCKCHAIN", None))
+        self.entitySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import From JSON", None))
+        self.graphClearButton.setText(QCoreApplication.translate("MainWindow", u"Clear All", None))
+        self.graphSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search nodes...", None))
+        self.graphClearFilterButton.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
+        self.nodeTitleEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Title", None))
+        self.nodeContentEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Content", None))
+        self.nodeEvidenceAddFileBtn.setText(QCoreApplication.translate("MainWindow", u"Add File", None))
+        self.nodeEvidenceAddUrlBtn.setText(QCoreApplication.translate("MainWindow", u"Add URL", None))
+        self.nodeEvidenceRemoveBtn.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))

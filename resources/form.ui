@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>5</number>
+         <number>11</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1547,287 +1547,426 @@
            </widget>
           </item>
          </layout>
-         </widget>
-         <widget class="QWidget" name="blockchainTab">
-          <attribute name="title">
-           <string>BLOCKCHAIN</string>
-          </attribute>
-          <layout class="QHBoxLayout" name="bcHorizontalLayout">
-           <item>
-            <widget class="QSplitter" name="bcSplitter">
-             <property name="orientation">
-              <enum>Qt::Orientation::Horizontal</enum>
-             </property>
-             <widget class="QWidget" name="bcSettingsSection">
-              <layout class="QVBoxLayout" name="bcSettingsLayout">
-                <item>
-                 <widget class="QComboBox" name="bcNetworkCombo">
-                  <item>
-                   <property name="text">
-                    <string>TRON</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>TON</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>ETH</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BSC</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BASE</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>SOL</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BTC</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>LTC</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>DOGE</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BCH</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QComboBox" name="bcCoinCombo">
-                  <item>
-                   <property name="text">
-                    <string>USDT</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>USDC</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BTC</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>ETH</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>TON</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>SOL</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BNB</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>LTC</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>DOGE</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>BCH</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>NOT</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>RAY</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>JUP</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               <item>
-                <widget class="QLineEdit" name="bcDateEdit">
-                 <property name="placeholderText">
-                  <string>Date DD.MM.YYYY or range DD.MM.YYYY-DD.MM.YYYY</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="bcTimeEdit">
-                 <property name="placeholderText">
-                  <string>Time HH:MM (UTC)</string>
-                 </property>
-                </widget>
-               </item>
-                <item>
-                 <widget class="QComboBox" name="bcTimeRangeCombo">
-                  <item>
-                   <property name="text">
-                    <string>exact</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>±1min</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>±5min</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>±15min</string>
-                   </property>
-                  </item>
-                  <item>
-                   <property name="text">
-                    <string>custom</string>
-                   </property>
-                  </item>
-                 </widget>
-                </item>
-               <item>
-                <widget class="QLineEdit" name="bcAmountEdit">
-                 <property name="placeholderText">
-                  <string>Amount or range (e.g. 800 or 500-800)</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QDoubleSpinBox" name="bcToleranceSpin">
-                 <property name="decimals">
-                  <number>2</number>
-                 </property>
-                 <property name="maximum">
-                  <double>1.000000000000000</double>
-                 </property>
-                 <property name="singleStep">
-                  <double>0.010000000000000</double>
-                 </property>
-                 <property name="value">
-                  <double>0.010000000000000</double>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QLineEdit" name="bcMemoEdit">
-                 <property name="placeholderText">
-                  <string>Memo (optional)</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="bcSearchButton">
-                 <property name="text">
-                  <string>Search</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="bcVerticalSpacer">
-                 <property name="orientation">
-                  <enum>Qt::Orientation::Vertical</enum>
-                 </property>
-                 <property name="sizeHint" stdset="0">
-                  <size>
-                   <width>20</width>
-                   <height>40</height>
-                  </size>
-                 </property>
-                </spacer>
-               </item>
-               <item>
-                <widget class="QProgressBar" name="bcProgressBar">
-                 <property name="value">
-                  <number>0</number>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="bcDebugSection">
-              <layout class="QVBoxLayout" name="bcDebugLayout">
-               <item>
-                <widget class="QPlainTextEdit" name="bcDebug">
-                 <property name="readOnly">
-                  <bool>true</bool>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </widget>
-            </widget>
-           </item>
-          </layout>
-         </widget>
-         <widget class="QWidget" name="graphTab">
-          <attribute name="title">
-           <string>GRAPH</string>
-          </attribute>
-         <layout class="QHBoxLayout" name="horizontalLayout_10">
+        </widget>
+        <widget class="QWidget" name="blockchainTab">
+         <attribute name="title">
+          <string>BLOCKCHAIN</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="bcHorizontalLayout">
           <item>
-           <layout class="QGridLayout" name="gridLayout_6">
-            <item row="1" column="0">
-             <widget class="QPushButton" name="exportGraphButton">
-              <property name="text">
-               <string>Export To JSON</string>
+           <widget class="QSplitter" name="bcSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="bcSettingsSection">
+             <layout class="QVBoxLayout" name="bcSettingsLayout">
+              <item>
+               <widget class="QComboBox" name="bcNetworkCombo">
+                <item>
+                 <property name="text">
+                  <string>TRON</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>TON</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>ETH</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BSC</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BASE</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>SOL</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BTC</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>LTC</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>DOGE</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BCH</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="bcCoinCombo">
+                <item>
+                 <property name="text">
+                  <string>USDT</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>USDC</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BTC</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>ETH</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>TON</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>SOL</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BNB</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>LTC</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>DOGE</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>BCH</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>NOT</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>RAY</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>JUP</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="bcDateEdit">
+                <property name="placeholderText">
+                 <string>Date DD.MM.YYYY or range DD.MM.YYYY-DD.MM.YYYY</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="bcTimeEdit">
+                <property name="placeholderText">
+                 <string>Time HH:MM (UTC)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="bcTimeRangeCombo">
+                <item>
+                 <property name="text">
+                  <string>exact</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>±1min</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>±5min</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>±15min</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>custom</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="bcAmountEdit">
+                <property name="placeholderText">
+                 <string>Amount or range (e.g. 800 or 500-800)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDoubleSpinBox" name="bcToleranceSpin">
+                <property name="decimals">
+                 <number>2</number>
+                </property>
+                <property name="maximum">
+                 <double>1.000000000000000</double>
+                </property>
+                <property name="singleStep">
+                 <double>0.010000000000000</double>
+                </property>
+                <property name="value">
+                 <double>0.010000000000000</double>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="bcMemoEdit">
+                <property name="placeholderText">
+                 <string>Memo (optional)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="bcSearchButton">
+                <property name="text">
+                 <string>Search</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="bcVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="bcProgressBar">
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="bcDebugSection">
+             <layout class="QVBoxLayout" name="bcDebugLayout">
+              <item>
+               <widget class="QPlainTextEdit" name="bcDebug">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="graphTab">
+         <attribute name="title">
+          <string>GRAPH</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="graphMainLayout">
+          <item>
+           <layout class="QVBoxLayout" name="verticalLayout_13">
+            <property name="rightMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QLineEdit" name="entitySearchEdit">
+              <property name="placeholderText">
+               <string>Search</string>
               </property>
              </widget>
             </item>
-            <item row="1" column="1">
-             <widget class="QPushButton" name="importGraphButton">
-              <property name="text">
-               <string>Import From JSON</string>
+            <item>
+             <widget class="EntityPalette" name="entityPalette" native="true">
+              <property name="minimumSize">
+               <size>
+                <width>250</width>
+                <height>0</height>
+               </size>
               </property>
+              <layout class="QVBoxLayout" name="verticalLayout_23"/>
              </widget>
-            </item>
-            <item row="0" column="0" colspan="2">
-             <widget class="GraphWidget" name="graphWidget"/>
-            </item>
-            <item row="0" column="2" rowspan="2">
-             <widget class="PropertiesPanel" name="nodeEditPanel" native="true"/>
             </item>
            </layout>
+          </item>
+          <item>
+           <layout class="QVBoxLayout" name="graphCenterLayout">
+            <item>
+             <layout class="QHBoxLayout" name="graphButtonLayout">
+              <item>
+               <widget class="QPushButton" name="exportGraphButton">
+                <property name="text">
+                 <string>Export To JSON</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="importGraphButton">
+                <property name="text">
+                 <string>Import From JSON</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="graphClearButton">
+                <property name="text">
+                 <string>Clear All</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <layout class="QHBoxLayout" name="graphSearchLayout">
+              <item>
+               <widget class="QLineEdit" name="graphSearchEdit">
+                <property name="placeholderText">
+                 <string>Search nodes...</string>
+                </property>
+                <property name="clearButtonEnabled">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="graphClearFilterButton">
+                <property name="minimumSize">
+                 <size>
+                  <width>150</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="text">
+                 <string>Clear</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="graphFilterCombo">
+                <property name="minimumSize">
+                 <size>
+                  <width>150</width>
+                  <height>0</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </item>
+            <item>
+             <widget class="GraphWidget" name="graphWidget"/>
+            </item>
+           </layout>
+          </item>
+          <item>
+           <widget class="PropertiesPanel" name="nodeEditPanel" native="true">
+            <layout class="QVBoxLayout" name="nodeEditLayout">
+             <property name="leftMargin">
+              <number>0</number>
+             </property>
+             <property name="topMargin">
+              <number>0</number>
+             </property>
+             <property name="rightMargin">
+              <number>0</number>
+             </property>
+             <property name="bottomMargin">
+              <number>0</number>
+             </property>
+             <item>
+              <widget class="QLineEdit" name="nodeTitleEdit">
+               <property name="placeholderText">
+                <string>Title</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QComboBox" name="nodeTypeCombo"/>
+             </item>
+             <item>
+              <widget class="QPlainTextEdit" name="nodeContentEdit">
+               <property name="minimumSize">
+                <size>
+                 <width>0</width>
+                 <height>60</height>
+                </size>
+               </property>
+               <property name="placeholderText">
+                <string>Content</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QListWidget" name="nodeEvidenceList"/>
+             </item>
+             <item>
+              <layout class="QHBoxLayout" name="nodeEvidenceBtnLayout">
+               <item>
+                <widget class="QPushButton" name="nodeEvidenceAddFileBtn">
+                 <property name="text">
+                  <string>Add File</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="nodeEvidenceAddUrlBtn">
+                 <property name="text">
+                  <string>Add URL</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="nodeEvidenceRemoveBtn">
+                 <property name="text">
+                  <string>Remove</string>
+                 </property>
+                </widget>
+               </item>
+              </layout>
+             </item>
+            </layout>
+           </widget>
           </item>
          </layout>
         </widget>
@@ -1941,48 +2080,48 @@
               </property>
              </widget>
             </item>
-             <item>
-              <widget class="QLineEdit" name="trongridApiKeyEdit">
-               <property name="placeholderText">
-                <string>TronGrid API Key</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="etherscanApiKeyEdit">
-               <property name="placeholderText">
-                <string>Etherscan API Key</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="bscscanApiKeyEdit">
-               <property name="placeholderText">
-                <string>BscScan API Key</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="tonapiApiKeyEdit">
-               <property name="placeholderText">
-                <string>TON API Key</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QLineEdit" name="heliusApiKeyEdit">
-               <property name="placeholderText">
-                <string>Helius API Key</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="lightThemeCheck">
-               <property name="text">
-                <string>Light Theme</string>
-               </property>
-              </widget>
-             </item>
+            <item>
+             <widget class="QLineEdit" name="trongridApiKeyEdit">
+              <property name="placeholderText">
+               <string>TronGrid API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="etherscanApiKeyEdit">
+              <property name="placeholderText">
+               <string>Etherscan API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="bscscanApiKeyEdit">
+              <property name="placeholderText">
+               <string>BscScan API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="tonapiApiKeyEdit">
+              <property name="placeholderText">
+               <string>TON API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="heliusApiKeyEdit">
+              <property name="placeholderText">
+               <string>Helius API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="lightThemeCheck">
+              <property name="text">
+               <string>Light Theme</string>
+              </property>
+             </widget>
+            </item>
             <item>
              <widget class="QPushButton" name="pushButton">
               <property name="text">
@@ -2085,6 +2224,12 @@
    <class>PropertiesPanel</class>
    <extends>QWidget</extends>
    <header location="global">src.libs.graph_panel</header>
+  </customwidget>
+  <customwidget>
+   <class>EntityPalette</class>
+   <extends>QWidget</extends>
+   <header location="global">src.libs.graph_panel</header>
+   <container>1</container>
   </customwidget>
  </customwidgets>
  <resources/>

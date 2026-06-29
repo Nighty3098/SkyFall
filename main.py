@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "thirdparty" / "txfetch"))
 
 from loguru import logger
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -44,7 +44,7 @@ from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
 from src.libs.graph_lib import GraphWidget
-from src.libs.graph_panel import PropertiesPanel
+from src.libs.graph_panel import EntityPalette, PropertiesPanel
 from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
@@ -75,6 +75,10 @@ class Loader(QUiLoader):
             return widget
         if class_name == "PropertiesPanel":
             widget = PropertiesPanel(parent)
+            widget.setObjectName(name)
+            return widget
+        if class_name == "EntityPalette":
+            widget = EntityPalette(parent)
             widget.setObjectName(name)
             return widget
         if class_name == "QWebEngineView":
@@ -115,6 +119,7 @@ class MainWindow(QMainWindow):
         )
 
         self.ui.graphWidget.selectionChanged.connect(self.ui.nodeEditPanel.show_node)
+        self.ui.nodeEditPanel._find_children()
 
         self.init_font("resources/Caveat-VariableFont_wght.ttf")
         self.init_font("resources/IosevkaCharonMono-Regular.ttf")

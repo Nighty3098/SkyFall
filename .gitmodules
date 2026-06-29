@@ -1,3 +1,4 @@
 [submodule "thirdparty/txfetch"]
 	path = thirdparty/txfetch
 	url = https://github.com/xaynov-osint/txfetch.git
+	branch = main

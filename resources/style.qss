@@ -382,7 +382,7 @@ QMenu::item {
     padding: 6px 20px;
     margin: 2px 4px;
     border-radius: 6px;
-    color: #262626;
+    color: #C1C1C1;
 }
 
 QMenu::item:selected {

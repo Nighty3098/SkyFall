@@ -203,13 +203,15 @@ class MainWindow(QMainWindow):
 
         self.fileAnalyzer.update_api_key(settings.virustotal_api_key)
 
-        self.blockchainSearch._set_env_keys({
-            "trongrid_api_key": settings.trongrid_api_key,
-            "etherscan_api_key": settings.etherscan_api_key,
-            "bscscan_api_key": settings.bscscan_api_key,
-            "tonapi_api_key": settings.tonapi_api_key,
-            "helius_api_key": settings.helius_api_key,
-        })
+        self.blockchainSearch._set_env_keys(
+            {
+                "trongrid_api_key": settings.trongrid_api_key,
+                "etherscan_api_key": settings.etherscan_api_key,
+                "bscscan_api_key": settings.bscscan_api_key,
+                "tonapi_api_key": settings.tonapi_api_key,
+                "helius_api_key": settings.helius_api_key,
+            }
+        )
 
         self.tgDownloader.api_id = settings.tg_api_key
         self.tgDownloader.api_hash = settings.telegram_api_hash

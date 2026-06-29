@@ -1,6 +1,5 @@
 import asyncio
 import datetime
-import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -45,8 +44,8 @@ class BlockchainSearch:
 
         # Patch frozen class-level API_KEY on EVM adapter classes
         _patch_map = {
-            "eth":  "etherscan_api_key",
-            "bsc":  "bscscan_api_key",
+            "eth": "etherscan_api_key",
+            "bsc": "bscscan_api_key",
             "base": "etherscan_api_key",
         }
         for name, settings_key in _patch_map.items():

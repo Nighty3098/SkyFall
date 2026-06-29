@@ -33,6 +33,7 @@ from PySide6.QtWidgets import (
     QLabel,
     QLineEdit,
     QListWidget,
+    QMainWindow,
     QMenu,
     QPlainTextEdit,
     QPushButton,
@@ -397,13 +398,14 @@ class EdgeItem(QGraphicsPathItem):
                 painter.restore()
 
 
-class NodeEditDialog(QDialog):
+class NodeEditDialog(QMainWindow):
+    data_ready = Signal(str, str, str, list)
+
     def __init__(
         self, title="", content="", entity_type="Custom", evidence=None, parent=None
     ):
         super().__init__(parent)
         self.setWindowTitle("Edit Node")
-        self.setModal(True)
 
         ss = QApplication.instance().styleSheet()
         dark = "#0A0A0A" in ss
@@ -453,8 +455,10 @@ class NodeEditDialog(QDialog):
             }}
         """)
 
-        layout = QVBoxLayout(self)
+        central = QWidget()
+        layout = QVBoxLayout(central)
         layout.setSpacing(8)
+        self.setCentralWidget(central)
 
         self.title_edit = QLineEdit(title)
         self.title_edit.setPlaceholderText("Title")
@@ -507,12 +511,25 @@ class NodeEditDialog(QDialog):
         btn_layout = QHBoxLayout()
         btn_layout.setContentsMargins(0, 0, 0, 0)
         btn_save = QPushButton("Save")
-        btn_save.clicked.connect(self.accept)
+        btn_save.clicked.connect(self._save)
         btn_cancel = QPushButton("Cancel")
-        btn_cancel.clicked.connect(self.reject)
+        btn_cancel.clicked.connect(self.close)
         btn_layout.addWidget(btn_save)
         btn_layout.addWidget(btn_cancel)
         layout.addLayout(btn_layout)
+
+    def _save(self):
+        evidence = []
+        for i in range(self.evidence_list.count()):
+            text = self.evidence_list.item(i).text()
+            evidence.append(text.split("\n", 1)[-1])
+        self.data_ready.emit(
+            self.title_edit.text(),
+            self.content_edit.toPlainText(),
+            self.type_combo.currentText(),
+            evidence,
+        )
+        self.close()
 
     def _add_file(self):
         files, _ = QFileDialog.getOpenFileNames(self, "Select Evidence Files")
@@ -942,14 +959,20 @@ class GraphWidget(QGraphicsView):
         dialog = NodeEditDialog(
             node.title, node.content, node.entity_type, node.evidence, self
         )
-        if dialog.exec() == QDialog.DialogCode.Accepted:
-            new_title, new_content, new_type, new_evidence = dialog.get_data()
-            node.title = new_title
-            node.content = new_content
-            node.entity_type = new_type
-            node.evidence = new_evidence
-            node.prepareGeometryChange()
-            node.update()
+        dialog.data_ready.connect(
+            lambda title, content, etype, ev: self._on_node_edited(
+                node, title, content, etype, ev
+            )
+        )
+        dialog.show()
+
+    def _on_node_edited(self, node, title, content, entity_type, evidence):
+        node.title = title
+        node.content = content
+        node.entity_type = entity_type
+        node.evidence = evidence
+        node.prepareGeometryChange()
+        node.update()
 
     def edit_edge_label(self, edge: EdgeItem):
         dialog = QDialog(self)

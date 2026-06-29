@@ -79,8 +79,13 @@ class Settings:
         self.light_theme = False
         self.frameless_window = True
 
+        self._post_save_callbacks = []
+
         self._load()
         self._apply_theme()
+
+    def on_save(self, callback):
+        self._post_save_callbacks.append(callback)
 
     def _load(self):
         logger.debug("Loading settings")
@@ -164,4 +169,6 @@ class Settings:
             encoding="utf-8",
         )
         self._apply_theme()
+        for cb in self._post_save_callbacks:
+            cb(self)
         logger.success("Settings saved")

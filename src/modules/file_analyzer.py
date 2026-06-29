@@ -50,6 +50,14 @@ class FileAnalyzer:
     async def close(self):
         await self._client.aclose()
 
+    def update_vt_key(self, new_key):
+        self.API_KEYS["VIRUSTOTAL"] = new_key
+        self.HEADERS["x-apikey"] = new_key
+
+    async def recreate_client(self):
+        await self._client.aclose()
+        self._client = httpx.AsyncClient(headers=self.HEADERS, timeout=120)
+
     async def _read_file_bytes(self, path):
         def _read(path):
             with open(path, "rb") as f:

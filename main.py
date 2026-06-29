@@ -117,6 +117,7 @@ class MainWindow(QMainWindow):
             self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self._init_modules()
+        self.settings.on_save(self._sync_tokens)
         setup_ui(self)
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
@@ -188,6 +189,31 @@ class MainWindow(QMainWindow):
                 "helius_api_key": self.settings.helius_api_key,
             }
         )
+
+    def _sync_tokens(self, settings):
+        self.githubSearch._token = settings.github_token
+        self.githubSearch._headers["Authorization"] = f"Bearer {settings.github_token}"
+
+        self.domainAnalyzer.API_KEYS["VIRUSTOTAL"] = settings.virustotal_api_key
+        self.domainAnalyzer.API_KEYS["GOOGLE_SAFE"] = settings.google_safe_api_key
+        self.domainAnalyzer.API_KEYS["IPINFO"] = settings.ipinfo_api_key
+
+        self.intelxSearchEngine.api_key = settings.intelligent_x_api_key
+        self.intelxSearchEngine.headers["x-key"] = settings.intelligent_x_api_key
+
+        self.fileAnalyzer.update_vt_key(settings.virustotal_api_key)
+        asyncio.ensure_future(self.fileAnalyzer.recreate_client())
+
+        self.blockchainSearch._set_env_keys({
+            "trongrid_api_key": settings.trongrid_api_key,
+            "etherscan_api_key": settings.etherscan_api_key,
+            "bscscan_api_key": settings.bscscan_api_key,
+            "tonapi_api_key": settings.tonapi_api_key,
+            "helius_api_key": settings.helius_api_key,
+        })
+
+        self.tgDownloader.api_id = settings.tg_api_key
+        self.tgDownloader.api_hash = settings.telegram_api_hash
 
     async def _async_init(self):
         logger.debug("Init controllers")

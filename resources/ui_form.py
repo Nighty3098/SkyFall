@@ -1268,6 +1268,7 @@ class Ui_MainWindow(object):
 
         self.nodeEditPanel = PropertiesPanel(self.graphTab)
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
+        self.nodeEditPanel.setMinimumSize(QSize(500, 0))
         self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
         self.nodeEditLayout.setObjectName(u"nodeEditLayout")
         self.nodeEditLayout.setContentsMargins(0, 0, 0, 0)
@@ -1283,7 +1284,7 @@ class Ui_MainWindow(object):
 
         self.nodeContentEdit = QPlainTextEdit(self.nodeEditPanel)
         self.nodeContentEdit.setObjectName(u"nodeContentEdit")
-        self.nodeContentEdit.setMinimumSize(QSize(0, 60))
+        self.nodeContentEdit.setMinimumSize(QSize(250, 60))
 
         self.nodeEditLayout.addWidget(self.nodeContentEdit)
 
@@ -1467,7 +1468,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(12)
+        self.mainStackedWidget.setCurrentIndex(11)
         self.tabWidget.setCurrentIndex(0)
 
 

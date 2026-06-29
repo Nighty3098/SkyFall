@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>11</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1901,6 +1901,12 @@
           </item>
           <item>
            <widget class="PropertiesPanel" name="nodeEditPanel" native="true">
+            <property name="minimumSize">
+             <size>
+              <width>400</width>
+              <height>0</height>
+             </size>
+            </property>
             <layout class="QVBoxLayout" name="nodeEditLayout">
              <property name="leftMargin">
               <number>0</number>
@@ -1928,7 +1934,7 @@
               <widget class="QPlainTextEdit" name="nodeContentEdit">
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
+                 <width>250</width>
                  <height>60</height>
                 </size>
                </property>

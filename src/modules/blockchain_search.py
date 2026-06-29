@@ -30,6 +30,8 @@ class BlockchainSearch:
         self._import_adapters()
 
     def _set_env_keys(self, settings: dict):
+        from modules import config as txfetch_config
+
         key_map = {
             "TRONGRID_API_KEY": settings.get("trongrid_api_key"),
             "ETHERSCAN_API_KEY": settings.get("etherscan_api_key"),
@@ -39,7 +41,19 @@ class BlockchainSearch:
         }
         for env_key, val in key_map.items():
             if val:
-                os.environ[env_key] = val
+                txfetch_config.setenv(env_key, val)
+
+        # Patch frozen class-level API_KEY on EVM adapter classes
+        _patch_map = {
+            "eth":  "etherscan_api_key",
+            "bsc":  "bscscan_api_key",
+            "base": "etherscan_api_key",
+        }
+        for name, settings_key in _patch_map.items():
+            val = settings.get(settings_key)
+            cls = self._adapters.get(name)
+            if val and cls and hasattr(cls, "API_KEY"):
+                cls.API_KEY = val
 
     def _import_adapters(self):
         from modules.base_chain import BaseAdapter

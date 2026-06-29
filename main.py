@@ -201,8 +201,7 @@ class MainWindow(QMainWindow):
         self.intelxSearchEngine.api_key = settings.intelligent_x_api_key
         self.intelxSearchEngine.headers["x-key"] = settings.intelligent_x_api_key
 
-        self.fileAnalyzer.update_vt_key(settings.virustotal_api_key)
-        asyncio.ensure_future(self.fileAnalyzer.recreate_client())
+        self.fileAnalyzer.update_api_key(settings.virustotal_api_key)
 
         self.blockchainSearch._set_env_keys({
             "trongrid_api_key": settings.trongrid_api_key,

@@ -61,21 +61,6 @@ ENTITY_NAMES = [e[0] for e in ENTITY_TYPES]
 ENTITY_COLORS = {e[0]: e[1] for e in ENTITY_TYPES}
 ENTITY_SYMBOLS = {e[0]: e[2] for e in ENTITY_TYPES}
 
-RELATIONSHIP_TYPES = [
-    "owns",
-    "registered_at",
-    "member_of",
-    "located_at",
-    "communicates_with",
-    "associated_with",
-    "works_at",
-    "attends",
-    "created_by",
-    "resolved_to",
-    "mentions",
-    "forwarded_to",
-]
-
 PORT_DIR = {
     "left": (-1, 0),
     "right": (1, 0),
@@ -111,6 +96,18 @@ def _theme_colors(dark=None):
         "port_color": QColor("#C1C1C1" if dark else "#3A3A3A"),
         "edge_color": QColor("#262626" if dark else "#D0D0D0"),
     }
+
+
+def _center_dialog(dialog):
+    screen = QApplication.primaryScreen()
+    if not screen:
+        return
+    sg = screen.availableGeometry()
+    dialog.adjustSize()
+    dialog.move(
+        sg.center().x() - dialog.width() // 2,
+        sg.center().y() - dialog.height() // 2,
+    )
 
 
 class NodeItem(QGraphicsItem):
@@ -644,6 +641,7 @@ class NodeEditDialog(QMainWindow):
         btn_layout.addWidget(btn_ok)
         btn_layout.addWidget(btn_cancel)
         layout.addLayout(btn_layout)
+        _center_dialog(dialog)
         if dialog.exec() == QDialog.DialogCode.Accepted and line_edit.text().strip():
             self.evidence_list.addItem(
                 f"{line_edit.text().strip()}\n{line_edit.text().strip()}"
@@ -866,6 +864,7 @@ class PropertiesPanel(QDockWidget):
         btn_hlay.addWidget(ok_btn)
         btn_hlay.addWidget(cancel_btn)
         dlg_layout.addLayout(btn_hlay)
+        _center_dialog(dialog)
         if dialog.exec() == QDialog.DialogCode.Accepted and line_edit.text().strip():
             url = line_edit.text().strip()
             self._node.evidence.append(url)
@@ -1035,6 +1034,7 @@ class GraphWidget(QGraphicsView):
                 node, title, content, etype, ev
             )
         )
+        _center_dialog(dialog)
         dialog.show()
 
     def _on_node_edited(self, node, title, content, entity_type, evidence):
@@ -1112,6 +1112,7 @@ class GraphWidget(QGraphicsView):
         btn_layout.addWidget(btn_ok)
         btn_layout.addWidget(btn_cancel)
         layout.addLayout(btn_layout)
+        _center_dialog(dialog)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             edge.relationship_type = type_combo.currentText()
             edge.label = line_edit.text()

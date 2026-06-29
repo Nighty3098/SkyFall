@@ -30,6 +30,18 @@ from PySide6.QtWidgets import (
 from src.libs.graph_lib import ENTITY_NAMES, ENTITY_SYMBOLS
 
 
+def _center_dialog(dialog):
+    screen = QApplication.primaryScreen()
+    if not screen:
+        return
+    sg = screen.availableGeometry()
+    dialog.adjustSize()
+    dialog.move(
+        sg.center().x() - dialog.width() // 2,
+        sg.center().y() - dialog.height() // 2,
+    )
+
+
 class EntityPalette(QListWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -220,6 +232,7 @@ class PropertiesPanel(QWidget):
         btn_hlay.addWidget(ok_btn)
         btn_hlay.addWidget(cancel_btn)
         dlg_layout.addLayout(btn_hlay)
+        _center_dialog(dialog)
         if dialog.exec() == QDialog.DialogCode.Accepted and line_edit.text().strip():
             url = line_edit.text().strip()
             self._node.evidence.append(url)

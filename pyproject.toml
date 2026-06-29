@@ -51,7 +51,7 @@ files = [
 [tool.ruff]
 line-length = 88
 target-version = "py313"
-exclude = ["resources/ui_form.py", "modules/", "scripts/"]
+exclude = ["resources/ui_form.py", "modules/", "scripts/", "thirdparty/"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]

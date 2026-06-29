@@ -10,6 +10,7 @@ from src.modules.metadata_cleaner import remove_metadata
 from src.utils import filter_list, find_text
 
 if TYPE_CHECKING:
+    from src.controllers.blockchain_controller import BlockchainController
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
@@ -190,6 +191,12 @@ def setup_phone_connectors(controller: "PhoneController"):
 def setup_mac_location_connectors(controller: "MacLocationController"):
     controller.ui.checkMacAddrButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.start_searching())
+    )
+
+
+def setup_blockchain_connectors(controller: "BlockchainController"):
+    controller.ui.bcSearchButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search())
     )
 
 

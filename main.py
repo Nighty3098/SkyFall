@@ -3,6 +3,8 @@ import asyncio
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).parent / "thirdparty" / "txfetch"))
+
 from loguru import logger
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFontDatabase
@@ -13,6 +15,7 @@ from qasync import QEventLoop
 
 from logger_setup import setup_logging
 from src.connectors import (
+    setup_blockchain_connectors,
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_github_connectors,
@@ -27,6 +30,7 @@ from src.connectors import (
     setup_tg_downloader_connectors,
     setup_username_connectors,
 )
+from src.controllers.blockchain_controller import BlockchainController
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
@@ -41,6 +45,7 @@ from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
 from src.libs.graph_lib import GraphWidget
 from src.libs.graph_panel import PropertiesPanel
+from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
@@ -166,6 +171,15 @@ class MainWindow(QMainWindow):
         self.intelxSearchEngine = IntelxSearchEngine(
             self.settings.intelligent_x_api_key
         )
+        self.blockchainSearch = BlockchainSearch(
+            {
+                "trongrid_api_key": self.settings.trongrid_api_key,
+                "etherscan_api_key": self.settings.etherscan_api_key,
+                "bscscan_api_key": self.settings.bscscan_api_key,
+                "tonapi_api_key": self.settings.tonapi_api_key,
+                "helius_api_key": self.settings.helius_api_key,
+            }
+        )
 
     async def _async_init(self):
         logger.debug("Init controllers")
@@ -195,6 +209,8 @@ class MainWindow(QMainWindow):
             intelx_key=self.settings.intelligent_x_api_key,
         )
 
+        self.blockchainController = BlockchainController(self.ui, self.blockchainSearch)
+
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
         setup_settings_connectors(self.settings)
@@ -207,6 +223,7 @@ class MainWindow(QMainWindow):
         setup_github_connectors(self.githubController)
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
+        setup_blockchain_connectors(self.blockchainController)
         setup_graph_connectors(self.ui)
 
 

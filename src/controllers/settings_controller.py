@@ -32,6 +32,7 @@ DEFAULT_SETTINGS = {
     "tonapi_api_key": "",
     "helius_api_key": "",
     "light_theme": False,
+    "frameless_window": True,
 }
 
 FIELD_MAP = {
@@ -76,6 +77,7 @@ class Settings:
         self.tonapi_api_key = ""
         self.helius_api_key = ""
         self.light_theme = False
+        self.frameless_window = True
 
         self._load()
         self._apply_theme()
@@ -105,6 +107,10 @@ class Settings:
         checkbox = getattr(self.ui, "lightThemeCheck", None)
         if checkbox:
             checkbox.setChecked(self.light_theme)
+
+        frameless = getattr(self.ui, "framelessCheck", None)
+        if frameless:
+            frameless.setChecked(self.frameless_window)
 
     def _apply_theme(self):
         theme = "style_light.qss" if self.light_theme else "style.qss"
@@ -146,6 +152,10 @@ class Settings:
         checkbox = getattr(self.ui, "lightThemeCheck", None)
         if checkbox:
             self.light_theme = checkbox.isChecked()
+
+        frameless = getattr(self.ui, "framelessCheck", None)
+        if frameless:
+            self.frameless_window = frameless.isChecked()
 
         CONFIG_DIR.mkdir(parents=True, exist_ok=True)
         data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}

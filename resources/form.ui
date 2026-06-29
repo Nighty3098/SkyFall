@@ -2127,14 +2127,21 @@
               </property>
              </widget>
             </item>
-            <item>
-             <widget class="QCheckBox" name="lightThemeCheck">
-              <property name="text">
-               <string>Light Theme</string>
-              </property>
-             </widget>
-            </item>
-            <item>
+             <item>
+              <widget class="QCheckBox" name="lightThemeCheck">
+               <property name="text">
+                <string>Light Theme</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="framelessCheck">
+               <property name="text">
+                <string>Frameless Window</string>
+               </property>
+              </widget>
+             </item>
+             <item>
              <widget class="QPushButton" name="pushButton">
               <property name="text">
                <string>Save</string>

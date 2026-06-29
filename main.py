@@ -107,10 +107,14 @@ class MainWindow(QMainWindow):
 └─────────────────────────────────────────────────────────────────┘
             """)
         super().__init__(parent)
+
         ui_file = Path(__file__).parent / "resources" / "form.ui"
         self.ui = Loader().load(ui_file)
         self.setCentralWidget(self.ui)
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+
+        self.settings = Settings(self.ui)
+        if self.settings.frameless_window:
+            self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self._init_modules()
         setup_ui(self)
@@ -145,7 +149,6 @@ class MainWindow(QMainWindow):
     def _init_modules(self):
         logger.debug("Init modules")
 
-        self.settings = Settings(self.ui)
         self.proxy = Proxy(self.ui)
         from pathlib import Path
 

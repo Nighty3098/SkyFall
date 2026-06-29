@@ -106,6 +106,12 @@
   - [x] Parse & Validate (phonenumbers): country, region, carrier, line type, timezone
   - [x] Reverse Lookup (NumVerify / AbstractAPI APIs)
   - [x] Leak check via IntelX
+- [x] Blockchain Transaction Search
+  - [x] 10 supported networks: TRON, TON, ETH, BSC, BASE, SOL, BTC, LTC, DOGE, BCH
+  - [x] Search by date, time (UTC), amount, and memo — without TX hash
+  - [x] Confidence scoring (time proximity, amount match, memo match)
+  - [x] Optional API keys for higher rate limits (TronGrid, Etherscan, BscScan, TON, Helius)
+  - [x] Powered by TXFetch engine (thirdparty/txfetch)
 - [x] Interactive Graph Editor
   - [x] Draggable nodes with title and content
   - [x] 4 connection ports per node (left, right, top, bottom)
@@ -126,6 +132,14 @@ To work with dorking, you need to run searxng via docker:
 ```bash
 
 docker compose up --build
+
+```
+
+## `DOWNLOAD`
+
+```bash
+
+git clone https://github.com/Nighty3098/SkyFall --recurse-submodules
 
 ```
 

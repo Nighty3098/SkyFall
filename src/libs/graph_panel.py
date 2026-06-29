@@ -1,4 +1,5 @@
 import os
+from typing import override
 
 from PySide6.QtCore import QMimeData, Qt, QUrl
 from PySide6.QtGui import (
@@ -16,7 +17,6 @@ from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QHBoxLayout,
-    QLabel,
     QLineEdit,
     QListWidget,
     QListWidgetItem,
@@ -27,7 +27,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from src.libs.graph_lib import ENTITY_COLORS, ENTITY_NAMES, ENTITY_SYMBOLS
+from src.libs.graph_lib import ENTITY_NAMES, ENTITY_SYMBOLS
 
 
 class EntityPalette(QListWidget):
@@ -51,7 +51,8 @@ class EntityPalette(QListWidget):
             etype = item.data(Qt.ItemDataRole.UserRole)
             item.setHidden(bool(text) and text not in etype.lower())
 
-    def startDrag(self, supportedActions):
+    @override
+    def startDrag(self, supported_actions):
         item = self.currentItem()
         if not item:
             return
@@ -92,7 +93,9 @@ class PropertiesPanel(QWidget):
 
         self.type_combo.addItems(ENTITY_NAMES)
         self.evidence_list.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
-        self.evidence_list.customContextMenuRequested.connect(self._evidence_context_menu)
+        self.evidence_list.customContextMenuRequested.connect(
+            self._evidence_context_menu
+        )
         self.evidence_list.itemDoubleClicked.connect(self._open_evidence)
 
         self.title_edit.textChanged.connect(self._on_title_changed)

@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>11</number>
+         <number>0</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -2005,6 +2005,12 @@
             </item>
             <item>
              <widget class="QLineEdit" name="pathToStorageEdit">
+              <property name="minimumSize">
+               <size>
+                <width>500</width>
+                <height>0</height>
+               </size>
+              </property>
               <property name="placeholderText">
                <string>Path to folder</string>
               </property>

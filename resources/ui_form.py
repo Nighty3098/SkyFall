@@ -1270,7 +1270,7 @@ class Ui_MainWindow(object):
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
         self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
         self.nodeEditLayout.setObjectName(u"nodeEditLayout")
-        self.nodeEditLayout.setContentsMargins(4, 4, 4, 4)
+        self.nodeEditLayout.setContentsMargins(0, 0, 0, 0)
         self.nodeTitleEdit = QLineEdit(self.nodeEditPanel)
         self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
 
@@ -1332,6 +1332,7 @@ class Ui_MainWindow(object):
 
         self.pathToStorageEdit = QLineEdit(self.settingsTab)
         self.pathToStorageEdit.setObjectName(u"pathToStorageEdit")
+        self.pathToStorageEdit.setMinimumSize(QSize(500, 0))
 
         self.verticalLayout_4.addWidget(self.pathToStorageEdit)
 
@@ -1466,7 +1467,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(11)
+        self.mainStackedWidget.setCurrentIndex(12)
         self.tabWidget.setCurrentIndex(0)
 
 

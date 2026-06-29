@@ -24,7 +24,6 @@ from PySide6.QtWidgets import (
     QDockWidget,
     QFileDialog,
     QFormLayout,
-    QGraphicsDropShadowEffect,
     QGraphicsItem,
     QGraphicsPathItem,
     QGraphicsScene,
@@ -102,12 +101,6 @@ class NodeItem(QGraphicsItem):
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
-
-        shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(15)
-        shadow.setOffset(3, 3)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        self.setGraphicsEffect(shadow)
 
     def _get_height(self):
         if self.entity_type == "Evidence":

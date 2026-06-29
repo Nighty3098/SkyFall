@@ -3,6 +3,7 @@ import os
 import sys
 import uuid
 
+import networkx as nx
 from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import (
     QAction,
@@ -60,12 +61,42 @@ ENTITY_NAMES = [e[0] for e in ENTITY_TYPES]
 ENTITY_COLORS = {e[0]: e[1] for e in ENTITY_TYPES}
 ENTITY_SYMBOLS = {e[0]: e[2] for e in ENTITY_TYPES}
 
+RELATIONSHIP_TYPES = [
+    "owns",
+    "registered_at",
+    "member_of",
+    "located_at",
+    "communicates_with",
+    "associated_with",
+    "works_at",
+    "attends",
+    "created_by",
+    "resolved_to",
+    "mentions",
+    "forwarded_to",
+]
+
 PORT_DIR = {
     "left": (-1, 0),
     "right": (1, 0),
     "top": (0, -1),
     "bottom": (0, 1),
 }
+
+RELATIONSHIP_TYPES = [
+    "owns",
+    "registered_at",
+    "resolved_to",
+    "member_of",
+    "located_at",
+    "communicates_with",
+    "associated_with",
+    "works_at",
+    "created_by",
+    "attends",
+    "hosted_by",
+    "linked_to",
+]
 
 
 def _theme_colors(dark=None):
@@ -306,6 +337,7 @@ class EdgeItem(QGraphicsPathItem):
         source_port="right",
         target_port="left",
         label="",
+        relationship_type="",
         parent=None,
     ):
         super().__init__(parent)
@@ -314,6 +346,7 @@ class EdgeItem(QGraphicsPathItem):
         self.source_port = source_port
         self.target_port = target_port
         self.label = label
+        self.relationship_type = relationship_type
         self.setPen(QPen(_theme_colors()["edge_color"], 4))
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -381,21 +414,42 @@ class EdgeItem(QGraphicsPathItem):
             painter.drawPath(arrow_path)
             painter.restore()
 
-        if self.label:
+        display = self.relationship_type or self.label
+        if display:
             path_length = self.path().length()
             if path_length > 40:
                 mid = self.path().pointAtPercent(0.5)
                 painter.save()
                 fm = painter.fontMetrics()
-                text_w = fm.horizontalAdvance(self.label) + 12
+                text_w = fm.horizontalAdvance(display) + 12
                 text_h = fm.height() + 6
                 bg = QRectF(mid.x() - text_w / 2, mid.y() - text_h / 2, text_w, text_h)
                 painter.setBrush(QBrush(c["card_title"]))
                 painter.setPen(Qt.PenStyle.NoPen)
                 painter.drawRoundedRect(bg, 4, 4)
                 painter.setPen(QPen(c["card_bg"]))
-                painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, self.label)
+                painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, display)
                 painter.restore()
+
+        if self.label and self.relationship_type:
+            mid = self.path().pointAtPercent(0.5)
+            painter.save()
+            painter.setFont(QFont("Segoe UI", 7))
+            fm = painter.fontMetrics()
+            text_w = fm.horizontalAdvance(self.label) + 8
+            text_h = fm.height() + 4
+            bg = QRectF(
+                mid.x() - text_w / 2,
+                mid.y() + 10,
+                text_w,
+                text_h,
+            )
+            painter.setBrush(QBrush(c["card_border"]))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(bg, 3, 3)
+            painter.setPen(QPen(c["card_title"]))
+            painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, self.label)
+            painter.restore()
 
 
 class NodeEditDialog(QMainWindow):
@@ -867,6 +921,7 @@ class GraphWidget(QGraphicsView):
         self._panning = False
         self._pan_start = QPointF()
         self._filter_text = ""
+        self._path_source = None
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
@@ -923,7 +978,7 @@ class GraphWidget(QGraphicsView):
         menu = QMenu(self)
 
         if isinstance(item, EdgeItem):
-            label_action = QAction("Edit Label", self)
+            label_action = QAction("Edit Edge", self)
             label_action.triggered.connect(lambda: self.edit_edge_label(item))
             menu.addAction(label_action)
             menu.addSeparator()
@@ -939,6 +994,13 @@ class GraphWidget(QGraphicsView):
             menu.addAction(attach_action)
             menu.addSeparator()
 
+            analysis_menu = QMenu("Analysis", self)
+            sp_action = QAction("Shortest Path", self)
+            sp_action.triggered.connect(lambda: self._start_shortest_path(item))
+            analysis_menu.addAction(sp_action)
+            menu.addMenu(analysis_menu)
+            menu.addSeparator()
+
             delete_action = QAction("Delete Node", self)
             delete_action.triggered.connect(lambda: self.remove_node(item))
             menu.addAction(delete_action)
@@ -952,6 +1014,15 @@ class GraphWidget(QGraphicsView):
                 )
                 add_menu.addAction(act)
             menu.addMenu(add_menu)
+            menu.addSeparator()
+            analysis_all = QMenu("Global Analysis", self)
+            cent_action = QAction("Show Centrality", self)
+            cent_action.triggered.connect(self._show_centrality)
+            analysis_all.addAction(cent_action)
+            cluster_action = QAction("Detect Communities", self)
+            cluster_action.triggered.connect(self._detect_communities)
+            analysis_all.addAction(cluster_action)
+            menu.addMenu(analysis_all)
 
         menu.exec(self.viewport().mapToGlobal(pos))
 
@@ -976,7 +1047,7 @@ class GraphWidget(QGraphicsView):
 
     def edit_edge_label(self, edge: EdgeItem):
         dialog = QDialog(self)
-        dialog.setWindowTitle("Edit Edge Label")
+        dialog.setWindowTitle("Edit Edge")
         ss = QApplication.instance().styleSheet()
         dark = "#0A0A0A" in ss
         bg = "#0A0A0A" if dark else "#F5F5F5"
@@ -990,7 +1061,7 @@ class GraphWidget(QGraphicsView):
                 border: 1px solid {border};
                 border-radius: 10px;
             }}
-            QLineEdit {{
+            QLineEdit, QComboBox {{
                 border-radius: 10px;
                 border: 1px solid {border};
                 background-color: {surface};
@@ -1017,9 +1088,22 @@ class GraphWidget(QGraphicsView):
             }}
         """)
         layout = QVBoxLayout(dialog)
+
+        rel_layout = QHBoxLayout()
+        rel_layout.addWidget(QLabel("Type:"))
+        type_combo = QComboBox()
+        type_combo.addItem("")
+        for rt in RELATIONSHIP_TYPES:
+            type_combo.addItem(rt)
+        if edge.relationship_type in RELATIONSHIP_TYPES:
+            type_combo.setCurrentText(edge.relationship_type)
+        rel_layout.addWidget(type_combo)
+        layout.addLayout(rel_layout)
+
         line_edit = QLineEdit(edge.label)
-        line_edit.setPlaceholderText("owns, registered, communicates...")
+        line_edit.setPlaceholderText("Additional label (optional)")
         layout.addWidget(line_edit)
+
         btn_layout = QHBoxLayout()
         btn_ok = QPushButton("OK")
         btn_ok.clicked.connect(dialog.accept)
@@ -1029,6 +1113,7 @@ class GraphWidget(QGraphicsView):
         btn_layout.addWidget(btn_cancel)
         layout.addLayout(btn_layout)
         if dialog.exec() == QDialog.DialogCode.Accepted:
+            edge.relationship_type = type_combo.currentText()
             edge.label = line_edit.text()
             edge.update()
 
@@ -1059,6 +1144,109 @@ class GraphWidget(QGraphicsView):
         edge.target.remove_edge_ref(edge)
         self._scene.removeItem(edge)
 
+    def _to_networkx(self):
+        g = nx.Graph()
+        for item in self._scene.items():
+            if isinstance(item, NodeItem):
+                g.add_node(item.id, label=item.title, etype=item.entity_type)
+        for item in self._scene.items():
+            if isinstance(item, EdgeItem):
+                g.add_edge(
+                    item.source.id,
+                    item.target.id,
+                    label=item.relationship_type or item.label,
+                )
+        return g
+
+    def _start_shortest_path(self, source_node):
+        self._path_source = source_node
+        for item in self._scene.items():
+            if isinstance(item, NodeItem):
+                item.setOpacity(0.3 if item != source_node else 1.0)
+        self._path_source.setOpacity(1.0)
+        msg = f"Click target node for shortest path from '{source_node.title}'"
+        self.status_message(msg)
+
+    def _finish_shortest_path(self, target_node):
+        if not self._path_source:
+            return
+        source_id = self._path_source.id
+        target_id = target_node.id
+        for item in self._scene.items():
+            if isinstance(item, NodeItem):
+                item.setOpacity(1.0)
+
+        try:
+            g = self._to_networkx()
+            path = nx.shortest_path(g, source=source_id, target=target_id)
+            self._highlight_path(path)
+            self.status_message(f"Shortest path: {' → '.join(path)}")
+        except (nx.NetworkXNoPath, nx.NodeNotFound):
+            self.status_message("No path found between selected nodes")
+        self._path_source = None
+
+    def _highlight_path(self, node_ids):
+        self._clear_highlights()
+        for item in self._scene.items():
+            if isinstance(item, NodeItem) and item.id in node_ids:
+                item.setOpacity(1.0)
+                item.setScale(1.15)
+            elif isinstance(item, NodeItem):
+                item.setOpacity(0.25)
+            if isinstance(item, EdgeItem):
+                src_tgt = {item.source.id, item.target.id}
+                on_path = any(
+                    src_tgt == {node_ids[i], node_ids[i + 1]}
+                    for i in range(len(node_ids) - 1)
+                )
+                item.setOpacity(1.0 if on_path else 0.15)
+
+    def _clear_highlights(self):
+        for item in self._scene.items():
+            item.setOpacity(1.0)
+            if isinstance(item, NodeItem):
+                item.setScale(1.0)
+
+    def _show_centrality(self):
+        g = self._to_networkx()
+        if g.number_of_nodes() == 0:
+            self.status_message("Graph is empty")
+            return
+        cent = nx.degree_centrality(g)
+        max_cent = max(cent.values()) if cent else 1
+        for item in self._scene.items():
+            if isinstance(item, NodeItem):
+                c = cent.get(item.id, 0)
+                item.setScale(0.8 + c / max_cent * 0.7)
+        sorted_nodes = sorted(cent.items(), key=lambda x: x[1], reverse=True)
+        top = [f"{g.nodes[n]['label']}: {c:.2f}" for n, c in sorted_nodes[:5]]
+        self.status_message(f"Top centrality: {', '.join(top)}")
+
+    def _detect_communities(self):
+        g = self._to_networkx()
+        if g.number_of_nodes() == 0:
+            self.status_message("Graph is empty")
+            return
+        try:
+            from networkx.algorithms.community import greedy_modularity_communities
+
+            communities = list(greedy_modularity_communities(g))
+            for i, comm in enumerate(communities):
+                for node_id in comm:
+                    for item in self._scene.items():
+                        if isinstance(item, NodeItem) and item.id == node_id:
+                            item.setScale(1.0)
+                            break
+            self.status_message(f"Found {len(communities)} communities")
+        except ImportError:
+            self.status_message("Community detection requires networkx 2.x")
+
+    def status_message(self, msg):
+        if self.parent():
+            main = self.parent().parent().parent()
+            if hasattr(main, "statusBar"):
+                main.statusBar().showMessage(msg, 5000)
+
     def wheelEvent(self, event):
         factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
         self.scale(factor, factor)
@@ -1070,6 +1258,13 @@ class GraphWidget(QGraphicsView):
             self.setCursor(Qt.CursorShape.ClosedHandCursor)
             event.accept()
             return
+        if event.button() == Qt.MouseButton.LeftButton and self._path_source:
+            scene_pos = self.mapToScene(event.pos())
+            item = self._scene.itemAt(scene_pos, self.transform())
+            if isinstance(item, NodeItem) and item != self._path_source:
+                self._finish_shortest_path(item)
+                event.accept()
+                return
         super().mousePressEvent(event)
 
     def mouseMoveEvent(self, event):
@@ -1128,6 +1323,7 @@ class GraphWidget(QGraphicsView):
                         "source_port": item.source_port,
                         "target_port": item.target_port,
                         "label": item.label,
+                        "relationship_type": item.relationship_type,
                     }
                 )
         return {"nodes": nodes, "edges": edges}
@@ -1153,7 +1349,14 @@ class GraphWidget(QGraphicsView):
             if src and tgt:
                 sp = e.get("source_port", "right")
                 tp = e.get("target_port", "left")
-                edge = EdgeItem(src, tgt, sp, tp, label=e.get("label", ""))
+                edge = EdgeItem(
+                    src,
+                    tgt,
+                    sp,
+                    tp,
+                    label=e.get("label", ""),
+                    relationship_type=e.get("relationship_type", ""),
+                )
                 self._scene.addItem(edge)
                 src.add_edge_ref(edge)
                 tgt.add_edge_ref(edge)

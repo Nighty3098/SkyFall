@@ -14,6 +14,9 @@ class ShortcutManager(QObject):
         self.shortcut = QShortcut(
             QKeySequence("Ctrl+Shift+Tab"), parent, self.change_tab_backward
         )
+        self.shortcut = QShortcut(
+            QKeySequence("Ctrl+Shift+b"), parent, self.toggle_tabs
+        )
 
     def change_tab_forward(self):
         num_tabs = self._tab_widget.count()
@@ -36,3 +39,6 @@ class ShortcutManager(QObject):
         else:
             self._tab_widget.setCurrentIndex(current_index - 1)
             self._menu_list_widget.setCurrentRow(current_index - 1)
+
+    def toggle_tabs(self):
+        self._menu_list_widget.setVisible(self._menu_list_widget.isHidden())

@@ -20,6 +20,7 @@ from src.connectors import (
     setup_dorking_connectors,
     setup_github_connectors,
     setup_graph_connectors,
+    setup_graph_transform_connectors,
     setup_intelx_connectors,
     setup_mac_location_connectors,
     setup_metadata_connectors,
@@ -29,6 +30,9 @@ from src.connectors import (
     setup_tg_analyzer_connectors,
     setup_tg_downloader_connectors,
     setup_username_connectors,
+)
+from src.controllers.graph_transform_controller import (
+    GraphTransformController,
 )
 from src.controllers.blockchain_controller import BlockchainController
 from src.controllers.domain_controller import DomainController
@@ -259,6 +263,19 @@ class MainWindow(QMainWindow):
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
         setup_blockchain_connectors(self.blockchainController)
+
+        self.graphTransformController = GraphTransformController(
+            self.ui.graphWidget,
+            {
+                "domain_analyzer": self.domainAnalyzer,
+                "username_search": self.usernameSearch,
+                "maigret_search": self.maigretSearch,
+                "phone_search": self.phoneSearch,
+                "mac_location": self.macLocation,
+                "intelx_search": self.intelxSearchEngine,
+            },
+        )
+        setup_graph_transform_connectors(self.ui, self.graphTransformController)
         setup_graph_connectors(self.ui)
 
 

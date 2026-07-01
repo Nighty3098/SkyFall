@@ -254,3 +254,7 @@ def setup_graph_connectors(ui):
         ui.graphFilterCombo.addItem(etype)
 
     ui.entitySearchEdit.textChanged.connect(ui.entityPalette.set_filter)
+
+
+def setup_graph_transform_connectors(ui, controller):
+    ui.graphWidget._transform_controller = controller

@@ -998,6 +998,21 @@ class GraphWidget(QGraphicsView):
             sp_action.triggered.connect(lambda: self._start_shortest_path(item))
             analysis_menu.addAction(sp_action)
             menu.addMenu(analysis_menu)
+
+            if hasattr(self, '_transform_controller'):
+                transforms = self._transform_controller.get_transforms(item)
+                if transforms:
+                    tx_menu = QMenu("\u26a1 Transforms", self)
+                    for tf in transforms:
+                        act = QAction(f"  {tf.name}", self)
+                        act.setToolTip(tf.description)
+                        act.triggered.connect(
+                            lambda checked, n=item, t=tf:
+                                self._transform_controller.execute(n, t)
+                        )
+                        tx_menu.addAction(act)
+                    menu.addMenu(tx_menu)
+
             menu.addSeparator()
 
             delete_action = QAction("Delete Node", self)

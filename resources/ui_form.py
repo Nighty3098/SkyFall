@@ -1192,42 +1192,47 @@ class Ui_MainWindow(object):
         self.mainStackedWidget.addTab(self.blockchainTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
-        self.graphMainLayout = QHBoxLayout(self.graphTab)
+        self.graphMainLayout = QVBoxLayout(self.graphTab)
         self.graphMainLayout.setObjectName(u"graphMainLayout")
-        self.verticalLayout_13 = QVBoxLayout()
-        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
-        self.verticalLayout_13.setContentsMargins(-1, -1, 0, -1)
-        self.entitySearchEdit = QLineEdit(self.graphTab)
+        self.graphMainLayout.setContentsMargins(0, 0, 0, 0)
+        self.graphSplitter = QSplitter(self.graphTab)
+        self.graphSplitter.setObjectName(u"graphSplitter")
+        self.graphSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.entityPanel = QWidget(self.graphSplitter)
+        self.entityPanel.setObjectName(u"entityPanel")
+        self.entityLayout = QVBoxLayout(self.entityPanel)
+        self.entityLayout.setObjectName(u"entityLayout")
+        self.entityLayout.setContentsMargins(-1, -1, 0, -1)
+        self.entitySearchEdit = QLineEdit(self.entityPanel)
         self.entitySearchEdit.setObjectName(u"entitySearchEdit")
 
-        self.verticalLayout_13.addWidget(self.entitySearchEdit)
+        self.entityLayout.addWidget(self.entitySearchEdit)
 
-        self.entityPalette = EntityPalette(self.graphTab)
+        self.entityPalette = EntityPalette(self.entityPanel)
         self.entityPalette.setObjectName(u"entityPalette")
         self.entityPalette.setMinimumSize(QSize(250, 0))
         self.verticalLayout_23 = QVBoxLayout(self.entityPalette)
         self.verticalLayout_23.setObjectName(u"verticalLayout_23")
 
-        self.verticalLayout_13.addWidget(self.entityPalette)
+        self.entityLayout.addWidget(self.entityPalette)
 
-
-        self.graphMainLayout.addLayout(self.verticalLayout_13)
-
-        self.graphCenterLayout = QVBoxLayout()
+        self.graphCenterPanel = QWidget(self.graphSplitter)
+        self.graphCenterPanel.setObjectName(u"graphCenterPanel")
+        self.graphCenterLayout = QVBoxLayout(self.graphCenterPanel)
         self.graphCenterLayout.setObjectName(u"graphCenterLayout")
         self.graphButtonLayout = QHBoxLayout()
         self.graphButtonLayout.setObjectName(u"graphButtonLayout")
-        self.exportGraphButton = QPushButton(self.graphTab)
+        self.exportGraphButton = QPushButton(self.graphCenterPanel)
         self.exportGraphButton.setObjectName(u"exportGraphButton")
 
         self.graphButtonLayout.addWidget(self.exportGraphButton)
 
-        self.importGraphButton = QPushButton(self.graphTab)
+        self.importGraphButton = QPushButton(self.graphCenterPanel)
         self.importGraphButton.setObjectName(u"importGraphButton")
 
         self.graphButtonLayout.addWidget(self.importGraphButton)
 
-        self.graphClearButton = QPushButton(self.graphTab)
+        self.graphClearButton = QPushButton(self.graphCenterPanel)
         self.graphClearButton.setObjectName(u"graphClearButton")
 
         self.graphButtonLayout.addWidget(self.graphClearButton)
@@ -1237,19 +1242,19 @@ class Ui_MainWindow(object):
 
         self.graphSearchLayout = QHBoxLayout()
         self.graphSearchLayout.setObjectName(u"graphSearchLayout")
-        self.graphSearchEdit = QLineEdit(self.graphTab)
+        self.graphSearchEdit = QLineEdit(self.graphCenterPanel)
         self.graphSearchEdit.setObjectName(u"graphSearchEdit")
         self.graphSearchEdit.setClearButtonEnabled(True)
 
         self.graphSearchLayout.addWidget(self.graphSearchEdit)
 
-        self.graphClearFilterButton = QPushButton(self.graphTab)
+        self.graphClearFilterButton = QPushButton(self.graphCenterPanel)
         self.graphClearFilterButton.setObjectName(u"graphClearFilterButton")
         self.graphClearFilterButton.setMinimumSize(QSize(150, 0))
 
         self.graphSearchLayout.addWidget(self.graphClearFilterButton)
 
-        self.graphFilterCombo = QComboBox(self.graphTab)
+        self.graphFilterCombo = QComboBox(self.graphCenterPanel)
         self.graphFilterCombo.setObjectName(u"graphFilterCombo")
         self.graphFilterCombo.setMinimumSize(QSize(150, 0))
 
@@ -1258,15 +1263,12 @@ class Ui_MainWindow(object):
 
         self.graphCenterLayout.addLayout(self.graphSearchLayout)
 
-        self.graphWidget = GraphWidget(self.graphTab)
+        self.graphWidget = GraphWidget(self.graphCenterPanel)
         self.graphWidget.setObjectName(u"graphWidget")
 
         self.graphCenterLayout.addWidget(self.graphWidget)
 
-
-        self.graphMainLayout.addLayout(self.graphCenterLayout)
-
-        self.nodeEditPanel = PropertiesPanel(self.graphTab)
+        self.nodeEditPanel = PropertiesPanel(self.graphSplitter)
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
         self.nodeEditPanel.setMinimumSize(QSize(500, 0))
         self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
@@ -1313,8 +1315,11 @@ class Ui_MainWindow(object):
 
         self.nodeEditLayout.addLayout(self.nodeEvidenceBtnLayout)
 
+        self.graphSplitter.addWidget(self.entityPanel)
+        self.graphSplitter.addWidget(self.graphCenterPanel)
+        self.graphSplitter.addWidget(self.nodeEditPanel)
 
-        self.graphMainLayout.addWidget(self.nodeEditPanel)
+        self.graphMainLayout.addWidget(self.graphSplitter)
 
         self.mainStackedWidget.addTab(self.graphTab, "")
         self.settingsTab = QWidget()

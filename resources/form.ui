@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1516</width>
-    <height>792</height>
+    <width>1243</width>
+    <height>944</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>12</number>
+         <number>11</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1788,174 +1788,191 @@
          <attribute name="title">
           <string>GRAPH</string>
          </attribute>
-         <layout class="QHBoxLayout" name="graphMainLayout">
+         <layout class="QVBoxLayout" name="graphMainLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
           <item>
-           <layout class="QVBoxLayout" name="verticalLayout_13">
-            <property name="rightMargin">
-             <number>0</number>
+           <widget class="QSplitter" name="graphSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
-            <item>
-             <widget class="QLineEdit" name="entitySearchEdit">
-              <property name="placeholderText">
-               <string>Search</string>
+            <widget class="QWidget" name="entityPanel" native="true">
+             <layout class="QVBoxLayout" name="entityLayout">
+              <property name="rightMargin">
+               <number>0</number>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="EntityPalette" name="entityPalette" native="true">
-              <property name="minimumSize">
-               <size>
-                <width>250</width>
-                <height>0</height>
-               </size>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_23"/>
-             </widget>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <layout class="QVBoxLayout" name="graphCenterLayout">
-            <item>
-             <layout class="QHBoxLayout" name="graphButtonLayout">
               <item>
-               <widget class="QPushButton" name="exportGraphButton">
-                <property name="text">
-                 <string>Export To JSON</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="importGraphButton">
-                <property name="text">
-                 <string>Import From JSON</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QPushButton" name="graphClearButton">
-                <property name="text">
-                 <string>Clear All</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </item>
-            <item>
-             <layout class="QHBoxLayout" name="graphSearchLayout">
-              <item>
-               <widget class="QLineEdit" name="graphSearchEdit">
+               <widget class="QLineEdit" name="entitySearchEdit">
                 <property name="placeholderText">
-                 <string>Search nodes...</string>
-                </property>
-                <property name="clearButtonEnabled">
-                 <bool>true</bool>
+                 <string>Search</string>
                 </property>
                </widget>
               </item>
               <item>
-               <widget class="QPushButton" name="graphClearFilterButton">
+               <widget class="EntityPalette" name="entityPalette" native="true">
                 <property name="minimumSize">
                  <size>
-                  <width>150</width>
+                  <width>250</width>
                   <height>0</height>
                  </size>
                 </property>
-                <property name="text">
-                 <string>Clear</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="graphFilterCombo">
-                <property name="minimumSize">
-                 <size>
-                  <width>150</width>
-                  <height>0</height>
-                 </size>
-                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_23"/>
                </widget>
               </item>
              </layout>
-            </item>
-            <item>
-             <widget class="GraphWidget" name="graphWidget"/>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="PropertiesPanel" name="nodeEditPanel" native="true">
-            <property name="minimumSize">
-             <size>
-              <width>400</width>
-              <height>0</height>
-             </size>
-            </property>
-            <layout class="QVBoxLayout" name="nodeEditLayout">
-             <property name="leftMargin">
-              <number>0</number>
+            </widget>
+            <widget class="QWidget" name="graphCenterPanel" native="true">
+             <layout class="QVBoxLayout" name="graphCenterLayout">
+              <item>
+               <layout class="QHBoxLayout" name="graphButtonLayout">
+                <item>
+                 <widget class="QPushButton" name="exportGraphButton">
+                  <property name="text">
+                   <string>Export To JSON</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="importGraphButton">
+                  <property name="text">
+                   <string>Import From JSON</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="graphClearButton">
+                  <property name="text">
+                   <string>Clear All</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="graphSearchLayout">
+                <item>
+                 <widget class="QLineEdit" name="graphSearchEdit">
+                  <property name="placeholderText">
+                   <string>Search nodes...</string>
+                  </property>
+                  <property name="clearButtonEnabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="graphClearFilterButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>150</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Clear</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QComboBox" name="graphFilterCombo">
+                  <property name="minimumSize">
+                   <size>
+                    <width>150</width>
+                    <height>0</height>
+                   </size>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item>
+               <widget class="GraphWidget" name="graphWidget"/>
+              </item>
+             </layout>
+            </widget>
+            <widget class="PropertiesPanel" name="nodeEditPanel" native="true">
+             <property name="minimumSize">
+              <size>
+               <width>400</width>
+               <height>0</height>
+              </size>
              </property>
-             <property name="topMargin">
-              <number>0</number>
-             </property>
-             <property name="rightMargin">
-              <number>0</number>
-             </property>
-             <property name="bottomMargin">
-              <number>0</number>
-             </property>
-             <item>
-              <widget class="QLineEdit" name="nodeTitleEdit">
-               <property name="placeholderText">
-                <string>Title</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QComboBox" name="nodeTypeCombo"/>
-             </item>
-             <item>
-              <widget class="QPlainTextEdit" name="nodeContentEdit">
-               <property name="minimumSize">
-                <size>
-                 <width>250</width>
-                 <height>60</height>
-                </size>
-               </property>
-               <property name="placeholderText">
-                <string>Content</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QListWidget" name="nodeEvidenceList"/>
-             </item>
-             <item>
-              <layout class="QHBoxLayout" name="nodeEvidenceBtnLayout">
-               <item>
-                <widget class="QPushButton" name="nodeEvidenceAddFileBtn">
-                 <property name="text">
-                  <string>Add File</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="nodeEvidenceAddUrlBtn">
-                 <property name="text">
-                  <string>Add URL</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="nodeEvidenceRemoveBtn">
-                 <property name="text">
-                  <string>Remove</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
-             </item>
-            </layout>
+             <layout class="QVBoxLayout" name="nodeEditLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QLineEdit" name="nodeTitleEdit">
+                <property name="placeholderText">
+                 <string>Title</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="nodeTypeCombo"/>
+              </item>
+              <item>
+               <widget class="QPlainTextEdit" name="nodeContentEdit">
+                <property name="minimumSize">
+                 <size>
+                  <width>250</width>
+                  <height>60</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string>Content</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="nodeEvidenceList"/>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="nodeEvidenceBtnLayout">
+                <item>
+                 <widget class="QPushButton" name="nodeEvidenceAddFileBtn">
+                  <property name="text">
+                   <string>Add File</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="nodeEvidenceAddUrlBtn">
+                  <property name="text">
+                   <string>Add URL</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="nodeEvidenceRemoveBtn">
+                  <property name="text">
+                   <string>Remove</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>

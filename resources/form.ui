@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>11</number>
+         <number>12</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -128,22 +128,6 @@
              </spacer>
             </item>
            </layout>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_4">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Policy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>150</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
           </item>
          </layout>
         </widget>
@@ -2127,21 +2111,21 @@
               </property>
              </widget>
             </item>
-             <item>
-              <widget class="QCheckBox" name="lightThemeCheck">
-               <property name="text">
-                <string>Light Theme</string>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QCheckBox" name="framelessCheck">
-               <property name="text">
-                <string>Frameless Window</string>
-               </property>
-              </widget>
-             </item>
-             <item>
+            <item>
+             <widget class="QCheckBox" name="lightThemeCheck">
+              <property name="text">
+               <string>Light Theme</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="framelessCheck">
+              <property name="text">
+               <string>Frameless Window</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QPushButton" name="pushButton">
               <property name="text">
                <string>Save</string>
@@ -2171,22 +2155,6 @@
             <property name="sizeHint" stdset="0">
              <size>
               <width>40</width>
-              <height>20</height>
-             </size>
-            </property>
-           </spacer>
-          </item>
-          <item>
-           <spacer name="horizontalSpacer_5">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-            <property name="sizeType">
-             <enum>QSizePolicy::Policy::Fixed</enum>
-            </property>
-            <property name="sizeHint" stdset="0">
-             <size>
-              <width>150</width>
               <height>20</height>
              </size>
             </property>

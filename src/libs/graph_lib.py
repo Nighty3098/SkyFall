@@ -999,7 +999,7 @@ class GraphWidget(QGraphicsView):
             analysis_menu.addAction(sp_action)
             menu.addMenu(analysis_menu)
 
-            if hasattr(self, '_transform_controller'):
+            if hasattr(self, "_transform_controller"):
                 transforms = self._transform_controller.get_transforms(item)
                 if transforms:
                     tx_menu = QMenu("\u26a1 Transforms", self)
@@ -1007,8 +1007,9 @@ class GraphWidget(QGraphicsView):
                         act = QAction(f"  {tf.name}", self)
                         act.setToolTip(tf.description)
                         act.triggered.connect(
-                            lambda checked, n=item, t=tf:
+                            lambda checked, n=item, t=tf: (
                                 self._transform_controller.execute(n, t)
+                            )
                         )
                         tx_menu.addAction(act)
                     menu.addMenu(tx_menu)

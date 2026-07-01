@@ -31,14 +31,14 @@ from src.connectors import (
     setup_tg_downloader_connectors,
     setup_username_connectors,
 )
-from src.controllers.graph_transform_controller import (
-    GraphTransformController,
-)
 from src.controllers.blockchain_controller import BlockchainController
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
+from src.controllers.graph_transform_controller import (
+    GraphTransformController,
+)
 from src.controllers.intelx_controller import IntelxController
 from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.phone_controller import PhoneController

@@ -61,11 +61,13 @@ class GraphTransformController:
 
         children = list(result.children)
         if not children and result.content:
-            children.append(ChildNodeDef(
-                title=result.content.split("\n")[0][:60],
-                entity_type=transform_def.output_type or "Custom",
-                content=result.content,
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=result.content.split("\n")[0][:60],
+                    entity_type=transform_def.output_type or "Custom",
+                    content=result.content,
+                )
+            )
 
         child_nodes = []
         for cd in children:
@@ -80,9 +82,7 @@ class GraphTransformController:
             child.update()
             child_nodes.append(child)
 
-            self._graph.add_edge(
-                node, child, source_port="right", target_port="left"
-            )
+            self._graph.add_edge(node, child, source_port="right", target_port="left")
             if transform_def.relationship:
                 for edge in child._edges:
                     if edge.target == child or edge.source == child:
@@ -301,6 +301,7 @@ def _pack_content(lines: list[str]) -> str:
 
 # ── Username transforms ──────────────────────────────────────────
 
+
 async def _transform_username_search(username: str, modules) -> TransformResult:
     engine = modules.get("username_search")
     if not engine:
@@ -311,27 +312,35 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
     detail = f"Username search: found on {len(claimed)}/{len(results)} sites\n"
     children = []
     for r in claimed[:CHILD_THRESHOLD]:
-        children.append(ChildNodeDef(
-            title=r["site"],
-            entity_type="Custom",
-            content=r.get("url_user", ""),
-            evidence=[r.get("url_main", "")],
-        ))
+        children.append(
+            ChildNodeDef(
+                title=r["site"],
+                entity_type="Custom",
+                content=r.get("url_user", ""),
+                evidence=[r.get("url_main", "")],
+            )
+        )
 
     if len(claimed) > CHILD_THRESHOLD:
-        children.append(ChildNodeDef(
-            title=f"+{len(claimed) - CHILD_THRESHOLD} more sites",
-            entity_type="Custom",
-            content="\n".join(
-                f"{r['site']}: {r.get('url_user', '')}"
-                for r in claimed[CHILD_THRESHOLD:]
-            ),
-        ))
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(claimed) - CHILD_THRESHOLD} more sites",
+                entity_type="Custom",
+                content="\n".join(
+                    f"{r['site']}: {r.get('url_user', '')}"
+                    for r in claimed[CHILD_THRESHOLD:]
+                ),
+            )
+        )
 
-    site_lines = [f"{r['site']}: {r.get('url_user', r.get('url_main', ''))}" for r in claimed]
+    site_lines = [
+        f"{r['site']}: {r.get('url_user', r.get('url_main', ''))}" for r in claimed
+    ]
     return TransformResult(
         children=children,
-        content=detail + "\n".join(site_lines) if site_lines else detail + "No accounts found",
+        content=detail + "\n".join(site_lines)
+        if site_lines
+        else detail + "No accounts found",
         evidence=[r.get("url_main", "") for r in claimed if r.get("url_main")],
     )
 
@@ -348,6 +357,7 @@ async def _transform_maigret_search(username: str, modules) -> TransformResult:
 
 # ── Domain transforms ────────────────────────────────────────────
 
+
 async def _transform_domain_ip(domain: str, modules) -> TransformResult:
     da = modules.get("domain_analyzer")
     if not da:
@@ -361,22 +371,26 @@ async def _transform_domain_ip(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=ip,
                     entity_type="IP",
-                    content=_pack_content([
-                        f"Country: {data.get('country', '?')}",
-                        f"City: {data.get('city', '?')}",
-                        f"ASN: {data.get('asn', '?')}",
-                        f"Provider: {data.get('provider', '?')}",
-                    ]),
+                    content=_pack_content(
+                        [
+                            f"Country: {data.get('country', '?')}",
+                            f"City: {data.get('city', '?')}",
+                            f"ASN: {data.get('asn', '?')}",
+                            f"Provider: {data.get('provider', '?')}",
+                        ]
+                    ),
                 ),
             )
         lat = data.get("lat")
         lon = data.get("lon")
         if lat and lon:
-            children.append(ChildNodeDef(
-                title=f"{lat:.2f}, {lon:.2f}",
-                entity_type="Geolocation",
-                content=f"Latitude: {lat}\nLongitude: {lon}",
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"{lat:.2f}, {lon:.2f}",
+                    entity_type="Geolocation",
+                    content=f"Latitude: {lat}\nLongitude: {lon}",
+                )
+            )
         info = _pack_content([f"{k}: {v}" for k, v in data.items() if v])
         return TransformResult(children=children, content=info or str(data))
     return TransformResult(content=str(data))
@@ -396,7 +410,9 @@ async def _transform_domain_dns(domain: str, modules) -> TransformResult:
                 lines.append(f"{rtype}: {', '.join(records[:3])}")
                 for rec in records[:3]:
                     child_type = "IP" if rtype == "A" else "Custom"
-                    children.append(ChildNodeDef(title=str(rec), entity_type=child_type))
+                    children.append(
+                        ChildNodeDef(title=str(rec), entity_type=child_type)
+                    )
         soa = data.get("SOA", {})
         if soa:
             lines.append(f"SOA: {soa.get('mname', '?')}")
@@ -451,28 +467,36 @@ async def _transform_domain_webstack(domain: str, modules) -> TransformResult:
         ]
         children = []
         if server and server != "Not resolve":
-            children.append(ChildNodeDef(
-                title=f"Server: {server}",
-                entity_type="Custom",
-                content=f"Web server: {server}",
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"Server: {server}",
+                    entity_type="Custom",
+                    content=f"Web server: {server}",
+                )
+            )
         if waf and waf != "NOT FOUND":
-            children.append(ChildNodeDef(
-                title=f"WAF: {waf}",
-                entity_type="Custom",
-                content=f"WAF detected: {waf}",
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"WAF: {waf}",
+                    entity_type="Custom",
+                    content=f"WAF detected: {waf}",
+                )
+            )
         if isinstance(tech, list):
             for t in tech[:CHILD_THRESHOLD]:
-                children.append(ChildNodeDef(
-                    title=t,
-                    entity_type="Custom",
-                    content=f"Technology: {t}",
-                ))
+                children.append(
+                    ChildNodeDef(
+                        title=t,
+                        entity_type="Custom",
+                        content=f"Technology: {t}",
+                    )
+                )
         return TransformResult(
-            children=children[:CHILD_THRESHOLD + 2],
+            children=children[: CHILD_THRESHOLD + 2],
             content=_pack_content(lines),
-            evidence=[str(data.get("http_headers", {}))] if data.get("http_headers") else [],
+            evidence=[str(data.get("http_headers", {}))]
+            if data.get("http_headers")
+            else [],
         )
     return TransformResult(content=str(data))
 
@@ -493,18 +517,24 @@ async def _transform_domain_whois(domain: str, modules) -> TransformResult:
             expiration = expiration[0]
         children = []
         if org:
-            children.append(ChildNodeDef(
-                title=str(org)[:60],
-                entity_type="Organization",
-                content=_pack_content([
-                    f"Registrar: {registrar}",
-                    f"Created: {creation}",
-                    f"Expires: {expiration}",
-                ]),
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=str(org)[:60],
+                    entity_type="Organization",
+                    content=_pack_content(
+                        [
+                            f"Registrar: {registrar}",
+                            f"Created: {creation}",
+                            f"Expires: {expiration}",
+                        ]
+                    ),
+                )
+            )
         return TransformResult(
             children=children,
-            content=_pack_content([f"{k}: {v}" for k, v in data.items() if not k.startswith("_")]),
+            content=_pack_content(
+                [f"{k}: {v}" for k, v in data.items() if not k.startswith("_")]
+            ),
         )
     return TransformResult(content=str(data))
 
@@ -520,11 +550,13 @@ async def _transform_domain_subdomains(domain: str, modules) -> TransformResult:
         for sub in subs[:CHILD_THRESHOLD]:
             children.append(ChildNodeDef(title=sub, entity_type="Domain"))
         if len(subs) > CHILD_THRESHOLD:
-            children.append(ChildNodeDef(
-                title=f"+{len(subs) - CHILD_THRESHOLD} more",
-                entity_type="Custom",
-                content="\n".join(subs[CHILD_THRESHOLD:]),
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"+{len(subs) - CHILD_THRESHOLD} more",
+                    entity_type="Custom",
+                    content="\n".join(subs[CHILD_THRESHOLD:]),
+                )
+            )
         return TransformResult(
             children=children,
             content=f"Found {len(subs)} subdomains\n" + "\n".join(subs) if subs else "",
@@ -540,9 +572,7 @@ async def _transform_domain_ct(domain: str, modules) -> TransformResult:
     if isinstance(raw, str) and raw and "Error" not in raw:
         lines = raw.split("\n")
         domains = [l[2:] for l in lines if l.startswith("- ")][:CHILD_THRESHOLD]
-        children = [
-            ChildNodeDef(title=d, entity_type="Domain") for d in domains
-        ]
+        children = [ChildNodeDef(title=d, entity_type="Domain") for d in domains]
         return TransformResult(
             children=children,
             content=raw,
@@ -564,17 +594,21 @@ async def _transform_domain_social(domain: str, modules) -> TransformResult:
             val = tag.split(":", 1)[1].strip() if ":" in tag else ""
             if key not in seen:
                 seen.add(key)
-                children.append(ChildNodeDef(
-                    title=key if len(key) < 40 else key[:37] + "...",
-                    entity_type="Custom",
-                    content=val,
-                ))
+                children.append(
+                    ChildNodeDef(
+                        title=key if len(key) < 40 else key[:37] + "...",
+                        entity_type="Custom",
+                        content=val,
+                    )
+                )
         if len(tags) > CHILD_THRESHOLD:
-            children.append(ChildNodeDef(
-                title=f"+{len(tags) - CHILD_THRESHOLD} more tags",
-                entity_type="Custom",
-                content="\n".join(tags[CHILD_THRESHOLD:]),
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"+{len(tags) - CHILD_THRESHOLD} more tags",
+                    entity_type="Custom",
+                    content="\n".join(tags[CHILD_THRESHOLD:]),
+                )
+            )
         return TransformResult(children=children, content=raw)
     return TransformResult(content="No social tags found")
 
@@ -589,11 +623,13 @@ async def _transform_domain_malware(domain: str, modules) -> TransformResult:
         source = data.get("source", "?")
         malicious = data.get("malicious_votes", 0)
         return TransformResult(
-            children=[ChildNodeDef(
-                title=f"Reputation: {status}",
-                entity_type="Custom",
-                content=f"Source: {source}\nMalicious votes: {malicious}",
-            )],
+            children=[
+                ChildNodeDef(
+                    title=f"Reputation: {status}",
+                    entity_type="Custom",
+                    content=f"Source: {source}\nMalicious votes: {malicious}",
+                )
+            ],
             content=f"Status: {status}\nSource: {source}\nMalicious votes: {malicious}",
         )
     return TransformResult(content=str(data))
@@ -606,11 +642,13 @@ async def _transform_domain_securitytxt(domain: str, modules) -> TransformResult
     raw = await da.get_security_txt(domain)
     if raw and "Not Found" not in raw:
         return TransformResult(
-            children=[ChildNodeDef(
-                title="security.txt",
-                entity_type="Custom",
-                content=raw[:500],
-            )],
+            children=[
+                ChildNodeDef(
+                    title="security.txt",
+                    entity_type="Custom",
+                    content=raw[:500],
+                )
+            ],
             content=raw,
         )
     return TransformResult(content="No security.txt found")
@@ -624,23 +662,29 @@ async def _transform_domain_cookies(domain: str, modules) -> TransformResult:
     if raw and "No cookies" not in raw:
         lines = [l for l in raw.split("\n") if l.strip()]
         children = []
-        for i, line in enumerate(lines[:CHILD_THRESHOLD * 2]):
+        for i, line in enumerate(lines[: CHILD_THRESHOLD * 2]):
             if ":" in line and not line.startswith(" "):
                 name = line.split(":", 1)[0].strip()
                 val = line.split(":", 1)[1].strip()
-                children.append(ChildNodeDef(
-                    title=f"Cookie: {name}" if len(name) < 50 else name[:47] + "...",
-                    entity_type="Custom",
-                    content=val,
-                ))
+                children.append(
+                    ChildNodeDef(
+                        title=f"Cookie: {name}"
+                        if len(name) < 50
+                        else name[:47] + "...",
+                        entity_type="Custom",
+                        content=val,
+                    )
+                )
         if len(lines) > CHILD_THRESHOLD * 2:
-            children.append(ChildNodeDef(
-                title=f"+{len(lines) - CHILD_THRESHOLD * 2} more cookies",
-                entity_type="Custom",
-                content="\n".join(lines[CHILD_THRESHOLD * 2:]),
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"+{len(lines) - CHILD_THRESHOLD * 2} more cookies",
+                    entity_type="Custom",
+                    content="\n".join(lines[CHILD_THRESHOLD * 2 :]),
+                )
+            )
         return TransformResult(
-            children=children[:CHILD_THRESHOLD + 1],
+            children=children[: CHILD_THRESHOLD + 1],
             content=raw,
         )
     return TransformResult(content="No cookies found")
@@ -653,11 +697,13 @@ async def _transform_domain_robots(domain: str, modules) -> TransformResult:
     raw = await da.get_robots_txt(domain)
     if raw and "Error" not in raw:
         return TransformResult(
-            children=[ChildNodeDef(
-                title="robots.txt",
-                entity_type="Custom",
-                content=raw[:500],
-            )],
+            children=[
+                ChildNodeDef(
+                    title="robots.txt",
+                    entity_type="Custom",
+                    content=raw[:500],
+                )
+            ],
             content=raw,
         )
     return TransformResult(content=str(raw))
@@ -672,22 +718,25 @@ async def _transform_domain_nmap(domain: str, modules) -> TransformResult:
         children = []
         for host, ports in data.items():
             for p in ports[:CHILD_THRESHOLD]:
-                children.append(ChildNodeDef(
-                    title=f"Port {p['port']}/{p.get('service', '?')}",
-                    entity_type="Custom",
-                    content=_pack_content([
-                        f"State: {p.get('state', '?')}",
-                        f"Service: {p.get('service', '?')}",
-                        f"Product: {p.get('product', '?')}",
-                        f"Version: {p.get('version', '?')}",
-                    ]),
-                ))
+                children.append(
+                    ChildNodeDef(
+                        title=f"Port {p['port']}/{p.get('service', '?')}",
+                        entity_type="Custom",
+                        content=_pack_content(
+                            [
+                                f"State: {p.get('state', '?')}",
+                                f"Service: {p.get('service', '?')}",
+                                f"Product: {p.get('product', '?')}",
+                                f"Version: {p.get('version', '?')}",
+                            ]
+                        ),
+                    )
+                )
         lines = []
         for host, ports in data.items():
             for p in ports:
                 lines.append(
-                    f"Port {p['port']}/{p.get('service', '?')} "
-                    f"- {p.get('state', '?')}"
+                    f"Port {p['port']}/{p.get('service', '?')} - {p.get('state', '?')}"
                 )
         return TransformResult(
             children=children[:CHILD_THRESHOLD],
@@ -697,6 +746,7 @@ async def _transform_domain_nmap(domain: str, modules) -> TransformResult:
 
 
 # ── IP transforms ────────────────────────────────────────────────
+
 
 async def _transform_ip_geo(ip_addr: str, modules) -> TransformResult:
     da = modules.get("domain_analyzer")
@@ -712,13 +762,15 @@ async def _transform_ip_geo(ip_addr: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=f"{lat:.2f}, {lon:.2f}",
                     entity_type="Geolocation",
-                    content=_pack_content([
-                        f"IP: {data.get('ip', ip_addr)}",
-                        f"Country: {data.get('country', '?')}",
-                        f"City: {data.get('city', '?')}",
-                        f"Latitude: {lat}",
-                        f"Longitude: {lon}",
-                    ]),
+                    content=_pack_content(
+                        [
+                            f"IP: {data.get('ip', ip_addr)}",
+                            f"Country: {data.get('country', '?')}",
+                            f"City: {data.get('city', '?')}",
+                            f"Latitude: {lat}",
+                            f"Longitude: {lon}",
+                        ]
+                    ),
                 ),
             )
         info = _pack_content([f"{k}: {v}" for k, v in data.items() if v])
@@ -727,6 +779,7 @@ async def _transform_ip_geo(ip_addr: str, modules) -> TransformResult:
 
 
 # ── Email transforms ─────────────────────────────────────────────
+
 
 async def _transform_email_intelx(email: str, modules) -> TransformResult:
     engine = modules.get("intelx_search")
@@ -742,22 +795,27 @@ async def _transform_email_intelx(email: str, modules) -> TransformResult:
             clean = db.strip()
             if clean and clean not in seen:
                 seen.add(clean)
-                children.append(ChildNodeDef(
-                    title=clean[:50],
-                    entity_type="Custom",
-                    content=f"Database: {clean}\nEmail: {email}",
-                ))
+                children.append(
+                    ChildNodeDef(
+                        title=clean[:50],
+                        entity_type="Custom",
+                        content=f"Database: {clean}\nEmail: {email}",
+                    )
+                )
         if len(db_lines) > CHILD_THRESHOLD:
-            children.append(ChildNodeDef(
-                title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
-                entity_type="Custom",
-                content="\n".join(db_lines[CHILD_THRESHOLD:]),
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
+                    entity_type="Custom",
+                    content="\n".join(db_lines[CHILD_THRESHOLD:]),
+                )
+            )
         return TransformResult(children=children, content=raw)
     return TransformResult(content=str(raw))
 
 
 # ── Phone transforms ─────────────────────────────────────────────
+
 
 async def _transform_phone_parse(phone: str, modules) -> TransformResult:
     engine = modules.get("phone_search")
@@ -774,11 +832,13 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
             if key not in seen:
                 seen.add(key)
                 title = f"{key}: {val}" if len(val) < 30 else key
-                children.append(ChildNodeDef(
-                    title=title[:50],
-                    entity_type="Custom",
-                    content=line,
-                ))
+                children.append(
+                    ChildNodeDef(
+                        title=title[:50],
+                        entity_type="Custom",
+                        content=line,
+                    )
+                )
         return TransformResult(children=children, content=raw)
     return TransformResult(content=str(raw))
 
@@ -794,11 +854,13 @@ async def _transform_phone_lookup(phone: str, modules) -> TransformResult:
         for line in lines[:CHILD_THRESHOLD]:
             key = line.split(":", 1)[0].strip()
             val = line.split(":", 1)[1].strip() if ":" in line else ""
-            children.append(ChildNodeDef(
-                title=key[:50],
-                entity_type="Custom",
-                content=val,
-            ))
+            children.append(
+                ChildNodeDef(
+                    title=key[:50],
+                    entity_type="Custom",
+                    content=val,
+                )
+            )
         return TransformResult(children=children, content=raw)
     return TransformResult(content=str(raw))
 
@@ -810,17 +872,20 @@ async def _transform_phone_leaks(phone: str, modules) -> TransformResult:
     raw = await engine.check_leaks(phone)
     if raw and "No API keys" not in raw and "Not found" not in raw:
         return TransformResult(
-            children=[ChildNodeDef(
-                title="Leak Check Results",
-                entity_type="Custom",
-                content=raw[:500],
-            )],
+            children=[
+                ChildNodeDef(
+                    title="Leak Check Results",
+                    entity_type="Custom",
+                    content=raw[:500],
+                )
+            ],
             content=raw,
         )
     return TransformResult(content=str(raw))
 
 
 # ── MAC transforms ───────────────────────────────────────────────
+
 
 async def _transform_mac_geo(mac: str, modules) -> TransformResult:
     engine = modules.get("mac_location")
@@ -838,18 +903,22 @@ async def _transform_mac_geo(mac: str, modules) -> TransformResult:
                     ChildNodeDef(
                         title=f"{lat:.4f}, {lon:.4f}",
                         entity_type="Geolocation",
-                        content=_pack_content([
-                            f"MAC: {mac}",
-                            f"Provider: {name}",
-                            f"Latitude: {lat}",
-                            f"Longitude: {lon}",
-                        ]),
+                        content=_pack_content(
+                            [
+                                f"MAC: {mac}",
+                                f"Provider: {name}",
+                                f"Latitude: {lat}",
+                                f"Longitude: {lon}",
+                            ]
+                        ),
                     ),
                 ],
-                content=_pack_content([
-                    f"{n}: {l['latitude']:.4f}, {l['longitude']:.4f}"
-                    for n, l in found.items()
-                ]),
+                content=_pack_content(
+                    [
+                        f"{n}: {l['latitude']:.4f}, {l['longitude']:.4f}"
+                        for n, l in found.items()
+                    ]
+                ),
             )
         return TransformResult(content="No geolocation data found for this MAC")
     return TransformResult(content=str(data))

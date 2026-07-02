@@ -951,12 +951,12 @@ async def _transform_mac_geo(mac: str, modules) -> TransformResult:
     data = await engine.locate_async(mac)
     if isinstance(data, dict):
         locs = data.get("location", {})
-        found = {name: loc for name, loc in locs.items() if loc}
-        if found:
-            name, loc = next(iter(found.items()))
-            lat, lon = loc["latitude"], loc["longitude"]
-            return TransformResult(
-                children=[
+        children = []
+        content_lines = []
+        for name, loc in locs.items():
+            if loc:
+                lat, lon = loc["latitude"], loc["longitude"]
+                children.append(
                     ChildNodeDef(
                         title=f"{lat:.4f}, {lon:.4f}",
                         entity_type="Geolocation",
@@ -968,14 +968,14 @@ async def _transform_mac_geo(mac: str, modules) -> TransformResult:
                                 f"Longitude: {lon}",
                             ]
                         ),
-                    ),
-                ],
-                content=_pack_content(
-                    [
-                        f"{n}: {l['latitude']:.4f}, {l['longitude']:.4f}"
-                        for n, l in found.items()
-                    ]
-                ),
+                    )
+                )
+                content_lines.append(f"{name}: {lat:.4f}, {lon:.4f}")
+            else:
+                content_lines.append(f"{name}: no data")
+        if children:
+            return TransformResult(
+                children=children, content=_pack_content(content_lines)
             )
         return TransformResult(content="No geolocation data found for this MAC")
     return TransformResult(content=str(data))

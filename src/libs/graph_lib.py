@@ -48,6 +48,7 @@ ENTITY_TYPES = [
     ("IP", "#f9ca24", "\U0001f4e1"),
     ("Email", "#6c5ce7", "\u2709\ufe0f"),
     ("Phone", "#fd79a8", "\U0001f4f1"),
+    ("MAC", "#d35400", "\U0001f50c"),
     ("Username", "#00b894", "@"),
     ("Crypto", "#f39c12", "\u20bf"),
     ("Organization", "#e17055", "\U0001f3e2"),

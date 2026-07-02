@@ -874,19 +874,12 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
 
         timezones_str = data.get("Timezones")
         if timezones_str:
-            tzs = [t.strip() for t in timezones_str.split(",")]
-            for tz in tzs[:CHILD_THRESHOLD]:
+            for tz in [t.strip() for t in timezones_str.split(",")]:
                 city = tz.split("/")[-1] if "/" in tz else tz
                 children.append(ChildNodeDef(
                     title=city,
                     entity_type="Geolocation",
                     content=f"Phone: {e164}\nTimezone: {tz}",
-                ))
-            if len(tzs) > CHILD_THRESHOLD:
-                children.append(ChildNodeDef(
-                    title=f"+{len(tzs) - CHILD_THRESHOLD} more timezones",
-                    entity_type="Custom",
-                    content="\n".join(tzs[CHILD_THRESHOLD:]),
                 ))
 
         return TransformResult(children=children, content=raw)

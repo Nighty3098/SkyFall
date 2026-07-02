@@ -72,8 +72,8 @@ class GraphTransformController:
         child_nodes = []
         for cd in children:
             pos = node.pos() + QPointF(
-                220 + len(child_nodes) * 40,
-                -30 * max(1, len(children)) + len(child_nodes) * 60,
+                220 + len(child_nodes) * 80,
+                -40 * len(children) + len(child_nodes) * 80,
             )
             child = self._graph.add_node(pos, cd.entity_type)
             child.title = cd.title
@@ -96,15 +96,29 @@ class GraphTransformController:
         count = len(children)
         if count == 0:
             return
-        radius = 200
-        start_angle = -80
-        end_angle = 80
-        for i, child in enumerate(children):
-            frac = i / max(count - 1, 1)
-            angle = start_angle + frac * (end_angle - start_angle)
-            rad = math.radians(angle)
+
+        node_w = 180
+        spacing = 20
+
+        if count == 1:
+            radius = 200
+            rad = math.radians(-80)
             x = parent.pos().x() + radius * math.cos(rad)
             y = parent.pos().y() + radius * math.sin(rad)
+            children[0].setPos(x, y)
+            return
+
+        arc_deg = min(130 + count * 3, 270)
+        half_arc = arc_deg / 2
+        delta = math.radians(arc_deg / (count - 1))
+        min_radius = (node_w + spacing) / (2 * math.sin(delta / 2))
+        radius = max(min_radius, 200)
+
+        for i, child in enumerate(children):
+            frac = i / (count - 1)
+            angle = math.radians(-half_arc + frac * arc_deg)
+            x = parent.pos().x() + radius * math.cos(angle)
+            y = parent.pos().y() + radius * math.sin(angle)
             child.setPos(x, y)
 
     def _build_registry(self):

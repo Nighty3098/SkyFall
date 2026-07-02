@@ -823,22 +823,72 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
         return TransformResult(content="PhoneSearch module not available")
     raw = engine.parse_and_validate(phone)
     if raw and "Parse error" not in raw:
-        lines = [l for l in raw.split("\n") if ":" in l]
+        data = {}
+        for line in raw.split("\n"):
+            if ":" in line and not line.startswith("["):
+                key = line.split(":", 1)[0].strip()
+                val = line.split(":", 1)[1].strip()
+                if key and val:
+                    data[key] = val
+
+        e164 = data.get("E.164", phone)
         children = []
-        seen = set()
-        for line in lines[:CHILD_THRESHOLD]:
-            key = line.split(":", 1)[0].strip()
-            val = line.split(":", 1)[1].strip() if ":" in line else ""
-            if key not in seen:
-                seen.add(key)
-                title = f"{key}: {val}" if len(val) < 30 else key
-                children.append(
-                    ChildNodeDef(
-                        title=title[:50],
-                        entity_type="Custom",
-                        content=line,
-                    )
-                )
+
+        children.append(ChildNodeDef(
+            title=e164,
+            entity_type="Phone",
+            content=raw,
+        ))
+
+        location = data.get("Location")
+        if location:
+            children.append(ChildNodeDef(
+                title=location,
+                entity_type="Geolocation",
+                content=f"Phone: {e164}\nLocation: {location}",
+            ))
+
+        carrier_name = data.get("Carrier")
+        if carrier_name:
+            children.append(ChildNodeDef(
+                title=carrier_name,
+                entity_type="Organization",
+                content=f"Phone: {e164}\nCarrier: {carrier_name}",
+            ))
+
+        line_type = data.get("Line Type")
+        if line_type:
+            children.append(ChildNodeDef(
+                title=line_type,
+                entity_type="Custom",
+                content=f"Phone: {e164}\nLine Type: {line_type}",
+            ))
+
+        region = data.get("Region")
+        if region:
+            children.append(ChildNodeDef(
+                title=region,
+                entity_type="Custom",
+                content=f"Phone: {e164}\nRegion: {region}",
+            ))
+
+        timezones_str = data.get("Timezones")
+        if timezones_str:
+            tzs = [t.strip() for t in timezones_str.split(",")]
+            for tz in tzs[:CHILD_THRESHOLD]:
+                city = tz.split("/")[-1] if "/" in tz else tz
+                children.append(ChildNodeDef(
+                    title=city,
+                    entity_type="Geolocation",
+                    content=f"Phone: {e164}\nTimezone: {tz}",
+                ))
+            if len(tzs) > CHILD_THRESHOLD:
+                children.append(ChildNodeDef(
+                    title=f"+{len(tzs) - CHILD_THRESHOLD} more timezones",
+                    entity_type="Custom",
+                    content="\n".join(tzs[CHILD_THRESHOLD:]),
+                ))
+
         return TransformResult(children=children, content=raw)
     return TransformResult(content=str(raw))
 

@@ -292,6 +292,14 @@ class GraphTransformController:
                     relationship="located_at",
                     handler=_transform_ip_geo,
                 ),
+                TransformDef(
+                    name="Port Scan",
+                    description="Nmap port scan (1-65535)",
+                    input_types=["IP"],
+                    output_type="Custom",
+                    relationship="hosted_by",
+                    handler=_transform_domain_nmap,
+                ),
             ],
             "Email": [
                 TransformDef(

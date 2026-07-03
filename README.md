@@ -160,3 +160,23 @@ python3 main.py
 Main Developer: https://t.me/Night3098
 
 GitHub: https://github.com/Nighty3098
+
+## `THIRDPARTY`
+
+### TXFetch — Blockchain Transaction Search Engine
+
+Blockchain transaction retrieval tool — find a transaction hash using only indirect data: time, amount, and network.
+
+- **Author:** xaynov (https://github.com/xaynov-osint)
+- **License:** [MIT](./thirdparty/txfetch/LICENSE)
+- **Repository:** https://github.com/xaynov-osint/txfetch
+- **Copyright:** Copyright (c) 2026 xaynov
+
+## `GENERATE THIRD-PARTY NOTICES`
+
+```bash
+
+pip install pip-licenses
+pip-licenses --with-authors --with-urls --format=markdown > THIRD_PARTY_NOTICES.md
+
+```

@@ -1,11 +1,33 @@
 import asyncio
 import math
+import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 
 from PySide6.QtCore import QPointF
 
 CHILD_THRESHOLD = 5
+
+_PATTERNS: dict[str, re.Pattern] = {
+    "Domain": re.compile(
+        r'(?:[a-zA-Z0-9](?:[a-zA-Z0-9\-]{0,61}[a-zA-Z0-9])?\.)+[a-zA-Z]{2,}'
+    ),
+    "IP": re.compile(
+        r'(?:(?:25[0-5]|2[0-4]\d|[01]?\d\d?)\.){3}(?:25[0-5]|2[0-4]\d|[01]?\d\d?)'
+    ),
+    "Email": re.compile(
+        r'[\w.+-]+@[\w-]+\.[\w.-]+'
+    ),
+    "Phone": re.compile(
+        r'\+?\d[\d\s\-().]{6,}\d'
+    ),
+    "MAC": re.compile(
+        r'(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}'
+    ),
+    "Crypto": re.compile(
+        r'(?:1|3|bc1|0x)[a-zA-Z0-9]{25,}'
+    ),
+}
 
 
 @dataclass
@@ -49,13 +71,27 @@ class GraphTransformController:
     async def _execute_async(self, node, transform_def):
         title = (node.title or "").strip()
         content = (node.content or "").strip()
-        default_prefix = f"New {node.entity_type}"
-        if title and title != default_prefix:
-            input_value = title
-        elif content:
-            input_value = content
+        etype = node.entity_type
+        default_prefix = f"New {etype}"
+
+        pattern = _PATTERNS.get(etype)
+        if pattern:
+            m = pattern.fullmatch(title) if title and title != default_prefix else None
+            if m:
+                input_value = m.group()
+            else:
+                m = pattern.search(content) if content else None
+                if m:
+                    input_value = m.group()
+                else:
+                    return
         else:
-            return
+            if title and title != default_prefix:
+                input_value = title
+            elif content:
+                input_value = content
+            else:
+                return
 
         result = await transform_def.handler(input_value, self._modules)
 

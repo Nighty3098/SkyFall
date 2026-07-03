@@ -469,6 +469,16 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_19.addWidget(self.startMailSearchButton)
 
+        self.hibpEmailEdit = QLineEdit(self.mailSettingsSection)
+        self.hibpEmailEdit.setObjectName(u"hibpEmailEdit")
+
+        self.verticalLayout_19.addWidget(self.hibpEmailEdit)
+
+        self.startHibpSearchButton = QPushButton(self.mailSettingsSection)
+        self.startHibpSearchButton.setObjectName(u"startHibpSearchButton")
+
+        self.verticalLayout_19.addWidget(self.startHibpSearchButton)
+
         self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_19.addItem(self.verticalSpacer_6)
@@ -483,6 +493,11 @@ class Ui_MainWindow(object):
         self.mailSearchDebug.setObjectName(u"mailSearchDebug")
 
         self.verticalLayout_20.addWidget(self.mailSearchDebug)
+
+        self.hibpDebug = QPlainTextEdit(self.mailDebugSection)
+        self.hibpDebug.setObjectName(u"hibpDebug")
+
+        self.verticalLayout_20.addWidget(self.hibpDebug)
 
         self.mailSplitter.addWidget(self.mailDebugSection)
 
@@ -1417,6 +1432,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.heliusApiKeyEdit)
 
+        self.hibpApiKeyEdit = QLineEdit(self.settingsTab)
+        self.hibpApiKeyEdit.setObjectName(u"hibpApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.hibpApiKeyEdit)
+
         self.lightThemeCheck = QCheckBox(self.settingsTab)
         self.lightThemeCheck.setObjectName(u"lightThemeCheck")
 
@@ -1533,7 +1553,8 @@ class Ui_MainWindow(object):
         self.maigretDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Maigret", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.usernameSearchTab), QCoreApplication.translate("MainWindow", u"USERNAME", None))
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
-        self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
+        self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"IntelX Search", None))
+        self.startHibpSearchButton.setText(QCoreApplication.translate("MainWindow", u"HIBP Search", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mailToolsTab), QCoreApplication.translate("MainWindow", u"MAIL", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
@@ -1675,6 +1696,7 @@ class Ui_MainWindow(object):
         self.bscscanApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"BscScan API Key", None))
         self.tonapiApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TON API Key", None))
         self.heliusApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Helius API Key", None))
+        self.hibpApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HIBP API Key", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))

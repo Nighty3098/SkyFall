@@ -310,6 +310,14 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_email_intelx,
                 ),
+                TransformDef(
+                    name="HIBP Search",
+                    description="Search email in Have I Been Pwned",
+                    input_types=["Email"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_email_hibp,
+                ),
             ],
             "Phone": [
                 TransformDef(
@@ -866,6 +874,40 @@ async def _transform_email_intelx(email: str, modules) -> TransformResult:
                     title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
                     entity_type="Custom",
                     content="\n".join(db_lines[CHILD_THRESHOLD:]),
+                )
+            )
+        return TransformResult(children=children, content=raw)
+    return TransformResult(content=str(raw))
+
+
+async def _transform_email_hibp(email: str, modules) -> TransformResult:
+    engine = modules.get("hibp_search")
+    if not engine:
+        return TransformResult(content="HIBP module not available")
+    raw = await engine.get_data(email)
+    if raw and "No breaches found" not in raw and "hibp-api-key" not in raw.lower():
+        import re
+        lines = raw.split("\n")
+        names = []
+        for l in lines:
+            m = re.match(r"^═══ (.+) ───", l)
+            if m:
+                names.append(m.group(1))
+        children = []
+        for name in names[:CHILD_THRESHOLD]:
+            children.append(
+                ChildNodeDef(
+                    title=name[:50],
+                    entity_type="Custom",
+                    content=f"Breach: {name}\nEmail: {email}",
+                )
+            )
+        if len(names) > CHILD_THRESHOLD:
+            children.append(
+                ChildNodeDef(
+                    title=f"+{len(names) - CHILD_THRESHOLD} more breaches",
+                    entity_type="Custom",
+                    content="\n".join(names[CHILD_THRESHOLD:]),
                 )
             )
         return TransformResult(children=children, content=raw)

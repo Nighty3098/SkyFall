@@ -21,6 +21,7 @@ from src.connectors import (
     setup_github_connectors,
     setup_graph_connectors,
     setup_graph_transform_connectors,
+    setup_hibp_connectors,
     setup_intelx_connectors,
     setup_mac_location_connectors,
     setup_metadata_connectors,
@@ -39,6 +40,7 @@ from src.controllers.github_controller import GitHubController
 from src.controllers.graph_transform_controller import (
     GraphTransformController,
 )
+from src.controllers.hibp_controller import HibpController
 from src.controllers.intelx_controller import IntelxController
 from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.phone_controller import PhoneController
@@ -55,6 +57,7 @@ from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
+from src.modules.hibp_search import HibpSearch
 from src.modules.intelx_search_engine import IntelxSearchEngine
 from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
@@ -184,6 +187,9 @@ class MainWindow(QMainWindow):
         self.intelxSearchEngine = IntelxSearchEngine(
             self.settings.intelligent_x_api_key
         )
+        self.hibpSearch = HibpSearch(
+            self.settings.hibp_api_key
+        )
         self.blockchainSearch = BlockchainSearch(
             {
                 "trongrid_api_key": self.settings.trongrid_api_key,
@@ -204,6 +210,9 @@ class MainWindow(QMainWindow):
 
         self.intelxSearchEngine.api_key = settings.intelligent_x_api_key
         self.intelxSearchEngine.headers["x-key"] = settings.intelligent_x_api_key
+
+        self.hibpSearch.api_key = settings.hibp_api_key
+        self.hibpSearch._update_headers()
 
         self.fileAnalyzer.update_api_key(settings.virustotal_api_key)
 
@@ -231,6 +240,7 @@ class MainWindow(QMainWindow):
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.IntelxController = IntelxController(self.ui, self.intelxSearchEngine)
+        self.HibpController = HibpController(self.ui, self.hibpSearch)
         self.usernameController = UsernameController(
             self.ui, self.usernameSearch, self.maigretSearch
         )
@@ -255,6 +265,7 @@ class MainWindow(QMainWindow):
         setup_settings_connectors(self.settings)
         setup_metadata_connectors(self.fileAnalyzeController)
         setup_intelx_connectors(self.IntelxController)
+        setup_hibp_connectors(self.HibpController)
         setup_username_connectors(self.usernameController)
         setup_tg_downloader_connectors(self.tgDownloaderController)
         setup_tg_analyzer_connectors(self.tgAnalyzerController)
@@ -273,6 +284,7 @@ class MainWindow(QMainWindow):
                 "phone_search": self.phoneSearch,
                 "mac_location": self.macLocation,
                 "intelx_search": self.intelxSearchEngine,
+                "hibp_search": self.hibpSearch,
             },
         )
         setup_graph_transform_connectors(self.ui, self.graphTransformController)

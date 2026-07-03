@@ -16,6 +16,7 @@ if TYPE_CHECKING:
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.github_controller import GitHubController
+    from src.controllers.hibp_controller import HibpController
     from src.controllers.intelx_controller import IntelxController
     from src.controllers.mac_location_controller import MacLocationController
     from src.controllers.phone_controller import PhoneController
@@ -77,6 +78,16 @@ def setup_intelx_connectors(controller: "IntelxController"):
         lambda: (
             asyncio.ensure_future(
                 controller.start_searching(controller.ui.mailEdit.text())
+            ),
+        )
+    )
+
+
+def setup_hibp_connectors(controller: "HibpController"):
+    controller.ui.startHibpSearchButton.clicked.connect(
+        lambda: (
+            asyncio.ensure_future(
+                controller.start_searching(controller.ui.hibpEmailEdit.text())
             ),
         )
     )

@@ -7,11 +7,14 @@ from pathlib import Path
 from loguru import logger
 
 from src.ui.output_formatter import (
+    bullet,
     divider,
     end_of,
     error,
     info,
     kv,
+    line,
+    section,
     title,
 )
 
@@ -142,14 +145,12 @@ class BlockchainSearch:
             on_result(lines[-1])
 
         for i, c in enumerate(candidates, 1):
-            line_text = (
-                f"  {i}. [{c.confidence:.0%}] {c.tx_id[:16]}..."
-                f"  |  {c.timestamp.strftime('%H:%M:%S')}"
-                f"  |  {c.amount:.6f} {c.coin}"
-            )
-            lines.append(line_text)
+            lines.append(bullet(f"[{c.confidence:.0%}] {c.tx_id}"))
+            lines.append(line(f"Time:   {c.timestamp.strftime('%H:%M:%S')}"))
+            lines.append(line(f"Amount: {c.amount:.6f} {c.coin}"))
             if on_result:
-                on_result(line_text)
+                for l in lines[-3:]:
+                    on_result(l)
 
             detail = c.score_detail
             if detail:
@@ -169,13 +170,11 @@ class BlockchainSearch:
                         on_result(detail_text)
 
             if c.from_address or c.to_address:
-                addr_text = (
-                    f"    From: {c.from_address or '-'}"
-                    f"  \u2192  To: {c.to_address or '-'}"
-                )
-                lines.append(addr_text)
+                lines.append(line(f"From:   {c.from_address or '-'}"))
+                lines.append(line(f"To:     {c.to_address or '-'}"))
                 if on_result:
-                    on_result(addr_text)
+                    for l in lines[-2:]:
+                        on_result(l)
 
             if c.memo:
                 memo_text = kv("Memo", c.memo)

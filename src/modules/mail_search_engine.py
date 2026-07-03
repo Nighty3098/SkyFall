@@ -1,17 +1,22 @@
 import asyncio
 import json
+import urllib.parse
 
 import requests
 from loguru import logger
 
-from src.ui.output_formatter import bullet, divider, error, kv, section, title
+from src.ui.output_formatter import bullet, divider, end_of, error, info, kv, line, section, title
+
+HIBP_API_URL = "https://haveibeenpwned.com/api/v3/breachedaccount/{email}"
+HIBP_USER_AGENT = "SkyFallMailEngine/1.0"
 
 
-class IntelxSearchEngine:
-    def __init__(self, api_key):
-        logger.debug("Init: IntelxSearchEngine")
+class MailSearchEngine:
+    def __init__(self, intelx_api_key, hibp_api_key=""):
+        logger.debug("Init: MailSearchEngine")
         self.base_url = "https://public.intelx.io"
-        self.api_key = api_key
+        self.api_key = intelx_api_key
+        self.hibp_api_key = hibp_api_key
         self.headers = {
             "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:151.0)"
             "Gecko/20100101 Firefox/151.0",
@@ -23,6 +28,8 @@ class IntelxSearchEngine:
             "Referer": "https://intelx.io/",
             "Connection": "keep-alive",
         }
+
+    # ── IntelX ────────────────────────────────────────────────────
 
     async def _send_request(self, email):
         search_data = {
@@ -174,18 +181,18 @@ class IntelxSearchEngine:
                     logger.error(f"Error fetching results (attempt {i + 1}): {e}")
                     break
 
-            result = f"\n{divider()}\n"
+            result = f"{divider()}\n"
+            result += f"{title(f'IntelX Search: {email}')}\n"
 
             if databases:
-                result += f"{title(f'Found ({len(databases)}) databases:')}\n"
+                result += f"{section(f'Found ({len(databases)}) databases')}\n"
                 for db in sorted(databases):
                     result += f"{bullet(db)}\n"
 
                 if records_with_data:
-                    result += f"\n{divider()}\n"
-                    result += f"{title('Data:')}\n"
+                    result += f"{section('Data')}\n"
                     for idx, record in enumerate(records_with_data, 1):
-                        result += f"\n{section(f'#{idx}')}\n"
+                        result += f"{section(f'Record #{idx}')}\n"
                         result += f"{kv('DB', record['name'])}\n"
                         result += f"{kv('Bucket ID', record['bucket_id'])}\n"
                         if record.get("date"):
@@ -198,27 +205,28 @@ class IntelxSearchEngine:
                             result += f"{kv('Tags', ', '.join(record['tags']))}\n"
 
                         content = record["content"]
-                        result += "Content:\n"
+                        result += f"  Content:\n"
                         if isinstance(content, dict):
                             for key, value in content.items():
                                 if isinstance(value, list):
-                                    result += f"  {key}:\n"
+                                    result += f"    {key}:\n"
                                     for item in value:
-                                        result += f"{bullet(item, indent=4)}\n"
+                                        result += f"    - {item}\n"
                                 else:
-                                    result += f"  {key}: {value}\n"
+                                    result += f"    {key}: {value}\n"
                         elif isinstance(content, list):
                             for item in content:
                                 if isinstance(item, dict):
                                     for k, v in item.items():
-                                        result += f"  {k}: {v}\n"
+                                        result += f"    {k}: {v}\n"
                                 else:
-                                    result += f"{bullet(item)}\n"
+                                    result += f"    - {item}\n"
                         else:
-                            result += f"  {content}\n"
+                            result += f"    {content}\n"
             else:
-                result += "Not found\n"
+                result += f"{info('Not found')}\n"
 
+            result += f"{end_of('intelx search')}\n"
             result += divider()
             return result
 
@@ -228,3 +236,66 @@ class IntelxSearchEngine:
 
     async def get_bucket_by_id(self, bucket_id):
         return await self._get_bucket_content(bucket_id)
+
+    # ── HIBP ──────────────────────────────────────────────────────
+
+    async def check_hibp(self, email):
+        if not self.hibp_api_key:
+            return error("HIBP API key not configured. Add it in settings.")
+
+        encoded = urllib.parse.quote(email.strip())
+        url = HIBP_API_URL.format(email=encoded)
+        headers = {
+            "hibp-api-key": self.hibp_api_key,
+            "User-Agent": HIBP_USER_AGENT,
+        }
+
+        for attempt in range(3):
+            try:
+                resp = await asyncio.to_thread(
+                    requests.get, url, headers=headers, timeout=15
+                )
+
+                if resp.status_code == 200:
+                    breaches = resp.json()
+                    return self._format_hibp_result(email, breaches)
+                elif resp.status_code == 404:
+                    return self._format_hibp_result(email, [])
+                elif resp.status_code == 429:
+                    retry_after = int(resp.headers.get("Retry-After", 2))
+                    logger.warning(f"HIBP rate limited, waiting {retry_after}s")
+                    await asyncio.sleep(retry_after)
+                    continue
+                else:
+                    return error(f"HIBP API error {resp.status_code}: {resp.text[:200]}")
+            except Exception as e:
+                logger.error(f"HIBP network error: {e}")
+                if attempt < 2:
+                    await asyncio.sleep(2)
+                    continue
+                return error(f"HIBP request failed: {e}")
+
+        return error("HIBP request failed after retries")
+
+    def _format_hibp_result(self, email, breaches):
+        lines = [divider(), title(f"HIBP: {email}")]
+        if not breaches:
+            lines.append(info("No breaches found"))
+        else:
+            lines.append(section(f"Found in {len(breaches)} breach(es)"))
+            for b in breaches:
+                name = b.get("Name", "?")
+                domain = b.get("Domain", "?")
+                date = b.get("BreachDate", "?")
+                classes = b.get("PwnCount", "?")
+                data_classes = ", ".join(b.get("DataClasses", []))
+                description = b.get("Description", "")
+                lines.append(bullet(name))
+                lines.append(line(f"Domain:  {domain}"))
+                lines.append(line(f"Date:    {date}"))
+                lines.append(line(f"Records: {classes}"))
+                lines.append(line(f"Data:    {data_classes}"))
+                lines.append(line(f"Info:    {description[:200]}"))
+        lines.append(end_of("hibp check"))
+        lines.append(divider())
+        return "\n".join(lines)

@@ -13,7 +13,7 @@ from ddgs import DDGS
 from fake_useragent import UserAgent
 from loguru import logger
 
-from src.ui.output_formatter import error, info, kv, line
+from src.ui.output_formatter import bullet, divider, end_of, error, info, kv, line, section, title
 
 
 class DomainAnalyzer:
@@ -36,11 +36,23 @@ class DomainAnalyzer:
                 headers={"User-Agent": self.ua.random},
             )
 
-            return response.text
+            return "\n".join([
+                divider(),
+                title(f"Robots.txt: {domain}"),
+                response.text,
+                end_of("robots.txt"),
+                divider(),
+            ])
 
         except Exception as e:
             logger.error(f"Robots.txt: Error: {e}")
-            return f"Error getting robots.txt: {e}"
+            return "\n".join([
+                divider(),
+                title(f"Robots.txt: {domain}"),
+                error(f"Error getting robots.txt: {e}"),
+                end_of("robots.txt"),
+                divider(),
+            ])
 
     async def get_ip_and_location(self, domain):
         logger.debug("Trying to get IP and location")
@@ -384,14 +396,21 @@ class DomainAnalyzer:
 
             discovered_subdomains = await asyncio.to_thread(_search)
 
-            result = ""
+            lines = [divider(), title(f"Subdomains: {domain}")]
             for sub in sorted(discovered_subdomains):
-                result += sub
-            return result
+                lines.append(bullet(sub))
+            lines.extend([end_of("subdomains"), divider()])
+            return "\n".join(lines)
 
         except Exception as e:
             logger.error(f"Subdomains: Error: {e}")
-            return e
+            return "\n".join([
+                divider(),
+                title(f"Subdomains: {domain}"),
+                error(str(e)),
+                end_of("subdomains"),
+                divider(),
+            ])
 
     async def get_security_txt(self, domain):
         logger.debug("Trying to find security.txt")
@@ -401,13 +420,22 @@ class DomainAnalyzer:
                 requests.get, f"https://{domain}/.well-known/security.txt", timeout=5
             )
 
+            lines = [divider(), title(f"Security.txt: {domain}")]
             if response.status_code == 404:
-                return "Not Found"
+                lines.append(info("Not Found"))
             else:
-                return response.text
+                lines.append(response.text)
+            lines.extend([end_of("security.txt"), divider()])
+            return "\n".join(lines)
         except Exception as e:
             logger.error(f"Security.txt: Error: {e}")
-            return str(e)
+            return "\n".join([
+                divider(),
+                title(f"Security.txt: {domain}"),
+                error(str(e)),
+                end_of("security.txt"),
+                divider(),
+            ])
 
     async def get_cookies(self, domain):
         logger.debug("Trying to get cookies")
@@ -417,21 +445,33 @@ class DomainAnalyzer:
                 requests.get, f"https://{domain}", timeout=5
             )
 
-            lines = []
+            cookie_lines = []
             for cookie in response.cookies:
                 http_only = cookie.has_nonstandard_attr("HttpOnly")
-                lines.append(kv(cookie.name, cookie.value))
-                lines.append(
+                cookie_lines.append(kv(cookie.name, cookie.value))
+                cookie_lines.append(
                     line(
                         f"domain={cookie.domain}, path={cookie.path},"
                         f" secure={cookie.secure}, httpOnly={http_only}",
-                        indent=4,
                     )
                 )
-            return "\n".join(lines) if lines else info("No cookies")
+
+            lines = [divider(), title(f"Cookies: {domain}")]
+            if cookie_lines:
+                lines.extend(cookie_lines)
+            else:
+                lines.append(info("No cookies"))
+            lines.extend([end_of("cookies"), divider()])
+            return "\n".join(lines)
         except Exception as e:
             logger.error(f"Cookies: Error: {e}")
-            return str(e)
+            return "\n".join([
+                divider(),
+                title(f"Cookies: {domain}"),
+                error(str(e)),
+                end_of("cookies"),
+                divider(),
+            ])
 
     async def get_certificate_transparency(self, domain):
         logger.debug("Trying to get Certificate Transparency logs")
@@ -472,26 +512,30 @@ class DomainAnalyzer:
                 )
 
             lines = [
-                "[Certificate Transparency]",
-                f"Total certs found: {min(len(data), 100)}",
-                f"Unique domains: {len(unique_domains)}",
-                f"Unique issuers (CAs): {len(unique_issuers)}",
+                divider(),
+                title("Certificate Transparency: detail"),
+                kv("Total certs found", min(len(data), 100)),
+                kv("Unique domains", len(unique_domains)),
+                kv("Unique issuers (CAs)", len(unique_issuers)),
                 "",
-                "--- Discovered domains ---",
+                section("Discovered domains"),
             ]
             for d in sorted(unique_domains):
-                lines.append(f"- {d}")
+                lines.append(bullet(d))
             lines.append("")
-            lines.append("--- Recent certificates (up to 100) ---")
+            lines.append(section("Recent certificates (up to 100)"))
             for c in certs[:20]:
                 lines.append(
-                    f"#{c['id']} | {c['common_name']} | "
-                    f"{c['not_before']} → {c['not_after']}"
+                    line(
+                        f"#{c['id']} | {c['common_name']} | "
+                        f"{c['not_before']} → {c['not_after']}"
+                    )
                 )
-                lines.append(f"  issuer: {c['issuer']}")
-                lines.append(f"  serial: {c['serial']}")
+                lines.append(line(f"issuer: {c['issuer']}"))
+                lines.append(line(f"serial: {c['serial']}"))
                 lines.append("")
 
+            lines.extend([end_of("certificate transparency"), divider()])
             return "\n".join(lines)
 
         except requests.exceptions.Timeout:
@@ -521,9 +565,19 @@ class DomainAnalyzer:
                 if key.startswith("og:") or key.startswith("twitter:"):
                     tags[key] = meta.get("content", "")
 
+            lines = [divider(), title(f"Social Tags: {domain}")]
             if not tags:
-                return info("Not found")
-            return "\n".join(kv(k, v) for k, v in tags.items())
+                lines.append(info("Not found"))
+            else:
+                lines.extend(kv(k, v) for k, v in tags.items())
+            lines.extend([end_of("social tags"), divider()])
+            return "\n".join(lines)
         except Exception as e:
             logger.error(f"Social tags: Error: {e}")
-            return str(e)
+            return "\n".join([
+                divider(),
+                title(f"Social Tags: {domain}"),
+                error(str(e)),
+                end_of("social tags"),
+                divider(),
+            ])

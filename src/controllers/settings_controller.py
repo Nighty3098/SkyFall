@@ -20,6 +20,7 @@ DEFAULT_SETTINGS = {
     "telegram_api_hash": "",
     "telegram_phone": "",
     "intelligent_x_api_key": "",
+    "hibp_api_key": "",
     "virustotal_api_key": "",
     "google_safe_api_key": "",
     "ipinfo_api_key": "",
@@ -31,7 +32,6 @@ DEFAULT_SETTINGS = {
     "bscscan_api_key": "",
     "tonapi_api_key": "",
     "helius_api_key": "",
-    "hibp_api_key": "",
     "light_theme": False,
     "frameless_window": True,
 }
@@ -42,6 +42,7 @@ FIELD_MAP = {
     "telegram_api_hash": "telegramApiHashEdit",
     "telegram_phone": "telegramPhoneEdit",
     "intelligent_x_api_key": "intelligentXApiKeyEdit",
+    "hibp_api_key": "hibpApiKeyEdit",
     "virustotal_api_key": "virustotalApiKeyEdit",
     "google_safe_api_key": "googleSafeApiKeyEdit",
     "ipinfo_api_key": "ipinfoApiKeyEdit",
@@ -53,7 +54,6 @@ FIELD_MAP = {
     "bscscan_api_key": "bscscanApiKeyEdit",
     "tonapi_api_key": "tonapiApiKeyEdit",
     "helius_api_key": "heliusApiKeyEdit",
-    "hibp_api_key": "hibpApiKeyEdit",
 }
 
 
@@ -67,6 +67,7 @@ class Settings:
         self.telegram_api_hash = ""
         self.telegram_phone = ""
         self.intelligent_x_api_key = ""
+        self.hibp_api_key = ""
         self.virustotal_api_key = ""
         self.ipinfo_api_key = ""
         self.google_safe_api_key = ""
@@ -78,7 +79,6 @@ class Settings:
         self.bscscan_api_key = ""
         self.tonapi_api_key = ""
         self.helius_api_key = ""
-        self.hibp_api_key = ""
         self.light_theme = False
         self.frameless_window = True
 

@@ -16,9 +16,8 @@ if TYPE_CHECKING:
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.github_controller import GitHubController
-    from src.controllers.hibp_controller import HibpController
-    from src.controllers.intelx_controller import IntelxController
     from src.controllers.mac_location_controller import MacLocationController
+    from src.controllers.mail_controller import MailController
     from src.controllers.phone_controller import PhoneController
     from src.controllers.proxy_controller import Proxy
     from src.controllers.settings_controller import Settings
@@ -73,21 +72,18 @@ def setup_domain_connectors(controller: "DomainController"):
     )
 
 
-def setup_intelx_connectors(controller: "IntelxController"):
+def setup_mail_connectors(controller: "MailController"):
     controller.ui.startMailSearchButton.clicked.connect(
         lambda: (
             asyncio.ensure_future(
-                controller.start_searching(controller.ui.mailEdit.text())
+                controller.start_intelx_search(controller.ui.mailEdit.text())
             ),
         )
     )
-
-
-def setup_hibp_connectors(controller: "HibpController"):
-    controller.ui.startHibpSearchButton.clicked.connect(
+    controller.ui.startHibpCheckButton.clicked.connect(
         lambda: (
             asyncio.ensure_future(
-                controller.start_searching(controller.ui.hibpEmailEdit.text())
+                controller.start_hibp_check(controller.ui.mailEdit.text())
             ),
         )
     )

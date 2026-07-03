@@ -7,8 +7,11 @@ from maigret.sites import MaigretDatabase
 
 from src.ui.output_formatter import (
     bullet,
+    divider,
+    end_of,
     info,
     kv,
+    section,
     title,
 )
 
@@ -63,6 +66,7 @@ class MaigretSearch:
         from maigret.result import MaigretCheckStatus
 
         output_lines = []
+        output_lines.append(divider())
         output_lines.append(title(f"Searching: {username}") + "\n")
 
         matches = []
@@ -113,19 +117,28 @@ class MaigretSearch:
 
         if not_found:
             display = not_found[:50]
-            suffix = "..." if len(not_found) > 50 else ""
-            output_lines.append(info(f"Not found on: {', '.join(display)}{suffix}"))
+            output_lines.append(section("Not found"))
+            for item in display:
+                output_lines.append(bullet(item))
+            if len(not_found) > 50:
+                output_lines.append(bullet(f"... and {len(not_found) - 50} more"))
 
         if disabled:
             display = disabled[:30]
-            suffix = "..." if len(disabled) > 30 else ""
-            output_lines.append(
-                info(f"Skipped (disabled): {', '.join(display)}{suffix}")
-            )
+            output_lines.append(section("Disabled"))
+            for item in display:
+                output_lines.append(bullet(item))
+            if len(disabled) > 30:
+                output_lines.append(bullet(f"... and {len(disabled) - 30} more"))
 
         if unknown:
             display = [str(s) for s in unknown[:20]]
-            suffix = "..." if len(unknown) > 20 else ""
-            output_lines.append(info(f"Unknown/Error on: {', '.join(display)}{suffix}"))
+            output_lines.append(section("Unknown/Error"))
+            for item in display:
+                output_lines.append(bullet(item))
+            if len(unknown) > 20:
+                output_lines.append(bullet(f"... and {len(unknown) - 20} more"))
 
+        output_lines.append(end_of("maigret search"))
+        output_lines.append(divider())
         return "\n".join(output_lines)

@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>11</number>
+         <number>3</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -624,7 +624,14 @@
               <item>
                <widget class="QPushButton" name="startMailSearchButton">
                 <property name="text">
-                 <string>Search</string>
+                 <string>IntelX Search</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="startHibpCheckButton">
+                <property name="text">
+                 <string>HIBP Check</string>
                 </property>
                </widget>
               </item>
@@ -649,7 +656,21 @@
                <number>0</number>
               </property>
               <item>
-               <widget class="QPlainTextEdit" name="mailSearchDebug"/>
+               <widget class="QSplitter" name="mailDebugSplitter">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <widget class="QPlainTextEdit" name="mailSearchDebug">
+                 <property name="plainText">
+                  <string>INTELX</string>
+                 </property>
+                </widget>
+                <widget class="QPlainTextEdit" name="hibpDebug">
+                 <property name="plainText">
+                  <string>HIBP</string>
+                 </property>
+                </widget>
+               </widget>
               </item>
              </layout>
             </widget>
@@ -2048,6 +2069,13 @@
              <widget class="QLineEdit" name="intelligentXApiKeyEdit">
               <property name="placeholderText">
                <string>IntelligentX API KEY</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="hibpApiKeyEdit">
+              <property name="placeholderText">
+               <string>HIBP API KEY</string>
               </property>
              </widget>
             </item>

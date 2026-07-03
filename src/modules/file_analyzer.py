@@ -16,12 +16,15 @@ from hachoir.parser import createParser
 from loguru import logger
 
 from src.ui.output_formatter import (
+    bullet,
     divider,
+    end_of,
     error,
     info,
     kv,
     line,
     section,
+    title,
 )
 
 _hconfig.quiet = True
@@ -153,8 +156,9 @@ class FileAnalyzer:
                 logger.error(f"Error: {response.status_code}")
                 return None
 
-    def get_virustotal_info(self, stats, results=None):
+    def get_virustotal_info(self, hash_value, stats, results=None):
         result = divider() + "\n"
+        result += title(f"VirusTotal: {hash_value[:16]}...") + "\n"
         result += kv("Malicious", stats.get("malicious", 0)) + "\n"
         result += kv("Suspicious", stats.get("suspicious", 0)) + "\n"
         result += kv("Harmless", stats.get("harmless", 0)) + "\n"
@@ -177,6 +181,9 @@ class FileAnalyzer:
                 result += info("Not found") + "\n"
             result += divider() + "\n"
 
+        result += end_of("virustotal") + "\n"
+        result += divider() + "\n"
+
         return result
 
     async def virustotal_analyze(self, path):
@@ -194,7 +201,7 @@ class FileAnalyzer:
             attributes = report["data"]["attributes"]
             stats = attributes["last_analysis_stats"]
             results = attributes.get("last_analysis_results")
-            return self.get_virustotal_info(stats, results)
+            return self.get_virustotal_info(file_hash, stats, results)
         else:
             logger.debug("File not found in VirusTotal DB.")
             analysis_id = await self.upload_and_scan_file(path)
@@ -211,7 +218,7 @@ class FileAnalyzer:
                         category = res.get("category")
                         if category in stats:
                             stats[category] += 1
-                    return self.get_virustotal_info(stats)
+                    return self.get_virustotal_info(file_hash, stats)
             return ""
 
     def get_file_type(self, path):
@@ -240,7 +247,7 @@ class FileAnalyzer:
 
     async def check_tail_data(self, path):
         result = divider() + "\n"
-        result += section("Append / Tail Data") + "\n"
+        result += title("Tail Data") + "\n"
 
         data = await self._read_file_bytes(path)
 
@@ -254,7 +261,8 @@ class FileAnalyzer:
                     info(f"Hidden data discovered after EOF! Size: {len(tail)} bytes.")
                     + "\n"
                 )
-        result += line("Clean", indent=0) + "\n"
+        result += line("Clean") + "\n"
+        result += end_of("tail data") + "\n"
         result += divider() + "\n"
 
         return result
@@ -266,6 +274,9 @@ class FileAnalyzer:
         if not path.exists():
             result += error(f"File '{path}' not found.")
             return result
+
+        result += divider() + "\n"
+        result += title("Metadata") + "\n"
 
         file_stat = path.stat()
 
@@ -300,7 +311,7 @@ class FileAnalyzer:
             file_type = await asyncio.to_thread(_mime, path)
             result += kv("MIME type", file_type) + "\n"
         except Exception as e:
-            result += line(f"Could not determine MIME type: {e}", indent=0) + "\n"
+            result += line(f"Could not determine MIME type: {e}") + "\n"
 
         result += divider() + "\n"
         result += section("Internal Metadata (Hachoir)") + "\n"
@@ -333,6 +344,9 @@ class FileAnalyzer:
                 result += line("No internal metadata found in file.") + "\n"
         except Exception as e:
             result += line(f"Error reading metadata: {e}") + "\n"
+
+        result += end_of("metadata") + "\n"
+        result += divider() + "\n"
 
         return result
 

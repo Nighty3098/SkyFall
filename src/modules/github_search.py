@@ -3,7 +3,16 @@ from collections.abc import Callable
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import error, kv, section, title
+from src.ui.output_formatter import (
+    bullet,
+    divider,
+    end_of,
+    error,
+    info,
+    kv,
+    section,
+    title,
+)
 
 SECRET_PATTERNS = [
     "api_key",
@@ -370,7 +379,7 @@ class GitHubSearch:
                     repo = item["repository"]["full_name"]
                     path = item["path"]
                     url = item["html_url"]
-                    entry = f"[{repo}] {path}\n  {url}"
+                    entry = f"{bullet(repo)}\n{line(path)}\n{line(url)}"
                     results.append(entry)
                     if on_result:
                         on_result(entry)
@@ -386,8 +395,11 @@ class GitHubSearch:
         if not results:
             return "No email results found."
 
-        header = f"{title(f'Email search results for {query!r}:')}\n"
-        return header + "\n".join(results)
+        output = [divider(), title(f"Email search results for {query!r}:")]
+        output.extend(results)
+        output.append(end_of("email search"))
+        output.append(divider())
+        return "\n".join(output)
 
     async def search_secrets(
         self,
@@ -459,7 +471,7 @@ class GitHubSearch:
                         repo = item["repository"]["full_name"]
                         path = item["path"]
                         url = item["html_url"]
-                        entry = f"  [{repo}] {path}\n    {url}"
+                        entry = f"{bullet(repo)}\n{line(path)}\n{line(url)}"
                         results.append(entry)
                         if on_result:
                             on_result(entry)
@@ -471,7 +483,11 @@ class GitHubSearch:
         if not results:
             return "No secrets found."
 
-        return f"{title(f'Secret scan results for {query!r}:')}" + "\n".join(results)
+        output = [divider(), title(f"Secret scan results for {query!r}:")]
+        output.extend(results)
+        output.append(end_of("secret scan"))
+        output.append(divider())
+        return "\n".join(output)
 
     async def search_commits(
         self,
@@ -522,7 +538,12 @@ class GitHubSearch:
                         sha = item["sha"][:8]
                         url = item["html_url"]
                         entry = (
-                            f"[{sha}] {date} {name} <{email}>\n  {msg} | {q}\n  {url}"
+                            f"{bullet(sha)}\n"
+                            f"{line(f'Date: {date}')}\n"
+                            f"{line(f'Author: {name} <{email}>')}\n"
+                            f"{line(f'Message: {msg}')}\n"
+                            f"{line(f'Repo: {q}')}\n"
+                            f"{line(url)}"
                         )
                         results.append(entry)
                         if on_result:
@@ -584,8 +605,12 @@ class GitHubSearch:
                         sha = item["sha"][:8]
                         url = item["html_url"]
                         entry = (
-                            f"[{sha}] {date} {name} <{email}>\n"
-                            f"  {msg} | {repo}\n  {url}"
+                            f"{bullet(sha)}\n"
+                            f"{line(f'Date: {date}')}\n"
+                            f"{line(f'Author: {name} <{email}>')}\n"
+                            f"{line(f'Message: {msg}')}\n"
+                            f"{line(f'Repo: {repo}')}\n"
+                            f"{line(url)}"
                         )
                         results.append(entry)
                         if on_result:
@@ -602,9 +627,11 @@ class GitHubSearch:
         if not results:
             return "No commits found."
 
-        return f"{title(f'Commit search results for {query!r}:')}\n" + "\n".join(
-            results
-        )
+        output = [divider(), title(f"Commit search results for {query!r}:")]
+        output.extend(results)
+        output.append(end_of("commit search"))
+        output.append(divider())
+        return "\n".join(output)
 
     async def search_repos(
         self,
@@ -649,7 +676,9 @@ class GitHubSearch:
                     lang = item.get("language") or "N/A"
                     url = item["html_url"]
                     entry = (
-                        f"[{full_name}] {lang} | {stars}★ {forks}⑃\n  {desc}\n  {url}"
+                        f"{bullet(full_name)} {lang} | {stars}★ {forks}⑃\n"
+                        f"{line(desc)}\n"
+                        f"{line(url)}"
                     )
                     results.append(entry)
                     if on_result:
@@ -666,9 +695,11 @@ class GitHubSearch:
         if not results:
             return "No repositories found."
 
-        return f"{title(f'Repository search results for {query!r}:')}\n" + "\n".join(
-            results
-        )
+        output = [divider(), title(f"Repository search results for {query!r}:")]
+        output.extend(results)
+        output.append(end_of("repo search"))
+        output.append(divider())
+        return "\n".join(output)
 
     async def search_user(
         self,
@@ -676,6 +707,13 @@ class GitHubSearch:
         on_result: Callable | None = None,
     ) -> str:
         lines = []
+
+        lines.append(divider())
+        if on_result:
+            on_result(divider())
+        lines.append(title(f"GitHub User: {username}"))
+        if on_result:
+            on_result(title(f"GitHub User: {username}"))
 
         try:
             async with httpx.AsyncClient(timeout=30) as client:
@@ -740,6 +778,12 @@ class GitHubSearch:
         except httpx.RequestError as e:
             return error(f"Request failed: {e}")
 
+        lines.append(end_of("user search"))
+        if on_result:
+            on_result(end_of("user search"))
+        lines.append(divider())
+        if on_result:
+            on_result(divider())
         return "\n".join(lines)
 
     async def search_dork(
@@ -809,7 +853,7 @@ class GitHubSearch:
                         repo = item["repository"]["full_name"]
                         path = item["path"]
                         url = item["html_url"]
-                        entry = f"[{repo}] {path}\n  {url}"
+                        entry = f"{bullet(repo)}\n{line(path)}\n{line(url)}"
                     elif dork_type == "commits":
                         author = item.get("commit", {}).get("author", {})
                         email = author.get("email", "N/A")
@@ -818,25 +862,43 @@ class GitHubSearch:
                         repo = item["repository"]["full_name"]
                         sha = item["sha"][:8]
                         url = item["html_url"]
-                        entry = f"[{sha}] {name} <{email}> | {repo}\n  {msg}\n  {url}"
+                        entry = (
+                            f"{bullet(sha)}\n"
+                            f"{line(f'Author: {name} <{email}>')}\n"
+                            f"{line(f'Message: {msg}')}\n"
+                            f"{line(f'Repo: {repo}')}\n"
+                            f"{line(url)}"
+                        )
                     elif dork_type == "issues":
                         repo = item["repository"]["full_name"]
-                        title = item["title"]
+                        issue_title = item["title"]
                         state = item["state"]
                         url = item["html_url"]
-                        entry = f"[{repo}] [{state}] {title}\n  {url}"
+                        entry = (
+                            f"{bullet(repo)}\n"
+                            f"{line(f'[{state}] {issue_title}')}\n"
+                            f"{line(url)}"
+                        )
                     elif dork_type == "repositories":
                         full_name = item["full_name"]
                         desc = item.get("description") or "No description"
                         stars = item["stargazers_count"]
                         lang = item.get("language") or "N/A"
                         url = item["html_url"]
-                        entry = f"[{full_name}] {lang} | {stars}★\n  {desc}\n  {url}"
+                        entry = (
+                            f"{bullet(full_name)} {lang} | {stars}★\n"
+                            f"{line(desc)}\n"
+                            f"{line(url)}"
+                        )
                     elif dork_type == "users":
                         login = item["login"]
                         uid = item["id"]
                         url = item["html_url"]
-                        entry = f"[{login}] (id: {uid})\n  {url}"
+                        entry = (
+                            f"{bullet(login)}\n"
+                            f"{line(f'(id: {uid})')}\n"
+                            f"{line(url)}"
+                        )
                     else:
                         entry = str(item)
 
@@ -856,6 +918,8 @@ class GitHubSearch:
         if not results:
             return "No results found."
 
-        return f"{title(f'Dork results for {query!r} ({dork_type}):')}\n" + "\n".join(
-            results
-        )
+        output = [divider(), title(f"Dork results for {query!r} ({dork_type}):")]
+        output.extend(results)
+        output.append(end_of("dork search"))
+        output.append(divider())
+        return "\n".join(output)

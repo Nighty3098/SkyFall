@@ -8,6 +8,8 @@ from loguru import logger
 from phonenumbers import carrier, geocoder, timezone
 
 from src.ui.output_formatter import (
+    divider,
+    end_of,
     error,
     info,
     kv,
@@ -26,7 +28,7 @@ class PhoneSearch:
         default_region: str = None,
         on_result: Callable | None = None,
     ) -> str:
-        lines = [title(f"Phone: {phone}"), section("Parse & Validate")]
+        lines = [divider(), title(f"Phone: {phone}"), section("Parse & Validate")]
         if on_result:
             on_result(lines[-1])
 
@@ -107,9 +109,11 @@ class PhoneSearch:
             except Exception:
                 pass
 
-        if len(lines) <= 2:
+        if len(lines) <= 3:
             return info("No information available for this number.")
 
+        lines.append(end_of("parse & validate"))
+        lines.append(divider())
         return "\n".join(lines)
 
     async def reverse_lookup(
@@ -127,7 +131,7 @@ class PhoneSearch:
                 on_result(msg)
             return msg
 
-        lines = [title(f"Phone: {phone}")]
+        lines = [divider(), title(f"Phone: {phone}")]
 
         if numverify_key:
             lines.append(section("NumVerify"))
@@ -183,9 +187,11 @@ class PhoneSearch:
             except httpx.RequestError as e:
                 lines.append(info(f"Request failed: {e}"))
 
-        if len(lines) <= 1:
+        if len(lines) <= 2:
             return info("No data returned.")
 
+        lines.append(end_of("reverse lookup"))
+        lines.append(divider())
         return "\n".join(lines)
 
     async def check_leaks(
@@ -200,7 +206,7 @@ class PhoneSearch:
                 on_result(msg)
             return msg
 
-        lines = [title(f"Phone: {phone}"), section("IntelX Search")]
+        lines = [divider(), title(f"Phone: {phone}"), section("IntelX Search")]
         if on_result:
             on_result(lines[-1])
 
@@ -262,16 +268,13 @@ class PhoneSearch:
                         or item.get("bucket")
                         or item.get("bucketId")
                     )
-                    parts = [f"\n    Source: {name}"]
-                    if date:
-                        parts.append(f"Date: {date}")
-                    if bucket_id:
-                        parts.append(f"Bucket: {bucket_id}")
-                    line = " | ".join(parts)
-                    lines.append(line)
+                    lines.append(bullet(name))
                     if on_result:
-                        on_result(line)
-
+                        on_result(lines[-1])
+                    if date:
+                        lines.append(line(f"Date:   {date}"))
+                    if bucket_id:
+                        lines.append(line(f"Bucket: {bucket_id}"))
                     if bucket_id:
                         try:
                             async with httpx.AsyncClient(timeout=15) as client:
@@ -299,9 +302,11 @@ class PhoneSearch:
         except Exception as e:
             lines.append(info(f"Error: {e}"))
 
-        if len(lines) <= 2:
+        if len(lines) <= 3:
             return info("No leak data found.")
 
+        lines.append(end_of("leak check"))
+        lines.append(divider())
         return "\n".join(lines)
 
     def _number_type_name(self, num) -> str:

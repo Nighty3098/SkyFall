@@ -9,7 +9,7 @@ import networkx as nx
 from loguru import logger
 from networkx.readwrite import json_graph
 
-from src.ui.output_formatter import divider, kv, line, section, title
+from src.ui.output_formatter import divider, end_of, kv, line, section, title
 
 try:
     from pyvis.network import Network
@@ -728,23 +728,22 @@ class TgAnalyzer:
         return graph
 
     def print_graph_stats(self, graph, log_callback=print):
-        log_callback("\n" + divider("=", 50))
+        log_callback(divider())
         log_callback(title("Graph Statistics"))
-        log_callback(divider("=", 50))
         log_callback(kv("Total nodes", graph.number_of_nodes()))
         log_callback(kv("Total edges", graph.number_of_edges()))
 
         node_types = defaultdict(int)
         for n, d in graph.nodes(data=True):
             node_types[d.get("node_type", "unknown")] += 1
-        log_callback("\n" + section("Node types"))
+        log_callback(section("Node types"))
         for t, cnt in node_types.items():
             log_callback(line(f"{t}: {cnt}"))
 
         edge_types = defaultdict(int)
         for u, v, d in graph.edges(data=True):
             edge_types[d.get("edge_type", "unknown")] += 1
-        log_callback("\n" + section("Edge types"))
+        log_callback(section("Edge types"))
         for t, cnt in edge_types.items():
             log_callback(line(f"{t}: {cnt}"))
 
@@ -755,8 +754,7 @@ class TgAnalyzer:
             degrees = [d for n, d in graph.degree(user_nodes)]
             if degrees:
                 log_callback(
-                    "\n"
-                    + line(
+                    line(
                         f"User node degree: min={min(degrees)}, max={max(degrees)}, avg={sum(degrees) / len(degrees):.2f}"
                     )
                 )
@@ -778,6 +776,8 @@ class TgAnalyzer:
             log_callback(line(f"Bots: {bot_count}"))
             log_callback(line(f"Verified: {verified_count}"))
             log_callback(line(f"Premium: {premium_count}"))
+        log_callback(end_of("graph stats"))
+        log_callback(divider())
 
     def export_graph(
         self,

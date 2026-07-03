@@ -6,6 +6,17 @@ from dataclasses import dataclass, field
 
 from PySide6.QtCore import QPointF
 
+from src.ui.output_formatter import (
+    bullet,
+    divider,
+    end_of,
+    error as fmt_error,
+    info as fmt_info,
+    kv,
+    section,
+    title,
+)
+
 CHILD_THRESHOLD = 5
 
 _PATTERNS: dict[str, re.Pattern] = {
@@ -310,14 +321,6 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_email_intelx,
                 ),
-                TransformDef(
-                    name="HIBP Search",
-                    description="Search email in Have I Been Pwned",
-                    input_types=["Email"],
-                    output_type="Custom",
-                    relationship="associated_with",
-                    handler=_transform_email_hibp,
-                ),
             ],
             "Phone": [
                 TransformDef(
@@ -375,7 +378,6 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
     results = await engine.acheck(username)
     claimed = [r for r in results if r.get("status") == "Claimed"]
 
-    detail = f"Username search: found on {len(claimed)}/{len(results)} sites\n"
     children = []
     for r in claimed[:CHILD_THRESHOLD]:
         children.append(
@@ -399,14 +401,20 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
             )
         )
 
-    site_lines = [
-        f"{r['site']}: {r.get('url_user', r.get('url_main', ''))}" for r in claimed
+    content_lines = [
+        divider(),
+        title(f"Username search: {len(claimed)}/{len(results)} sites"),
     ]
+    for r in claimed:
+        content_lines.append(bullet(f"{r['site']}: {r.get('url_user', r.get('url_main', ''))}"))
+    if not claimed:
+        content_lines.append(fmt_info("No accounts found"))
+    content_lines.append(end_of("username search"))
+    content_lines.append(divider())
+
     return TransformResult(
         children=children,
-        content=detail + "\n".join(site_lines)
-        if site_lines
-        else detail + "No accounts found",
+        content="\n".join(content_lines),
         evidence=[r.get("url_main", "") for r in claimed if r.get("url_main")],
     )
 
@@ -437,14 +445,12 @@ async def _transform_domain_ip(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=ip,
                     entity_type="IP",
-                    content=_pack_content(
-                        [
-                            f"Country: {data.get('country', '?')}",
-                            f"City: {data.get('city', '?')}",
-                            f"ASN: {data.get('asn', '?')}",
-                            f"Provider: {data.get('provider', '?')}",
-                        ]
-                    ),
+                    content="\n".join([
+                        kv("Country", data.get("country", "?")),
+                        kv("City", data.get("city", "?")),
+                        kv("ASN", data.get("asn", "?")),
+                        kv("Provider", data.get("provider", "?")),
+                    ]),
                 ),
             )
         lat = data.get("lat")
@@ -454,11 +460,11 @@ async def _transform_domain_ip(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=f"{lat:.2f}, {lon:.2f}",
                     entity_type="Geolocation",
-                    content=f"Latitude: {lat}\nLongitude: {lon}",
+                    content=f"{kv('Latitude', lat)}\n{kv('Longitude', lon)}",
                 )
             )
-        info = _pack_content([f"{k}: {v}" for k, v in data.items() if v])
-        return TransformResult(children=children, content=info or str(data))
+        content = _pack_content([kv(k, v) for k, v in data.items() if v])
+        return TransformResult(children=children, content=content or str(data))
     return TransformResult(content=str(data))
 
 
@@ -468,20 +474,24 @@ async def _transform_domain_dns(domain: str, modules) -> TransformResult:
         return TransformResult(content="DomainAnalyzer module not available")
     data = await da.get_dns(domain)
     if isinstance(data, dict) and "error" not in data:
-        lines = []
+        lines = [divider(), title(f"DNS: {domain}")]
         children = []
         for rtype in ["A", "MX", "TXT", "NS", "CNAME"]:
             records = data.get(rtype, [])
             if records:
-                lines.append(f"{rtype}: {', '.join(records[:3])}")
+                lines.append(section(rtype))
                 for rec in records[:3]:
+                    lines.append(bullet(str(rec)))
                     child_type = "IP" if rtype == "A" else "Custom"
                     children.append(
                         ChildNodeDef(title=str(rec), entity_type=child_type)
                     )
         soa = data.get("SOA", {})
         if soa:
-            lines.append(f"SOA: {soa.get('mname', '?')}")
+            lines.append(section("SOA"))
+            lines.append(kv("MNAME", soa.get("mname", "?")))
+        lines.append(end_of("dns lookup"))
+        lines.append(divider())
         return TransformResult(
             children=children[:CHILD_THRESHOLD],
             content=_pack_content(lines) if lines else "No DNS records found",
@@ -498,11 +508,15 @@ async def _transform_domain_ssl(domain: str, modules) -> TransformResult:
         issuer = data.get("issuer", {})
         subject = data.get("subject", {})
         lines = [
-            f"Version: {data.get('version', '?')}",
-            f"Cipher: {data.get('cipher', '?')}",
-            f"Issuer: {issuer.get('organizationName', issuer.get('commonName', '?'))}",
-            f"Subject: {subject.get('commonName', '?')}",
-            f"Expires: {data.get('expires', '?')}",
+            divider(),
+            title(f"SSL/TLS: {domain}"),
+            kv("Version", data.get("version", "?")),
+            kv("Cipher", data.get("cipher", "?")),
+            kv("Issuer", issuer.get("organizationName", issuer.get("commonName", "?"))),
+            kv("Subject", subject.get("commonName", "?")),
+            kv("Expires", data.get("expires", "?")),
+            end_of("ssl/tls"),
+            divider(),
         ]
         return TransformResult(
             children=[
@@ -527,9 +541,13 @@ async def _transform_domain_webstack(domain: str, modules) -> TransformResult:
         waf = data.get("waf", "?")
         server = data.get("web_server", "?")
         lines = [
-            f"Server: {server}",
-            f"WAF: {waf}",
-            f"Tech: {', '.join(tech) if isinstance(tech, list) else tech}",
+            divider(),
+            title(f"Web Stack: {domain}"),
+            kv("Server", server),
+            kv("WAF", waf),
+            kv("Tech", ', '.join(tech) if isinstance(tech, list) else tech),
+            end_of("web stack"),
+            divider(),
         ]
         children = []
         if server and server != "Not resolve":
@@ -537,7 +555,7 @@ async def _transform_domain_webstack(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=f"Server: {server}",
                     entity_type="Custom",
-                    content=f"Web server: {server}",
+                    content=kv("Web server", server),
                 )
             )
         if waf and waf != "NOT FOUND":
@@ -545,7 +563,7 @@ async def _transform_domain_webstack(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=f"WAF: {waf}",
                     entity_type="Custom",
-                    content=f"WAF detected: {waf}",
+                    content=kv("WAF detected", waf),
                 )
             )
         if isinstance(tech, list):
@@ -554,7 +572,7 @@ async def _transform_domain_webstack(domain: str, modules) -> TransformResult:
                     ChildNodeDef(
                         title=t,
                         entity_type="Custom",
-                        content=f"Technology: {t}",
+                        content=kv("Technology", t),
                     )
                 )
         return TransformResult(
@@ -587,20 +605,18 @@ async def _transform_domain_whois(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=str(org)[:60],
                     entity_type="Organization",
-                    content=_pack_content(
-                        [
-                            f"Registrar: {registrar}",
-                            f"Created: {creation}",
-                            f"Expires: {expiration}",
-                        ]
-                    ),
+                    content="\n".join([
+                        kv("Registrar", registrar),
+                        kv("Created", creation),
+                        kv("Expires", expiration),
+                    ]),
                 )
             )
+        fields = [kv(k, v) for k, v in data.items() if not k.startswith("_")]
+        content = "\n".join([divider(), title(f"WHOIS: {domain}")] + fields + [end_of("whois"), divider()])
         return TransformResult(
             children=children,
-            content=_pack_content(
-                [f"{k}: {v}" for k, v in data.items() if not k.startswith("_")]
-            ),
+            content=content,
         )
     return TransformResult(content=str(data))
 
@@ -611,7 +627,8 @@ async def _transform_domain_subdomains(domain: str, modules) -> TransformResult:
         return TransformResult(content="DomainAnalyzer module not available")
     raw = await da.find_subdomains(domain)
     if isinstance(raw, str) and raw and "Error" not in raw:
-        subs = [s.strip() for s in raw.split("\n") if s.strip()]
+        result_lines = raw.split("\n")
+        subs = [l.strip().lstrip("- ").strip() for l in result_lines if l.startswith("  - ")]
         children = []
         for sub in subs[:CHILD_THRESHOLD]:
             children.append(ChildNodeDef(title=sub, entity_type="Domain"))
@@ -625,7 +642,7 @@ async def _transform_domain_subdomains(domain: str, modules) -> TransformResult:
             )
         return TransformResult(
             children=children,
-            content=f"Found {len(subs)} subdomains\n" + "\n".join(subs) if subs else "",
+            content=raw,
         )
     return TransformResult(content=str(raw))
 
@@ -636,12 +653,13 @@ async def _transform_domain_ct(domain: str, modules) -> TransformResult:
         return TransformResult(content="DomainAnalyzer module not available")
     raw = await da.get_certificate_transparency(domain)
     if isinstance(raw, str) and raw and "Error" not in raw:
-        lines = raw.split("\n")
-        domains = [l[2:] for l in lines if l.startswith("- ")][:CHILD_THRESHOLD]
+        result_lines = raw.split("\n")
+        domains = [l.strip()[2:].strip() for l in result_lines if l.strip().startswith("- ")][:CHILD_THRESHOLD]
         children = [ChildNodeDef(title=d, entity_type="Domain") for d in domains]
+        content = raw  # already formatted by domain_analyzer
         return TransformResult(
             children=children,
-            content=raw,
+            content=content,
         )
     return TransformResult(content=str(raw))
 
@@ -693,10 +711,18 @@ async def _transform_domain_malware(domain: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=f"Reputation: {status}",
                     entity_type="Custom",
-                    content=f"Source: {source}\nMalicious votes: {malicious}",
+                    content=f"{kv('Source', source)}\n{kv('Malicious votes', malicious)}",
                 )
             ],
-            content=f"Status: {status}\nSource: {source}\nMalicious votes: {malicious}",
+            content="\n".join([
+                divider(),
+                title(f"Malware: {domain}"),
+                kv("Status", status),
+                kv("Source", source),
+                kv("Malicious votes", malicious),
+                end_of("malware check"),
+                divider(),
+            ]),
         )
     return TransformResult(content=str(data))
 
@@ -729,7 +755,7 @@ async def _transform_domain_cookies(domain: str, modules) -> TransformResult:
         lines = [l for l in raw.split("\n") if l.strip()]
         children = []
         for i, line in enumerate(lines[: CHILD_THRESHOLD * 2]):
-            if ":" in line and not line.startswith(" "):
+            if ":" in line and line.startswith("  ") and not line.startswith("    "):
                 name = line.split(":", 1)[0].strip()
                 val = line.split(":", 1)[1].strip()
                 children.append(
@@ -798,15 +824,18 @@ async def _transform_domain_nmap(domain: str, modules) -> TransformResult:
                         ),
                     )
                 )
-        lines = []
+        lines = [divider(), title(f"Nmap: {domain}")]
         for host, ports in data.items():
+            lines.append(section(host))
             for p in ports:
-                lines.append(
-                    f"Port {p['port']}/{p.get('service', '?')} - {p.get('state', '?')}"
-                )
+                lines.append(bullet(f"Port {p['port']}/{p.get('service', '?')} - {p.get('state', '?')}"))
+        if not any(data.values()):
+            lines.append(fmt_info("All ports closed"))
+        lines.append(end_of("port scan"))
+        lines.append(divider())
         return TransformResult(
             children=children[:CHILD_THRESHOLD],
-            content=_pack_content(lines) if lines else "All ports closed",
+            content=_pack_content(lines),
         )
     return TransformResult(content=str(data))
 
@@ -828,19 +857,18 @@ async def _transform_ip_geo(ip_addr: str, modules) -> TransformResult:
                 ChildNodeDef(
                     title=f"{lat:.2f}, {lon:.2f}",
                     entity_type="Geolocation",
-                    content=_pack_content(
-                        [
-                            f"IP: {data.get('ip', ip_addr)}",
-                            f"Country: {data.get('country', '?')}",
-                            f"City: {data.get('city', '?')}",
-                            f"Latitude: {lat}",
-                            f"Longitude: {lon}",
-                        ]
-                    ),
+                    content="\n".join([
+                        kv("IP", data.get("ip", ip_addr)),
+                        kv("Country", data.get("country", "?")),
+                        kv("City", data.get("city", "?")),
+                        kv("Latitude", lat),
+                        kv("Longitude", lon),
+                    ]),
                 ),
             )
-        info = _pack_content([f"{k}: {v}" for k, v in data.items() if v])
-        return TransformResult(children=children, content=info or str(data))
+        fields = [kv(k, v) for k, v in data.items() if v]
+        content = "\n".join([divider(), title(f"IP Geo: {ip_addr}")] + fields + [end_of("ip geo"), divider()])
+        return TransformResult(children=children, content=content or str(data))
     return TransformResult(content=str(data))
 
 
@@ -848,13 +876,13 @@ async def _transform_ip_geo(ip_addr: str, modules) -> TransformResult:
 
 
 async def _transform_email_intelx(email: str, modules) -> TransformResult:
-    engine = modules.get("intelx_search")
+    engine = modules.get("mail_search")
     if not engine:
         return TransformResult(content="IntelX module not available")
     raw = await engine.get_data(email)
     if raw and "Not found" not in raw:
         lines = raw.split("\n")
-        db_lines = [l[2:] for l in lines if l.startswith("  • ") or l.startswith("  -")]
+        db_lines = [l.lstrip()[2:] for l in lines if l.startswith("  -")]
         children = []
         seen = set()
         for db in db_lines[:CHILD_THRESHOLD]:
@@ -874,40 +902,6 @@ async def _transform_email_intelx(email: str, modules) -> TransformResult:
                     title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
                     entity_type="Custom",
                     content="\n".join(db_lines[CHILD_THRESHOLD:]),
-                )
-            )
-        return TransformResult(children=children, content=raw)
-    return TransformResult(content=str(raw))
-
-
-async def _transform_email_hibp(email: str, modules) -> TransformResult:
-    engine = modules.get("hibp_search")
-    if not engine:
-        return TransformResult(content="HIBP module not available")
-    raw = await engine.get_data(email)
-    if raw and "No breaches found" not in raw and "hibp-api-key" not in raw.lower():
-        import re
-        lines = raw.split("\n")
-        names = []
-        for l in lines:
-            m = re.match(r"^═══ (.+) ───", l)
-            if m:
-                names.append(m.group(1))
-        children = []
-        for name in names[:CHILD_THRESHOLD]:
-            children.append(
-                ChildNodeDef(
-                    title=name[:50],
-                    entity_type="Custom",
-                    content=f"Breach: {name}\nEmail: {email}",
-                )
-            )
-        if len(names) > CHILD_THRESHOLD:
-            children.append(
-                ChildNodeDef(
-                    title=f"+{len(names) - CHILD_THRESHOLD} more breaches",
-                    entity_type="Custom",
-                    content="\n".join(names[CHILD_THRESHOLD:]),
                 )
             )
         return TransformResult(children=children, content=raw)
@@ -945,7 +939,7 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
             children.append(ChildNodeDef(
                 title=location,
                 entity_type="Geolocation",
-                content=f"Phone: {e164}\nLocation: {location}",
+                content=f"{kv('Phone', e164)}\n{kv('Location', location)}",
             ))
 
         carrier_name = data.get("Carrier")
@@ -953,7 +947,7 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
             children.append(ChildNodeDef(
                 title=carrier_name,
                 entity_type="Organization",
-                content=f"Phone: {e164}\nCarrier: {carrier_name}",
+                content=f"{kv('Phone', e164)}\n{kv('Carrier', carrier_name)}",
             ))
 
         line_type = data.get("Line Type")
@@ -961,7 +955,7 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
             children.append(ChildNodeDef(
                 title=line_type,
                 entity_type="Custom",
-                content=f"Phone: {e164}\nLine Type: {line_type}",
+                content=f"{kv('Phone', e164)}\n{kv('Line Type', line_type)}",
             ))
 
         region = data.get("Region")
@@ -969,7 +963,7 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
             children.append(ChildNodeDef(
                 title=region,
                 entity_type="Custom",
-                content=f"Phone: {e164}\nRegion: {region}",
+                content=f"{kv('Phone', e164)}\n{kv('Region', region)}",
             ))
 
         timezones_str = data.get("Timezones")
@@ -979,7 +973,7 @@ async def _transform_phone_parse(phone: str, modules) -> TransformResult:
                 children.append(ChildNodeDef(
                     title=city,
                     entity_type="Geolocation",
-                    content=f"Phone: {e164}\nTimezone: {tz}",
+                    content=f"{kv('Phone', e164)}\n{kv('Timezone', tz)}",
                 ))
 
         return TransformResult(children=children, content=raw)
@@ -1038,7 +1032,7 @@ async def _transform_mac_geo(mac: str, modules) -> TransformResult:
     if isinstance(data, dict):
         locs = data.get("location", {})
         children = []
-        content_lines = []
+        content_lines = [divider(), title(f"MAC Geo: {mac}")]
         for name, loc in locs.items():
             if loc:
                 lat, lon = loc["latitude"], loc["longitude"]
@@ -1046,19 +1040,19 @@ async def _transform_mac_geo(mac: str, modules) -> TransformResult:
                     ChildNodeDef(
                         title=f"{lat:.4f}, {lon:.4f}",
                         entity_type="Geolocation",
-                        content=_pack_content(
-                            [
-                                f"MAC: {mac}",
-                                f"Provider: {name}",
-                                f"Latitude: {lat}",
-                                f"Longitude: {lon}",
-                            ]
-                        ),
+                        content="\n".join([
+                            kv("MAC", mac),
+                            kv("Provider", name),
+                            kv("Latitude", lat),
+                            kv("Longitude", lon),
+                        ]),
                     )
                 )
-                content_lines.append(f"{name}: {lat:.4f}, {lon:.4f}")
+                content_lines.append(bullet(f"{name}: {lat:.4f}, {lon:.4f}"))
             else:
-                content_lines.append(f"{name}: no data")
+                content_lines.append(bullet(f"{name}: no data"))
+        content_lines.append(end_of("mac geo"))
+        content_lines.append(divider())
         if children:
             return TransformResult(
                 children=children, content=_pack_content(content_lines)

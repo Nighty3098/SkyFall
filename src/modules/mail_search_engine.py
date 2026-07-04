@@ -5,7 +5,17 @@ import urllib.parse
 import requests
 from loguru import logger
 
-from src.ui.output_formatter import bullet, divider, end_of, error, info, kv, line, section, title
+from src.ui.output_formatter import (
+    bullet,
+    divider,
+    end_of,
+    error,
+    info,
+    kv,
+    line,
+    section,
+    title,
+)
 
 HIBP_API_URL = "https://haveibeenpwned.com/api/v3/breachedaccount/{email}"
 HIBP_USER_AGENT = "SkyFallMailEngine/1.0"
@@ -205,7 +215,7 @@ class MailSearchEngine:
                             result += f"{kv('Tags', ', '.join(record['tags']))}\n"
 
                         content = record["content"]
-                        result += f"  Content:\n"
+                        result += "  Content:\n"
                         if isinstance(content, dict):
                             for key, value in content.items():
                                 if isinstance(value, list):
@@ -267,7 +277,9 @@ class MailSearchEngine:
                     await asyncio.sleep(retry_after)
                     continue
                 else:
-                    return error(f"HIBP API error {resp.status_code}: {resp.text[:200]}")
+                    return error(
+                        f"HIBP API error {resp.status_code}: {resp.text[:200]}"
+                    )
             except Exception as e:
                 logger.error(f"HIBP network error: {e}")
                 if attempt < 2:

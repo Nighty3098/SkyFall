@@ -25,6 +25,4 @@ class MailController:
         )
 
     async def start_hibp_check(self, email):
-        self.ui.hibpDebug.setPlainText(
-            await self.mail_search_engine.check_hibp(email)
-        )
+        self.ui.hibpDebug.setPlainText(await self.mail_search_engine.check_hibp(email))

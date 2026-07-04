@@ -13,7 +13,17 @@ from ddgs import DDGS
 from fake_useragent import UserAgent
 from loguru import logger
 
-from src.ui.output_formatter import bullet, divider, end_of, error, info, kv, line, section, title
+from src.ui.output_formatter import (
+    bullet,
+    divider,
+    end_of,
+    error,
+    info,
+    kv,
+    line,
+    section,
+    title,
+)
 
 
 class DomainAnalyzer:
@@ -36,23 +46,27 @@ class DomainAnalyzer:
                 headers={"User-Agent": self.ua.random},
             )
 
-            return "\n".join([
-                divider(),
-                title(f"Robots.txt: {domain}"),
-                response.text,
-                end_of("robots.txt"),
-                divider(),
-            ])
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"Robots.txt: {domain}"),
+                    response.text,
+                    end_of("robots.txt"),
+                    divider(),
+                ]
+            )
 
         except Exception as e:
             logger.error(f"Robots.txt: Error: {e}")
-            return "\n".join([
-                divider(),
-                title(f"Robots.txt: {domain}"),
-                error(f"Error getting robots.txt: {e}"),
-                end_of("robots.txt"),
-                divider(),
-            ])
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"Robots.txt: {domain}"),
+                    error(f"Error getting robots.txt: {e}"),
+                    end_of("robots.txt"),
+                    divider(),
+                ]
+            )
 
     async def get_ip_and_location(self, domain):
         logger.debug("Trying to get IP and location")
@@ -404,13 +418,15 @@ class DomainAnalyzer:
 
         except Exception as e:
             logger.error(f"Subdomains: Error: {e}")
-            return "\n".join([
-                divider(),
-                title(f"Subdomains: {domain}"),
-                error(str(e)),
-                end_of("subdomains"),
-                divider(),
-            ])
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"Subdomains: {domain}"),
+                    error(str(e)),
+                    end_of("subdomains"),
+                    divider(),
+                ]
+            )
 
     async def get_security_txt(self, domain):
         logger.debug("Trying to find security.txt")
@@ -429,13 +445,15 @@ class DomainAnalyzer:
             return "\n".join(lines)
         except Exception as e:
             logger.error(f"Security.txt: Error: {e}")
-            return "\n".join([
-                divider(),
-                title(f"Security.txt: {domain}"),
-                error(str(e)),
-                end_of("security.txt"),
-                divider(),
-            ])
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"Security.txt: {domain}"),
+                    error(str(e)),
+                    end_of("security.txt"),
+                    divider(),
+                ]
+            )
 
     async def get_cookies(self, domain):
         logger.debug("Trying to get cookies")
@@ -465,13 +483,15 @@ class DomainAnalyzer:
             return "\n".join(lines)
         except Exception as e:
             logger.error(f"Cookies: Error: {e}")
-            return "\n".join([
-                divider(),
-                title(f"Cookies: {domain}"),
-                error(str(e)),
-                end_of("cookies"),
-                divider(),
-            ])
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"Cookies: {domain}"),
+                    error(str(e)),
+                    end_of("cookies"),
+                    divider(),
+                ]
+            )
 
     async def get_certificate_transparency(self, domain):
         logger.debug("Trying to get Certificate Transparency logs")
@@ -574,10 +594,12 @@ class DomainAnalyzer:
             return "\n".join(lines)
         except Exception as e:
             logger.error(f"Social tags: Error: {e}")
-            return "\n".join([
-                divider(),
-                title(f"Social Tags: {domain}"),
-                error(str(e)),
-                end_of("social tags"),
-                divider(),
-            ])
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"Social Tags: {domain}"),
+                    error(str(e)),
+                    end_of("social tags"),
+                    divider(),
+                ]
+            )

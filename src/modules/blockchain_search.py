@@ -14,7 +14,6 @@ from src.ui.output_formatter import (
     info,
     kv,
     line,
-    section,
     title,
 )
 
@@ -149,8 +148,8 @@ class BlockchainSearch:
             lines.append(line(f"Time:   {c.timestamp.strftime('%H:%M:%S')}"))
             lines.append(line(f"Amount: {c.amount:.6f} {c.coin}"))
             if on_result:
-                for l in lines[-3:]:
-                    on_result(l)
+                for ln in lines[-3:]:
+                    on_result(ln)
 
             detail = c.score_detail
             if detail:
@@ -173,8 +172,8 @@ class BlockchainSearch:
                 lines.append(line(f"From:   {c.from_address or '-'}"))
                 lines.append(line(f"To:     {c.to_address or '-'}"))
                 if on_result:
-                    for l in lines[-2:]:
-                        on_result(l)
+                    for ln in lines[-2:]:
+                        on_result(ln)
 
             if c.memo:
                 memo_text = kv("Memo", c.memo)

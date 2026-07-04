@@ -16,7 +16,6 @@ from hachoir.parser import createParser
 from loguru import logger
 
 from src.ui.output_formatter import (
-    bullet,
     divider,
     end_of,
     error,

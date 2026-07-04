@@ -8,11 +8,13 @@ from loguru import logger
 from phonenumbers import carrier, geocoder, timezone
 
 from src.ui.output_formatter import (
+    bullet,
     divider,
     end_of,
     error,
     info,
     kv,
+    line,
     section,
     title,
 )

@@ -8,8 +8,8 @@ from src.ui.output_formatter import (
     divider,
     end_of,
     error,
-    info,
     kv,
+    line,
     section,
     title,
 )
@@ -894,11 +894,7 @@ class GitHubSearch:
                         login = item["login"]
                         uid = item["id"]
                         url = item["html_url"]
-                        entry = (
-                            f"{bullet(login)}\n"
-                            f"{line(f'(id: {uid})')}\n"
-                            f"{line(url)}"
-                        )
+                        entry = f"{bullet(login)}\n{line(f'(id: {uid})')}\n{line(url)}"
                     else:
                         entry = str(item)
 

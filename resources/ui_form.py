@@ -31,7 +31,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1516, 792)
+        MainWindow.resize(1243, 944)
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_22 = QVBoxLayout(self.centralwidget)
@@ -86,10 +86,6 @@ class Ui_MainWindow(object):
 
 
         self.horizontalLayout_7.addLayout(self.verticalLayout_21)
-
-        self.horizontalSpacer_4 = QSpacerItem(150, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout_7.addItem(self.horizontalSpacer_4)
 
         self.mainStackedWidget.addTab(self.mainTab, "")
         self.telegramToolsTab = QWidget()
@@ -469,6 +465,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_19.addWidget(self.startMailSearchButton)
 
+        self.startHibpCheckButton = QPushButton(self.mailSettingsSection)
+        self.startHibpCheckButton.setObjectName(u"startHibpCheckButton")
+
+        self.verticalLayout_19.addWidget(self.startHibpCheckButton)
+
         self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_19.addItem(self.verticalSpacer_6)
@@ -479,10 +480,17 @@ class Ui_MainWindow(object):
         self.verticalLayout_20 = QVBoxLayout(self.mailDebugSection)
         self.verticalLayout_20.setObjectName(u"verticalLayout_20")
         self.verticalLayout_20.setContentsMargins(0, 0, 0, 0)
-        self.mailSearchDebug = QPlainTextEdit(self.mailDebugSection)
+        self.mailDebugSplitter = QSplitter(self.mailDebugSection)
+        self.mailDebugSplitter.setObjectName(u"mailDebugSplitter")
+        self.mailDebugSplitter.setOrientation(Qt.Orientation.Vertical)
+        self.mailSearchDebug = QPlainTextEdit(self.mailDebugSplitter)
         self.mailSearchDebug.setObjectName(u"mailSearchDebug")
+        self.mailDebugSplitter.addWidget(self.mailSearchDebug)
+        self.hibpDebug = QPlainTextEdit(self.mailDebugSplitter)
+        self.hibpDebug.setObjectName(u"hibpDebug")
+        self.mailDebugSplitter.addWidget(self.hibpDebug)
 
-        self.verticalLayout_20.addWidget(self.mailSearchDebug)
+        self.verticalLayout_20.addWidget(self.mailDebugSplitter)
 
         self.mailSplitter.addWidget(self.mailDebugSection)
 
@@ -1216,6 +1224,7 @@ class Ui_MainWindow(object):
 
         self.entityLayout.addWidget(self.entityPalette)
 
+        self.graphSplitter.addWidget(self.entityPanel)
         self.graphCenterPanel = QWidget(self.graphSplitter)
         self.graphCenterPanel.setObjectName(u"graphCenterPanel")
         self.graphCenterLayout = QVBoxLayout(self.graphCenterPanel)
@@ -1268,9 +1277,10 @@ class Ui_MainWindow(object):
 
         self.graphCenterLayout.addWidget(self.graphWidget)
 
+        self.graphSplitter.addWidget(self.graphCenterPanel)
         self.nodeEditPanel = PropertiesPanel(self.graphSplitter)
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
-        self.nodeEditPanel.setMinimumSize(QSize(500, 0))
+        self.nodeEditPanel.setMinimumSize(QSize(400, 0))
         self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
         self.nodeEditLayout.setObjectName(u"nodeEditLayout")
         self.nodeEditLayout.setContentsMargins(0, 0, 0, 0)
@@ -1315,8 +1325,6 @@ class Ui_MainWindow(object):
 
         self.nodeEditLayout.addLayout(self.nodeEvidenceBtnLayout)
 
-        self.graphSplitter.addWidget(self.entityPanel)
-        self.graphSplitter.addWidget(self.graphCenterPanel)
         self.graphSplitter.addWidget(self.nodeEditPanel)
 
         self.graphMainLayout.addWidget(self.graphSplitter)
@@ -1361,6 +1369,11 @@ class Ui_MainWindow(object):
         self.intelligentXApiKeyEdit.setObjectName(u"intelligentXApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.intelligentXApiKeyEdit)
+
+        self.hibpApiKeyEdit = QLineEdit(self.settingsTab)
+        self.hibpApiKeyEdit.setObjectName(u"hibpApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.hibpApiKeyEdit)
 
         self.virustotalApiKeyEdit = QLineEdit(self.settingsTab)
         self.virustotalApiKeyEdit.setObjectName(u"virustotalApiKeyEdit")
@@ -1422,6 +1435,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.lightThemeCheck)
 
+        self.framelessCheck = QCheckBox(self.settingsTab)
+        self.framelessCheck.setObjectName(u"framelessCheck")
+
+        self.verticalLayout_4.addWidget(self.framelessCheck)
+
         self.pushButton = QPushButton(self.settingsTab)
         self.pushButton.setObjectName(u"pushButton")
 
@@ -1437,10 +1455,6 @@ class Ui_MainWindow(object):
         self.horizontalSpacer_2 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
-
-        self.horizontalSpacer_5 = QSpacerItem(150, 20, QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Minimum)
-
-        self.horizontalLayout.addItem(self.horizontalSpacer_5)
 
         self.mainStackedWidget.addTab(self.settingsTab, "")
         self.proxyTab = QWidget()
@@ -1473,7 +1487,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(11)
+        self.mainStackedWidget.setCurrentIndex(3)
         self.tabWidget.setCurrentIndex(0)
 
 
@@ -1533,7 +1547,10 @@ class Ui_MainWindow(object):
         self.maigretDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Maigret", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.usernameSearchTab), QCoreApplication.translate("MainWindow", u"USERNAME", None))
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
-        self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
+        self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"IntelX Search", None))
+        self.startHibpCheckButton.setText(QCoreApplication.translate("MainWindow", u"HIBP Check", None))
+        self.mailSearchDebug.setPlainText(QCoreApplication.translate("MainWindow", u"INTELX", None))
+        self.hibpDebug.setPlainText(QCoreApplication.translate("MainWindow", u"HIBP", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mailToolsTab), QCoreApplication.translate("MainWindow", u"MAIL", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
@@ -1664,6 +1681,7 @@ class Ui_MainWindow(object):
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))
         self.telegramPhoneEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram Phone Number", None))
         self.intelligentXApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IntelligentX API KEY", None))
+        self.hibpApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HIBP API KEY", None))
         self.virustotalApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Virustotal", None))
         self.googleSafeApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Google Safe API KEY", None))
         self.ipinfoApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"IpInfo", None))
@@ -1676,6 +1694,7 @@ class Ui_MainWindow(object):
         self.tonapiApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TON API Key", None))
         self.heliusApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Helius API Key", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
+        self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))

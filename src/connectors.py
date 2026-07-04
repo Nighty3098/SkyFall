@@ -265,3 +265,10 @@ def setup_graph_connectors(ui):
 
 def setup_graph_transform_connectors(ui, controller):
     ui.graphWidget._transform_controller = controller
+
+
+def setup_report_connectors(controller):
+    controller.ui.generateReportButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.generate_report())
+    )
+    controller.ui.saveReportButton.clicked.connect(controller.save_report)

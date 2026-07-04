@@ -26,6 +26,7 @@ from src.connectors import (
     setup_metadata_connectors,
     setup_phone_connectors,
     setup_proxies_connectors,
+    setup_report_connectors,
     setup_settings_connectors,
     setup_tg_analyzer_connectors,
     setup_tg_downloader_connectors,
@@ -39,8 +40,8 @@ from src.controllers.github_controller import GitHubController
 from src.controllers.graph_transform_controller import (
     GraphTransformController,
 )
-from src.controllers.mail_controller import MailController
 from src.controllers.mac_location_controller import MacLocationController
+from src.controllers.mail_controller import MailController
 from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
 from src.controllers.settings_controller import Settings
@@ -55,13 +56,14 @@ from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
-from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
+from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.phone_search import PhoneSearch
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
+from src.report_controller import ReportController
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
 from src.ui.setup_ui import setup_ui
@@ -277,6 +279,8 @@ class MainWindow(QMainWindow):
                 "mail_search": self.mailSearchEngine,
             },
         )
+        self.reportController = ReportController(self.ui)
+        setup_report_connectors(self.reportController)
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
         setup_graph_connectors(self.ui)
 

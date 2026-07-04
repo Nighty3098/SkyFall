@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1243</width>
-    <height>944</height>
+    <width>1678</width>
+    <height>767</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>3</number>
+         <number>12</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -662,11 +662,17 @@
                 </property>
                 <widget class="QPlainTextEdit" name="mailSearchDebug">
                  <property name="plainText">
+                  <string/>
+                 </property>
+                 <property name="placeholderText">
                   <string>INTELX</string>
                  </property>
                 </widget>
                 <widget class="QPlainTextEdit" name="hibpDebug">
                  <property name="plainText">
+                  <string/>
+                 </property>
+                 <property name="placeholderText">
                   <string>HIBP</string>
                  </property>
                 </widget>
@@ -1994,6 +2000,34 @@
               </item>
              </layout>
             </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="reportTab">
+         <attribute name="title">
+          <string>AI REPORT</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_6">
+          <item row="1" column="0">
+           <widget class="QPushButton" name="generateReportButton">
+            <property name="text">
+             <string>Generate Report</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="saveReportButton">
+            <property name="text">
+             <string>Save Report</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPlainTextEdit" name="aiReportDebug">
+            <property name="placeholderText">
+             <string>REPORT</string>
+            </property>
            </widget>
           </item>
          </layout>

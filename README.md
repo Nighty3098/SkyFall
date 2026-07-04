@@ -123,6 +123,12 @@
   - [x] JSON save/load via file dialog (default ~/.skyfall/data/)
   - [x] Theme-aware colors from QSS (dark/light)
   - [x] Node selection highlighting (accent border)
+- [x] AI Reports (via local Ollama)
+  - [x] Standalone MCP server for report generation
+  - [x] Collects data from all analysis modules and graph
+  - [x] Generates comprehensive OSINT report in Markdown
+  - [x] Configurable model selection
+  - [x] Save report to .md file
 - [ ] Reverse Image Search With Yandex and Google
 
 ## `SETUP SEARXNG`

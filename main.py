@@ -14,6 +14,7 @@ from PySide6.QtWidgets import QApplication, QMainWindow
 from qasync import QEventLoop
 
 from logger_setup import setup_logging
+from src.case_manager import CaseManager
 from src.connectors import (
     setup_blockchain_connectors,
     setup_domain_connectors,
@@ -122,9 +123,10 @@ class MainWindow(QMainWindow):
         if self.settings.frameless_window:
             self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
+        self.case_manager = CaseManager()
         self._init_modules()
         self.settings.on_save(self._sync_tokens)
-        setup_ui(self)
+        setup_ui(self, self.case_manager)
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
@@ -152,6 +154,18 @@ class MainWindow(QMainWindow):
         if hasattr(self, "fileAnalyzer"):
             asyncio.ensure_future(self.fileAnalyzer.close())
         super().closeEvent(event)
+
+    def _wire_case_auto_save(self):
+        widget_names = list(self.case_manager.CATEGORY_MAP)
+        for name in widget_names:
+            widget = getattr(self.ui, name, None)
+            if widget is None:
+                continue
+            widget.textChanged.connect(
+                lambda n=name, w=widget: self.case_manager.save_result(
+                    n, w.toPlainText()
+                )
+            )
 
     def _init_modules(self):
         logger.debug("Init modules")
@@ -240,7 +254,7 @@ class MainWindow(QMainWindow):
         )
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.tgDownloaderController = TgDownloaderController(
-            self.ui, self.tgDownloader, self.proxy
+            self.ui, self.tgDownloader, self.proxy, self.case_manager
         )
         self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
         self.githubController = GitHubController(self.ui, self.githubSearch)
@@ -279,10 +293,12 @@ class MainWindow(QMainWindow):
                 "mail_search": self.mailSearchEngine,
             },
         )
-        self.reportController = ReportController(self.ui)
+        self.reportController = ReportController(self.ui, self.case_manager)
         setup_report_connectors(self.reportController)
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
-        setup_graph_connectors(self.ui)
+        setup_graph_connectors(self.ui, self.case_manager)
+
+        self._wire_case_auto_save()
 
 
 if __name__ == "__main__":

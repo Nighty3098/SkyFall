@@ -66,6 +66,7 @@ class TgDownloader:
         self.api_hash = config.get("api_hash")
         self.channel_name = config.get("channel")
         self.path = config.get("path")
+        self.session_path = config.get("session_path") or self.path
         self.collect_members = config.get("collect_members", True)
         self.collect_links = config.get("collect_links", True)
         self.download_media = config.get("download_media", True)
@@ -104,7 +105,7 @@ class TgDownloader:
         logger.info("Starting data collection...")
 
         provided_api_id, provided_api_hash = self._get_env_creds()
-        session_path = os.path.join(os.path.abspath(self.path), SESSION_NAME)
+        session_path = os.path.join(os.path.abspath(self.session_path), SESSION_NAME)
         logger.debug("run: path={}, session_path={}", self.path, session_path)
         logger.debug("run: channel_name={}", self.channel_name)
 
@@ -115,7 +116,7 @@ class TgDownloader:
             return
 
         if self.multi_acc:
-            self.state.multi_acc_sessions = load_multi_acc_sessions(self.path)
+            self.state.multi_acc_sessions = load_multi_acc_sessions(self.session_path)
             if self.state.multi_acc_sessions:
                 self.log_callback(
                     f"Loaded {len(self.state.multi_acc_sessions)} sessions for multi-account mode"
@@ -398,7 +399,7 @@ class TgDownloader:
         self.state.reset()
 
         provided_api_id, provided_api_hash = self._get_env_creds()
-        session_path = os.path.join(os.path.abspath(self.path), SESSION_NAME)
+        session_path = os.path.join(os.path.abspath(self.session_path), SESSION_NAME)
         logger.debug(
             "download_avatars: path={}, session_path={}", self.path, session_path
         )
@@ -512,9 +513,9 @@ class TgDownloader:
 
         if self.state.use_proxy and proxy_list_str:
             self.state.proxies = parse_proxies_text(proxy_list_str)
-        elif os.path.exists(os.path.join(self.path, "resources/proxies.txt")):
+        elif os.path.exists(os.path.join(self.session_path, "resources/proxies.txt")):
             self.state.proxies = load_proxies(
-                os.path.join(self.path, "resources/proxies.txt")
+                os.path.join(self.session_path, "resources/proxies.txt")
             )
 
         if self.state.use_proxy and self.state.proxies:

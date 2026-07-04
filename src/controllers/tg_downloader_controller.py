@@ -31,12 +31,14 @@ class TgDownloaderController:
         ui: QMainWindow,
         tg_downloader: TgDownloader,
         proxy: Proxy | None = None,
+        case_manager=None,
     ):
         logger.debug("Init: TgDownloaderController")
 
         self.ui = ui
         self.tg_downloader = tg_downloader
         self.proxy = proxy
+        self.case_manager = case_manager
         self._task = None
         self._bridge = _DownloaderBridge()
         self._bridge.log_signal.connect(
@@ -118,12 +120,18 @@ class TgDownloaderController:
     def build_collection_config(self) -> dict:
         from pathlib import Path
 
-        tg_data_path = str(Path.home() / ".skyfall" / "data")
+        default_path = str(Path.home() / ".skyfall" / "data")
+        tg_data_path = (
+            str(self.case_manager.current_case_path / "telegram")
+            if self.case_manager and self.case_manager.current_case_path
+            else default_path
+        )
         return {
             "api_id": self.ui.tgApiKeyEdit.text(),
             "api_hash": self.ui.telegramApiHashEdit.text(),
             "channel": self.ui.telegramUsernameEdit.text(),
             "path": tg_data_path,
+            "session_path": default_path,
             "collect_members": self.ui.telegramCollectMembersCheck.isChecked(),
             "collect_links": self.ui.telegramCollectLinksCheck.isChecked(),
             "download_media": self.ui.telegramDownloadMediaCheck.isChecked(),

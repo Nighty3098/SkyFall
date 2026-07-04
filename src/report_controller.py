@@ -9,8 +9,9 @@ from PySide6.QtWidgets import QApplication, QFileDialog
 
 
 class ReportController:
-    def __init__(self, ui):
+    def __init__(self, ui, case_manager=None):
         self.ui = ui
+        self.case_manager = case_manager
 
     @staticmethod
     def _server_params() -> StdioServerParameters:
@@ -112,7 +113,11 @@ class ReportController:
         if not report_text or report_text in ("REPORT", "Generating report..."):
             return
 
-        data_dir = str(Path.home() / ".skyfall" / "data")
+        data_dir = (
+            self.case_manager.get_reports_dir()
+            if self.case_manager
+            else str(Path.home() / ".skyfall" / "data")
+        )
         os.makedirs(data_dir, exist_ok=True)
 
         path, _ = QFileDialog.getSaveFileName(

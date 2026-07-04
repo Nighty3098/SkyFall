@@ -225,7 +225,7 @@ class FileAnalyzer:
         try:
             mime = magic.Magic(mime=True)
             file_type = mime.from_file(str(path))
-            return line(file_type, indent=0) + "\n"
+            return line(file_type) + "\n"
         except Exception as e:
             return str(e)
 

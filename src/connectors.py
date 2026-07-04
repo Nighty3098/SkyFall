@@ -208,8 +208,10 @@ def setup_blockchain_connectors(controller: "BlockchainController"):
     )
 
 
-def setup_graph_connectors(ui):
+def setup_graph_connectors(ui, case_manager=None):
     data_dir = str(Path.home() / ".skyfall" / "data")
+    if case_manager:
+        data_dir = case_manager.get_graph_dir()
 
     def export_graph():
         path, _ = QFileDialog.getSaveFileName(

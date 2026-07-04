@@ -3,11 +3,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    info,
-    line,
-)
+from src.ui.output_formatter import info
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -25,24 +21,25 @@ def _val(v):
 
 
 def _fmt(data, indent=2):
+    p = " " * indent
     if isinstance(data, dict):
         parts = []
         for k, v in data.items():
             if isinstance(v, (dict, list)):
-                parts.append(line(f"{k}:", indent=indent))
+                parts.append(f"{p}{k}:")
                 parts.append(_fmt(v, indent + 2))
             else:
-                parts.append(line(f"{k}: {_val(v)}", indent=indent))
+                parts.append(f"{p}{k}: {_val(v)}")
         return "\n".join(parts)
-    elif isinstance(data, list):
+    if isinstance(data, list):
         parts = []
         for item in data:
             if isinstance(item, (dict, list)):
                 parts.append(_fmt(item, indent))
             else:
-                parts.append(bullet(str(item), indent=indent))
+                parts.append(f"{p}- {item}")
         return "\n".join(parts)
-    return line(str(data), indent=indent)
+    return f"{p}{data}"
 
 
 class DomainController:

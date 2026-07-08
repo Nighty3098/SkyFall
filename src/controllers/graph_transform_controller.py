@@ -361,16 +361,29 @@ def _pack_content(lines: list[str]) -> str:
     return "\n".join(str(ln) for ln in lines if ln)
 
 
-# ── Username transforms ──────────────────────────────────────────
+# ── Universal transform runner ────────────────────────────────────
 
-
-async def _transform_username_search(username: str, modules) -> TransformResult:
-    engine = modules.get("username_search")
+async def _run_transform(
+    modules: dict,
+    module_key: str,
+    method: str,
+    input_value: str,
+    parser: Callable,
+    label: str | None = None,
+) -> TransformResult:
+    engine = modules.get(module_key)
     if not engine:
-        return TransformResult(content="UsernameSearch module not available")
-    results = await engine.acheck(username)
-    claimed = [r for r in results if r.get("status") == "Claimed"]
+        msg = label or module_key.replace("_", " ").title().replace(" ", "")
+        return TransformResult(content=f"{msg} module not available")
+    fn = getattr(engine, method)
+    result = await fn(input_value) if asyncio.iscoroutinefunction(fn) else fn(input_value)
+    return parser(result, input_value)
 
+
+# ── Parsers ───────────────────────────────────────────────────────
+
+def _parse_username_search(results, username):
+    claimed = [r for r in results if r.get("status") == "Claimed"]
     children = []
     for r in claimed[:CHILD_THRESHOLD]:
         children.append(
@@ -381,7 +394,6 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
                 evidence=[r.get("url_main", "")],
             )
         )
-
     if len(claimed) > CHILD_THRESHOLD:
         children.append(
             ChildNodeDef(
@@ -393,7 +405,6 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
                 ),
             )
         )
-
     content_lines = [
         divider(),
         title(f"Username search: {len(claimed)}/{len(results)} sites"),
@@ -405,7 +416,6 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
         content_lines.append(fmt_info("No accounts found"))
     content_lines.append(end_of("username search"))
     content_lines.append(divider())
-
     return TransformResult(
         children=children,
         content="\n".join(content_lines),
@@ -413,686 +423,666 @@ async def _transform_username_search(username: str, modules) -> TransformResult:
     )
 
 
-async def _transform_maigret_search(username: str, modules) -> TransformResult:
-    engine = modules.get("maigret_search")
-    if not engine:
-        return TransformResult(content="MaigretSearch module not available")
-    report = await engine.search_and_report(username)
+def _parse_maigret_search(report, username):
+    return TransformResult(content=report)
+
+
+def _parse_domain_ip(data, domain):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    ip = data.get("ip", "")
+    children = []
+    if ip:
+        children.append(
+            ChildNodeDef(
+                title=ip,
+                entity_type="IP",
+                content="\n".join(
+                    [
+                        kv("Country", data.get("country", "?")),
+                        kv("City", data.get("city", "?")),
+                        kv("ASN", data.get("asn", "?")),
+                        kv("Provider", data.get("provider", "?")),
+                    ]
+                ),
+            ),
+        )
+    lat = data.get("lat")
+    lon = data.get("lon")
+    if lat and lon:
+        children.append(
+            ChildNodeDef(
+                title=f"{lat:.2f}, {lon:.2f}",
+                entity_type="Geolocation",
+                content=f"{kv('Latitude', lat)}\n{kv('Longitude', lon)}",
+            )
+        )
+    content = _pack_content([kv(k, v) for k, v in data.items() if v])
+    return TransformResult(children=children, content=content or str(data))
+
+
+def _parse_domain_dns(data, domain):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content="DNS lookup failed")
+    lines = [divider(), title(f"DNS: {domain}")]
+    children = []
+    for rtype in ["A", "MX", "TXT", "NS", "CNAME"]:
+        records = data.get(rtype, [])
+        if records:
+            lines.append(section(rtype))
+            for rec in records[:3]:
+                lines.append(bullet(str(rec)))
+                child_type = "IP" if rtype == "A" else "Custom"
+                children.append(
+                    ChildNodeDef(title=str(rec), entity_type=child_type)
+                )
+    soa = data.get("SOA", {})
+    if soa:
+        lines.append(section("SOA"))
+        lines.append(kv("MNAME", soa.get("mname", "?")))
+    lines.append(end_of("dns lookup"))
+    lines.append(divider())
     return TransformResult(
-        content=report,
+        children=children[:CHILD_THRESHOLD],
+        content=_pack_content(lines) if lines else "No DNS records found",
     )
 
 
-# ── Domain transforms ────────────────────────────────────────────
-
-
-async def _transform_domain_ip(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.get_ip_and_location(domain)
-    if isinstance(data, dict):
-        ip = data.get("ip", "")
-        children = []
-        if ip:
-            children.append(
-                ChildNodeDef(
-                    title=ip,
-                    entity_type="IP",
-                    content="\n".join(
-                        [
-                            kv("Country", data.get("country", "?")),
-                            kv("City", data.get("city", "?")),
-                            kv("ASN", data.get("asn", "?")),
-                            kv("Provider", data.get("provider", "?")),
-                        ]
-                    ),
-                ),
-            )
-        lat = data.get("lat")
-        lon = data.get("lon")
-        if lat and lon:
-            children.append(
-                ChildNodeDef(
-                    title=f"{lat:.2f}, {lon:.2f}",
-                    entity_type="Geolocation",
-                    content=f"{kv('Latitude', lat)}\n{kv('Longitude', lon)}",
-                )
-            )
-        content = _pack_content([kv(k, v) for k, v in data.items() if v])
-        return TransformResult(children=children, content=content or str(data))
-    return TransformResult(content=str(data))
-
-
-async def _transform_domain_dns(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.get_dns(domain)
-    if isinstance(data, dict) and "error" not in data:
-        lines = [divider(), title(f"DNS: {domain}")]
-        children = []
-        for rtype in ["A", "MX", "TXT", "NS", "CNAME"]:
-            records = data.get(rtype, [])
-            if records:
-                lines.append(section(rtype))
-                for rec in records[:3]:
-                    lines.append(bullet(str(rec)))
-                    child_type = "IP" if rtype == "A" else "Custom"
-                    children.append(
-                        ChildNodeDef(title=str(rec), entity_type=child_type)
-                    )
-        soa = data.get("SOA", {})
-        if soa:
-            lines.append(section("SOA"))
-            lines.append(kv("MNAME", soa.get("mname", "?")))
-        lines.append(end_of("dns lookup"))
-        lines.append(divider())
-        return TransformResult(
-            children=children[:CHILD_THRESHOLD],
-            content=_pack_content(lines) if lines else "No DNS records found",
-        )
-    return TransformResult(content="DNS lookup failed")
-
-
-async def _transform_domain_ssl(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.get_ssl_tls_info(domain)
-    if isinstance(data, dict) and "error" not in data:
-        issuer = data.get("issuer", {})
-        subject = data.get("subject", {})
-        lines = [
-            divider(),
-            title(f"SSL/TLS: {domain}"),
-            kv("Version", data.get("version", "?")),
-            kv("Cipher", data.get("cipher", "?")),
-            kv("Issuer", issuer.get("organizationName", issuer.get("commonName", "?"))),
-            kv("Subject", subject.get("commonName", "?")),
-            kv("Expires", data.get("expires", "?")),
-            end_of("ssl/tls"),
-            divider(),
-        ]
-        return TransformResult(
-            children=[
-                ChildNodeDef(
-                    title=subject.get("commonName", domain),
-                    entity_type="Custom",
-                    content=_pack_content(lines),
-                ),
-            ],
-            content=_pack_content(lines),
-        )
-    return TransformResult(content=str(data))
-
-
-async def _transform_domain_webstack(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.analyze_web_stack(domain)
-    if isinstance(data, dict) and "error" not in data:
-        tech = data.get("detected_tech", [])
-        waf = data.get("waf", "?")
-        server = data.get("web_server", "?")
-        lines = [
-            divider(),
-            title(f"Web Stack: {domain}"),
-            kv("Server", server),
-            kv("WAF", waf),
-            kv("Tech", ", ".join(tech) if isinstance(tech, list) else tech),
-            end_of("web stack"),
-            divider(),
-        ]
-        children = []
-        if server and server != "Not resolve":
-            children.append(
-                ChildNodeDef(
-                    title=f"Server: {server}",
-                    entity_type="Custom",
-                    content=kv("Web server", server),
-                )
-            )
-        if waf and waf != "NOT FOUND":
-            children.append(
-                ChildNodeDef(
-                    title=f"WAF: {waf}",
-                    entity_type="Custom",
-                    content=kv("WAF detected", waf),
-                )
-            )
-        if isinstance(tech, list):
-            for t in tech[:CHILD_THRESHOLD]:
-                children.append(
-                    ChildNodeDef(
-                        title=t,
-                        entity_type="Custom",
-                        content=kv("Technology", t),
-                    )
-                )
-        return TransformResult(
-            children=children[: CHILD_THRESHOLD + 2],
-            content=_pack_content(lines),
-            evidence=[str(data.get("http_headers", {}))]
-            if data.get("http_headers")
-            else [],
-        )
-    return TransformResult(content=str(data))
-
-
-async def _transform_domain_whois(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.get_whois_info(domain)
-    if isinstance(data, dict) and "error" not in data:
-        org = data.get("org") or data.get("name") or ""
-        registrar = data.get("registrar", "?")
-        creation = data.get("creation_date", "?")
-        expiration = data.get("expiration_date", "?")
-        if isinstance(creation, list):
-            creation = creation[0]
-        if isinstance(expiration, list):
-            expiration = expiration[0]
-        children = []
-        if org:
-            children.append(
-                ChildNodeDef(
-                    title=str(org)[:60],
-                    entity_type="Organization",
-                    content="\n".join(
-                        [
-                            kv("Registrar", registrar),
-                            kv("Created", creation),
-                            kv("Expires", expiration),
-                        ]
-                    ),
-                )
-            )
-        fields = [kv(k, v) for k, v in data.items() if not k.startswith("_")]
-        content = "\n".join(
-            [divider(), title(f"WHOIS: {domain}")]
-            + fields
-            + [end_of("whois"), divider()]
-        )
-        return TransformResult(
-            children=children,
-            content=content,
-        )
-    return TransformResult(content=str(data))
-
-
-async def _transform_domain_subdomains(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    raw = await da.find_subdomains(domain)
-    if isinstance(raw, str) and raw and "Error" not in raw:
-        result_lines = raw.split("\n")
-        subs = [
-            ln.strip().lstrip("- ").strip()
-            for ln in result_lines
-            if ln.startswith("  - ")
-        ]
-        children = []
-        for sub in subs[:CHILD_THRESHOLD]:
-            children.append(ChildNodeDef(title=sub, entity_type="Domain"))
-        if len(subs) > CHILD_THRESHOLD:
-            children.append(
-                ChildNodeDef(
-                    title=f"+{len(subs) - CHILD_THRESHOLD} more",
-                    entity_type="Custom",
-                    content="\n".join(subs[CHILD_THRESHOLD:]),
-                )
-            )
-        return TransformResult(
-            children=children,
-            content=raw,
-        )
-    return TransformResult(content=str(raw))
-
-
-async def _transform_domain_ct(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    raw = await da.get_certificate_transparency(domain)
-    if isinstance(raw, str) and raw and "Error" not in raw:
-        result_lines = raw.split("\n")
-        domains = [
-            ln.strip()[2:].strip() for ln in result_lines if ln.strip().startswith("- ")
-        ][:CHILD_THRESHOLD]
-        children = [ChildNodeDef(title=d, entity_type="Domain") for d in domains]
-        content = raw  # already formatted by domain_analyzer
-        return TransformResult(
-            children=children,
-            content=content,
-        )
-    return TransformResult(content=str(raw))
-
-
-async def _transform_domain_social(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    raw = await da.get_social_tags(domain)
-    if raw and "Not found" not in raw:
-        tags = [ln for ln in raw.split("\n") if ":" in ln]
-        children = []
-        seen = set()
-        for tag in tags[:CHILD_THRESHOLD]:
-            key = tag.split(":", 1)[0].strip()
-            val = tag.split(":", 1)[1].strip() if ":" in tag else ""
-            if key not in seen:
-                seen.add(key)
-                children.append(
-                    ChildNodeDef(
-                        title=key if len(key) < 40 else key[:37] + "...",
-                        entity_type="Custom",
-                        content=val,
-                    )
-                )
-        if len(tags) > CHILD_THRESHOLD:
-            children.append(
-                ChildNodeDef(
-                    title=f"+{len(tags) - CHILD_THRESHOLD} more tags",
-                    entity_type="Custom",
-                    content="\n".join(tags[CHILD_THRESHOLD:]),
-                )
-            )
-        return TransformResult(children=children, content=raw)
-    return TransformResult(content="No social tags found")
-
-
-async def _transform_domain_malware(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.check_malware_reputation(domain)
-    if isinstance(data, dict) and "error" not in data:
-        status = data.get("status", "?")
-        source = data.get("source", "?")
-        malicious = data.get("malicious_votes", 0)
-        return TransformResult(
-            children=[
-                ChildNodeDef(
-                    title=f"Reputation: {status}",
-                    entity_type="Custom",
-                    content=(
-                        f"{kv('Source', source)}\n{kv('Malicious votes', malicious)}"
-                    ),
-                )
-            ],
-            content="\n".join(
-                [
-                    divider(),
-                    title(f"Malware: {domain}"),
-                    kv("Status", status),
-                    kv("Source", source),
-                    kv("Malicious votes", malicious),
-                    end_of("malware check"),
-                    divider(),
-                ]
+def _parse_domain_ssl(data, domain):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+    issuer = data.get("issuer", {})
+    subject = data.get("subject", {})
+    lines = [
+        divider(),
+        title(f"SSL/TLS: {domain}"),
+        kv("Version", data.get("version", "?")),
+        kv("Cipher", data.get("cipher", "?")),
+        kv("Issuer", issuer.get("organizationName", issuer.get("commonName", "?"))),
+        kv("Subject", subject.get("commonName", "?")),
+        kv("Expires", data.get("expires", "?")),
+        end_of("ssl/tls"),
+        divider(),
+    ]
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=subject.get("commonName", domain),
+                entity_type="Custom",
+                content=_pack_content(lines),
             ),
-        )
-    return TransformResult(content=str(data))
+        ],
+        content=_pack_content(lines),
+    )
 
 
-async def _transform_domain_securitytxt(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    raw = await da.get_security_txt(domain)
-    if raw and "Not Found" not in raw:
-        return TransformResult(
-            children=[
-                ChildNodeDef(
-                    title="security.txt",
-                    entity_type="Custom",
-                    content=raw[:500],
-                )
-            ],
-            content=raw,
-        )
-    return TransformResult(content="No security.txt found")
-
-
-async def _transform_domain_cookies(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    raw = await da.get_cookies(domain)
-    if raw and "No cookies" not in raw:
-        lines = [ln for ln in raw.split("\n") if ln.strip()]
-        children = []
-        for i, line in enumerate(lines[: CHILD_THRESHOLD * 2]):
-            if ":" in line and line.startswith("  ") and not line.startswith("    "):
-                name = line.split(":", 1)[0].strip()
-                val = line.split(":", 1)[1].strip()
-                children.append(
-                    ChildNodeDef(
-                        title=f"Cookie: {name}"
-                        if len(name) < 50
-                        else name[:47] + "...",
-                        entity_type="Custom",
-                        content=val,
-                    )
-                )
-        if len(lines) > CHILD_THRESHOLD * 2:
-            children.append(
-                ChildNodeDef(
-                    title=f"+{len(lines) - CHILD_THRESHOLD * 2} more cookies",
-                    entity_type="Custom",
-                    content="\n".join(lines[CHILD_THRESHOLD * 2 :]),
-                )
-            )
-        return TransformResult(
-            children=children[: CHILD_THRESHOLD + 1],
-            content=raw,
-        )
-    return TransformResult(content="No cookies found")
-
-
-async def _transform_domain_robots(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    raw = await da.get_robots_txt(domain)
-    if raw and "Error" not in raw:
-        return TransformResult(
-            children=[
-                ChildNodeDef(
-                    title="robots.txt",
-                    entity_type="Custom",
-                    content=raw[:500],
-                )
-            ],
-            content=raw,
-        )
-    return TransformResult(content=str(raw))
-
-
-async def _transform_domain_nmap(domain: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.run_nmap_scan(domain)
-    if isinstance(data, dict) and "error" not in data:
-        children = []
-        for host, ports in data.items():
-            for p in ports[:CHILD_THRESHOLD]:
-                children.append(
-                    ChildNodeDef(
-                        title=f"Port {p['port']}/{p.get('service', '?')}",
-                        entity_type="Custom",
-                        content=_pack_content(
-                            [
-                                f"State: {p.get('state', '?')}",
-                                f"Service: {p.get('service', '?')}",
-                                f"Product: {p.get('product', '?')}",
-                                f"Version: {p.get('version', '?')}",
-                            ]
-                        ),
-                    )
-                )
-        lines = [divider(), title(f"Nmap: {domain}")]
-        for host, ports in data.items():
-            lines.append(section(host))
-            for p in ports:
-                lines.append(
-                    bullet(
-                        f"Port {p['port']}/{p.get('service', '?')}"
-                        f" - {p.get('state', '?')}"
-                    )
-                )
-        if not any(data.values()):
-            lines.append(fmt_info("All ports closed"))
-        lines.append(end_of("port scan"))
-        lines.append(divider())
-        return TransformResult(
-            children=children[:CHILD_THRESHOLD],
-            content=_pack_content(lines),
-        )
-    return TransformResult(content=str(data))
-
-
-# ── IP transforms ────────────────────────────────────────────────
-
-
-async def _transform_ip_geo(ip_addr: str, modules) -> TransformResult:
-    da = modules.get("domain_analyzer")
-    if not da:
-        return TransformResult(content="DomainAnalyzer module not available")
-    data = await da.get_ip_and_location(ip_addr)
-    if isinstance(data, dict):
-        lat = data.get("lat")
-        lon = data.get("lon")
-        children = []
-        if lat and lon:
-            children.append(
-                ChildNodeDef(
-                    title=f"{lat:.2f}, {lon:.2f}",
-                    entity_type="Geolocation",
-                    content="\n".join(
-                        [
-                            kv("IP", data.get("ip", ip_addr)),
-                            kv("Country", data.get("country", "?")),
-                            kv("City", data.get("city", "?")),
-                            kv("Latitude", lat),
-                            kv("Longitude", lon),
-                        ]
-                    ),
-                ),
-            )
-        fields = [kv(k, v) for k, v in data.items() if v]
-        content = "\n".join(
-            [divider(), title(f"IP Geo: {ip_addr}")]
-            + fields
-            + [end_of("ip geo"), divider()]
-        )
-        return TransformResult(children=children, content=content or str(data))
-    return TransformResult(content=str(data))
-
-
-# ── Email transforms ─────────────────────────────────────────────
-
-
-async def _transform_email_intelx(email: str, modules) -> TransformResult:
-    engine = modules.get("mail_search")
-    if not engine:
-        return TransformResult(content="IntelX module not available")
-    raw = await engine.get_data(email)
-    if raw and "Not found" not in raw:
-        lines = raw.split("\n")
-        db_lines = [ln.lstrip()[2:] for ln in lines if ln.startswith("  -")]
-        children = []
-        seen = set()
-        for db in db_lines[:CHILD_THRESHOLD]:
-            clean = db.strip()
-            if clean and clean not in seen:
-                seen.add(clean)
-                children.append(
-                    ChildNodeDef(
-                        title=clean[:50],
-                        entity_type="Custom",
-                        content=f"Database: {clean}\nEmail: {email}",
-                    )
-                )
-        if len(db_lines) > CHILD_THRESHOLD:
-            children.append(
-                ChildNodeDef(
-                    title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
-                    entity_type="Custom",
-                    content="\n".join(db_lines[CHILD_THRESHOLD:]),
-                )
-            )
-        return TransformResult(children=children, content=raw)
-    return TransformResult(content=str(raw))
-
-
-# ── Phone transforms ─────────────────────────────────────────────
-
-
-async def _transform_phone_parse(phone: str, modules) -> TransformResult:
-    engine = modules.get("phone_search")
-    if not engine:
-        return TransformResult(content="PhoneSearch module not available")
-    raw = engine.parse_and_validate(phone)
-    if raw and "Parse error" not in raw:
-        data = {}
-        for line in raw.split("\n"):
-            if ":" in line and not line.startswith("["):
-                key = line.split(":", 1)[0].strip()
-                val = line.split(":", 1)[1].strip()
-                if key and val:
-                    data[key] = val
-
-        e164 = data.get("E.164", phone)
-        children = []
-
+def _parse_domain_webstack(data, domain):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+    tech = data.get("detected_tech", [])
+    waf = data.get("waf", "?")
+    server = data.get("web_server", "?")
+    lines = [
+        divider(),
+        title(f"Web Stack: {domain}"),
+        kv("Server", server),
+        kv("WAF", waf),
+        kv("Tech", ", ".join(tech) if isinstance(tech, list) else tech),
+        end_of("web stack"),
+        divider(),
+    ]
+    children = []
+    if server and server != "Not resolve":
         children.append(
             ChildNodeDef(
-                title=e164,
-                entity_type="Phone",
-                content=raw,
+                title=f"Server: {server}",
+                entity_type="Custom",
+                content=kv("Web server", server),
             )
         )
-
-        location = data.get("Location")
-        if location:
-            children.append(
-                ChildNodeDef(
-                    title=location,
-                    entity_type="Geolocation",
-                    content=f"{kv('Phone', e164)}\n{kv('Location', location)}",
-                )
+    if waf and waf != "NOT FOUND":
+        children.append(
+            ChildNodeDef(
+                title=f"WAF: {waf}",
+                entity_type="Custom",
+                content=kv("WAF detected", waf),
             )
-
-        carrier_name = data.get("Carrier")
-        if carrier_name:
+        )
+    if isinstance(tech, list):
+        for t in tech[:CHILD_THRESHOLD]:
             children.append(
                 ChildNodeDef(
-                    title=carrier_name,
-                    entity_type="Organization",
-                    content=f"{kv('Phone', e164)}\n{kv('Carrier', carrier_name)}",
-                )
-            )
-
-        line_type = data.get("Line Type")
-        if line_type:
-            children.append(
-                ChildNodeDef(
-                    title=line_type,
+                    title=t,
                     entity_type="Custom",
-                    content=f"{kv('Phone', e164)}\n{kv('Line Type', line_type)}",
+                    content=kv("Technology", t),
                 )
             )
+    return TransformResult(
+        children=children[: CHILD_THRESHOLD + 2],
+        content=_pack_content(lines),
+        evidence=[str(data.get("http_headers", {}))]
+        if data.get("http_headers")
+        else [],
+    )
 
-        region = data.get("Region")
-        if region:
-            children.append(
-                ChildNodeDef(
-                    title=region,
-                    entity_type="Custom",
-                    content=f"{kv('Phone', e164)}\n{kv('Region', region)}",
-                )
+
+def _parse_domain_whois(data, domain):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+    org = data.get("org") or data.get("name") or ""
+    registrar = data.get("registrar", "?")
+    creation = data.get("creation_date", "?")
+    expiration = data.get("expiration_date", "?")
+    if isinstance(creation, list):
+        creation = creation[0]
+    if isinstance(expiration, list):
+        expiration = expiration[0]
+    children = []
+    if org:
+        children.append(
+            ChildNodeDef(
+                title=str(org)[:60],
+                entity_type="Organization",
+                content="\n".join(
+                    [
+                        kv("Registrar", registrar),
+                        kv("Created", creation),
+                        kv("Expires", expiration),
+                    ]
+                ),
             )
-
-        timezones_str = data.get("Timezones")
-        if timezones_str:
-            for tz in [t.strip() for t in timezones_str.split(",")]:
-                city = tz.split("/")[-1] if "/" in tz else tz
-                children.append(
-                    ChildNodeDef(
-                        title=city,
-                        entity_type="Geolocation",
-                        content=f"{kv('Phone', e164)}\n{kv('Timezone', tz)}",
-                    )
-                )
-
-        return TransformResult(children=children, content=raw)
-    return TransformResult(content=str(raw))
+        )
+    fields = [kv(k, v) for k, v in data.items() if not k.startswith("_")]
+    content = "\n".join(
+        [divider(), title(f"WHOIS: {domain}")]
+        + fields
+        + [end_of("whois"), divider()]
+    )
+    return TransformResult(
+        children=children,
+        content=content,
+    )
 
 
-async def _transform_phone_lookup(phone: str, modules) -> TransformResult:
-    engine = modules.get("phone_search")
-    if not engine:
-        return TransformResult(content="PhoneSearch module not available")
-    raw = await engine.reverse_lookup(phone)
-    if raw and "No API keys" not in raw:
-        lines = [ln for ln in raw.split("\n") if ln.strip() and ":" in ln]
-        children = []
-        for line in lines[:CHILD_THRESHOLD]:
-            key = line.split(":", 1)[0].strip()
-            val = line.split(":", 1)[1].strip() if ":" in line else ""
+def _parse_domain_subdomains(raw, domain):
+    if not isinstance(raw, str) or not raw or "Error" in raw:
+        return TransformResult(content=str(raw))
+    result_lines = raw.split("\n")
+    subs = [
+        ln.strip().lstrip("- ").strip()
+        for ln in result_lines
+        if ln.startswith("  - ")
+    ]
+    children = []
+    for sub in subs[:CHILD_THRESHOLD]:
+        children.append(ChildNodeDef(title=sub, entity_type="Domain"))
+    if len(subs) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(subs) - CHILD_THRESHOLD} more",
+                entity_type="Custom",
+                content="\n".join(subs[CHILD_THRESHOLD:]),
+            )
+        )
+    return TransformResult(
+        children=children,
+        content=raw,
+    )
+
+
+def _parse_domain_ct(raw, domain):
+    if not isinstance(raw, str) or not raw or "Error" in raw:
+        return TransformResult(content=str(raw))
+    result_lines = raw.split("\n")
+    domains = [
+        ln.strip()[2:].strip() for ln in result_lines if ln.strip().startswith("- ")
+    ][:CHILD_THRESHOLD]
+    children = [ChildNodeDef(title=d, entity_type="Domain") for d in domains]
+    return TransformResult(
+        children=children,
+        content=raw,
+    )
+
+
+def _parse_domain_social(raw, domain):
+    if not raw or "Not found" in raw:
+        return TransformResult(content="No social tags found")
+    tags = [ln for ln in raw.split("\n") if ":" in ln]
+    children = []
+    seen = set()
+    for tag in tags[:CHILD_THRESHOLD]:
+        key = tag.split(":", 1)[0].strip()
+        val = tag.split(":", 1)[1].strip() if ":" in tag else ""
+        if key not in seen:
+            seen.add(key)
             children.append(
                 ChildNodeDef(
-                    title=key[:50],
+                    title=key if len(key) < 40 else key[:37] + "...",
                     entity_type="Custom",
                     content=val,
                 )
             )
-        return TransformResult(children=children, content=raw)
-    return TransformResult(content=str(raw))
+    if len(tags) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(tags) - CHILD_THRESHOLD} more tags",
+                entity_type="Custom",
+                content="\n".join(tags[CHILD_THRESHOLD:]),
+            )
+        )
+    return TransformResult(children=children, content=raw)
 
 
-async def _transform_phone_leaks(phone: str, modules) -> TransformResult:
-    engine = modules.get("phone_search")
-    if not engine:
-        return TransformResult(content="PhoneSearch module not available")
-    raw = await engine.check_leaks(phone)
-    if raw and "No API keys" not in raw and "Not found" not in raw:
-        return TransformResult(
-            children=[
+def _parse_domain_malware(data, domain):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+    status = data.get("status", "?")
+    source = data.get("source", "?")
+    malicious = data.get("malicious_votes", 0)
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"Reputation: {status}",
+                entity_type="Custom",
+                content=(
+                    f"{kv('Source', source)}\n{kv('Malicious votes', malicious)}"
+                ),
+            )
+        ],
+        content="\n".join(
+            [
+                divider(),
+                title(f"Malware: {domain}"),
+                kv("Status", status),
+                kv("Source", source),
+                kv("Malicious votes", malicious),
+                end_of("malware check"),
+                divider(),
+            ]
+        ),
+    )
+
+
+def _parse_domain_securitytxt(raw, domain):
+    if not raw or "Not Found" in raw:
+        return TransformResult(content="No security.txt found")
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title="security.txt",
+                entity_type="Custom",
+                content=raw[:500],
+            )
+        ],
+        content=raw,
+    )
+
+
+def _parse_domain_cookies(raw, domain):
+    if not raw or "No cookies" in raw:
+        return TransformResult(content="No cookies found")
+    lines = [ln for ln in raw.split("\n") if ln.strip()]
+    children = []
+    for i, line in enumerate(lines[: CHILD_THRESHOLD * 2]):
+        if ":" in line and line.startswith("  ") and not line.startswith("    "):
+            name = line.split(":", 1)[0].strip()
+            val = line.split(":", 1)[1].strip()
+            children.append(
                 ChildNodeDef(
-                    title="Leak Check Results",
+                    title=f"Cookie: {name}"
+                    if len(name) < 50
+                    else name[:47] + "...",
                     entity_type="Custom",
-                    content=raw[:500],
+                    content=val,
                 )
-            ],
+            )
+    if len(lines) > CHILD_THRESHOLD * 2:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(lines) - CHILD_THRESHOLD * 2} more cookies",
+                entity_type="Custom",
+                content="\n".join(lines[CHILD_THRESHOLD * 2 :]),
+            )
+        )
+    return TransformResult(
+        children=children[: CHILD_THRESHOLD + 1],
+        content=raw,
+    )
+
+
+def _parse_domain_robots(raw, domain):
+    if not raw or "Error" in raw:
+        return TransformResult(content=str(raw))
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title="robots.txt",
+                entity_type="Custom",
+                content=raw[:500],
+            )
+        ],
+        content=raw,
+    )
+
+
+def _parse_domain_nmap(data, domain):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+    children = []
+    for host, ports in data.items():
+        for p in ports[:CHILD_THRESHOLD]:
+            children.append(
+                ChildNodeDef(
+                    title=f"Port {p['port']}/{p.get('service', '?')}",
+                    entity_type="Custom",
+                    content=_pack_content(
+                        [
+                            f"State: {p.get('state', '?')}",
+                            f"Service: {p.get('service', '?')}",
+                            f"Product: {p.get('product', '?')}",
+                            f"Version: {p.get('version', '?')}",
+                        ]
+                    ),
+                )
+            )
+    lines = [divider(), title(f"Nmap: {domain}")]
+    for host, ports in data.items():
+        lines.append(section(host))
+        for p in ports:
+            lines.append(
+                bullet(
+                    f"Port {p['port']}/{p.get('service', '?')}"
+                    f" - {p.get('state', '?')}"
+                )
+            )
+    if not any(data.values()):
+        lines.append(fmt_info("All ports closed"))
+    lines.append(end_of("port scan"))
+    lines.append(divider())
+    return TransformResult(
+        children=children[:CHILD_THRESHOLD],
+        content=_pack_content(lines),
+    )
+
+
+def _parse_ip_geo(data, ip_addr):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    lat = data.get("lat")
+    lon = data.get("lon")
+    children = []
+    if lat and lon:
+        children.append(
+            ChildNodeDef(
+                title=f"{lat:.2f}, {lon:.2f}",
+                entity_type="Geolocation",
+                content="\n".join(
+                    [
+                        kv("IP", data.get("ip", ip_addr)),
+                        kv("Country", data.get("country", "?")),
+                        kv("City", data.get("city", "?")),
+                        kv("Latitude", lat),
+                        kv("Longitude", lon),
+                    ]
+                ),
+            ),
+        )
+    fields = [kv(k, v) for k, v in data.items() if v]
+    content = "\n".join(
+        [divider(), title(f"IP Geo: {ip_addr}")]
+        + fields
+        + [end_of("ip geo"), divider()]
+    )
+    return TransformResult(children=children, content=content or str(data))
+
+
+def _parse_email_intelx(raw, email):
+    if not raw or "Not found" in raw:
+        return TransformResult(content=str(raw))
+    lines = raw.split("\n")
+    db_lines = [ln.lstrip()[2:] for ln in lines if ln.startswith("  -")]
+    children = []
+    seen = set()
+    for db in db_lines[:CHILD_THRESHOLD]:
+        clean = db.strip()
+        if clean and clean not in seen:
+            seen.add(clean)
+            children.append(
+                ChildNodeDef(
+                    title=clean[:50],
+                    entity_type="Custom",
+                    content=f"Database: {clean}\nEmail: {email}",
+                )
+            )
+    if len(db_lines) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
+                entity_type="Custom",
+                content="\n".join(db_lines[CHILD_THRESHOLD:]),
+            )
+        )
+    return TransformResult(children=children, content=raw)
+
+
+def _parse_phone_parse(raw, phone):
+    if not raw or "Parse error" in raw:
+        return TransformResult(content=str(raw))
+    data = {}
+    for line in raw.split("\n"):
+        if ":" in line and not line.startswith("["):
+            key = line.split(":", 1)[0].strip()
+            val = line.split(":", 1)[1].strip()
+            if key and val:
+                data[key] = val
+    e164 = data.get("E.164", phone)
+    children = []
+    children.append(
+        ChildNodeDef(
+            title=e164,
+            entity_type="Phone",
             content=raw,
         )
-    return TransformResult(content=str(raw))
-
-
-# ── MAC transforms ───────────────────────────────────────────────
-
-
-async def _transform_mac_geo(mac: str, modules) -> TransformResult:
-    engine = modules.get("mac_location")
-    if not engine:
-        return TransformResult(content="MacLocation module not available")
-    data = await engine.locate_async(mac)
-    if isinstance(data, dict):
-        locs = data.get("location", {})
-        children = []
-        content_lines = [divider(), title(f"MAC Geo: {mac}")]
-        for name, loc in locs.items():
-            if loc:
-                lat, lon = loc["latitude"], loc["longitude"]
-                children.append(
-                    ChildNodeDef(
-                        title=f"{lat:.4f}, {lon:.4f}",
-                        entity_type="Geolocation",
-                        content="\n".join(
-                            [
-                                kv("MAC", mac),
-                                kv("Provider", name),
-                                kv("Latitude", lat),
-                                kv("Longitude", lon),
-                            ]
-                        ),
-                    )
-                )
-                content_lines.append(bullet(f"{name}: {lat:.4f}, {lon:.4f}"))
-            else:
-                content_lines.append(bullet(f"{name}: no data"))
-        content_lines.append(end_of("mac geo"))
-        content_lines.append(divider())
-        if children:
-            return TransformResult(
-                children=children, content=_pack_content(content_lines)
+    )
+    location = data.get("Location")
+    if location:
+        children.append(
+            ChildNodeDef(
+                title=location,
+                entity_type="Geolocation",
+                content=f"{kv('Phone', e164)}\n{kv('Location', location)}",
             )
-        return TransformResult(content="No geolocation data found for this MAC")
-    return TransformResult(content=str(data))
+        )
+    carrier_name = data.get("Carrier")
+    if carrier_name:
+        children.append(
+            ChildNodeDef(
+                title=carrier_name,
+                entity_type="Organization",
+                content=f"{kv('Phone', e164)}\n{kv('Carrier', carrier_name)}",
+            )
+        )
+    line_type = data.get("Line Type")
+    if line_type:
+        children.append(
+            ChildNodeDef(
+                title=line_type,
+                entity_type="Custom",
+                content=f"{kv('Phone', e164)}\n{kv('Line Type', line_type)}",
+            )
+        )
+    region = data.get("Region")
+    if region:
+        children.append(
+            ChildNodeDef(
+                title=region,
+                entity_type="Custom",
+                content=f"{kv('Phone', e164)}\n{kv('Region', region)}",
+            )
+        )
+    timezones_str = data.get("Timezones")
+    if timezones_str:
+        for tz in [t.strip() for t in timezones_str.split(",")]:
+            city = tz.split("/")[-1] if "/" in tz else tz
+            children.append(
+                ChildNodeDef(
+                    title=city,
+                    entity_type="Geolocation",
+                    content=f"{kv('Phone', e164)}\n{kv('Timezone', tz)}",
+                )
+            )
+    return TransformResult(children=children, content=raw)
+
+
+def _parse_phone_lookup(raw, phone):
+    if not raw or "No API keys" in raw:
+        return TransformResult(content=str(raw))
+    lines = [ln for ln in raw.split("\n") if ln.strip() and ":" in ln]
+    children = []
+    for line in lines[:CHILD_THRESHOLD]:
+        key = line.split(":", 1)[0].strip()
+        val = line.split(":", 1)[1].strip() if ":" in line else ""
+        children.append(
+            ChildNodeDef(
+                title=key[:50],
+                entity_type="Custom",
+                content=val,
+            )
+        )
+    return TransformResult(children=children, content=raw)
+
+
+def _parse_phone_leaks(raw, phone):
+    if not raw or "No API keys" in raw or "Not found" in raw:
+        return TransformResult(content=str(raw))
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title="Leak Check Results",
+                entity_type="Custom",
+                content=raw[:500],
+            )
+        ],
+        content=raw,
+    )
+
+
+def _parse_mac_geo(data, mac):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    locs = data.get("location", {})
+    children = []
+    content_lines = [divider(), title(f"MAC Geo: {mac}")]
+    for name, loc in locs.items():
+        if loc:
+            lat, lon = loc["latitude"], loc["longitude"]
+            children.append(
+                ChildNodeDef(
+                    title=f"{lat:.4f}, {lon:.4f}",
+                    entity_type="Geolocation",
+                    content="\n".join(
+                        [
+                            kv("MAC", mac),
+                            kv("Provider", name),
+                            kv("Latitude", lat),
+                            kv("Longitude", lon),
+                        ]
+                    ),
+                )
+            )
+            content_lines.append(bullet(f"{name}: {lat:.4f}, {lon:.4f}"))
+        else:
+            content_lines.append(bullet(f"{name}: no data"))
+    content_lines.append(end_of("mac geo"))
+    content_lines.append(divider())
+    if children:
+        return TransformResult(
+            children=children, content=_pack_content(content_lines)
+        )
+    return TransformResult(content="No geolocation data found for this MAC")
+
+
+# ── Transform wrappers ────────────────────────────────────────────
+
+async def _transform_username_search(username, modules):
+    return await _run_transform(modules, "username_search", "acheck", username, _parse_username_search)
+
+
+async def _transform_maigret_search(username, modules):
+    return await _run_transform(modules, "maigret_search", "search_and_report", username, _parse_maigret_search)
+
+
+async def _transform_domain_ip(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_ip_and_location", domain, _parse_domain_ip)
+
+
+async def _transform_domain_dns(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_dns", domain, _parse_domain_dns)
+
+
+async def _transform_domain_ssl(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_ssl_tls_info", domain, _parse_domain_ssl)
+
+
+async def _transform_domain_webstack(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "analyze_web_stack", domain, _parse_domain_webstack)
+
+
+async def _transform_domain_whois(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_whois_info", domain, _parse_domain_whois)
+
+
+async def _transform_domain_subdomains(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "find_subdomains", domain, _parse_domain_subdomains)
+
+
+async def _transform_domain_ct(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_certificate_transparency", domain, _parse_domain_ct)
+
+
+async def _transform_domain_social(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_social_tags", domain, _parse_domain_social)
+
+
+async def _transform_domain_malware(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "check_malware_reputation", domain, _parse_domain_malware)
+
+
+async def _transform_domain_securitytxt(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_security_txt", domain, _parse_domain_securitytxt)
+
+
+async def _transform_domain_cookies(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_cookies", domain, _parse_domain_cookies)
+
+
+async def _transform_domain_robots(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_robots_txt", domain, _parse_domain_robots)
+
+
+async def _transform_domain_nmap(domain, modules):
+    return await _run_transform(modules, "domain_analyzer", "run_nmap_scan", domain, _parse_domain_nmap)
+
+
+async def _transform_ip_geo(ip_addr, modules):
+    return await _run_transform(modules, "domain_analyzer", "get_ip_and_location", ip_addr, _parse_ip_geo)
+
+
+async def _transform_email_intelx(email, modules):
+    return await _run_transform(modules, "mail_search", "get_data", email, _parse_email_intelx, label="IntelX")
+
+
+async def _transform_phone_parse(phone, modules):
+    return await _run_transform(modules, "phone_search", "parse_and_validate", phone, _parse_phone_parse)
+
+
+async def _transform_phone_lookup(phone, modules):
+    return await _run_transform(modules, "phone_search", "reverse_lookup", phone, _parse_phone_lookup)
+
+
+async def _transform_phone_leaks(phone, modules):
+    return await _run_transform(modules, "phone_search", "check_leaks", phone, _parse_phone_leaks)
+
+
+async def _transform_mac_geo(mac, modules):
+    return await _run_transform(modules, "mac_location", "locate_async", mac, _parse_mac_geo)

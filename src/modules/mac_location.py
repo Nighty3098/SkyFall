@@ -6,6 +6,8 @@ from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
+from loguru import logger
+
 APPLE_SENTINEL = -18000000000
 
 
@@ -43,7 +45,7 @@ class MacLocation:
             if d.get("result") == 200 and d.get("data", {}).get("lat") is not None:
                 return d["data"]["lat"], d["data"]["lon"]
         except Exception:
-            pass
+            logger.exception("Mylnikov: failed for {}", mac)
         return None
 
     def _yandex(self, mac: str, timeout: int = 10):
@@ -64,7 +66,7 @@ class MacLocation:
                     if lat and lon:
                         return float(lat), float(lon)
         except Exception:
-            pass
+            logger.exception("Yandex: failed for {}", mac)
         return None
 
     def _microsoft(self, mac: str, timeout: int = 10):
@@ -133,7 +135,7 @@ class MacLocation:
             lon = pos.findtext("ns:Longitude", None, ns)
             return (float(lat), float(lon)) if lat and lon else None
         except Exception:
-            pass
+            logger.exception("Microsoft: failed for {}", mac)
         return None
 
     def _apple(self, mac: str, timeout: int = 10):
@@ -223,7 +225,7 @@ class MacLocation:
                         ):
                             return rlat * 1e-8, rlon * 1e-8
         except Exception:
-            pass
+            logger.exception("Apple: failed for {}", mac)
         return None
 
     def _google(self, mac: str, timeout: int = 10):
@@ -339,7 +341,7 @@ class MacLocation:
 
             return walk(u)
         except Exception:
-            pass
+            logger.exception("Google: failed for {}", mac)
         return None
 
     def locate(
@@ -381,6 +383,7 @@ class MacLocation:
                         if on_result:
                             on_result(f"{name}: no data")
                 except Exception as e:
+                    logger.exception("{} provider threw exception", name)
                     result["location"][name] = None
                     if on_result:
                         on_result(f"{name}: {e}")

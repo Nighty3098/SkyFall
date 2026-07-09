@@ -92,7 +92,6 @@ def setup_mail_connectors(controller: "MailController"):
 def setup_metadata_connectors(controller: "FileAnalyzeController"):
     controller.ui.metadataFileDropWidget.file_dropped.connect(
         lambda path: (
-            controller.ui.metadataFilePath.setText(f"File: {path}"),
             asyncio.ensure_future(
                 controller.start_file_analyzer(
                     controller.ui.metadataFileDropWidget.get_file_path()

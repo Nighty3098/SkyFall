@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>12</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -131,414 +131,388 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="telegramToolsTab">
+        <widget class="QWidget" name="telegramDownloaderTab">
          <attribute name="title">
-          <string>TELEGRAM</string>
+          <string>TELEGRAM DOWNLOADER</string>
          </attribute>
-         <layout class="QVBoxLayout" name="verticalLayout_2">
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QTabWidget" name="tabWidget">
-            <property name="currentIndex">
-             <number>0</number>
+           <widget class="QSplitter" name="downloaderSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
-            <widget class="QWidget" name="telegram_downloader_tab">
-             <attribute name="title">
-              <string>DOWNLOADER</string>
-             </attribute>
-             <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <widget class="QWidget" name="downloaderSettingsSection">
+             <layout class="QVBoxLayout" name="verticalLayout_5">
               <item>
-               <widget class="QSplitter" name="downloaderSplitter">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
+               <widget class="QLineEdit" name="telegramUsernameEdit">
+                <property name="placeholderText">
+                 <string>Username</string>
                 </property>
-                <widget class="QWidget" name="downloaderSettingsSection">
-                 <layout class="QVBoxLayout" name="verticalLayout_5">
-                  <item>
-                   <widget class="QLineEdit" name="telegramUsernameEdit">
-                    <property name="placeholderText">
-                     <string>Username</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QLineEdit" name="telegramAccountInfo">
-                    <property name="readOnly">
-                     <bool>true</bool>
-                    </property>
-                    <property name="placeholderText">
-                     <string>Account (auto after download)</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QCheckBox" name="telegramUseProxyCheck">
-                    <property name="text">
-                     <string>Use Proxy</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="groupBox_2">
-                    <property name="title">
-                     <string>Safety Delays</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_8">
-                     <item>
-                      <layout class="QGridLayout" name="gridLayout">
-                       <item row="2" column="0">
-                        <widget class="QLabel" name="label_3">
-                         <property name="text">
-                          <string>Member Delay(S)</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="0">
-                        <widget class="QLabel" name="label_4">
-                         <property name="text">
-                          <string>Pause(S)</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="0">
-                        <widget class="QLabel" name="label_2">
-                         <property name="text">
-                          <string>Max Requests</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="0">
-                        <widget class="QLabel" name="label">
-                         <property name="text">
-                          <string>Base Delay(S)</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="1">
-                        <widget class="QDoubleSpinBox" name="telegramBaseDelay"/>
-                       </item>
-                       <item row="1" column="1">
-                        <widget class="QSpinBox" name="telegramMaxReq"/>
-                       </item>
-                       <item row="2" column="1">
-                        <widget class="QDoubleSpinBox" name="telegrammembersDelay"/>
-                       </item>
-                       <item row="3" column="1">
-                        <widget class="QDoubleSpinBox" name="telegramPause"/>
-                       </item>
-                      </layout>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="groupBox">
-                    <property name="title">
-                     <string>Collection Options</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_7">
-                     <item>
-                      <widget class="QCheckBox" name="telegramDownloadMediaCheck">
-                       <property name="text">
-                        <string>Download Media</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QCheckBox" name="telegramCollectMembersCheck">
-                       <property name="text">
-                        <string>Collect Members</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QCheckBox" name="telegramCollectLinksCheck">
-                       <property name="text">
-                        <string>Collect Links</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QCheckBox" name="telegramMultiAccCheck">
-                       <property name="text">
-                        <string>Multi-Acc Mode</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="verticalSpacer_3">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="telegramDownloadStart">
-                    <property name="text">
-                     <string>Run</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QProgressBar" name="telegramDownloadProgress">
-                    <property name="value">
-                     <number>0</number>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="telegramDownloadAvatarsBtn">
-                    <property name="text">
-                     <string>Download Avatars</string>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-                <widget class="QWidget" name="downloaderDebugSection">
-                 <layout class="QVBoxLayout" name="verticalLayout_6">
-                  <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QPlainTextEdit" name="telegramDownloaderDebug">
-                    <property name="readOnly">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="telegramAccountInfo">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
+                <property name="placeholderText">
+                 <string>Account (auto after download)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QCheckBox" name="telegramUseProxyCheck">
+                <property name="text">
+                 <string>Use Proxy</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_2">
+                <property name="title">
+                 <string>Safety Delays</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_8">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout">
+                   <item row="2" column="0">
+                    <widget class="QLabel" name="label_3">
+                     <property name="text">
+                      <string>Member Delay(S)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="label_4">
+                     <property name="text">
+                      <string>Pause(S)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QLabel" name="label_2">
+                     <property name="text">
+                      <string>Max Requests</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label">
+                     <property name="text">
+                      <string>Base Delay(S)</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QDoubleSpinBox" name="telegramBaseDelay"/>
+                   </item>
+                   <item row="1" column="1">
+                    <widget class="QSpinBox" name="telegramMaxReq"/>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QDoubleSpinBox" name="telegrammembersDelay"/>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QDoubleSpinBox" name="telegramPause"/>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox">
+                <property name="title">
+                 <string>Collection Options</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_7">
+                 <item>
+                  <widget class="QCheckBox" name="telegramDownloadMediaCheck">
+                   <property name="text">
+                    <string>Download Media</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="telegramCollectMembersCheck">
+                   <property name="text">
+                    <string>Collect Members</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="telegramCollectLinksCheck">
+                   <property name="text">
+                    <string>Collect Links</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QCheckBox" name="telegramMultiAccCheck">
+                   <property name="text">
+                    <string>Multi-Acc Mode</string>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_3">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="telegramDownloadStart">
+                <property name="text">
+                 <string>Run</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="telegramDownloadProgress">
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="telegramDownloadAvatarsBtn">
+                <property name="text">
+                 <string>Download Avatars</string>
+                </property>
                </widget>
               </item>
              </layout>
             </widget>
-            <widget class="QWidget" name="telegram_analyzer_tab">
-             <attribute name="title">
-              <string>ANALYZER</string>
-             </attribute>
-             <layout class="QVBoxLayout" name="verticalLayout_9">
+            <widget class="QWidget" name="downloaderDebugSection">
+             <layout class="QVBoxLayout" name="verticalLayout_6">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
               <item>
-               <widget class="QSplitter" name="analyzerSplitter">
-                <property name="orientation">
-                 <enum>Qt::Orientation::Horizontal</enum>
+               <widget class="QPlainTextEdit" name="telegramDownloaderDebug">
+                <property name="readOnly">
+                 <bool>true</bool>
                 </property>
-                <widget class="QWidget" name="analyzerSettingsSection">
-                 <layout class="QVBoxLayout" name="verticalLayout_17">
-                  <item>
-                   <widget class="QPushButton" name="telegramAnalyzerLoadChannelsButton">
-                    <property name="text">
-                     <string>Load Channels</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QListWidget" name="telegramChannelsList">
-                    <item>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="telegramAnalyzerTab">
+         <attribute name="title">
+          <string>TELEGRAM ANALYZER</string>
+         </attribute>
+         <layout class="QVBoxLayout" name="verticalLayout_9">
+          <item>
+           <widget class="QSplitter" name="analyzerSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="analyzerSettingsSection">
+             <layout class="QVBoxLayout" name="verticalLayout_17">
+              <item>
+               <widget class="QPushButton" name="telegramAnalyzerLoadChannelsButton">
+                <property name="text">
+                 <string>Load Channels</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="telegramChannelsList">
+                <item>
+                 <property name="text">
+                  <string>All Channels</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_3">
+                <property name="title">
+                 <string>Graph Parameters</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_10">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_3">
+                   <property name="topMargin">
+                    <number>0</number>
+                   </property>
+                   <item row="0" column="0">
+                    <widget class="QLabel" name="label_5">
                      <property name="text">
-                      <string>All Channels</string>
+                      <string>Min replies</string>
                      </property>
-                    </item>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="groupBox_3">
-                    <property name="title">
-                     <string>Graph Parameters</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_10">
-                     <item>
-                      <layout class="QGridLayout" name="gridLayout_3">
-                       <property name="topMargin">
-                        <number>0</number>
-                       </property>
-                       <item row="0" column="0">
-                        <widget class="QLabel" name="label_5">
-                         <property name="text">
-                          <string>Min replies</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="5" column="0">
-                        <widget class="QCheckBox" name="includeLinksCheck">
-                         <property name="text">
-                          <string>Include Links</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="4" column="0">
-                        <widget class="QLabel" name="label_7">
-                         <property name="text">
-                          <string>End</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="4" column="1">
-                        <widget class="QDateTimeEdit" name="telegramAnalyzerEndDate"/>
-                       </item>
-                       <item row="3" column="0">
-                        <widget class="QLabel" name="label_6">
-                         <property name="text">
-                          <string>Start</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="1">
-                        <widget class="QSpinBox" name="telegramAnalyzerMinReplies"/>
-                       </item>
-                       <item row="3" column="1">
-                        <widget class="QDateTimeEdit" name="telegramAnalyzerStartDate"/>
-                       </item>
-                       <item row="6" column="0">
-                        <widget class="QCheckBox" name="includeForwardingCheck">
-                         <property name="text">
-                          <string>Include Forwarding</string>
-                         </property>
-                         <property name="checked">
-                          <bool>true</bool>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="groupBox_4">
-                    <property name="title">
-                     <string>Output Formats</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="verticalLayout_11">
-                     <item>
-                      <layout class="QGridLayout" name="gridLayout_4">
-                       <property name="bottomMargin">
-                        <number>0</number>
-                       </property>
-                       <item row="1" column="1">
-                        <widget class="QCheckBox" name="telegramAnalyzerHTMLCheck">
-                         <property name="text">
-                          <string>HTML</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="1">
-                        <widget class="QCheckBox" name="telegramAnalyzerCSVCheck">
-                         <property name="text">
-                          <string>CSV</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="2" column="1">
-                        <widget class="QCheckBox" name="telegramAnalyzerObsidianCheck">
-                         <property name="text">
-                          <string>Obsidian</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="2" column="0">
-                        <widget class="QCheckBox" name="telegramAnalyzerPNGCheck">
-                         <property name="text">
-                          <string>PNG</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="0" column="0">
-                        <widget class="QCheckBox" name="telegramAnalyzerGraphMLCheck">
-                         <property name="text">
-                          <string>GraphML</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="1" column="0">
-                        <widget class="QCheckBox" name="telegramAnalyzerJSONCheck">
-                         <property name="text">
-                          <string>JSON</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="0">
-                        <widget class="QCheckBox" name="checkBox_7">
-                         <property name="text">
-                          <string>CheckBox</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item row="3" column="1">
-                        <widget class="QCheckBox" name="checkBox_8">
-                         <property name="text">
-                          <string>CheckBox</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="verticalSpacer_4">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="runTelegramAnalyzerBtn">
-                    <property name="text">
-                     <string>Run</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QProgressBar" name="telegramAnalyzerProgress">
-                    <property name="value">
-                     <number>24</number>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-                <widget class="QWidget" name="analyzerDebugSection">
-                 <layout class="QVBoxLayout" name="verticalLayout_18">
-                  <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QPlainTextEdit" name="telegramAnalyzerDebug">
-                    <property name="readOnly">
-                     <bool>true</bool>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
+                    </widget>
+                   </item>
+                   <item row="5" column="0">
+                    <widget class="QCheckBox" name="includeLinksCheck">
+                     <property name="text">
+                      <string>Include Links</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="0">
+                    <widget class="QLabel" name="label_7">
+                     <property name="text">
+                      <string>End</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="4" column="1">
+                    <widget class="QDateTimeEdit" name="telegramAnalyzerEndDate"/>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QLabel" name="label_6">
+                     <property name="text">
+                      <string>Start</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QSpinBox" name="telegramAnalyzerMinReplies"/>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QDateTimeEdit" name="telegramAnalyzerStartDate"/>
+                   </item>
+                   <item row="6" column="0">
+                    <widget class="QCheckBox" name="includeForwardingCheck">
+                     <property name="text">
+                      <string>Include Forwarding</string>
+                     </property>
+                     <property name="checked">
+                      <bool>true</bool>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <widget class="QGroupBox" name="groupBox_4">
+                <property name="title">
+                 <string>Output Formats</string>
+                </property>
+                <layout class="QVBoxLayout" name="verticalLayout_11">
+                 <item>
+                  <layout class="QGridLayout" name="gridLayout_4">
+                   <property name="bottomMargin">
+                    <number>0</number>
+                   </property>
+                   <item row="1" column="1">
+                    <widget class="QCheckBox" name="telegramAnalyzerHTMLCheck">
+                     <property name="text">
+                      <string>HTML</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="1">
+                    <widget class="QCheckBox" name="telegramAnalyzerCSVCheck">
+                     <property name="text">
+                      <string>CSV</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="1">
+                    <widget class="QCheckBox" name="telegramAnalyzerObsidianCheck">
+                     <property name="text">
+                      <string>Obsidian</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="2" column="0">
+                    <widget class="QCheckBox" name="telegramAnalyzerPNGCheck">
+                     <property name="text">
+                      <string>PNG</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="0" column="0">
+                    <widget class="QCheckBox" name="telegramAnalyzerGraphMLCheck">
+                     <property name="text">
+                      <string>GraphML</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="1" column="0">
+                    <widget class="QCheckBox" name="telegramAnalyzerJSONCheck">
+                     <property name="text">
+                      <string>JSON</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="0">
+                    <widget class="QCheckBox" name="checkBox_7">
+                     <property name="text">
+                      <string>CheckBox</string>
+                     </property>
+                    </widget>
+                   </item>
+                   <item row="3" column="1">
+                    <widget class="QCheckBox" name="checkBox_8">
+                     <property name="text">
+                      <string>CheckBox</string>
+                     </property>
+                    </widget>
+                   </item>
+                  </layout>
+                 </item>
+                </layout>
+               </widget>
+              </item>
+              <item>
+               <spacer name="verticalSpacer_4">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+              <item>
+               <widget class="QPushButton" name="runTelegramAnalyzerBtn">
+                <property name="text">
+                 <string>Run</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="telegramAnalyzerProgress">
+                <property name="value">
+                 <number>24</number>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="analyzerDebugSection">
+             <layout class="QVBoxLayout" name="verticalLayout_18">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="telegramAnalyzerDebug">
+                <property name="readOnly">
+                 <bool>true</bool>
+                </property>
                </widget>
               </item>
              </layout>
@@ -1550,19 +1524,22 @@
              <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
-            <widget class="QWebEngineView" name="macLocationMapView">
-             <property name="minimumSize">
-              <size>
-               <width>300</width>
-               <height>0</height>
-              </size>
-             </property>
-             <property name="styleSheet">
-              <string notr="true">border-radius: 15px;</string>
-             </property>
-             <property name="url">
-              <url>
-               <string>about:blank</string>
+             <widget class="QWebEngineView" name="macLocationMapView">
+              <property name="visible">
+               <bool>false</bool>
+              </property>
+              <property name="minimumSize">
+               <size>
+                <width>300</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="styleSheet">
+               <string notr="true">border-radius: 15px;</string>
+              </property>
+              <property name="url">
+               <url>
+                <string>about:blank</string>
               </url>
              </property>
             </widget>
@@ -1860,7 +1837,7 @@
                <widget class="EntityPalette" name="entityPalette" native="true">
                 <property name="minimumSize">
                  <size>
-                  <width>250</width>
+                  <width>200</width>
                   <height>0</height>
                  </size>
                 </property>
@@ -1946,17 +1923,20 @@
               </size>
              </property>
              <layout class="QVBoxLayout" name="nodeEditLayout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
-               <number>0</number>
+               <number>6</number>
               </property>
               <property name="topMargin">
-               <number>0</number>
+               <number>6</number>
               </property>
               <property name="rightMargin">
-               <number>0</number>
+               <number>6</number>
               </property>
               <property name="bottomMargin">
-               <number>0</number>
+               <number>6</number>
               </property>
               <item>
                <widget class="QLineEdit" name="nodeTitleEdit">
@@ -2279,6 +2259,16 @@
     </item>
    </layout>
   </widget>
+  <action name="actionNew_case">
+   <property name="text">
+    <string>New case</string>
+   </property>
+  </action>
+  <action name="actionOpen_case">
+   <property name="text">
+    <string>Open case</string>
+   </property>
+  </action>
  </widget>
  <customwidgets>
   <customwidget>

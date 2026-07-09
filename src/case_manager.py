@@ -40,7 +40,6 @@ class CaseManager:
     def __init__(self):
         self.current_case_path: Path | None = None
         self.current_case_name: str = ""
-        self._label_widgets: list = []
         self._last_saved: dict[str, str] = {}
         self._current_files: dict[str, Path] = {}
 
@@ -56,7 +55,6 @@ class CaseManager:
         self._last_saved.clear()
         self._current_files.clear()
         self._ensure_structure()
-        self._update_labels()
         logger.info(f"Case created: {self.current_case_name} ({path})")
 
     def open_case(self):
@@ -69,7 +67,6 @@ class CaseManager:
         self._last_saved.clear()
         self._current_files.clear()
         self._ensure_structure()
-        self._update_labels()
         logger.info(f"Case opened: {self.current_case_name} ({path})")
 
     def _ensure_structure(self):
@@ -123,12 +120,3 @@ class CaseManager:
         filepath.write_text(content, encoding="utf-8")
         self._last_saved[widget_name] = content
         self._current_files[widget_name] = filepath
-
-    def register_label(self, label_widget):
-        self._label_widgets.append(label_widget)
-        self._update_labels()
-
-    def _update_labels(self):
-        name = self.current_case_name or "No case"
-        for lbl in self._label_widgets:
-            lbl.setText(f"\U0001f4c1 {name}")

@@ -23,7 +23,7 @@ class _LoguruInterceptor(logging.Handler):
 logging.basicConfig(handlers=[_LoguruInterceptor()], level=0, force=True)
 
 OLLAMA_BASE = "http://127.0.0.1:11434"
-DEFAULT_MODEL = "qwen2.5:1.5b"
+DEFAULT_MODEL = "qwen3.6:35b-a3b"
 
 _current_model = DEFAULT_MODEL
 

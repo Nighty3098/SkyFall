@@ -47,7 +47,6 @@ class EntityPalette(QListWidget):
         super().__init__(parent)
         self.setDragEnabled(True)
         self.setMinimumWidth(160)
-        self.setMaximumWidth(200)
         self.setSpacing(1)
 
         for etype in ENTITY_NAMES:

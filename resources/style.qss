@@ -370,6 +370,27 @@ GraphWidget, QGraphicsView {
     padding: 0px;
 }
 
+QMenuBar {
+    color: #C1C1C1;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    border-radius: 8px;
+    padding: 4px 12px;
+    color: #C1C1C1;
+}
+
+QMenuBar::item:selected {
+    background-color: #262626;
+    color: #C1C1C1;
+}
+
+QMenuBar::item:pressed {
+    background-color: #C1C1C1;
+    color: #0A0A0A;
+}
+
 QMenu {
     background-color: #161616;
     border: 1px solid #262626;

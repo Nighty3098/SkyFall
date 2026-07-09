@@ -77,3 +77,4 @@ class MacLocationController:
                 markers="\n".join(markers),
             )
             self.ui.macLocationMapView.setHtml(html)
+            self.ui.macLocationMapView.show()

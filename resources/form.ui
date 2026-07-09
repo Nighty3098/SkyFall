@@ -2273,6 +2273,8 @@
      <property name="title">
       <string>View</string>
      </property>
+     <addaction name="actionToggleNavigation"/>
+     <addaction name="separator"/>
      <addaction name="actionViewMain"/>
      <addaction name="actionViewTelegramDownloader"/>
      <addaction name="actionViewTelegramAnalyzer"/>
@@ -2404,6 +2406,11 @@
    <action name="actionViewProxy">
     <property name="text">
      <string>PROXY</string>
+    </property>
+   </action>
+   <action name="actionToggleNavigation">
+    <property name="text">
+     <string>Toggle Navigation</string>
     </property>
    </action>
   </widget>

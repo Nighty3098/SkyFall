@@ -23,7 +23,7 @@ def setup_navbar(parent):
         parent.ui.mainStackedWidget.setCurrentIndex
     )
     parent.ui.mainStackedWidget.currentChanged.connect(
-        parent.ui.menuListWidget.setCurrentRow
+        lambda idx: parent.ui.menuListWidget.setCurrentRow(idx)
     )
     tab_count = parent.ui.mainStackedWidget.count()
     tabs = [parent.ui.mainStackedWidget.tabText(i) for i in range(tab_count)]

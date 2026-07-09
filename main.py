@@ -38,9 +38,7 @@ from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
-from src.controllers.graph_transform_controller import (
-    GraphTransformController,
-)
+from src.controllers.graph_transform_controller import GraphTransformController
 from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.mail_controller import MailController
 from src.controllers.phone_controller import PhoneController
@@ -108,7 +106,7 @@ class MainWindow(QMainWindow):
 │           |::.. . |           |::.|                             │
 │           `-------'           `---'                             │
 │                                                                 │
-│                      SkyFall Ver. 1.0                           │
+│                    SkyFall Ver. 1.0.1                           │
 │                    Coded by Nighty3098                          │
 │               https://nighty3098.vercel.app                     │
 └─────────────────────────────────────────────────────────────────┘
@@ -272,17 +270,19 @@ class MainWindow(QMainWindow):
 
     def _show_about(self):
         from PySide6.QtWidgets import QMessageBox
+
         QMessageBox.about(
             self,
             "About SkyFall",
-            "<h3>SkyFall 1.0</h3>"
+            "<h2>SkyFall 1.0.1</h2>"
             "<p>OSINT investigation toolkit</p>"
             "<p>Coded by <a href='https://nighty3098.vercel.app'>Nighty3098</a></p>",
         )
 
     def _open_github(self):
-        from PySide6.QtGui import QDesktopServices
         from PySide6.QtCore import QUrl
+        from PySide6.QtGui import QDesktopServices
+
         QDesktopServices.openUrl(QUrl("https://github.com/Nighty3098/SkyFall"))
 
     def _toggle_navigation(self):

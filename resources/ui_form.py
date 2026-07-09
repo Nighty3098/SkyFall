@@ -11,17 +11,19 @@
 from PySide6.QtCore import (QCoreApplication, QDate, QDateTime, QLocale,
     QMetaObject, QObject, QPoint, QRect,
     QSize, QTime, QUrl, Qt)
-from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
-    QFont, QFontDatabase, QGradient, QIcon,
-    QImage, QKeySequence, QLinearGradient, QPainter,
-    QPalette, QPixmap, QRadialGradient, QTransform)
+from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
+    QCursor, QFont, QFontDatabase, QGradient,
+    QIcon, QImage, QKeySequence, QLinearGradient,
+    QPainter, QPalette, QPixmap, QRadialGradient,
+    QTransform)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
     QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMainWindow, QPlainTextEdit, QProgressBar, QPushButton,
-    QSizePolicy, QSpacerItem, QSpinBox, QSplitter,
-    QTabWidget, QVBoxLayout, QWidget)
+    QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
+    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QSplitter, QTabWidget, QVBoxLayout,
+    QWidget)
 
 from src.libs.graph_lib import GraphWidget
 from src.libs.graph_panel import (EntityPalette, PropertiesPanel)
@@ -31,13 +33,17 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1243, 944)
+        MainWindow.resize(1213, 786)
+        self.actionNew_case = QAction(MainWindow)
+        self.actionNew_case.setObjectName(u"actionNew_case")
+        self.actionOpen_case = QAction(MainWindow)
+        self.actionOpen_case.setObjectName(u"actionOpen_case")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
         self.verticalLayout_22 = QVBoxLayout(self.centralwidget)
         self.verticalLayout_22.setSpacing(0)
         self.verticalLayout_22.setObjectName(u"verticalLayout_22")
-        self.verticalLayout_22.setContentsMargins(6, 6, 6, 6)
+        self.verticalLayout_22.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
@@ -88,18 +94,11 @@ class Ui_MainWindow(object):
         self.horizontalLayout_7.addLayout(self.verticalLayout_21)
 
         self.mainStackedWidget.addTab(self.mainTab, "")
-        self.telegramToolsTab = QWidget()
-        self.telegramToolsTab.setObjectName(u"telegramToolsTab")
-        self.verticalLayout_2 = QVBoxLayout(self.telegramToolsTab)
-        self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
-        self.tabWidget = QTabWidget(self.telegramToolsTab)
-        self.tabWidget.setObjectName(u"tabWidget")
-        self.telegram_downloader_tab = QWidget()
-        self.telegram_downloader_tab.setObjectName(u"telegram_downloader_tab")
-        self.horizontalLayout_3 = QHBoxLayout(self.telegram_downloader_tab)
+        self.telegramDownloaderTab = QWidget()
+        self.telegramDownloaderTab.setObjectName(u"telegramDownloaderTab")
+        self.horizontalLayout_3 = QHBoxLayout(self.telegramDownloaderTab)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
-        self.downloaderSplitter = QSplitter(self.telegram_downloader_tab)
+        self.downloaderSplitter = QSplitter(self.telegramDownloaderTab)
         self.downloaderSplitter.setObjectName(u"downloaderSplitter")
         self.downloaderSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.downloaderSettingsSection = QWidget(self.downloaderSplitter)
@@ -238,12 +237,12 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout_3.addWidget(self.downloaderSplitter)
 
-        self.tabWidget.addTab(self.telegram_downloader_tab, "")
-        self.telegram_analyzer_tab = QWidget()
-        self.telegram_analyzer_tab.setObjectName(u"telegram_analyzer_tab")
-        self.verticalLayout_9 = QVBoxLayout(self.telegram_analyzer_tab)
+        self.mainStackedWidget.addTab(self.telegramDownloaderTab, "")
+        self.telegramAnalyzerTab = QWidget()
+        self.telegramAnalyzerTab.setObjectName(u"telegramAnalyzerTab")
+        self.verticalLayout_9 = QVBoxLayout(self.telegramAnalyzerTab)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
-        self.analyzerSplitter = QSplitter(self.telegram_analyzer_tab)
+        self.analyzerSplitter = QSplitter(self.telegramAnalyzerTab)
         self.analyzerSplitter.setObjectName(u"analyzerSplitter")
         self.analyzerSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.analyzerSettingsSection = QWidget(self.analyzerSplitter)
@@ -400,11 +399,7 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_9.addWidget(self.analyzerSplitter)
 
-        self.tabWidget.addTab(self.telegram_analyzer_tab, "")
-
-        self.verticalLayout_2.addWidget(self.tabWidget)
-
-        self.mainStackedWidget.addTab(self.telegramToolsTab, "")
+        self.mainStackedWidget.addTab(self.telegramAnalyzerTab, "")
         self.usernameSearchTab = QWidget()
         self.usernameSearchTab.setObjectName(u"usernameSearchTab")
         self.gridLayout_8 = QGridLayout(self.usernameSearchTab)
@@ -777,6 +772,39 @@ class Ui_MainWindow(object):
         self.metadataTab.setObjectName(u"metadataTab")
         self.gridLayout_7 = QGridLayout(self.metadataTab)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.metadataDebug = QPlainTextEdit(self.metadataTab)
+        self.metadataDebug.setObjectName(u"metadataDebug")
+
+        self.gridLayout_7.addWidget(self.metadataDebug, 1, 1, 3, 1)
+
+        self.stringsFileDebug = QPlainTextEdit(self.metadataTab)
+        self.stringsFileDebug.setObjectName(u"stringsFileDebug")
+
+        self.gridLayout_7.addWidget(self.stringsFileDebug, 1, 3, 3, 1)
+
+        self.fileVirustotalCheck = QCheckBox(self.metadataTab)
+        self.fileVirustotalCheck.setObjectName(u"fileVirustotalCheck")
+        self.fileVirustotalCheck.setChecked(True)
+
+        self.gridLayout_7.addWidget(self.fileVirustotalCheck, 0, 2, 1, 1)
+
+        self.virustotalFileDebug = QPlainTextEdit(self.metadataTab)
+        self.virustotalFileDebug.setObjectName(u"virustotalFileDebug")
+
+        self.gridLayout_7.addWidget(self.virustotalFileDebug, 1, 2, 3, 1)
+
+        self.fileMetadataCheck = QCheckBox(self.metadataTab)
+        self.fileMetadataCheck.setObjectName(u"fileMetadataCheck")
+        self.fileMetadataCheck.setChecked(True)
+
+        self.gridLayout_7.addWidget(self.fileMetadataCheck, 0, 1, 1, 1)
+
+        self.getMetadataButton = QPushButton(self.metadataTab)
+        self.getMetadataButton.setObjectName(u"getMetadataButton")
+        self.getMetadataButton.setMaximumSize(QSize(400, 16777215))
+
+        self.gridLayout_7.addWidget(self.getMetadataButton, 2, 0, 1, 1)
+
         self.fileStringsCheck = QCheckBox(self.metadataTab)
         self.fileStringsCheck.setObjectName(u"fileStringsCheck")
         self.fileStringsCheck.setChecked(True)
@@ -804,50 +832,20 @@ class Ui_MainWindow(object):
 
         self.gridLayout_7.addWidget(self.metadataFileDropWidget, 0, 0, 2, 1)
 
-        self.getMetadataButton = QPushButton(self.metadataTab)
-        self.getMetadataButton.setObjectName(u"getMetadataButton")
-        self.getMetadataButton.setMaximumSize(QSize(400, 16777215))
-
-        self.gridLayout_7.addWidget(self.getMetadataButton, 3, 0, 1, 1)
-
-        self.fileVirustotalCheck = QCheckBox(self.metadataTab)
-        self.fileVirustotalCheck.setObjectName(u"fileVirustotalCheck")
-        self.fileVirustotalCheck.setChecked(True)
-
-        self.gridLayout_7.addWidget(self.fileVirustotalCheck, 0, 2, 1, 1)
-
-        self.metadataFilePath = QLabel(self.metadataTab)
-        self.metadataFilePath.setObjectName(u"metadataFilePath")
-        self.metadataFilePath.setMaximumSize(QSize(400, 30))
-        self.metadataFilePath.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_7.addWidget(self.metadataFilePath, 2, 0, 1, 1)
-
-        self.fileMetadataCheck = QCheckBox(self.metadataTab)
-        self.fileMetadataCheck.setObjectName(u"fileMetadataCheck")
-        self.fileMetadataCheck.setChecked(True)
-
-        self.gridLayout_7.addWidget(self.fileMetadataCheck, 0, 1, 1, 1)
-
         self.cleanMetadataButton = QPushButton(self.metadataTab)
         self.cleanMetadataButton.setObjectName(u"cleanMetadataButton")
 
-        self.gridLayout_7.addWidget(self.cleanMetadataButton, 4, 0, 1, 1)
+        self.gridLayout_7.addWidget(self.cleanMetadataButton, 3, 0, 1, 1)
 
-        self.metadataDebug = QPlainTextEdit(self.metadataTab)
-        self.metadataDebug.setObjectName(u"metadataDebug")
+        self.metadataMapView = QWebEngineView(self.metadataTab)
+        self.metadataMapView.setObjectName(u"metadataMapView")
+        self.metadataMapView.setMinimumSize(QSize(400, 0))
+        self.metadataMapView.setMaximumSize(QSize(400, 16777215))
+        self.metadataMapView.setVisible(False)
+        self.metadataMapView.setStyleSheet(u"")
+        self.metadataMapView.setUrl(QUrl(u"about:blank"))
 
-        self.gridLayout_7.addWidget(self.metadataDebug, 1, 1, 4, 1)
-
-        self.virustotalFileDebug = QPlainTextEdit(self.metadataTab)
-        self.virustotalFileDebug.setObjectName(u"virustotalFileDebug")
-
-        self.gridLayout_7.addWidget(self.virustotalFileDebug, 1, 2, 4, 1)
-
-        self.stringsFileDebug = QPlainTextEdit(self.metadataTab)
-        self.stringsFileDebug.setObjectName(u"stringsFileDebug")
-
-        self.gridLayout_7.addWidget(self.stringsFileDebug, 1, 3, 4, 1)
+        self.gridLayout_7.addWidget(self.metadataMapView, 0, 4, 4, 1)
 
         self.mainStackedWidget.addTab(self.metadataTab, "")
         self.githubTab = QWidget()
@@ -1075,6 +1073,7 @@ class Ui_MainWindow(object):
         self.macLocationMapView = QWebEngineView(self.macSplitter)
         self.macLocationMapView.setObjectName(u"macLocationMapView")
         self.macLocationMapView.setMinimumSize(QSize(300, 0))
+        self.macLocationMapView.setVisible(False)
         self.macLocationMapView.setStyleSheet(u"border-radius: 15px;")
         self.macLocationMapView.setUrl(QUrl(u"about:blank"))
         self.macSplitter.addWidget(self.macLocationMapView)
@@ -1218,7 +1217,7 @@ class Ui_MainWindow(object):
 
         self.entityPalette = EntityPalette(self.entityPanel)
         self.entityPalette.setObjectName(u"entityPalette")
-        self.entityPalette.setMinimumSize(QSize(250, 0))
+        self.entityPalette.setMinimumSize(QSize(200, 0))
         self.verticalLayout_23 = QVBoxLayout(self.entityPalette)
         self.verticalLayout_23.setObjectName(u"verticalLayout_23")
 
@@ -1282,8 +1281,9 @@ class Ui_MainWindow(object):
         self.nodeEditPanel.setObjectName(u"nodeEditPanel")
         self.nodeEditPanel.setMinimumSize(QSize(400, 0))
         self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
+        self.nodeEditLayout.setSpacing(6)
         self.nodeEditLayout.setObjectName(u"nodeEditLayout")
-        self.nodeEditLayout.setContentsMargins(0, 0, 0, 0)
+        self.nodeEditLayout.setContentsMargins(6, 6, 6, 6)
         self.nodeTitleEdit = QLineEdit(self.nodeEditPanel)
         self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
 
@@ -1330,6 +1330,26 @@ class Ui_MainWindow(object):
         self.graphMainLayout.addWidget(self.graphSplitter)
 
         self.mainStackedWidget.addTab(self.graphTab, "")
+        self.reportTab = QWidget()
+        self.reportTab.setObjectName(u"reportTab")
+        self.gridLayout_6 = QGridLayout(self.reportTab)
+        self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.generateReportButton = QPushButton(self.reportTab)
+        self.generateReportButton.setObjectName(u"generateReportButton")
+
+        self.gridLayout_6.addWidget(self.generateReportButton, 1, 0, 1, 1)
+
+        self.saveReportButton = QPushButton(self.reportTab)
+        self.saveReportButton.setObjectName(u"saveReportButton")
+
+        self.gridLayout_6.addWidget(self.saveReportButton, 2, 0, 1, 1)
+
+        self.aiReportDebug = QPlainTextEdit(self.reportTab)
+        self.aiReportDebug.setObjectName(u"aiReportDebug")
+
+        self.gridLayout_6.addWidget(self.aiReportDebug, 0, 0, 1, 1)
+
+        self.mainStackedWidget.addTab(self.reportTab, "")
         self.settingsTab = QWidget()
         self.settingsTab.setObjectName(u"settingsTab")
         self.horizontalLayout = QHBoxLayout(self.settingsTab)
@@ -1484,11 +1504,23 @@ class Ui_MainWindow(object):
         self.verticalLayout_22.addLayout(self.horizontalLayout_6)
 
         MainWindow.setCentralWidget(self.centralwidget)
+        self.menuBar = QMenuBar(MainWindow)
+        self.menuBar.setObjectName(u"menuBar")
+        self.menuBar.setGeometry(QRect(0, 0, 1213, 22))
+        self.menumain = QMenu(self.menuBar)
+        self.menumain.setObjectName(u"menumain")
+        self.menuSkyFall = QMenu(self.menuBar)
+        self.menuSkyFall.setObjectName(u"menuSkyFall")
+        MainWindow.setMenuBar(self.menuBar)
+
+        self.menuBar.addAction(self.menuSkyFall.menuAction())
+        self.menuBar.addAction(self.menumain.menuAction())
+        self.menumain.addAction(self.actionNew_case)
+        self.menumain.addAction(self.actionOpen_case)
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(3)
-        self.tabWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1496,6 +1528,8 @@ class Ui_MainWindow(object):
 
     def retranslateUi(self, MainWindow):
         MainWindow.setWindowTitle(QCoreApplication.translate("MainWindow", u"MainWindow", None))
+        self.actionNew_case.setText(QCoreApplication.translate("MainWindow", u"New case", None))
+        self.actionOpen_case.setText(QCoreApplication.translate("MainWindow", u"Open case", None))
         self.appIconLabel.setStyleSheet(QCoreApplication.translate("MainWindow", u"color: #82aaff;", None))
         self.winTitle.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))
@@ -1514,7 +1548,7 @@ class Ui_MainWindow(object):
         self.telegramMultiAccCheck.setText(QCoreApplication.translate("MainWindow", u"Multi-Acc Mode", None))
         self.telegramDownloadStart.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.telegramDownloadAvatarsBtn.setText(QCoreApplication.translate("MainWindow", u"Download Avatars", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_downloader_tab), QCoreApplication.translate("MainWindow", u"DOWNLOADER", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegramDownloaderTab), QCoreApplication.translate("MainWindow", u"TELEGRAM DOWNLOADER", None))
         self.telegramAnalyzerLoadChannelsButton.setText(QCoreApplication.translate("MainWindow", u"Load Channels", None))
 
         __sortingEnabled = self.telegramChannelsList.isSortingEnabled()
@@ -1539,8 +1573,7 @@ class Ui_MainWindow(object):
         self.checkBox_7.setText(QCoreApplication.translate("MainWindow", u"CheckBox", None))
         self.checkBox_8.setText(QCoreApplication.translate("MainWindow", u"CheckBox", None))
         self.runTelegramAnalyzerBtn.setText(QCoreApplication.translate("MainWindow", u"Run", None))
-        self.tabWidget.setTabText(self.tabWidget.indexOf(self.telegram_analyzer_tab), QCoreApplication.translate("MainWindow", u"ANALYZER", None))
-        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegramToolsTab), QCoreApplication.translate("MainWindow", u"TELEGRAM", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegramAnalyzerTab), QCoreApplication.translate("MainWindow", u"TELEGRAM ANALYZER", None))
         self.usernameScriptDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Script", None))
         self.usernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
         self.searchUsernameButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
@@ -1549,8 +1582,10 @@ class Ui_MainWindow(object):
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
         self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"IntelX Search", None))
         self.startHibpCheckButton.setText(QCoreApplication.translate("MainWindow", u"HIBP Check", None))
-        self.mailSearchDebug.setPlainText(QCoreApplication.translate("MainWindow", u"INTELX", None))
-        self.hibpDebug.setPlainText(QCoreApplication.translate("MainWindow", u"HIBP", None))
+        self.mailSearchDebug.setPlainText("")
+        self.mailSearchDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"INTELX", None))
+        self.hibpDebug.setPlainText("")
+        self.hibpDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HIBP", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mailToolsTab), QCoreApplication.translate("MainWindow", u"MAIL", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
@@ -1588,16 +1623,15 @@ class Ui_MainWindow(object):
         self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
         self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
+        self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
+        self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
+        self.fileVirustotalCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
+        self.virustotalFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"VIRUSTOTAL", None))
+        self.fileMetadataCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
+        self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
         self.fileStringsCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.metadataStatusLabel.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
-        self.getMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Analyze", None))
-        self.fileVirustotalCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
-        self.metadataFilePath.setText(QCoreApplication.translate("MainWindow", u"File", None))
-        self.fileMetadataCheck.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.cleanMetadataButton.setText(QCoreApplication.translate("MainWindow", u"Clean Metadata", None))
-        self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
-        self.virustotalFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"VIRUSTOTAL", None))
-        self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.metadataTab), QCoreApplication.translate("MainWindow", u"FILE ANALYZE", None))
         self.githubUserEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GitHub Username", None))
         self.githubUserSearchBtn.setText(QCoreApplication.translate("MainWindow", u"User Info", None))
@@ -1676,6 +1710,10 @@ class Ui_MainWindow(object):
         self.nodeEvidenceAddUrlBtn.setText(QCoreApplication.translate("MainWindow", u"Add URL", None))
         self.nodeEvidenceRemoveBtn.setText(QCoreApplication.translate("MainWindow", u"Remove", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.graphTab), QCoreApplication.translate("MainWindow", u"GRAPH", None))
+        self.generateReportButton.setText(QCoreApplication.translate("MainWindow", u"Generate Report", None))
+        self.saveReportButton.setText(QCoreApplication.translate("MainWindow", u"Save Report", None))
+        self.aiReportDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"REPORT", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.reportTab), QCoreApplication.translate("MainWindow", u"AI REPORT", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))
         self.telegramApiHashEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API HASH", None))
@@ -1699,5 +1737,7 @@ class Ui_MainWindow(object):
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.proxyTab), QCoreApplication.translate("MainWindow", u"PROXY", None))
+        self.menumain.setTitle(QCoreApplication.translate("MainWindow", u"cases", None))
+        self.menuSkyFall.setTitle(QCoreApplication.translate("MainWindow", u"SkyFall", None))
     # retranslateUi
 

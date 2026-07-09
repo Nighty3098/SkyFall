@@ -2259,41 +2259,154 @@
     </item>
    </layout>
   </widget>
-  <widget class="QMenuBar" name="menuBar">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>0</y>
-     <width>1213</width>
-     <height>22</height>
-    </rect>
-   </property>
-   <widget class="QMenu" name="menumain">
-    <property name="title">
-     <string>Cases</string>
-    </property>
-    <addaction name="actionNew_case"/>
-    <addaction name="actionOpen_case"/>
+   <widget class="QMenuBar" name="menuBar">
+    <widget class="QMenu" name="menuFile">
+     <property name="title">
+      <string>File</string>
+     </property>
+     <addaction name="actionNew_case"/>
+     <addaction name="actionOpen_case"/>
+     <addaction name="separator"/>
+     <addaction name="actionExit"/>
+    </widget>
+    <widget class="QMenu" name="menuView">
+     <property name="title">
+      <string>View</string>
+     </property>
+     <addaction name="actionViewMain"/>
+     <addaction name="actionViewTelegramDownloader"/>
+     <addaction name="actionViewTelegramAnalyzer"/>
+     <addaction name="actionViewUsername"/>
+     <addaction name="actionViewMail"/>
+     <addaction name="actionViewDorking"/>
+     <addaction name="actionViewWeb"/>
+     <addaction name="actionViewMetadata"/>
+     <addaction name="actionViewGithub"/>
+     <addaction name="actionViewPhone"/>
+     <addaction name="actionViewMacAddr"/>
+     <addaction name="actionViewBlockchain"/>
+     <addaction name="actionViewGraph"/>
+     <addaction name="actionViewAiReport"/>
+     <addaction name="actionViewSettings"/>
+     <addaction name="actionViewProxy"/>
+    </widget>
+    <widget class="QMenu" name="menuHelp">
+     <property name="title">
+      <string>Help</string>
+     </property>
+     <addaction name="actionAbout"/>
+     <addaction name="actionOpenGitHub"/>
+    </widget>
+    <addaction name="menuFile"/>
+    <addaction name="menuView"/>
+    <addaction name="menuHelp"/>
    </widget>
-   <widget class="QMenu" name="menuSkyFall">
-    <property name="title">
-     <string>SkyFall</string>
+   <action name="actionNew_case">
+    <property name="text">
+     <string>New case</string>
     </property>
-   </widget>
-   <addaction name="menuSkyFall"/>
-   <addaction name="menumain"/>
+   </action>
+   <action name="actionOpen_case">
+    <property name="text">
+     <string>Open case</string>
+    </property>
+   </action>
+   <action name="actionExit">
+    <property name="text">
+     <string>Exit</string>
+    </property>
+   </action>
+   <action name="actionAbout">
+    <property name="text">
+     <string>About</string>
+    </property>
+   </action>
+   <action name="actionOpenGitHub">
+    <property name="text">
+     <string>Open GitHub</string>
+    </property>
+   </action>
+   <action name="actionViewMain">
+    <property name="text">
+     <string>SKYFALL</string>
+    </property>
+   </action>
+   <action name="actionViewTelegramDownloader">
+    <property name="text">
+     <string>TELEGRAM DOWNLOADER</string>
+    </property>
+   </action>
+   <action name="actionViewTelegramAnalyzer">
+    <property name="text">
+     <string>TELEGRAM ANALYZER</string>
+    </property>
+   </action>
+   <action name="actionViewUsername">
+    <property name="text">
+     <string>USERNAME</string>
+    </property>
+   </action>
+   <action name="actionViewMail">
+    <property name="text">
+     <string>MAIL</string>
+    </property>
+   </action>
+   <action name="actionViewDorking">
+    <property name="text">
+     <string>DORKING</string>
+    </property>
+   </action>
+   <action name="actionViewWeb">
+    <property name="text">
+     <string>WEB</string>
+    </property>
+   </action>
+   <action name="actionViewMetadata">
+    <property name="text">
+     <string>FILE ANALYZE</string>
+    </property>
+   </action>
+   <action name="actionViewGithub">
+    <property name="text">
+     <string>GITHUB</string>
+    </property>
+   </action>
+   <action name="actionViewPhone">
+    <property name="text">
+     <string>PHONE</string>
+    </property>
+   </action>
+   <action name="actionViewMacAddr">
+    <property name="text">
+     <string>MAC ADDR</string>
+    </property>
+   </action>
+   <action name="actionViewBlockchain">
+    <property name="text">
+     <string>BLOCKCHAIN</string>
+    </property>
+   </action>
+   <action name="actionViewGraph">
+    <property name="text">
+     <string>GRAPH</string>
+    </property>
+   </action>
+   <action name="actionViewAiReport">
+    <property name="text">
+     <string>AI REPORT</string>
+    </property>
+   </action>
+   <action name="actionViewSettings">
+    <property name="text">
+     <string>SETTINGS</string>
+    </property>
+   </action>
+   <action name="actionViewProxy">
+    <property name="text">
+     <string>PROXY</string>
+    </property>
+   </action>
   </widget>
-  <action name="actionNew_case">
-   <property name="text">
-    <string>New case</string>
-   </property>
-  </action>
-  <action name="actionOpen_case">
-   <property name="text">
-    <string>Open case</string>
-   </property>
-  </action>
- </widget>
  <customwidgets>
   <customwidget>
    <class>QWebEngineView</class>

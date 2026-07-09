@@ -19,7 +19,7 @@ from src.ui.output_formatter import (
 
 PNG_IEND = b"IEND\xaeB`\x82"
 JPEG_EOI = b"\xff\xd9"
-GIF_TRAILER = b"\x00"
+GIF_TRAILER = b"\x3b"
 BMP_END_OFFSET = 2  # BMP files have no end marker, just fixed header
 
 
@@ -54,7 +54,9 @@ class SteganographyAnalyzer:
 
             def _lsb_analysis(p):
                 img = Image.open(p)
-                if img.mode not in ("RGB", "RGBA"):
+                if img.mode == "P":
+                    img = img.convert("RGB")
+                elif img.mode not in ("RGB", "RGBA"):
                     img = img.convert("RGB")
                 pixels = np.array(img, dtype=np.uint8)
                 channels = ["R", "G", "B"]
@@ -100,7 +102,7 @@ class SteganographyAnalyzer:
                         )
                         + "\n"
                     )
-                elif chi_r > 3.0 or chi_g > 3.0 or chi_b > 3.0:
+                elif chi_r > 3.84 or chi_g > 3.84 or chi_b > 3.84:
                     report += (
                         kv("  Verdict", "High chi2 - LSBs are noisy (normal)") + "\n"
                     )
@@ -134,7 +136,7 @@ class SteganographyAnalyzer:
                 report += kv("Mode", img.mode) + "\n"
                 report += kv("Pixel data size", f"{size_kb:.1f} KB") + "\n"
 
-                max_bits = img.size[0] * img.size[1] * 3
+                max_bits = img.size[0] * img.size[1] * len(channels)
                 max_bytes = max_bits // 8
                 report += kv("Max hidden data (all LSBs)", f"{max_bytes} bytes") + "\n"
                 report += (
@@ -171,7 +173,9 @@ class SteganographyAnalyzer:
 
             def _spectral(p):
                 img = Image.open(p)
-                if img.mode != "L":
+                if img.mode == "P":
+                    img = img.convert("L")
+                elif img.mode != "L":
                     img = img.convert("L")
                 pixels = np.array(img, dtype=np.float64)
 
@@ -201,9 +205,14 @@ class SteganographyAnalyzer:
                 report += "\n"
                 report += line("Frequency Band Energy:") + "\n"
                 report += kv("  Low-freq energy (center)", f"{low.mean():.2f}") + "\n"
-                report += kv("  High-freq energy (outer)", f"{high.mean():.2f}") + "\n"
+                high_nonzero = high[high > 0]
+                if high_nonzero.size > 0:
+                    high_energy = float(high_nonzero.mean())
+                else:
+                    high_energy = 0.0
+                report += kv("  High-freq energy (outer)", f"{high_energy:.2f}") + "\n"
 
-                hf_ratio = high.mean() / low.mean() if low.mean() > 0 else 0
+                hf_ratio = high_energy / low.mean() if low.mean() > 0 else 0
                 report += kv("  HF/LF ratio", f"{hf_ratio:.4f}") + "\n"
 
                 report += "\n"
@@ -531,15 +540,12 @@ class SteganographyAnalyzer:
             result += kv("Null byte padding at end", f"{null_tail} bytes") + "\n"
             result += info("Possible padding or hidden null data.") + "\n"
 
-        non_zero_from_end = len(data) - 1
-        while non_zero_from_end >= 0 and data[non_zero_from_end] == 0x00:
-            non_zero_from_end -= 1
-        if non_zero_from_end < len(data) - 17:
-            after_last_content = non_zero_from_end + 1
+        if null_tail > 16:
+            after_last_content = i + 1
             result += (
                 kv(
                     "Last non-null byte offset",
-                    f"0x{non_zero_from_end:08X}",
+                    f"0x{i:08X}",
                 )
                 + "\n"
             )
@@ -553,8 +559,8 @@ class SteganographyAnalyzer:
 
         return result
 
-    def detect_tail_data(self, path: str) -> str:
-        data = self._read_file_bytes_sync(path)
+    async def detect_tail_data(self, path: str) -> str:
+        data = await self._read_file_bytes(path)
 
         result = divider() + "\n"
         result += title("Tail Data Detection") + "\n"
@@ -616,10 +622,6 @@ class SteganographyAnalyzer:
         results["eoi"] = await self.analyze_eoi(path)
         results["tail"] = await self.detect_tail_data(path)
         return results
-
-    def _read_file_bytes_sync(self, path: str) -> bytes:
-        with open(path, "rb") as f:
-            return f.read()
 
     def _hex_dump(self, data: bytes, base_offset: int = 0) -> str:
         result = ""

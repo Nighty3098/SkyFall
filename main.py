@@ -127,10 +127,6 @@ class MainWindow(QMainWindow):
         self._init_modules()
         self.settings.on_save(self._sync_tokens)
         setup_ui(self)
-
-        case_menu = self.menuBar().addMenu("cases")
-        case_menu.addAction(self.ui.actionNew_case)
-        case_menu.addAction(self.ui.actionOpen_case)
         self.ui.actionNew_case.triggered.connect(self.case_manager.create_case)
         self.ui.actionOpen_case.triggered.connect(self.case_manager.open_case)
         self._shortcuts_manager = ShortcutManager(

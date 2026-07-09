@@ -371,6 +371,8 @@ GraphWidget, QGraphicsView {
 }
 
 QMenuBar {
+padding-top: 10px;
+padding-bottom: 0px;
     color: #C1C1C1;
 }
 

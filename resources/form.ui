@@ -19,16 +19,16 @@
      <number>0</number>
     </property>
     <property name="leftMargin">
-     <number>6</number>
+     <number>0</number>
     </property>
     <property name="topMargin">
-     <number>6</number>
+     <number>0</number>
     </property>
     <property name="rightMargin">
-     <number>6</number>
+     <number>0</number>
     </property>
     <property name="bottomMargin">
-     <number>6</number>
+     <number>0</number>
     </property>
     <item>
      <layout class="QHBoxLayout" name="horizontalLayout_6">
@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>12</number>
+         <number>0</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1524,22 +1524,22 @@
              <enum>Qt::Orientation::Horizontal</enum>
             </property>
             <widget class="QPlainTextEdit" name="macAddrLocationDebug"/>
-             <widget class="QWebEngineView" name="macLocationMapView">
-              <property name="visible">
-               <bool>false</bool>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>300</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="styleSheet">
-               <string notr="true">border-radius: 15px;</string>
-              </property>
-              <property name="url">
-               <url>
-                <string>about:blank</string>
+            <widget class="QWebEngineView" name="macLocationMapView">
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="visible">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-radius: 15px;</string>
+             </property>
+             <property name="url">
+              <url>
+               <string>about:blank</string>
               </url>
              </property>
             </widget>
@@ -2258,6 +2258,30 @@
      </layout>
     </item>
    </layout>
+  </widget>
+  <widget class="QMenuBar" name="menuBar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1213</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menumain">
+    <property name="title">
+     <string>Cases</string>
+    </property>
+    <addaction name="actionNew_case"/>
+    <addaction name="actionOpen_case"/>
+   </widget>
+   <widget class="QMenu" name="menuSkyFall">
+    <property name="title">
+     <string>SkyFall</string>
+    </property>
+   </widget>
+   <addaction name="menuSkyFall"/>
+   <addaction name="menumain"/>
   </widget>
   <action name="actionNew_case">
    <property name="text">

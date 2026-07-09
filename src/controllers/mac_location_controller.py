@@ -72,6 +72,8 @@ class MacLocationController:
 
         if first:
             html = LEAFLET_HTML.format(
-                lat=first[0], lng=first[1], markers="\n".join(markers)
+                lat=first[0],
+                lng=first[1],
+                markers="\n".join(markers),
             )
             self.ui.macLocationMapView.setHtml(html)

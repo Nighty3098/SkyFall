@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1678</width>
-    <height>767</height>
+    <width>1213</width>
+    <height>786</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>12</number>
+         <number>6</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1113,6 +1113,60 @@
           <string>FILE ANALYZE</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_7">
+          <item row="1" column="1" rowspan="3">
+           <widget class="QPlainTextEdit" name="metadataDebug">
+            <property name="placeholderText">
+             <string>METADATA</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="3" rowspan="3">
+           <widget class="QPlainTextEdit" name="stringsFileDebug">
+            <property name="placeholderText">
+             <string>STRINGS</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="2">
+           <widget class="QCheckBox" name="fileVirustotalCheck">
+            <property name="text">
+             <string>Check</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2" rowspan="3">
+           <widget class="QPlainTextEdit" name="virustotalFileDebug">
+            <property name="placeholderText">
+             <string>VIRUSTOTAL</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QCheckBox" name="fileMetadataCheck">
+            <property name="text">
+             <string>Check</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="getMetadataButton">
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Analyze</string>
+            </property>
+           </widget>
+          </item>
           <item row="0" column="3">
            <widget class="QCheckBox" name="fileStringsCheck">
             <property name="text">
@@ -1162,79 +1216,36 @@
            </widget>
           </item>
           <item row="3" column="0">
-           <widget class="QPushButton" name="getMetadataButton">
-            <property name="maximumSize">
-             <size>
-              <width>400</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Analyze</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QCheckBox" name="fileVirustotalCheck">
-            <property name="text">
-             <string>Check</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QLabel" name="metadataFilePath">
-            <property name="maximumSize">
-             <size>
-              <width>400</width>
-              <height>30</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>File</string>
-            </property>
-            <property name="alignment">
-             <set>Qt::AlignmentFlag::AlignCenter</set>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QCheckBox" name="fileMetadataCheck">
-            <property name="text">
-             <string>Check</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
            <widget class="QPushButton" name="cleanMetadataButton">
             <property name="text">
              <string>Clean Metadata</string>
             </property>
            </widget>
           </item>
-          <item row="1" column="1" rowspan="4">
-           <widget class="QPlainTextEdit" name="metadataDebug">
-            <property name="placeholderText">
-             <string>METADATA</string>
+          <item row="0" column="4" rowspan="4">
+           <widget class="QWebEngineView" name="metadataMapView">
+            <property name="minimumSize">
+             <size>
+              <width>400</width>
+              <height>0</height>
+             </size>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="2" rowspan="4">
-           <widget class="QPlainTextEdit" name="virustotalFileDebug">
-            <property name="placeholderText">
-             <string>VIRUSTOTAL</string>
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>16777215</height>
+             </size>
             </property>
-           </widget>
-          </item>
-          <item row="1" column="3" rowspan="4">
-           <widget class="QPlainTextEdit" name="stringsFileDebug">
-            <property name="placeholderText">
-             <string>STRINGS</string>
+            <property name="visible">
+             <bool>false</bool>
+            </property>
+            <property name="styleSheet">
+             <string notr="true"/>
+            </property>
+            <property name="url">
+             <url>
+              <string>about:blank</string>
+             </url>
             </property>
            </widget>
           </item>

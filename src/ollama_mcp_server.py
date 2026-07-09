@@ -1,3 +1,4 @@
+# ruff: noqa: E501
 """
 Standalone MCP server for SkyFall OSINT report generation via Ollama.
 
@@ -42,22 +43,30 @@ def _ollama_request(method: str, path: str, **kwargs) -> dict[str, Any]:
 
 def _ollama_generate(prompt: str, model: str | None = None) -> str:
     model = model or _current_model
-    full_text = ""
-    with httpx.Client(base_url=OLLAMA_BASE, timeout=300) as client:
-        with client.stream(
-            "POST",
+    logger.debug(f"Prompt length: {len(prompt)} chars, model: {model}")
+    with httpx.Client(base_url=OLLAMA_BASE, timeout=600) as client:
+        resp = client.post(
             "/api/generate",
-            json={"model": model, "prompt": prompt, "stream": True},
-        ) as resp:
-            resp.raise_for_status()
-            for line in resp.iter_lines():
-                if line:
-                    try:
-                        chunk = json.loads(line)
-                        full_text += chunk.get("response", "")
-                    except json.JSONDecodeError:
-                        pass
-    return full_text
+            json={"model": model, "prompt": prompt, "stream": False, "think": False},
+        )
+        resp.raise_for_status()
+        data = resp.json()
+
+        if "error" in data:
+            err = data["error"]
+            logger.error(f"Ollama error: {err}")
+            return f"Error from Ollama: {err}"
+
+        response = data.get("response", "")
+        if not response:
+            logger.error(
+                f"Empty response. Keys: {list(data.keys())}, "
+                f"done={data.get('done')}, "
+                f"resp_preview={json.dumps(data, ensure_ascii=False)[:500]}"
+            )
+        else:
+            logger.debug(f"Response length: {len(response)} chars")
+        return response
 
 
 @mcp.tool()
@@ -88,23 +97,114 @@ def list_ollama_models() -> str:
 
 
 @mcp.tool()
-def generate_osint_report(app_data: str) -> str:
+def generate_osint_report(app_data: str, language: str = "Russian") -> str:
     """
     Generate an OSINT report from the collected application data.
 
     Args:
-        app_data: JSON string containing all collected OSINT data from the application
+        app_data: JSON string containing all collected OSINT data
+        language: Target language for the report (e.g. Russian, English, German)
     """
     try:
         data = json.loads(app_data)
     except json.JSONDecodeError:
         data = {"raw": app_data}
 
-    prompt = _build_prompt(data)
+    prompt = _build_prompt(data, language)
     return _ollama_generate(prompt)
 
 
-def _build_prompt(data: dict) -> str:
+SYSTEM_PROMPT = """[CRITICAL] OUTPUT LANGUAGE: {language}. All text — headers, tables, markers — in {language} only.
+
+ROLE: Senior OSINT analyst. Analyze large SkyFall data dumps. Filter noise, cross-correlate, output dense report. No filler, no intros, no conclusions, no moralizing.
+
+CONFIDENCE:
+- [FACT] — directly in input, zero interpretation.
+- [INFERRED] — unavoidable consequence of [FACT]s.
+- [HYPOTHESIS] — requires verification. MUST include (basis: ...). No basis = do not write.
+
+AUTO-FILTER (discard silently, never mention):
+- CDN/hosting IPs (Cloudflare, Vercel, AWS CF, Fastly, Akamai, GH Pages, Netlify) for geolocation.
+- Ports 80/443/53 without version banners.
+- Platform-trivial facts (e.g., "vercel.app runs on Vercel").
+- Raw graph edges without interpretation.
+- Duplicate data.
+
+VOLUME:
+- Aggregate: "47 platforms found" not list all 47.
+- Only platforms with correlating evidence (shared email, avatar, mutual contact).
+- NMAP: anomalies only (non-standard ports, banners).
+- Telegram: admins, bots, cross-linked users only.
+- Files: anomalies only (EXIF GPS, hidden data).
+
+GRAPH RULES:
+- `owns` → [FACT] only with WHOIS/self-declaration/payment.
+- `associated_with` → [INFERRED] if same email/username across platforms; [HYPOTHESIS] if stylistic/temporal only.
+- `resolves_to` → [FACT].
+- `geolocated_to` from IP → [HYPOTHESIS] if CDN/hosting; [INFERRED] only if residential/ISP.
+
+EMPTY SECTIONS: If section has zero items after filtering, DO NOT OUTPUT the section header or any text. No "No data", "Skipped", "Filtered out".
+
+ANTI-HALLUCINATION: Absent data = omit. Do not invent.
+
+SECTIONS (output ONLY those with data):
+
+## 1. SUMMARY
+2–3 sentences. Who, input, main conclusion. No speculation.
+
+## 2. IDENTIFIERS
+| Type | Value | Source | Marker |
+Only identifiers from input.
+
+## 3. DIGITAL FOOTPRINT
+| Platform | Nick/ID | URL | Evidence | Marker |
+Evidence: what links to subject (shared email, mention, avatar hash). Omit entire section if none.
+
+## 4. INFRASTRUCTURE
+- CDN IP: state "IP x.x.x.x belongs to [provider] CDN; geolocation irrelevant to subject" [FACT].
+- NMAP: non-standard ports, banners only.
+- DNS: non-trivial only (unexpected subdomains, TXT tokens, SPF/DKIM).
+- WHOIS: only if privacy off, unusual dates, exotic registrar.
+- robots.txt/security.txt: only non-standard emails/paths/PGP keys.
+
+## 5. GEOLOCATION
+Only if direct non-CDN data exists (BSSID, EXIF GPS, phone region, profile location). Every claim needs source. [HYPOTHESIS] if single-source, [INFERRED] if multi-source. No CDN IPs.
+
+## 6. CONNECTIONS
+Cross-module links only. No trivial domain→IP unless IP non-CDN. No "email associated with search" — use "email not found in IntelX at scan time" [FACT]. Cross-people links only if found.
+
+## 7. VISIBILITY ASSESSMENT
+Only if ≥3 identifiers and ≥1 non-trivial finding.
+- Scale 1–10. Exactly 1 sentence justification.
+- Exposed/hidden list. No commentary.
+
+## 8. NEXT STEPS
+Exactly 3 concrete actions from gaps.
+Bad: "Check social media".
+Good: "Reverse-image-search Telegram avatar for other platforms".
+
+FORMATTING:
+- Markdown: `##`, `|`, `-`.
+- Markers at start of line or table column.
+- Confidence percentage: single integer at end of HYPOTHESIS section, no explanation.
+- Time in UTC.
+- If critically sparse (<3 unique identifiers): output ONLY `Insufficient data. Minimum: name/username + email/domain/geo.` and nothing else.
+
+FORBIDDEN:
+- Subjective insults, moral judgments.
+- Fabricating data.
+- Duplicating info across sections.
+- "may indicate", "possibly", "presumably" outside [HYPOTHESIS].
+- CDN/hosting IP for subject geolocation.
+- Raw graph edge dumps.
+
+INPUT DATA:
+{data_str}
+
+Generate ONLY the markdown report. No extra commentary."""
+
+
+def _build_prompt(data: dict, language: str = "Russian") -> str:
     sections = []
     for key, value in data.items():
         if value:
@@ -115,58 +215,7 @@ def _build_prompt(data: dict) -> str:
             else:
                 sections.append(f"### {key}\n{str(value)}")
     data_str = "\n\n".join(sections)
-
-    prompt = (
-        "РОЛЬ:\n"
-        "Ты — независимый аналитик по OSINT (разведка по открытым источникам) "
-        "с 10-летним опытом. Ты работаешь строго по фактам, разделяешь "
-        "подтвержденные данные и гипотезы. Ты не делаешь моральных оценок, "
-        "только фиксируешь связи и временные метки.\n\n"
-        "ЗАДАЧА:\n"
-        "Провести многоуровневый анализ по входным данным ниже. "
-        "Сформировать отчет по структуре ниже. Если данных по какому-то "
-        "пункту нет — пиши «Информация отсутствует», не придумывай.\n\n"
-        "СТРУКТУРА ОТЧЕТА:\n\n"
-        "1. ИСХОДНЫЕ ДАННЫЕ И ИХ ВЕРИФИКАЦИЯ\n"
-        "   - Что именно дано на вход (тип объекта)\n"
-        "   - Первичный анализ: уникальный, сгенерированный или реальный\n\n"
-        "2. ЦИФРОВОЙ СЛЕД (Платформы и аккаунты)\n"
-        "   - Социальные сети: перечисли все найденные профили, укажи активность\n"
-        "   - Профессиональные и медиа-площадки, если применимо\n"
-        "   - Для каждого аккаунта укажи: Совпадение (высокое/среднее/низкое) "
-        "и ссылку\n\n"
-        "3. ИНФРАСТРУКТУРА (Если применимо)\n"
-        "   - Домены, связанные с email/ником\n"
-        "   - Субдомены и IP\n"
-        "   - Связанные email-адреса, утечки баз данных\n\n"
-        "4. ВРЕМЕННАЯ ЛИНИЯ (Таймлайн)\n"
-        "   - Ключевые даты активности\n"
-        "   - Смена аватаров, юзернеймов\n\n"
-        "5. ГЕОЛОКАЦИЯ И РЕАЛЬНЫЙ МИР\n"
-        "   - IP-адреса, местоположение по EXIF\n"
-        "   - Упоминания городов, мест работы, учебных заведений\n"
-        "   - Связи с другими людьми\n\n"
-        "6. ОЦЕНКА УЯЗВИМОСТЕЙ И РИСКОВ\n"
-        "   - Насколько легко найти человека в офлайн-мире (шкала 1-10)\n"
-        "   - Какие данные защищены, а какие в открытом доступе\n"
-        "   - Рекомендации по закрытию пробелов\n\n"
-        "7. ВЫВОДЫ И ДАЛЬНЕЙШИЕ ШАГИ\n"
-        "   - Сборка пазла: гипотеза о субъекте\n"
-        "   - 3 следующих действия для углубления поиска\n\n"
-        "ПРАВИЛА ФОРМАТИРОВАНИЯ:\n"
-        "- Используй Markdown (заголовки #, списки -, жирный шрифт)\n"
-        "- В конце отчета поставь «Процент уверенности» по каждому блоку "
-        "(0-100%)\n"
-        "- Веди отсчет времени в UTC\n\n"
-        "ОГРАНИЧЕНИЯ:\n"
-        "- Запрещено писать субъективные оскорбления\n"
-        "- Если данных критически мало (< 3 символов), напиши: "
-        "«Недостаточно данных для генерации отчета» и остановись\n\n"
-        f"---\n\nСОБРАННЫЕ ДАННЫЕ:\n{data_str}\n\n"
-        "Сгенерируй ТОЛЬКО markdown отчет. Без лишних комментариев."
-    )
-
-    return prompt
+    return SYSTEM_PROMPT.format(data_str=data_str, language=language)
 
 
 if __name__ == "__main__":

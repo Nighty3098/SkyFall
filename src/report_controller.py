@@ -12,6 +12,7 @@ class ReportController:
     def __init__(self, ui, case_manager=None):
         self.ui = ui
         self.case_manager = case_manager
+        self._generating = False
 
     @staticmethod
     def _server_params() -> StdioServerParameters:
@@ -30,26 +31,43 @@ class ReportController:
                 return result.content[0].text
 
     async def generate_report(self):
+        if self._generating:
+            logger.warning("Report generation already in progress")
+            return
+
+        self._generating = True
         try:
             self.ui.aiReportDebug.setPlainText("Generating report...")
             QApplication.processEvents()
 
             data = self._collect_all_data()
 
+            language = self.ui.aiReportLangEdit.text().strip() or "Russian"
+
             report_text = await self._call_tool(
                 "generate_osint_report",
                 {
                     "app_data": json.dumps(data, ensure_ascii=False, default=str),
+                    "language": language,
                 },
             )
 
-            self.ui.aiReportDebug.setPlainText(report_text)
-            logger.success("OSINT report generated")
+            if report_text and report_text.strip():
+                self.ui.aiReportDebug.setPlainText(report_text)
+                logger.success("OSINT report generated")
+            else:
+                self.ui.aiReportDebug.setPlainText(
+                    "# Error\n\nEmpty report received from model. "
+                    "Check Ollama is running and the model is available."
+                )
+                logger.error("Empty report text received from Ollama")
 
         except Exception as e:
             error_msg = f"Error generating report: {e}"
             logger.error(error_msg)
             self.ui.aiReportDebug.setPlainText(f"# Error\n\n{error_msg}")
+        finally:
+            self._generating = False
 
     def _collect_all_data(self) -> dict:
         data = {}

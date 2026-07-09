@@ -29,6 +29,7 @@ from src.connectors import (
     setup_proxies_connectors,
     setup_report_connectors,
     setup_settings_connectors,
+    setup_steganography_connectors,
     setup_tg_analyzer_connectors,
     setup_tg_downloader_connectors,
     setup_username_connectors,
@@ -44,6 +45,7 @@ from src.controllers.mail_controller import MailController
 from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
 from src.controllers.settings_controller import Settings
+from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
@@ -59,6 +61,7 @@ from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
 from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.phone_search import PhoneSearch
+from src.modules.steganography import SteganographyAnalyzer
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
@@ -202,6 +205,7 @@ class MainWindow(QMainWindow):
             }
         )
         self.fileAnalyzer = FileAnalyzer(self.settings.virustotal_api_key)
+        self.stegAnalyzer = SteganographyAnalyzer()
         self.mailSearchEngine = MailSearchEngine(
             self.settings.intelligent_x_api_key,
             self.settings.hibp_api_key,
@@ -302,6 +306,7 @@ class MainWindow(QMainWindow):
 
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
+        self.stegController = SteganographyController(self.ui, self.stegAnalyzer)
         self.mailController = MailController(self.ui, self.mailSearchEngine)
         self.usernameController = UsernameController(
             self.ui, self.usernameSearch, self.maigretSearch
@@ -326,6 +331,7 @@ class MainWindow(QMainWindow):
         setup_domain_connectors(self.domainController)
         setup_settings_connectors(self.settings)
         setup_metadata_connectors(self.fileAnalyzeController)
+        setup_steganography_connectors(self.stegController)
         setup_mail_connectors(self.mailController)
         setup_username_connectors(self.usernameController)
         setup_tg_downloader_connectors(self.tgDownloaderController)

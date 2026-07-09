@@ -33,6 +33,10 @@ class CaseManager:
         "metadataDebug": "files",
         "stringsFileDebug": "files",
         "virustotalFileDebug": "files",
+        "LSBDebug": "steganography",
+        "spectralAnalysisDebug": "steganography",
+        "EOIDebug": "steganography",
+        "tailDataDetectionDebug": "steganography",
         "aiReportDebug": "reports",
         "dorksResult": "dorking",
     }

@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from src.controllers.phone_controller import PhoneController
     from src.controllers.proxy_controller import Proxy
     from src.controllers.settings_controller import Settings
+    from src.controllers.steganography_controller import SteganographyController
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
     from src.controllers.tg_downloader_controller import TgDownloaderController
 
@@ -118,6 +119,16 @@ def setup_metadata_connectors(controller: "FileAnalyzeController"):
                     controller.ui.metadataFileDropWidget.get_file_path()
                 )
             ),
+        )
+    )
+
+
+def setup_steganography_connectors(controller: "SteganographyController"):
+    controller.ui.steganoFileDrop.file_dropped.connect(
+        lambda path: asyncio.ensure_future(
+            controller.start_steganography_analysis(
+                controller.ui.steganoFileDrop.get_file_path()
+            )
         )
     )
 

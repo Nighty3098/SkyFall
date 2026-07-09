@@ -32,6 +32,21 @@ QWidget#metadataFileDropWidget QLabel {
     font-style: italic;
 }
 
+QWidget#steganoFileDrop {
+    border-radius: 10px;
+    border: 1px dashed #D0D0D0;
+    background-color: #E8E8E8;
+    color: #3A3A3A;
+    padding: 5px;
+}
+
+QWidget#steganoFileDrop QLabel {
+    background: transparent;
+    color: #3A3A3A;
+    font-size: 50px;
+    font-style: italic;
+}
+
 tabWidget * {
     background: #F5F5F5;
     color: #3A3A3A;

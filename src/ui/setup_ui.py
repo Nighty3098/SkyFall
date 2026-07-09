@@ -22,6 +22,9 @@ def setup_navbar(parent):
     parent.ui.menuListWidget.currentRowChanged.connect(
         parent.ui.mainStackedWidget.setCurrentIndex
     )
+    parent.ui.mainStackedWidget.currentChanged.connect(
+        parent.ui.menuListWidget.setCurrentRow
+    )
     tab_count = parent.ui.mainStackedWidget.count()
     tabs = [parent.ui.mainStackedWidget.tabText(i) for i in range(tab_count)]
     parent.ui.menuListWidget.addItems(tabs)

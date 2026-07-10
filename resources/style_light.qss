@@ -381,9 +381,8 @@ GraphWidget, QGraphicsView {
 }
 
 QMenuBar {
-padding-top: 10px;
-padding-bottom: 0px;
-
+    padding-top: 10px;
+    padding-bottom: 0px;
     color: #3A3A3A;
 }
 
@@ -416,7 +415,7 @@ QMenu::item {
     padding: 6px 20px;
     margin: 2px 4px;
     border-radius: 6px;
-    color: #D0D0D0;
+    color: #3A3A3A;
 }
 
 QMenu::item:selected {

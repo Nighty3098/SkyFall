@@ -1793,60 +1793,69 @@
          <attribute name="title">
           <string>STEGANOGRAPHY</string>
          </attribute>
-         <layout class="QGridLayout" name="gridLayout_10">
-          <item row="0" column="3">
-           <widget class="QPlainTextEdit" name="EOIDebug">
-            <property name="placeholderText">
-             <string>EOI/EOD</string>
+         <layout class="QHBoxLayout" name="steganographyLayout">
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSplitter" name="steganographySplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
             </property>
-           </widget>
-          </item>
-          <item row="0" column="4">
-           <widget class="QPlainTextEdit" name="tailDataDetectionDebug">
-            <property name="placeholderText">
-             <string>Tail Data Detection</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="1">
-           <widget class="QPlainTextEdit" name="LSBDebug">
-            <property name="placeholderText">
-             <string>LSB</string>
-            </property>
-           </widget>
-          </item>
-          <item row="0" column="0">
-           <widget class="DropWidget" name="steganoFileDrop" native="true">
-            <layout class="QVBoxLayout" name="verticalLayout_2">
-             <item>
-              <widget class="QLabel" name="label_8">
-               <property name="minimumSize">
-                <size>
-                 <width>200</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="font">
-                <font>
-                 <pointsize>30</pointsize>
-                </font>
-               </property>
-               <property name="text">
-                <string>DROP</string>
-               </property>
-               <property name="alignment">
-                <set>Qt::AlignmentFlag::AlignCenter</set>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </widget>
-          </item>
-          <item row="0" column="2">
-           <widget class="QPlainTextEdit" name="spectralAnalysisDebug">
-            <property name="placeholderText">
-             <string>Spectral Analysis</string>
-            </property>
+            <widget class="DropWidget" name="steganoFileDrop" native="true">
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_8">
+                <property name="minimumSize">
+                 <size>
+                  <width>200</width>
+                  <height>0</height>
+                 </size>
+                </property>
+                <property name="font">
+                 <font>
+                  <pointsize>30</pointsize>
+                 </font>
+                </property>
+                <property name="text">
+                 <string>DROP</string>
+                </property>
+                <property name="alignment">
+                 <set>Qt::AlignmentFlag::AlignCenter</set>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QPlainTextEdit" name="LSBDebug">
+             <property name="placeholderText">
+              <string>LSB</string>
+             </property>
+            </widget>
+            <widget class="QPlainTextEdit" name="spectralAnalysisDebug">
+             <property name="placeholderText">
+              <string>Spectral Analysis</string>
+             </property>
+            </widget>
+            <widget class="QPlainTextEdit" name="EOIDebug">
+             <property name="placeholderText">
+              <string>EOI/EOD</string>
+             </property>
+            </widget>
+            <widget class="QPlainTextEdit" name="tailDataDetectionDebug">
+             <property name="placeholderText">
+              <string>Tail Data Detection</string>
+             </property>
+            </widget>
            </widget>
           </item>
          </layout>

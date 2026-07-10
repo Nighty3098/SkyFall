@@ -312,13 +312,9 @@ QLabel#metadataFilePath {
     height: 20px;
 }
 
-QLabel#appIconLabel {
-    color: #C1C1C1;
-}
-
 QLabel#winTitle {
     color: #C1C1C1;
-    font-size: 80px;
+    font-size: 200px;
     font-style: italic;
     font-family: "Caveat", monospace;
 }

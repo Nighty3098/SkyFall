@@ -3,8 +3,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QApplication
 
 if TYPE_CHECKING:
@@ -131,24 +129,7 @@ class Settings:
         except FileNotFoundError:
             logger.warning(f"{qss_path} not found, using default theme")
 
-        icon_color = "#3A3A3A" if self.light_theme else "#C1C1C1"
-        self.ui.appIconLabel.setStyleSheet(f"color: {icon_color};")
-        self._reload_icon(icon_color)
 
-    def _reload_icon(self, color):
-        svg_path = Path(__file__).parent.parent.parent / "resources" / "icon.svg"
-        try:
-            svg_content = svg_path.read_text(encoding="utf-8")
-            svg_content = svg_content.replace("currentColor", color)
-            pixmap = QPixmap()
-            pixmap.loadFromData(svg_content.encode("utf-8"))
-            if not pixmap.isNull():
-                pixmap = pixmap.scaled(
-                    300, 300, Qt.KeepAspectRatio, Qt.SmoothTransformation
-                )
-                self.ui.appIconLabel.setPixmap(pixmap)
-        except (FileNotFoundError, OSError):
-            logger.warning("Failed to reload icon")
 
     def save(self):
         logger.debug("Saving settings")

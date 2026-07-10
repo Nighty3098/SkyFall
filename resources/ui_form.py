@@ -110,19 +110,13 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_21.addItem(self.verticalSpacer_5)
 
-        self.appIconLabel = QLabel(self.mainTab)
-        self.appIconLabel.setObjectName(u"appIconLabel")
-        self.appIconLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.verticalLayout_21.addWidget(self.appIconLabel)
-
         self.winTitle = QLabel(self.mainTab)
         self.winTitle.setObjectName(u"winTitle")
         font = QFont()
         font.setBold(True)
         font.setItalic(True)
         self.winTitle.setFont(font)
-        self.winTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.winTitle.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.verticalLayout_21.addWidget(self.winTitle)
 
@@ -1241,26 +1235,26 @@ class Ui_MainWindow(object):
         self.steganographyTab.setObjectName(u"steganographyTab")
         self.gridLayout_10 = QGridLayout(self.steganographyTab)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.plainTextEdit_3 = QPlainTextEdit(self.steganographyTab)
-        self.plainTextEdit_3.setObjectName(u"plainTextEdit_3")
+        self.EOIDebug = QPlainTextEdit(self.steganographyTab)
+        self.EOIDebug.setObjectName(u"EOIDebug")
 
-        self.gridLayout_10.addWidget(self.plainTextEdit_3, 0, 3, 1, 1)
+        self.gridLayout_10.addWidget(self.EOIDebug, 0, 3, 1, 1)
 
-        self.plainTextEdit_2 = QPlainTextEdit(self.steganographyTab)
-        self.plainTextEdit_2.setObjectName(u"plainTextEdit_2")
+        self.tailDataDetectionDebug = QPlainTextEdit(self.steganographyTab)
+        self.tailDataDetectionDebug.setObjectName(u"tailDataDetectionDebug")
 
-        self.gridLayout_10.addWidget(self.plainTextEdit_2, 0, 4, 1, 1)
+        self.gridLayout_10.addWidget(self.tailDataDetectionDebug, 0, 4, 1, 1)
 
-        self.plainTextEdit = QPlainTextEdit(self.steganographyTab)
-        self.plainTextEdit.setObjectName(u"plainTextEdit")
+        self.LSBDebug = QPlainTextEdit(self.steganographyTab)
+        self.LSBDebug.setObjectName(u"LSBDebug")
 
-        self.gridLayout_10.addWidget(self.plainTextEdit, 0, 1, 1, 1)
+        self.gridLayout_10.addWidget(self.LSBDebug, 0, 1, 1, 1)
 
-        self.widget = DropWidget(self.steganographyTab)
-        self.widget.setObjectName(u"widget")
-        self.verticalLayout_2 = QVBoxLayout(self.widget)
+        self.steganoFileDrop = DropWidget(self.steganographyTab)
+        self.steganoFileDrop.setObjectName(u"steganoFileDrop")
+        self.verticalLayout_2 = QVBoxLayout(self.steganoFileDrop)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
-        self.label_8 = QLabel(self.widget)
+        self.label_8 = QLabel(self.steganoFileDrop)
         self.label_8.setObjectName(u"label_8")
         self.label_8.setMinimumSize(QSize(200, 0))
         font2 = QFont()
@@ -1271,12 +1265,12 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.label_8)
 
 
-        self.gridLayout_10.addWidget(self.widget, 0, 0, 1, 1)
+        self.gridLayout_10.addWidget(self.steganoFileDrop, 0, 0, 1, 1)
 
-        self.plainTextEdit_4 = QPlainTextEdit(self.steganographyTab)
-        self.plainTextEdit_4.setObjectName(u"plainTextEdit_4")
+        self.spectralAnalysisDebug = QPlainTextEdit(self.steganographyTab)
+        self.spectralAnalysisDebug.setObjectName(u"spectralAnalysisDebug")
 
-        self.gridLayout_10.addWidget(self.plainTextEdit_4, 0, 2, 1, 1)
+        self.gridLayout_10.addWidget(self.spectralAnalysisDebug, 0, 2, 1, 1)
 
         self.mainStackedWidget.addTab(self.steganographyTab, "")
         self.graphTab = QWidget()
@@ -1419,17 +1413,22 @@ class Ui_MainWindow(object):
         self.generateReportButton = QPushButton(self.reportTab)
         self.generateReportButton.setObjectName(u"generateReportButton")
 
-        self.gridLayout_6.addWidget(self.generateReportButton, 1, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.generateReportButton, 2, 0, 1, 1)
 
         self.saveReportButton = QPushButton(self.reportTab)
         self.saveReportButton.setObjectName(u"saveReportButton")
 
-        self.gridLayout_6.addWidget(self.saveReportButton, 2, 0, 1, 1)
+        self.gridLayout_6.addWidget(self.saveReportButton, 3, 0, 1, 1)
 
         self.aiReportDebug = QPlainTextEdit(self.reportTab)
         self.aiReportDebug.setObjectName(u"aiReportDebug")
 
         self.gridLayout_6.addWidget(self.aiReportDebug, 0, 0, 1, 1)
+
+        self.aiReportLangEdit = QLineEdit(self.reportTab)
+        self.aiReportLangEdit.setObjectName(u"aiReportLangEdit")
+
+        self.gridLayout_6.addWidget(self.aiReportLangEdit, 1, 0, 1, 1)
 
         self.mainStackedWidget.addTab(self.reportTab, "")
         self.settingsTab = QWidget()
@@ -1627,7 +1626,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(12)
+        self.mainStackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1657,7 +1656,6 @@ class Ui_MainWindow(object):
         self.actionViewSettings.setText(QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.actionViewProxy.setText(QCoreApplication.translate("MainWindow", u"PROXY", None))
         self.actionToggleNavigation.setText(QCoreApplication.translate("MainWindow", u"Toggle Navigation", None))
-        self.appIconLabel.setStyleSheet(QCoreApplication.translate("MainWindow", u"color: #82aaff;", None))
         self.winTitle.setText(QCoreApplication.translate("MainWindow", u"SkyFall", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mainTab), QCoreApplication.translate("MainWindow", u"SKYFALL", None))
         self.telegramUsernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
@@ -1825,7 +1823,11 @@ class Ui_MainWindow(object):
         self.bcMemoEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Memo (optional)", None))
         self.bcSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.blockchainTab), QCoreApplication.translate("MainWindow", u"BLOCKCHAIN", None))
+        self.EOIDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"EOI/EOD", None))
+        self.tailDataDetectionDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Tail Data Detection", None))
+        self.LSBDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"LSB", None))
         self.label_8.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
+        self.spectralAnalysisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Spectral Analysis", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.steganographyTab), QCoreApplication.translate("MainWindow", u"STEGANOGRAPHY", None))
         self.entitySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
@@ -1842,6 +1844,7 @@ class Ui_MainWindow(object):
         self.generateReportButton.setText(QCoreApplication.translate("MainWindow", u"Generate Report", None))
         self.saveReportButton.setText(QCoreApplication.translate("MainWindow", u"Save Report", None))
         self.aiReportDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"REPORT", None))
+        self.aiReportLangEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Lang", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.reportTab), QCoreApplication.translate("MainWindow", u"AI REPORT", None))
         self.pathToStorageEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Path to folder", None))
         self.tgApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Telegram API KEY", None))

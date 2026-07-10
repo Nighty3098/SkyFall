@@ -134,7 +134,6 @@ class MainWindow(QMainWindow):
         self.ui.actionAbout.triggered.connect(self._show_about)
         self.ui.actionOpenGitHub.triggered.connect(self._open_github)
         self.ui.actionToggleNavigation.triggered.connect(self._toggle_navigation)
-        self._connect_view_actions()
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
@@ -246,31 +245,6 @@ class MainWindow(QMainWindow):
 
         self.tgDownloader.api_id = settings.tg_api_key
         self.tgDownloader.api_hash = settings.telegram_api_hash
-
-    def _connect_view_actions(self):
-        tabs = self.ui.mainStackedWidget
-        action_map = {
-            "actionViewMain": 0,
-            "actionViewTelegramDownloader": 1,
-            "actionViewTelegramAnalyzer": 2,
-            "actionViewUsername": 3,
-            "actionViewMail": 4,
-            "actionViewDorking": 5,
-            "actionViewWeb": 6,
-            "actionViewMetadata": 7,
-            "actionViewGithub": 8,
-            "actionViewPhone": 9,
-            "actionViewMacAddr": 10,
-            "actionViewBlockchain": 11,
-            "actionViewGraph": 12,
-            "actionViewAiReport": 13,
-            "actionViewSettings": 14,
-            "actionViewProxy": 15,
-        }
-        for name, idx in action_map.items():
-            action = getattr(self.ui, name, None)
-            if action:
-                action.triggered.connect(lambda checked, i=idx: tabs.setCurrentIndex(i))
 
     def _show_about(self):
         from PySide6.QtWidgets import QMessageBox

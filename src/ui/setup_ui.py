@@ -12,5 +12,15 @@ def setup_navbar(parent):
     parent.ui.menuListWidget.setCurrentRow(0)
 
 
+def setup_view_menu(parent):
+    tabs = parent.ui.mainStackedWidget
+    menu = parent.ui.menuView
+    menu.addSeparator()
+    for i in range(tabs.count()):
+        action = menu.addAction(tabs.tabText(i))
+        action.triggered.connect(lambda checked, idx=i: tabs.setCurrentIndex(idx))
+
+
 def setup_ui(self):
     setup_navbar(self)
+    setup_view_menu(self)

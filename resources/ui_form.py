@@ -82,7 +82,7 @@ class Ui_MainWindow(object):
         self.winTitle.setObjectName(u"winTitle")
         font = QFont()
         font.setBold(True)
-        font.setItalic(True)
+        font.setItalic(False)
         self.winTitle.setFont(font)
         self.winTitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -1574,8 +1574,12 @@ class Ui_MainWindow(object):
         self.menuView.setObjectName(u"menuView")
         self.menuHelp = QMenu(self.menuBar)
         self.menuHelp.setObjectName(u"menuHelp")
+        self.menu_SkyFall = QMenu(self.menuBar)
+        self.menu_SkyFall.setObjectName(u"menu_SkyFall")
+        self.menu_SkyFall.setTearOffEnabled(True)
         MainWindow.setMenuBar(self.menuBar)
 
+        self.menuBar.addAction(self.menu_SkyFall.menuAction())
         self.menuBar.addAction(self.menuFile.menuAction())
         self.menuBar.addAction(self.menuView.menuAction())
         self.menuBar.addAction(self.menuHelp.menuAction())
@@ -1589,7 +1593,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(14)
+        self.mainStackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1820,5 +1824,6 @@ class Ui_MainWindow(object):
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))
         self.menuView.setTitle(QCoreApplication.translate("MainWindow", u"View", None))
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
+        self.menu_SkyFall.setTitle(QCoreApplication.translate("MainWindow", u" SkyFall", None))
     # retranslateUi
 

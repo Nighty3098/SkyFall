@@ -11,6 +11,8 @@ def setup_navbar(parent):
     parent.ui.menuListWidget.addItems(tabs)
     parent.ui.menuListWidget.setCurrentRow(0)
 
+    parent.ui.menuListWidget.setVisible(False)
+
 
 def setup_view_menu(parent):
     tabs = parent.ui.mainStackedWidget

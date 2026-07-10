@@ -315,8 +315,7 @@ QLabel#metadataFilePath {
 QLabel#winTitle {
     color: #C1C1C1;
     font-size: 200px;
-    font-style: italic;
-    font-family: "Caveat", monospace;
+    font-family: "Bebas Neue", monospace;
 }
 
 QScrollBar:vertical {

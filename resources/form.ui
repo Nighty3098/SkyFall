@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>14</number>
+         <number>0</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -92,7 +92,7 @@
              <widget class="QLabel" name="winTitle">
               <property name="font">
                <font>
-                <italic>true</italic>
+                <italic>false</italic>
                 <bold>true</bold>
                </font>
               </property>
@@ -2372,6 +2372,15 @@
     <addaction name="actionAbout"/>
     <addaction name="actionOpenGitHub"/>
    </widget>
+   <widget class="QMenu" name="menu_SkyFall">
+    <property name="tearOffEnabled">
+     <bool>true</bool>
+    </property>
+    <property name="title">
+     <string> SkyFall</string>
+    </property>
+   </widget>
+   <addaction name="menu_SkyFall"/>
    <addaction name="menuFile"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>

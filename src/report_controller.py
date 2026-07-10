@@ -13,6 +13,21 @@ class ReportController:
         self.ui = ui
         self.case_manager = case_manager
         self._generating = False
+        self._ollama_base_url = "http://127.0.0.1:11434"
+
+    async def update_ollama_models(self):
+        import httpx
+
+        try:
+            async with httpx.AsyncClient() as client:
+                resp = await client.get(f"{self._ollama_base_url}/api/tags", timeout=10)
+                resp.raise_for_status()
+                models = resp.json().get("models", [])
+                self.ui.ollamaModelsSelector.clear()
+                for m in models:
+                    self.ui.ollamaModelsSelector.addItem(m["name"])
+        except Exception as e:
+            logger.error(f"Failed to fetch Ollama models: {e}")
 
     @staticmethod
     def _server_params() -> StdioServerParameters:
@@ -30,6 +45,17 @@ class ReportController:
                 result = await session.call_tool(tool_name, arguments or {})
                 return result.content[0].text
 
+    async def _call_tools(self, *calls: tuple[str, dict]) -> list[str]:
+        params = self._server_params()
+        async with stdio_client(params) as (read, write):
+            async with ClientSession(read, write) as session:
+                await session.initialize()
+                results = []
+                for tool_name, arguments in calls:
+                    result = await session.call_tool(tool_name, arguments or {})
+                    results.append(result.content[0].text)
+                return results
+
     async def generate_report(self):
         if self._generating:
             logger.warning("Report generation already in progress")
@@ -41,16 +67,23 @@ class ReportController:
             QApplication.processEvents()
 
             data = self._collect_all_data()
-
             language = self.ui.aiReportLangEdit.text().strip() or "Russian"
 
-            report_text = await self._call_tool(
-                "generate_osint_report",
-                {
+            prelude = [
+                ("set_ollama_url", {"url": self._ollama_base_url}),
+            ]
+            model = self.ui.ollamaModelsSelector.currentText()
+            if model:
+                prelude.append(("set_ollama_model", {"model_name": model}))
+
+            results = await self._call_tools(
+                *prelude,
+                ("generate_osint_report", {
                     "app_data": json.dumps(data, ensure_ascii=False, default=str),
                     "language": language,
-                },
+                }),
             )
+            report_text = results[-1]
 
             if report_text and report_text.strip():
                 self.ui.aiReportDebug.setPlainText(report_text)

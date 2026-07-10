@@ -284,3 +284,7 @@ def setup_report_connectors(controller):
         lambda: asyncio.ensure_future(controller.generate_report())
     )
     controller.ui.saveReportButton.clicked.connect(controller.save_report)
+
+    controller.ui.updateOllamaListButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.update_ollama_models())
+    )

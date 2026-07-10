@@ -78,10 +78,13 @@ class ReportController:
 
             results = await self._call_tools(
                 *prelude,
-                ("generate_osint_report", {
-                    "app_data": json.dumps(data, ensure_ascii=False, default=str),
-                    "language": language,
-                }),
+                (
+                    "generate_osint_report",
+                    {
+                        "app_data": json.dumps(data, ensure_ascii=False, default=str),
+                        "language": language,
+                    },
+                ),
             )
             report_text = results[-1]
 

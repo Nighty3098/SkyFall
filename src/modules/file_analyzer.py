@@ -5,7 +5,6 @@ import os
 import re as _re
 import stat
 from pathlib import Path
-from typing import Optional
 
 import hachoir.core.config as _hconfig
 import hachoir.metadata.setter as _hms
@@ -350,7 +349,7 @@ class FileAnalyzer:
 
         return result
 
-    async def get_gps_coordinates(self, path) -> Optional[tuple[float, float]]:
+    async def get_gps_coordinates(self, path) -> tuple[float, float] | None:
         def _extract(path):
             parser = createParser(str(path))
             if not parser:

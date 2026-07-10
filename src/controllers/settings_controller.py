@@ -129,8 +129,6 @@ class Settings:
         except FileNotFoundError:
             logger.warning(f"{qss_path} not found, using default theme")
 
-
-
     def save(self):
         logger.debug("Saving settings")
         for key, widget_name in FIELD_MAP.items():

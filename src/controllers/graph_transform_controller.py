@@ -363,6 +363,7 @@ def _pack_content(lines: list[str]) -> str:
 
 # ── Universal transform runner ────────────────────────────────────
 
+
 async def _run_transform(
     modules: dict,
     module_key: str,
@@ -376,11 +377,14 @@ async def _run_transform(
         msg = label or module_key.replace("_", " ").title().replace(" ", "")
         return TransformResult(content=f"{msg} module not available")
     fn = getattr(engine, method)
-    result = await fn(input_value) if asyncio.iscoroutinefunction(fn) else fn(input_value)
+    result = (
+        await fn(input_value) if asyncio.iscoroutinefunction(fn) else fn(input_value)
+    )
     return parser(result, input_value)
 
 
 # ── Parsers ───────────────────────────────────────────────────────
+
 
 def _parse_username_search(results, username):
     claimed = [r for r in results if r.get("status") == "Claimed"]
@@ -473,9 +477,7 @@ def _parse_domain_dns(data, domain):
             for rec in records[:3]:
                 lines.append(bullet(str(rec)))
                 child_type = "IP" if rtype == "A" else "Custom"
-                children.append(
-                    ChildNodeDef(title=str(rec), entity_type=child_type)
-                )
+                children.append(ChildNodeDef(title=str(rec), entity_type=child_type))
     soa = data.get("SOA", {})
     if soa:
         lines.append(section("SOA"))
@@ -594,9 +596,7 @@ def _parse_domain_whois(data, domain):
         )
     fields = [kv(k, v) for k, v in data.items() if not k.startswith("_")]
     content = "\n".join(
-        [divider(), title(f"WHOIS: {domain}")]
-        + fields
-        + [end_of("whois"), divider()]
+        [divider(), title(f"WHOIS: {domain}")] + fields + [end_of("whois"), divider()]
     )
     return TransformResult(
         children=children,
@@ -609,9 +609,7 @@ def _parse_domain_subdomains(raw, domain):
         return TransformResult(content=str(raw))
     result_lines = raw.split("\n")
     subs = [
-        ln.strip().lstrip("- ").strip()
-        for ln in result_lines
-        if ln.startswith("  - ")
+        ln.strip().lstrip("- ").strip() for ln in result_lines if ln.startswith("  - ")
     ]
     children = []
     for sub in subs[:CHILD_THRESHOLD]:
@@ -684,9 +682,7 @@ def _parse_domain_malware(data, domain):
             ChildNodeDef(
                 title=f"Reputation: {status}",
                 entity_type="Custom",
-                content=(
-                    f"{kv('Source', source)}\n{kv('Malicious votes', malicious)}"
-                ),
+                content=(f"{kv('Source', source)}\n{kv('Malicious votes', malicious)}"),
             )
         ],
         content="\n".join(
@@ -729,9 +725,7 @@ def _parse_domain_cookies(raw, domain):
             val = line.split(":", 1)[1].strip()
             children.append(
                 ChildNodeDef(
-                    title=f"Cookie: {name}"
-                    if len(name) < 50
-                    else name[:47] + "...",
+                    title=f"Cookie: {name}" if len(name) < 50 else name[:47] + "...",
                     entity_type="Custom",
                     content=val,
                 )
@@ -791,8 +785,7 @@ def _parse_domain_nmap(data, domain):
         for p in ports:
             lines.append(
                 bullet(
-                    f"Port {p['port']}/{p.get('service', '?')}"
-                    f" - {p.get('state', '?')}"
+                    f"Port {p['port']}/{p.get('service', '?')} - {p.get('state', '?')}"
                 )
             )
     if not any(data.values()):
@@ -996,93 +989,146 @@ def _parse_mac_geo(data, mac):
     content_lines.append(end_of("mac geo"))
     content_lines.append(divider())
     if children:
-        return TransformResult(
-            children=children, content=_pack_content(content_lines)
-        )
+        return TransformResult(children=children, content=_pack_content(content_lines))
     return TransformResult(content="No geolocation data found for this MAC")
 
 
 # ── Transform wrappers ────────────────────────────────────────────
 
+
 async def _transform_username_search(username, modules):
-    return await _run_transform(modules, "username_search", "acheck", username, _parse_username_search)
+    return await _run_transform(
+        modules, "username_search", "acheck", username, _parse_username_search
+    )
 
 
 async def _transform_maigret_search(username, modules):
-    return await _run_transform(modules, "maigret_search", "search_and_report", username, _parse_maigret_search)
+    return await _run_transform(
+        modules, "maigret_search", "search_and_report", username, _parse_maigret_search
+    )
 
 
 async def _transform_domain_ip(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_ip_and_location", domain, _parse_domain_ip)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_ip_and_location", domain, _parse_domain_ip
+    )
 
 
 async def _transform_domain_dns(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_dns", domain, _parse_domain_dns)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_dns", domain, _parse_domain_dns
+    )
 
 
 async def _transform_domain_ssl(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_ssl_tls_info", domain, _parse_domain_ssl)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_ssl_tls_info", domain, _parse_domain_ssl
+    )
 
 
 async def _transform_domain_webstack(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "analyze_web_stack", domain, _parse_domain_webstack)
+    return await _run_transform(
+        modules, "domain_analyzer", "analyze_web_stack", domain, _parse_domain_webstack
+    )
 
 
 async def _transform_domain_whois(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_whois_info", domain, _parse_domain_whois)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_whois_info", domain, _parse_domain_whois
+    )
 
 
 async def _transform_domain_subdomains(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "find_subdomains", domain, _parse_domain_subdomains)
+    return await _run_transform(
+        modules, "domain_analyzer", "find_subdomains", domain, _parse_domain_subdomains
+    )
 
 
 async def _transform_domain_ct(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_certificate_transparency", domain, _parse_domain_ct)
+    return await _run_transform(
+        modules,
+        "domain_analyzer",
+        "get_certificate_transparency",
+        domain,
+        _parse_domain_ct,
+    )
 
 
 async def _transform_domain_social(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_social_tags", domain, _parse_domain_social)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_social_tags", domain, _parse_domain_social
+    )
 
 
 async def _transform_domain_malware(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "check_malware_reputation", domain, _parse_domain_malware)
+    return await _run_transform(
+        modules,
+        "domain_analyzer",
+        "check_malware_reputation",
+        domain,
+        _parse_domain_malware,
+    )
 
 
 async def _transform_domain_securitytxt(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_security_txt", domain, _parse_domain_securitytxt)
+    return await _run_transform(
+        modules,
+        "domain_analyzer",
+        "get_security_txt",
+        domain,
+        _parse_domain_securitytxt,
+    )
 
 
 async def _transform_domain_cookies(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_cookies", domain, _parse_domain_cookies)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_cookies", domain, _parse_domain_cookies
+    )
 
 
 async def _transform_domain_robots(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_robots_txt", domain, _parse_domain_robots)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_robots_txt", domain, _parse_domain_robots
+    )
 
 
 async def _transform_domain_nmap(domain, modules):
-    return await _run_transform(modules, "domain_analyzer", "run_nmap_scan", domain, _parse_domain_nmap)
+    return await _run_transform(
+        modules, "domain_analyzer", "run_nmap_scan", domain, _parse_domain_nmap
+    )
 
 
 async def _transform_ip_geo(ip_addr, modules):
-    return await _run_transform(modules, "domain_analyzer", "get_ip_and_location", ip_addr, _parse_ip_geo)
+    return await _run_transform(
+        modules, "domain_analyzer", "get_ip_and_location", ip_addr, _parse_ip_geo
+    )
 
 
 async def _transform_email_intelx(email, modules):
-    return await _run_transform(modules, "mail_search", "get_data", email, _parse_email_intelx, label="IntelX")
+    return await _run_transform(
+        modules, "mail_search", "get_data", email, _parse_email_intelx, label="IntelX"
+    )
 
 
 async def _transform_phone_parse(phone, modules):
-    return await _run_transform(modules, "phone_search", "parse_and_validate", phone, _parse_phone_parse)
+    return await _run_transform(
+        modules, "phone_search", "parse_and_validate", phone, _parse_phone_parse
+    )
 
 
 async def _transform_phone_lookup(phone, modules):
-    return await _run_transform(modules, "phone_search", "reverse_lookup", phone, _parse_phone_lookup)
+    return await _run_transform(
+        modules, "phone_search", "reverse_lookup", phone, _parse_phone_lookup
+    )
 
 
 async def _transform_phone_leaks(phone, modules):
-    return await _run_transform(modules, "phone_search", "check_leaks", phone, _parse_phone_leaks)
+    return await _run_transform(
+        modules, "phone_search", "check_leaks", phone, _parse_phone_leaks
+    )
 
 
 async def _transform_mac_geo(mac, modules):
-    return await _run_transform(modules, "mac_location", "locate_async", mac, _parse_mac_geo)
+    return await _run_transform(
+        modules, "mac_location", "locate_async", mac, _parse_mac_geo
+    )

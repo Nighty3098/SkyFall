@@ -143,6 +143,7 @@ class MainWindow(QMainWindow):
 
         self.init_font("resources/Caveat-VariableFont_wght.ttf")
         self.init_font("resources/IosevkaCharonMono-Regular.ttf")
+        self.init_font("resources/BebasNeue-Regular.ttf")
 
     def init_font(self, font_path):
         font_id = QFontDatabase.addApplicationFont(font_path)
@@ -247,15 +248,38 @@ class MainWindow(QMainWindow):
         self.tgDownloader.api_hash = settings.telegram_api_hash
 
     def _show_about(self):
-        from PySide6.QtWidgets import QMessageBox
+        from PySide6.QtGui import QPixmap
+        from PySide6.QtWidgets import QDialog, QLabel, QSpacerItem, QVBoxLayout
 
-        QMessageBox.about(
-            self,
-            "About SkyFall",
-            "<h2>SkyFall 1.0.1</h2>"
+        dlg = QDialog(self)
+        dlg.setWindowTitle("About SkyFall")
+        dlg.setFixedSize(400, 500)
+
+        layout = QVBoxLayout(dlg)
+        layout.setAlignment(Qt.AlignCenter)
+
+        icon_path = Path(__file__).parent / "resources" / "icon.jpg"
+        if icon_path.exists():
+            pixmap = QPixmap(str(icon_path))
+            icon = QLabel()
+            icon.setPixmap(
+                pixmap.scaled(256, 256, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+            )
+            icon.setAlignment(Qt.AlignCenter)
+            layout.addWidget(icon)
+
+        layout.addSpacerItem(QSpacerItem(0, 50))
+
+        text = QLabel(
+            "<h1>SkyFall 1.0.1</h1>"
             "<p>OSINT investigation toolkit</p>"
-            "<p>Coded by <a href='https://nighty3098.vercel.app'>Nighty3098</a></p>",
+            "<p>Coded by <a href='https://nighty3098.vercel.app'>Nighty3098</a></p>"
         )
+        text.setAlignment(Qt.AlignCenter)
+        text.setOpenExternalLinks(True)
+        layout.addWidget(text)
+
+        dlg.exec()
 
     def _open_github(self):
         from PySide6.QtCore import QUrl

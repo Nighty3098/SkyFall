@@ -2,6 +2,7 @@ import asyncio
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QFileDialog
 
 from src.context_menus import open_dorks_list_menu
@@ -218,7 +219,7 @@ def setup_blockchain_connectors(controller: "BlockchainController"):
     )
 
 
-def setup_graph_connectors(ui, case_manager=None):
+def setup_graph_connectors(ui, node_controller, case_manager=None):
     data_dir = str(Path.home() / ".skyfall" / "data")
     if case_manager:
         data_dir = case_manager.get_graph_dir()
@@ -273,6 +274,20 @@ def setup_graph_connectors(ui, case_manager=None):
         ui.graphFilterCombo.addItem(etype)
 
     ui.entitySearchEdit.textChanged.connect(ui.entityPalette.set_filter)
+
+    ui.nodeTypeCombo.addItems(ENTITY_NAMES)
+    ui.nodeEvidenceList.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
+    ui.nodeEvidenceList.itemDoubleClicked.connect(node_controller._open_evidence)
+    ui.nodeEvidenceList.customContextMenuRequested.connect(
+        node_controller._evidence_context_menu
+    )
+    ui.nodeTitleEdit.textChanged.connect(node_controller._on_title_changed)
+    ui.nodeTypeCombo.currentTextChanged.connect(node_controller._on_type_changed)
+    ui.nodeContentEdit.textChanged.connect(node_controller._on_content_changed)
+    ui.nodeEvidenceAddFileBtn.clicked.connect(node_controller._add_file)
+    ui.nodeEvidenceAddUrlBtn.clicked.connect(node_controller._add_url)
+    ui.nodeEvidenceRemoveBtn.clicked.connect(node_controller._remove_evidence)
+    ui.graphWidget.selectionChanged.connect(node_controller.show_node)
 
 
 def setup_graph_transform_connectors(ui, controller):

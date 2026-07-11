@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>13</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1976,28 +1976,34 @@
               </item>
              </layout>
             </widget>
-            <widget class="PropertiesPanel" name="nodeEditPanel" native="true">
+            <widget class="QWidget" name="verticalWidget" native="true">
              <property name="minimumSize">
               <size>
-               <width>400</width>
+               <width>0</width>
                <height>0</height>
               </size>
              </property>
-             <layout class="QVBoxLayout" name="nodeEditLayout">
-              <property name="spacing">
-               <number>6</number>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_13">
+              <property name="sizeConstraint">
+               <enum>QLayout::SizeConstraint::SetFixedSize</enum>
               </property>
               <property name="leftMargin">
-               <number>6</number>
+               <number>9</number>
               </property>
               <property name="topMargin">
-               <number>6</number>
+               <number>9</number>
               </property>
               <property name="rightMargin">
-               <number>6</number>
+               <number>9</number>
               </property>
               <property name="bottomMargin">
-               <number>6</number>
+               <number>9</number>
               </property>
               <item>
                <widget class="QLineEdit" name="nodeTitleEdit">
@@ -2027,6 +2033,18 @@
               </item>
               <item>
                <layout class="QHBoxLayout" name="nodeEvidenceBtnLayout">
+                <property name="leftMargin">
+                 <number>0</number>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <property name="rightMargin">
+                 <number>0</number>
+                </property>
+                <property name="bottomMargin">
+                 <number>0</number>
+                </property>
                 <item>
                  <widget class="QPushButton" name="nodeEvidenceAddFileBtn">
                   <property name="text">
@@ -2441,11 +2459,6 @@
    <class>GraphWidget</class>
    <extends>QGraphicsView</extends>
    <header location="global">src.libs.graph_lib</header>
-  </customwidget>
-  <customwidget>
-   <class>PropertiesPanel</class>
-   <extends>QWidget</extends>
-   <header location="global">src.libs.graph_panel</header>
   </customwidget>
   <customwidget>
    <class>EntityPalette</class>

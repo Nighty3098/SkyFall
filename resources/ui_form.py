@@ -19,14 +19,14 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
     QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
-    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
-    QSpinBox, QSplitter, QTabWidget, QVBoxLayout,
-    QWidget)
+    QLabel, QLayout, QLineEdit, QListWidget,
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
+    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy,
+    QSpacerItem, QSpinBox, QSplitter, QTabWidget,
+    QVBoxLayout, QWidget)
 
 from src.libs.graph_lib import GraphWidget
-from src.libs.graph_panel import (EntityPalette, PropertiesPanel)
+from src.libs.graph_panel import EntityPalette
 from src.ui.drop_widget import DropWidget
 
 class Ui_MainWindow(object):
@@ -1201,24 +1201,13 @@ class Ui_MainWindow(object):
         self.mainStackedWidget.addTab(self.blockchainTab, "")
         self.steganographyTab = QWidget()
         self.steganographyTab.setObjectName(u"steganographyTab")
-        self.gridLayout_10 = QGridLayout(self.steganographyTab)
-        self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.EOIDebug = QPlainTextEdit(self.steganographyTab)
-        self.EOIDebug.setObjectName(u"EOIDebug")
-
-        self.gridLayout_10.addWidget(self.EOIDebug, 0, 3, 1, 1)
-
-        self.tailDataDetectionDebug = QPlainTextEdit(self.steganographyTab)
-        self.tailDataDetectionDebug.setObjectName(u"tailDataDetectionDebug")
-
-        self.gridLayout_10.addWidget(self.tailDataDetectionDebug, 0, 4, 1, 1)
-
-        self.LSBDebug = QPlainTextEdit(self.steganographyTab)
-        self.LSBDebug.setObjectName(u"LSBDebug")
-
-        self.gridLayout_10.addWidget(self.LSBDebug, 0, 1, 1, 1)
-
-        self.steganoFileDrop = DropWidget(self.steganographyTab)
+        self.steganographyLayout = QHBoxLayout(self.steganographyTab)
+        self.steganographyLayout.setObjectName(u"steganographyLayout")
+        self.steganographyLayout.setContentsMargins(0, 0, 0, 0)
+        self.steganographySplitter = QSplitter(self.steganographyTab)
+        self.steganographySplitter.setObjectName(u"steganographySplitter")
+        self.steganographySplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.steganoFileDrop = DropWidget(self.steganographySplitter)
         self.steganoFileDrop.setObjectName(u"steganoFileDrop")
         self.verticalLayout_2 = QVBoxLayout(self.steganoFileDrop)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
@@ -1232,13 +1221,21 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_2.addWidget(self.label_8)
 
-
-        self.gridLayout_10.addWidget(self.steganoFileDrop, 0, 0, 1, 1)
-
-        self.spectralAnalysisDebug = QPlainTextEdit(self.steganographyTab)
+        self.steganographySplitter.addWidget(self.steganoFileDrop)
+        self.LSBDebug = QPlainTextEdit(self.steganographySplitter)
+        self.LSBDebug.setObjectName(u"LSBDebug")
+        self.steganographySplitter.addWidget(self.LSBDebug)
+        self.spectralAnalysisDebug = QPlainTextEdit(self.steganographySplitter)
         self.spectralAnalysisDebug.setObjectName(u"spectralAnalysisDebug")
+        self.steganographySplitter.addWidget(self.spectralAnalysisDebug)
+        self.EOIDebug = QPlainTextEdit(self.steganographySplitter)
+        self.EOIDebug.setObjectName(u"EOIDebug")
+        self.steganographySplitter.addWidget(self.EOIDebug)
+        self.tailDataDetectionDebug = QPlainTextEdit(self.steganographySplitter)
+        self.tailDataDetectionDebug.setObjectName(u"tailDataDetectionDebug")
+        self.steganographySplitter.addWidget(self.tailDataDetectionDebug)
 
-        self.gridLayout_10.addWidget(self.spectralAnalysisDebug, 0, 2, 1, 1)
+        self.steganographyLayout.addWidget(self.steganographySplitter)
 
         self.mainStackedWidget.addTab(self.steganographyTab, "")
         self.graphTab = QWidget()
@@ -1321,55 +1318,57 @@ class Ui_MainWindow(object):
         self.graphCenterLayout.addWidget(self.graphWidget)
 
         self.graphSplitter.addWidget(self.graphCenterPanel)
-        self.nodeEditPanel = PropertiesPanel(self.graphSplitter)
-        self.nodeEditPanel.setObjectName(u"nodeEditPanel")
-        self.nodeEditPanel.setMinimumSize(QSize(400, 0))
-        self.nodeEditLayout = QVBoxLayout(self.nodeEditPanel)
-        self.nodeEditLayout.setSpacing(6)
-        self.nodeEditLayout.setObjectName(u"nodeEditLayout")
-        self.nodeEditLayout.setContentsMargins(6, 6, 6, 6)
-        self.nodeTitleEdit = QLineEdit(self.nodeEditPanel)
+        self.verticalWidget = QWidget(self.graphSplitter)
+        self.verticalWidget.setObjectName(u"verticalWidget")
+        self.verticalWidget.setMinimumSize(QSize(0, 0))
+        self.verticalWidget.setMaximumSize(QSize(16777215, 16777215))
+        self.verticalLayout_13 = QVBoxLayout(self.verticalWidget)
+        self.verticalLayout_13.setObjectName(u"verticalLayout_13")
+        self.verticalLayout_13.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
+        self.verticalLayout_13.setContentsMargins(9, 9, 9, 9)
+        self.nodeTitleEdit = QLineEdit(self.verticalWidget)
         self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
 
-        self.nodeEditLayout.addWidget(self.nodeTitleEdit)
+        self.verticalLayout_13.addWidget(self.nodeTitleEdit)
 
-        self.nodeTypeCombo = QComboBox(self.nodeEditPanel)
+        self.nodeTypeCombo = QComboBox(self.verticalWidget)
         self.nodeTypeCombo.setObjectName(u"nodeTypeCombo")
 
-        self.nodeEditLayout.addWidget(self.nodeTypeCombo)
+        self.verticalLayout_13.addWidget(self.nodeTypeCombo)
 
-        self.nodeContentEdit = QPlainTextEdit(self.nodeEditPanel)
+        self.nodeContentEdit = QPlainTextEdit(self.verticalWidget)
         self.nodeContentEdit.setObjectName(u"nodeContentEdit")
         self.nodeContentEdit.setMinimumSize(QSize(250, 60))
 
-        self.nodeEditLayout.addWidget(self.nodeContentEdit)
+        self.verticalLayout_13.addWidget(self.nodeContentEdit)
 
-        self.nodeEvidenceList = QListWidget(self.nodeEditPanel)
+        self.nodeEvidenceList = QListWidget(self.verticalWidget)
         self.nodeEvidenceList.setObjectName(u"nodeEvidenceList")
 
-        self.nodeEditLayout.addWidget(self.nodeEvidenceList)
+        self.verticalLayout_13.addWidget(self.nodeEvidenceList)
 
         self.nodeEvidenceBtnLayout = QHBoxLayout()
         self.nodeEvidenceBtnLayout.setObjectName(u"nodeEvidenceBtnLayout")
-        self.nodeEvidenceAddFileBtn = QPushButton(self.nodeEditPanel)
+        self.nodeEvidenceBtnLayout.setContentsMargins(0, 0, 0, 0)
+        self.nodeEvidenceAddFileBtn = QPushButton(self.verticalWidget)
         self.nodeEvidenceAddFileBtn.setObjectName(u"nodeEvidenceAddFileBtn")
 
         self.nodeEvidenceBtnLayout.addWidget(self.nodeEvidenceAddFileBtn)
 
-        self.nodeEvidenceAddUrlBtn = QPushButton(self.nodeEditPanel)
+        self.nodeEvidenceAddUrlBtn = QPushButton(self.verticalWidget)
         self.nodeEvidenceAddUrlBtn.setObjectName(u"nodeEvidenceAddUrlBtn")
 
         self.nodeEvidenceBtnLayout.addWidget(self.nodeEvidenceAddUrlBtn)
 
-        self.nodeEvidenceRemoveBtn = QPushButton(self.nodeEditPanel)
+        self.nodeEvidenceRemoveBtn = QPushButton(self.verticalWidget)
         self.nodeEvidenceRemoveBtn.setObjectName(u"nodeEvidenceRemoveBtn")
 
         self.nodeEvidenceBtnLayout.addWidget(self.nodeEvidenceRemoveBtn)
 
 
-        self.nodeEditLayout.addLayout(self.nodeEvidenceBtnLayout)
+        self.verticalLayout_13.addLayout(self.nodeEvidenceBtnLayout)
 
-        self.graphSplitter.addWidget(self.nodeEditPanel)
+        self.graphSplitter.addWidget(self.verticalWidget)
 
         self.graphMainLayout.addWidget(self.graphSplitter)
 
@@ -1593,7 +1592,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(13)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1774,11 +1773,11 @@ class Ui_MainWindow(object):
         self.bcMemoEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Memo (optional)", None))
         self.bcSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.blockchainTab), QCoreApplication.translate("MainWindow", u"BLOCKCHAIN", None))
+        self.label_8.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
+        self.LSBDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"LSB", None))
+        self.spectralAnalysisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Spectral Analysis", None))
         self.EOIDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"EOI/EOD", None))
         self.tailDataDetectionDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Tail Data Detection", None))
-        self.LSBDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"LSB", None))
-        self.label_8.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
-        self.spectralAnalysisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Spectral Analysis", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.steganographyTab), QCoreApplication.translate("MainWindow", u"STEGANOGRAPHY", None))
         self.entitySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))

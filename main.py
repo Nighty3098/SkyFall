@@ -39,6 +39,7 @@ from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
+from src.controllers.graph_node_controller import GraphNodeController
 from src.controllers.graph_transform_controller import GraphTransformController
 from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.mail_controller import MailController
@@ -50,7 +51,7 @@ from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
 from src.libs.graph_lib import GraphWidget
-from src.libs.graph_panel import EntityPalette, PropertiesPanel
+from src.libs.graph_panel import EntityPalette
 from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
@@ -79,10 +80,6 @@ class Loader(QUiLoader):
             return widget
         if class_name == "GraphWidget":
             widget = GraphWidget(parent)
-            widget.setObjectName(name)
-            return widget
-        if class_name == "PropertiesPanel":
-            widget = PropertiesPanel(parent)
             widget.setObjectName(name)
             return widget
         if class_name == "EntityPalette":
@@ -137,9 +134,6 @@ class MainWindow(QMainWindow):
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
-
-        self.ui.graphWidget.selectionChanged.connect(self.ui.nodeEditPanel.show_node)
-        self.ui.nodeEditPanel._find_children()
 
         self.init_font("resources/Caveat-VariableFont_wght.ttf")
         self.init_font("resources/IosevkaCharonMono-Regular.ttf")
@@ -311,7 +305,11 @@ class MainWindow(QMainWindow):
         )
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.tgDownloaderController = TgDownloaderController(
-            self.ui, self.tgDownloader, self.proxy, self.case_manager, file_analyzer=self.fileAnalyzer
+            self.ui,
+            self.tgDownloader,
+            self.proxy,
+            self.case_manager,
+            file_analyzer=self.fileAnalyzer,
         )
         self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
         self.githubController = GitHubController(self.ui, self.githubSearch)
@@ -324,6 +322,7 @@ class MainWindow(QMainWindow):
         )
 
         self.blockchainController = BlockchainController(self.ui, self.blockchainSearch)
+        self.nodeController = GraphNodeController(self.ui)
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
@@ -354,7 +353,7 @@ class MainWindow(QMainWindow):
         self.reportController = ReportController(self.ui, self.case_manager)
         setup_report_connectors(self.reportController)
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
-        setup_graph_connectors(self.ui, self.case_manager)
+        setup_graph_connectors(self.ui, self.nodeController, self.case_manager)
 
         self._wire_case_auto_save()
 

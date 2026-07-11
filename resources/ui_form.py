@@ -19,11 +19,11 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
     QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
-    QLabel, QLayout, QLineEdit, QListWidget,
-    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
-    QPlainTextEdit, QProgressBar, QPushButton, QSizePolicy,
-    QSpacerItem, QSpinBox, QSplitter, QTabWidget,
-    QVBoxLayout, QWidget)
+    QLabel, QLineEdit, QListWidget, QListWidgetItem,
+    QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
+    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
+    QSpinBox, QSplitter, QTabWidget, QVBoxLayout,
+    QWidget)
 
 from src.libs.graph_lib import GraphWidget
 from src.libs.graph_panel import EntityPalette
@@ -48,10 +48,10 @@ class Ui_MainWindow(object):
         self.actionToggleNavigation.setObjectName(u"actionToggleNavigation")
         self.centralwidget = QWidget(MainWindow)
         self.centralwidget.setObjectName(u"centralwidget")
-        self.verticalLayout_22 = QVBoxLayout(self.centralwidget)
-        self.verticalLayout_22.setSpacing(0)
-        self.verticalLayout_22.setObjectName(u"verticalLayout_22")
-        self.verticalLayout_22.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout_10 = QHBoxLayout(self.centralwidget)
+        self.horizontalLayout_10.setSpacing(0)
+        self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
+        self.horizontalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
@@ -1250,7 +1250,7 @@ class Ui_MainWindow(object):
         self.entityPanel.setObjectName(u"entityPanel")
         self.entityLayout = QVBoxLayout(self.entityPanel)
         self.entityLayout.setObjectName(u"entityLayout")
-        self.entityLayout.setContentsMargins(-1, -1, 0, -1)
+        self.entityLayout.setContentsMargins(-1, -1, 9, -1)
         self.entitySearchEdit = QLineEdit(self.entityPanel)
         self.entitySearchEdit.setObjectName(u"entitySearchEdit")
 
@@ -1324,7 +1324,6 @@ class Ui_MainWindow(object):
         self.verticalWidget.setMaximumSize(QSize(16777215, 16777215))
         self.verticalLayout_13 = QVBoxLayout(self.verticalWidget)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
-        self.verticalLayout_13.setSizeConstraint(QLayout.SizeConstraint.SetFixedSize)
         self.verticalLayout_13.setContentsMargins(9, 9, 9, 9)
         self.nodeTitleEdit = QLineEdit(self.verticalWidget)
         self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
@@ -1561,7 +1560,7 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.addWidget(self.mainStackedWidget)
 
 
-        self.verticalLayout_22.addLayout(self.horizontalLayout_6)
+        self.horizontalLayout_10.addLayout(self.horizontalLayout_6)
 
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QMenuBar(MainWindow)

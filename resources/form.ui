@@ -14,7 +14,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <layout class="QVBoxLayout" name="verticalLayout_22">
+   <layout class="QHBoxLayout" name="horizontalLayout_10">
     <property name="spacing">
      <number>0</number>
     </property>
@@ -1885,7 +1885,7 @@
             <widget class="QWidget" name="entityPanel" native="true">
              <layout class="QVBoxLayout" name="entityLayout">
               <property name="rightMargin">
-               <number>0</number>
+               <number>9</number>
               </property>
               <item>
                <widget class="QLineEdit" name="entitySearchEdit">
@@ -1990,9 +1990,6 @@
               </size>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_13">
-              <property name="sizeConstraint">
-               <enum>QLayout::SizeConstraint::SetFixedSize</enum>
-              </property>
               <property name="leftMargin">
                <number>9</number>
               </property>

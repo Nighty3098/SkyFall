@@ -1188,7 +1188,9 @@ class TgDownloader:
 
                     meta = {}
                     if reply_media_path and self.file_analyzer is not None:
-                        meta = self.file_analyzer.extract_file_info_sync(reply_media_path)
+                        meta = self.file_analyzer.extract_file_info_sync(
+                            reply_media_path
+                        )
 
                     add_discussion(
                         session,

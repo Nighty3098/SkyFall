@@ -57,10 +57,12 @@ class TgDownloader:
         config: dict,
         log_callback: Callable = logger.info,
         progress_callback: Callable | None = None,
+        file_analyzer: object | None = None,
     ):
         self.config = config
         self.log_callback = log_callback
         self.progress_callback = progress_callback
+        self.file_analyzer = file_analyzer
 
         self.api_id = config.get("api_id")
         self.api_hash = config.get("api_hash")
@@ -90,6 +92,7 @@ class TgDownloader:
         self.MEDIA_DIR = None
         self.MAX_CONCURRENT_DOWNLOADS = 2
         self._seen_user_ids: set[int] = set()
+        self._topics_mode = False
 
     def _get_env_creds(self):
         env_api_id = os.getenv("API_ID", "")
@@ -184,9 +187,30 @@ class TgDownloader:
         async with self.client:
             self.session = session_local()
             try:
-                self.channel = await self.client.get_entity(self.channel_name)
+                raw = self.channel_name.strip()
+
+                def _normalize(val):
+                    s = str(abs(val))
+                    return int(s[3:]) if s.startswith("100") else int(s)
+
+                try:
+                    target_id = _normalize(int(raw))
+                    self.channel = None
+                    for dialog in await self.client.get_dialogs(limit=200):
+                        eid = getattr(dialog.entity, "id", None)
+                        if eid is not None and _normalize(eid) == target_id:
+                            self.channel = dialog.entity
+                            break
+                    if self.channel is None:
+                        self.log_callback(
+                            f"Error: channel with ID {raw} not found in dialogs"
+                        )
+                        return
+                except (ValueError, TypeError):
+                    self.channel = await self.client.get_entity(raw)
                 logger.debug(
-                    "run: channel entity: id={}, username={}, title={}",
+                    "run: channel entity: type={}, id={}, username={}, title={}",
+                    type(self.channel).__name__,
                     getattr(self.channel, "id", "N/A"),
                     getattr(self.channel, "username", "N/A"),
                     getattr(self.channel, "title", self.channel_name),
@@ -194,6 +218,16 @@ class TgDownloader:
                 self.log_callback(
                     f"Connected to channel: {getattr(self.channel, 'title', self.channel_name)}"
                 )
+
+                from telethon.tl.types import User as TgUserType
+
+                if isinstance(self.channel, TgUserType):
+                    self.log_callback(
+                        "Error: the provided username belongs to a user, not a channel/group. "
+                        "Please provide a channel or group username."
+                    )
+                    return
+
                 save_channel(self.session, channel_model, self.channel)
                 logger.debug(
                     "run: channel saved to DB (channel_id={})",
@@ -273,7 +307,6 @@ class TgDownloader:
                 async for message in self.client.iter_messages(
                     self.channel,
                     min_id=last_post_id if last_post_id > 0 else 0,
-                    limit=0,
                 ):
                     try:
                         await self._process_message(
@@ -1067,6 +1100,9 @@ class TgDownloader:
         channel_model,
         channel_id,
     ):
+        if self._topics_mode:
+            return
+
         discussion_dir = os.path.join(channel_media_dir, f"discussion_{message.id}")
         os.makedirs(discussion_dir, exist_ok=True)
 
@@ -1150,6 +1186,10 @@ class TgDownloader:
                         reply_counter += 1
                         continue
 
+                    meta = {}
+                    if reply_media_path and self.file_analyzer is not None:
+                        meta = self.file_analyzer.extract_file_info_sync(reply_media_path)
+
                     add_discussion(
                         session,
                         discussion_model,
@@ -1161,6 +1201,7 @@ class TgDownloader:
                         user_id=reply_user_id,
                         media_path=reply_media_path,
                         reply_to_message_id=reply_to_id,
+                        **meta,
                     )
 
                     if collect_links and reply.text:
@@ -1185,6 +1226,10 @@ class TgDownloader:
                     await safe_sleep(REPLY_DELAY)
                     continue
         except Exception as e:
+            if "TOPIC_ID_INVALID" in str(e):
+                self._topics_mode = True
+                self.log_callback("Skipping replies: channel uses topics")
+                return
             self.log_callback(f"Error processing replies for message {message.id}: {e}")
 
     async def _download_discussion(self, client, message, discussion_dir, semaphore):
@@ -1214,9 +1259,10 @@ class TgDownloader:
         channel_id,
     ):
         logger.debug(
-            "_process_message: msg_id={}, channel_id={}",
+            "_process_message: msg_id={}, channel_id={}, channel_id_type={}",
             getattr(message, "id", "N/A"),
             channel_id,
+            type(channel_id).__name__,
         )
         media_path = await self._download_media_with_semaphore(
             message, client, channel_media_dir, semaphore
@@ -1283,6 +1329,10 @@ class TgDownloader:
         if existing_post:
             return
 
+        meta = {}
+        if media_path and self.file_analyzer is not None:
+            meta = self.file_analyzer.extract_file_info_sync(media_path)
+
         add_post(
             session,
             post_model,
@@ -1297,6 +1347,7 @@ class TgDownloader:
             is_forwarded=is_forwarded,
             forwarded_from_id=forwarded_from_id,
             forwarded_from_name=forwarded_from_name,
+            **meta,
         )
 
         if collect_links and message.text:
@@ -1448,6 +1499,10 @@ class TgDownloader:
                                     member_type="discussion_author",
                                 )
 
+                        meta = {}
+                        if media_path and self.file_analyzer is not None:
+                            meta = self.file_analyzer.extract_file_info_sync(media_path)
+
                         add_discussion(
                             session,
                             discussion_model,
@@ -1459,6 +1514,7 @@ class TgDownloader:
                             user_id=user_id,
                             media_path=media_path,
                             reply_to_message_id=reply_to_id,
+                            **meta,
                         )
 
                         if collect_links and msg.text:

@@ -32,6 +32,7 @@ class TgDownloaderController:
         tg_downloader: TgDownloader,
         proxy: Proxy | None = None,
         case_manager=None,
+        file_analyzer: object | None = None,
     ):
         logger.debug("Init: TgDownloaderController")
 
@@ -39,6 +40,7 @@ class TgDownloaderController:
         self.tg_downloader = tg_downloader
         self.proxy = proxy
         self.case_manager = case_manager
+        self.file_analyzer = file_analyzer
         self._task = None
         self._bridge = _DownloaderBridge()
         self._bridge.log_signal.connect(
@@ -62,6 +64,7 @@ class TgDownloaderController:
             config,
             log_callback=lambda msg: self._bridge.log_signal.emit(_strip_ansi(msg)),
             progress_callback=lambda val: self._bridge.progress_signal.emit(val),
+            file_analyzer=self.file_analyzer,
         )
 
         loop = asyncio.get_running_loop()
@@ -88,6 +91,7 @@ class TgDownloaderController:
             config,
             log_callback=lambda msg: self._bridge.log_signal.emit(_strip_ansi(msg)),
             progress_callback=lambda val: self._bridge.progress_signal.emit(val),
+            file_analyzer=self.file_analyzer,
         )
 
         loop = asyncio.get_running_loop()

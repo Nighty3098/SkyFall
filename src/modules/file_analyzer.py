@@ -266,6 +266,49 @@ class FileAnalyzer:
 
         return result
 
+    @staticmethod
+    def extract_file_info_sync(path: str) -> dict:
+        p = Path(path)
+        info = {}
+
+        if not p.exists():
+            return info
+
+        info["file_size"] = p.stat().st_size
+
+        try:
+            mime = magic.Magic(mime=True)
+            info["mime_type"] = mime.from_file(str(p))
+        except Exception:
+            pass
+
+        def _parse(path):
+            parser = createParser(str(path))
+            if not parser:
+                return {}
+            try:
+                metadata = extractMetadata(parser)
+                if not metadata:
+                    return {}
+                result = {}
+                for key in ("width", "height", "duration"):
+                    val = metadata.get(key)
+                    if val is not None:
+                        result[key] = int(val) if key != "duration" else float(val)
+                lat = metadata.get("latitude")
+                lng = metadata.get("longitude")
+                if lat is not None and lng is not None:
+                    result["gps_latitude"] = float(lat)
+                    result["gps_longitude"] = float(lng)
+                return result
+            except Exception:
+                return {}
+            finally:
+                parser.stream._input.close()
+
+        info.update(_parse(p))
+        return info
+
     async def get_metadata(self, path):
         path = Path(path)
         result = ""

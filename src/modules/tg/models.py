@@ -1,6 +1,7 @@
 from sqlalchemy import (
     Boolean,
     Column,
+    Float,
     Index,
     Integer,
     String,
@@ -95,6 +96,13 @@ def create_models(channel_name: str | None = None):
         is_forwarded = Column(Boolean, default=False)
         forwarded_from_id = Column(Integer, nullable=True)
         forwarded_from_name = Column(String, nullable=True)
+        mime_type = Column(String, nullable=True)
+        file_size = Column(Integer, nullable=True)
+        file_width = Column(Integer, nullable=True)
+        file_height = Column(Integer, nullable=True)
+        file_duration = Column(Float, nullable=True)
+        gps_latitude = Column(Float, nullable=True)
+        gps_longitude = Column(Float, nullable=True)
         __table_args__ = (
             UniqueConstraint("channel_id", "post_id", name="uix_channel_post"),
             Index("ix_posts_channel_date", "channel_id", "date"),
@@ -111,6 +119,13 @@ def create_models(channel_name: str | None = None):
         date = Column(String, nullable=True)
         user_id = Column(Integer, nullable=True)
         media_path = Column(String, nullable=True)
+        mime_type = Column(String, nullable=True)
+        file_size = Column(Integer, nullable=True)
+        file_width = Column(Integer, nullable=True)
+        file_height = Column(Integer, nullable=True)
+        file_duration = Column(Float, nullable=True)
+        gps_latitude = Column(Float, nullable=True)
+        gps_longitude = Column(Float, nullable=True)
         __table_args__ = (
             UniqueConstraint("channel_id", "message_id", name="uix_channel_discussion"),
             Index("ix_discussions_channel_date", "channel_id", "date"),

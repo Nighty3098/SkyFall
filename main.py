@@ -311,7 +311,7 @@ class MainWindow(QMainWindow):
         )
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.tgDownloaderController = TgDownloaderController(
-            self.ui, self.tgDownloader, self.proxy, self.case_manager
+            self.ui, self.tgDownloader, self.proxy, self.case_manager, file_analyzer=self.fileAnalyzer
         )
         self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
         self.githubController = GitHubController(self.ui, self.githubSearch)

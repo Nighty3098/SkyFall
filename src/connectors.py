@@ -294,6 +294,30 @@ def setup_graph_transform_connectors(ui, controller):
     ui.graphWidget._transform_controller = controller
 
 
+def setup_graph_layout_connectors(controller):
+    from src.modules.graph_layout import LAYOUT_ALGORITHMS
+
+    controller.ui.graphLayoutCombo.addItems(LAYOUT_ALGORITHMS.values())
+    controller.ui.graphAutoLayoutButton.clicked.connect(
+        lambda: controller.apply_layout(
+            _reverse_layout_map(controller.ui.graphLayoutCombo.currentText())
+        )
+    )
+
+
+def _reverse_layout_map(label: str) -> str:
+    from src.modules.graph_layout import LAYOUT_ALGORITHMS
+
+    for key, val in LAYOUT_ALGORITHMS.items():
+        if val == label:
+            return key
+    return "spring"
+
+
+def setup_mcp_connectors(controller):
+    controller.ui.mcpToggleButton.clicked.connect(controller.toggle)
+
+
 def setup_report_connectors(controller):
     controller.ui.generateReportButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.generate_report())

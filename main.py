@@ -21,9 +21,11 @@ from src.connectors import (
     setup_dorking_connectors,
     setup_github_connectors,
     setup_graph_connectors,
+    setup_graph_layout_connectors,
     setup_graph_transform_connectors,
     setup_mac_location_connectors,
     setup_mail_connectors,
+    setup_mcp_connectors,
     setup_metadata_connectors,
     setup_phone_connectors,
     setup_proxies_connectors,
@@ -39,6 +41,7 @@ from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
+from src.controllers.graph_layout_controller import GraphLayoutController
 from src.controllers.graph_node_controller import GraphNodeController
 from src.controllers.graph_transform_controller import GraphTransformController
 from src.controllers.mac_location_controller import MacLocationController
@@ -50,8 +53,9 @@ from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
-from src.libs.graph_lib import GraphWidget
+from src.libs.graph_lib import GraphWidget, NodeItem
 from src.libs.graph_panel import EntityPalette
+from src.mcp_controller import McpController
 from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
@@ -153,6 +157,8 @@ class MainWindow(QMainWindow):
         return None
 
     def closeEvent(self, event):
+        if hasattr(self, "mcpController"):
+            self.mcpController.cleanup()
         if hasattr(self, "fileAnalyzer"):
             asyncio.ensure_future(self.fileAnalyzer.close())
         super().closeEvent(event)
@@ -354,6 +360,13 @@ class MainWindow(QMainWindow):
         setup_report_connectors(self.reportController)
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
         setup_graph_connectors(self.ui, self.nodeController, self.case_manager)
+
+        self.graphLayoutController = GraphLayoutController(self.ui, self.ui.graphWidget)
+        setup_graph_layout_connectors(self.graphLayoutController)
+
+        self.mcpController = McpController(self.ui)
+        self.mcpController.set_graph_bridge(self.ui.graphWidget, NodeItem)
+        setup_mcp_connectors(self.mcpController)
 
         self._wire_case_auto_save()
 

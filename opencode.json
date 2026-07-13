@@ -1,0 +1,10 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "skyfall": {
+      "type": "remote",
+      "url": "http://127.0.0.1:9877/sse",
+      "enabled": true
+    }
+  }
+}

@@ -33,7 +33,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1213, 786)
+        MainWindow.resize(1244, 795)
         self.actionNew_case = QAction(MainWindow)
         self.actionNew_case.setObjectName(u"actionNew_case")
         self.actionOpen_case = QAction(MainWindow)
@@ -1286,6 +1286,17 @@ class Ui_MainWindow(object):
 
         self.graphButtonLayout.addWidget(self.graphClearButton)
 
+        self.graphLayoutCombo = QComboBox(self.graphCenterPanel)
+        self.graphLayoutCombo.setObjectName(u"graphLayoutCombo")
+        self.graphLayoutCombo.setMinimumSize(QSize(160, 0))
+
+        self.graphButtonLayout.addWidget(self.graphLayoutCombo)
+
+        self.graphAutoLayoutButton = QPushButton(self.graphCenterPanel)
+        self.graphAutoLayoutButton.setObjectName(u"graphAutoLayoutButton")
+
+        self.graphButtonLayout.addWidget(self.graphAutoLayoutButton)
+
 
         self.graphCenterLayout.addLayout(self.graphButtonLayout)
 
@@ -1519,6 +1530,26 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.framelessCheck)
 
+        self.groupBox_6 = QGroupBox(self.settingsTab)
+        self.groupBox_6.setObjectName(u"groupBox_6")
+        self.groupBox_6.setMinimumSize(QSize(0, 0))
+        self.groupBox_6.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.verticalLayout_22 = QVBoxLayout(self.groupBox_6)
+        self.verticalLayout_22.setObjectName(u"verticalLayout_22")
+        self.mcpStatusLabel = QLabel(self.groupBox_6)
+        self.mcpStatusLabel.setObjectName(u"mcpStatusLabel")
+        self.mcpStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_22.addWidget(self.mcpStatusLabel)
+
+        self.mcpToggleButton = QPushButton(self.groupBox_6)
+        self.mcpToggleButton.setObjectName(u"mcpToggleButton")
+
+        self.verticalLayout_22.addWidget(self.mcpToggleButton)
+
+
+        self.verticalLayout_4.addWidget(self.groupBox_6)
+
         self.pushButton = QPushButton(self.settingsTab)
         self.pushButton.setObjectName(u"pushButton")
 
@@ -1565,7 +1596,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1213, 22))
+        self.menuBar.setGeometry(QRect(0, 0, 1244, 22))
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuView = QMenu(self.menuBar)
@@ -1591,7 +1622,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(13)
+        self.mainStackedWidget.setCurrentIndex(15)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1782,6 +1813,7 @@ class Ui_MainWindow(object):
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import From JSON", None))
         self.graphClearButton.setText(QCoreApplication.translate("MainWindow", u"Clear All", None))
+        self.graphAutoLayoutButton.setText(QCoreApplication.translate("MainWindow", u"Auto Layout", None))
         self.graphSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search nodes...", None))
         self.graphClearFilterButton.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
         self.nodeTitleEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Title", None))
@@ -1815,6 +1847,9 @@ class Ui_MainWindow(object):
         self.heliusApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Helius API Key", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))
+        self.groupBox_6.setTitle(QCoreApplication.translate("MainWindow", u"MCP Server", None))
+        self.mcpStatusLabel.setText(QCoreApplication.translate("MainWindow", u"Stopped", None))
+        self.mcpToggleButton.setText(QCoreApplication.translate("MainWindow", u"Start MCP Server", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))

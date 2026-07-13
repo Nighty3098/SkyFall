@@ -163,6 +163,70 @@ class DomainAnalyzer:
             logger.error(f"Error SSL/TLS: {e}")
             return {"error": f"Error SSL/TLS: {e}"}
 
+    async def get_http_headers(self, domain):
+        logger.debug("Trying to get HTTP headers")
+        try:
+            response = await asyncio.to_thread(
+                requests.get,
+                f"https://{domain}",
+                timeout=5,
+                headers={"User-Agent": self.ua.random},
+                allow_redirects=True,
+            )
+            return {
+                "status_code": response.status_code,
+                "headers": dict(response.headers),
+                "final_url": response.url,
+            }
+        except Exception as e:
+            logger.error(f"HTTP Headers Error: {e}")
+            return {"error": f"HTTP Headers Error: {e}"}
+
+    async def detect_waf(self, domain):
+        logger.debug("Trying to detect WAF")
+        try:
+            response = await asyncio.to_thread(
+                requests.get,
+                f"https://{domain}",
+                timeout=5,
+                headers={"User-Agent": self.ua.random},
+            )
+            headers = {k.lower(): v for k, v in response.headers.items()}
+            server = headers.get("server", "").lower()
+
+            waf_signatures = {
+                "cloudflare": ["cf-ray", "cloudflare"],
+                "akamai": ["akamai", "akamaighost"],
+                "cloudfront": ["cloudfront", "x-amz-cf-id"],
+                "fastly": ["fastly", "x-fastly"],
+                "sucuri": ["sucuri", "x-sucuri-id"],
+                "imperva": ["imperva", "incap_ses"],
+                "fortinet": ["fortiweb"],
+                "barracuda": ["barracounter"],
+                "f5": ["bigip", "f5"],
+                "dosarrest": ["dosarrest"],
+                "radware": ["radware"],
+            }
+
+            detected = []
+            for waf_name, signatures in waf_signatures.items():
+                for sig in signatures:
+                    header_match = any(
+                        sig in str(v).lower() for v in headers.values()
+                    )
+                    if header_match or sig in server:
+                        detected.append(waf_name)
+                        break
+
+            return {
+                "waf_detected": bool(detected),
+                "waf_providers": detected if detected else ["NONE"],
+                "server": headers.get("server", "Unknown"),
+            }
+        except Exception as e:
+            logger.error(f"WAF Detection Error: {e}")
+            return {"error": f"WAF Detection Error: {e}"}
+
     async def get_dns(self, domain):
         logger.debug("Trying to get DNS info")
         try:
@@ -278,12 +342,12 @@ class DomainAnalyzer:
             logger.error(f"Error WHOIS: {e}")
             return {"error": f"Error WHOIS: {e}"}
 
-    async def run_nmap_scan(self, domain):
+    async def run_nmap_scan(self, domain, ports="1-1024"):
         logger.debug("Trying to get nmap info")
         try:
             nm = nmap.PortScanner()
             await asyncio.to_thread(
-                nm.scan, domain, "1-65535", arguments="-T4 --open --script=vuln"
+                nm.scan, domain, ports, arguments="-T4 --open --script=vuln"
             )
 
             scan_data = {}

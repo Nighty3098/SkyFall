@@ -270,5 +270,15 @@ def _build_prompt(data: dict, language: str = "Russian") -> str:
     return SYSTEM_PROMPT.format(data_str=data_str, language=language)
 
 
+@mcp.tool()
+async def skyfall_s4f_search(image_path: str, max_results: int = 500) -> str:
+    """Search for face matches on search4faces.com using a local image file."""
+    from src.modules.search4faces import Search4Faces
+
+    s4f = Search4Faces()
+    profiles = await s4f.search_face(image_path, max_results)
+    return json.dumps(profiles, ensure_ascii=False, indent=2)
+
+
 if __name__ == "__main__":
     mcp.run(transport="stdio")

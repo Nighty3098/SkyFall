@@ -1081,6 +1081,20 @@ def resource_settings() -> str:
 # ── Main ──────────────────────────────────────────────────────────────────────────
 
 
+async def _make_s4f():
+    from src.modules.search4faces import Search4Faces
+
+    return Search4Faces()
+
+
+@mcp.tool()
+async def skyfall_s4f_search(image_path: str, max_results: int = 500) -> str:
+    """Search for face matches on search4faces.com using a local image file."""
+    s4f = await _make_s4f()
+    profiles = await s4f.search_face(image_path, max_results)
+    return _extract_json(profiles)
+
+
 def main():
     parser = argparse.ArgumentParser(description="SkyFall MCP Server")
     parser.add_argument(

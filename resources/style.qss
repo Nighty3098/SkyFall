@@ -47,6 +47,37 @@ QWidget#steganoFileDrop QLabel {
     font-style: italic;
 }
 
+QWidget#s4fFileDropWidget {
+    border-radius: 10px;
+    border: 1px dashed #262626;
+    background-color: #161616;
+    color: #C1C1C1;
+    padding: 5px;
+}
+
+QWidget#s4fFileDropWidget QLabel {
+    background: transparent;
+    color: #C1C1C1;
+    font-size: 50px;
+    font-style: italic;
+}
+
+#s4fTargetLabel {
+    border-radius: 10px;
+    border: 1px dashed #262626;
+    background-color: #161616;
+    color: #C1C1C1;
+    padding: 5px;
+}
+
+#s4fResultsScrollArea {
+    border-radius: 10px;
+    border: 1px dashed #262626;
+    background-color: #161616;
+    color: #C1C1C1;
+    padding: 5px;
+}
+
 tabWidget * {
     background: #0A0A0A;
     color: #C1C1C1;

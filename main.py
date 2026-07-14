@@ -30,6 +30,7 @@ from src.connectors import (
     setup_phone_connectors,
     setup_proxies_connectors,
     setup_report_connectors,
+    setup_s4f_connectors,
     setup_settings_connectors,
     setup_steganography_connectors,
     setup_tg_analyzer_connectors,
@@ -48,6 +49,7 @@ from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.mail_controller import MailController
 from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
+from src.controllers.search4faces_controller import S4FController
 from src.controllers.settings_controller import Settings
 from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
@@ -66,6 +68,7 @@ from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
 from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.phone_search import PhoneSearch
+from src.modules.search4faces import Search4Faces
 from src.modules.steganography import SteganographyAnalyzer
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
@@ -206,6 +209,7 @@ class MainWindow(QMainWindow):
         )
         self.fileAnalyzer = FileAnalyzer(self.settings.virustotal_api_key)
         self.stegAnalyzer = SteganographyAnalyzer()
+        self.search4faces = Search4Faces()
         self.mailSearchEngine = MailSearchEngine(
             self.settings.intelligent_x_api_key,
             self.settings.hibp_api_key,
@@ -329,6 +333,7 @@ class MainWindow(QMainWindow):
 
         self.blockchainController = BlockchainController(self.ui, self.blockchainSearch)
         self.nodeController = GraphNodeController(self.ui)
+        self.s4fController = S4FController(self.ui, self.search4faces)
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
@@ -344,6 +349,7 @@ class MainWindow(QMainWindow):
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
         setup_blockchain_connectors(self.blockchainController)
+        setup_s4f_connectors(self.s4fController)
 
         self.graphTransformController = GraphTransformController(
             self.ui.graphWidget,

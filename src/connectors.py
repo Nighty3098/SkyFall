@@ -21,6 +21,7 @@ if TYPE_CHECKING:
     from src.controllers.mail_controller import MailController
     from src.controllers.phone_controller import PhoneController
     from src.controllers.proxy_controller import Proxy
+    from src.controllers.search4faces_controller import S4FController
     from src.controllers.settings_controller import Settings
     from src.controllers.steganography_controller import SteganographyController
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
@@ -131,6 +132,20 @@ def setup_steganography_connectors(controller: "SteganographyController"):
                 controller.ui.steganoFileDrop.get_file_path()
             )
         )
+    )
+
+
+def setup_s4f_connectors(controller: "S4FController"):
+    controller.ui.s4fFileDropWidget.file_dropped.connect(
+        lambda path: controller.on_image_dropped(
+            controller.ui.s4fFileDropWidget.get_file_path()
+        )
+    )
+    controller.ui.runS4FButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.run_search())
+    )
+    controller.ui.s4fSearchEdit.returnPressed.connect(
+        controller.search_next
     )
 
 

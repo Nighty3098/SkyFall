@@ -21,9 +21,9 @@ from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit
     QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
     QLabel, QLineEdit, QListWidget, QListWidgetItem,
     QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
-    QProgressBar, QPushButton, QSizePolicy, QSpacerItem,
-    QSpinBox, QSplitter, QTabWidget, QVBoxLayout,
-    QWidget)
+    QProgressBar, QPushButton, QScrollArea, QSizePolicy,
+    QSpacerItem, QSpinBox, QSplitter, QTabWidget,
+    QVBoxLayout, QWidget)
 
 from src.libs.graph_lib import GraphWidget
 from src.libs.graph_panel import EntityPalette
@@ -1248,6 +1248,63 @@ class Ui_MainWindow(object):
         self.steganographyLayout.addWidget(self.steganographySplitter)
 
         self.mainStackedWidget.addTab(self.steganographyTab, "")
+        self.s4facesTab = QWidget()
+        self.s4facesTab.setObjectName(u"s4facesTab")
+        self.gridLayout_10 = QGridLayout(self.s4facesTab)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.s4fFileDropWidget = DropWidget(self.s4facesTab)
+        self.s4fFileDropWidget.setObjectName(u"s4fFileDropWidget")
+        self.verticalLayout_24 = QVBoxLayout(self.s4fFileDropWidget)
+        self.verticalLayout_24.setObjectName(u"verticalLayout_24")
+        self.label_9 = QLabel(self.s4fFileDropWidget)
+        self.label_9.setObjectName(u"label_9")
+        self.label_9.setMinimumSize(QSize(300, 0))
+        self.label_9.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_24.addWidget(self.label_9)
+
+
+        self.gridLayout_10.addWidget(self.s4fFileDropWidget, 2, 0, 1, 1)
+
+        self.horizontalLayout_11 = QHBoxLayout()
+        self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
+        self.runS4FButton = QPushButton(self.s4facesTab)
+        self.runS4FButton.setObjectName(u"runS4FButton")
+        self.runS4FButton.setMinimumSize(QSize(150, 0))
+
+        self.horizontalLayout_11.addWidget(self.runS4FButton)
+
+
+        self.gridLayout_10.addLayout(self.horizontalLayout_11, 3, 0, 1, 1)
+
+        self.s4fResultsScrollArea = QScrollArea(self.s4facesTab)
+        self.s4fResultsScrollArea.setObjectName(u"s4fResultsScrollArea")
+        self.s4fResultsScrollArea.setWidgetResizable(True)
+        self.s4fResultsContainer = QWidget()
+        self.s4fResultsContainer.setObjectName(u"s4fResultsContainer")
+        self.s4fResultsContainer.setGeometry(QRect(0, 0, 738, 689))
+        self.verticalLayout_26 = QVBoxLayout(self.s4fResultsContainer)
+        self.verticalLayout_26.setObjectName(u"verticalLayout_26")
+        self.s4fResultsLayout = QVBoxLayout()
+        self.s4fResultsLayout.setObjectName(u"s4fResultsLayout")
+
+        self.verticalLayout_26.addLayout(self.s4fResultsLayout)
+
+        self.s4fResultsScrollArea.setWidget(self.s4fResultsContainer)
+
+        self.gridLayout_10.addWidget(self.s4fResultsScrollArea, 1, 1, 3, 1)
+
+        self.s4fSearchEdit = QLineEdit(self.s4facesTab)
+        self.s4fSearchEdit.setObjectName(u"s4fSearchEdit")
+
+        self.gridLayout_10.addWidget(self.s4fSearchEdit, 0, 1, 1, 1)
+
+        self.s4fTargetLabel = QLabel(self.s4facesTab)
+        self.s4fTargetLabel.setObjectName(u"s4fTargetLabel")
+
+        self.gridLayout_10.addWidget(self.s4fTargetLabel, 0, 0, 2, 1)
+
+        self.mainStackedWidget.addTab(self.s4facesTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
         self.graphMainLayout = QVBoxLayout(self.graphTab)
@@ -1632,7 +1689,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(6)
+        self.mainStackedWidget.setCurrentIndex(13)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1821,6 +1878,11 @@ class Ui_MainWindow(object):
         self.EOIDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"EOI/EOD", None))
         self.tailDataDetectionDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Tail Data Detection", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.steganographyTab), QCoreApplication.translate("MainWindow", u"STEGANOGRAPHY", None))
+        self.label_9.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
+        self.runS4FButton.setText(QCoreApplication.translate("MainWindow", u"Run", None))
+        self.s4fSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
+        self.s4fTargetLabel.setText("")
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.s4facesTab), QCoreApplication.translate("MainWindow", u"SEARCH4FACES", None))
         self.entitySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import From JSON", None))

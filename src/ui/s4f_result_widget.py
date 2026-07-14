@@ -51,6 +51,9 @@ class S4FResultWidget(QFrame):
 
         name_label = QLabel(name)
         name_label.setStyleSheet("font-weight: bold; font-size: 14px;")
+        name_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         info_layout.addWidget(name_label)
 
         parts = []
@@ -65,12 +68,19 @@ class S4FResultWidget(QFrame):
         parts.append(f"Similarity: {similarity:.1f}%")
         details_label = QLabel(" | ".join(parts))
         details_label.setStyleSheet("color: #999;")
+        details_label.setTextInteractionFlags(
+            Qt.TextInteractionFlag.TextSelectableByMouse
+        )
         info_layout.addWidget(details_label)
 
         vk_url = self.profile.get("vk_url", "")
         if vk_url:
             link_label = QLabel(f'<a href="{vk_url}">{vk_url}</a>')
             link_label.setOpenExternalLinks(True)
+            link_label.setTextInteractionFlags(
+                Qt.TextInteractionFlag.TextSelectableByMouse
+                | Qt.TextInteractionFlag.LinksAccessibleByMouse
+            )
             link_label.setStyleSheet("color: #5B9BD5;")
             info_layout.addWidget(link_label)
 

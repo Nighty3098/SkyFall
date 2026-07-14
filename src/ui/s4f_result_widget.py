@@ -18,9 +18,7 @@ class S4FResultWidget(QFrame):
     def _setup_ui(self, face_bytes: bytes | None):
         self.setFrameShape(QFrame.Shape.StyledPanel)
         self.setLineWidth(1)
-        self.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
 
         layout = QHBoxLayout(self)
         layout.setContentsMargins(8, 8, 8, 8)
@@ -51,9 +49,7 @@ class S4FResultWidget(QFrame):
 
         name_label = QLabel(name)
         name_label.setStyleSheet("font-weight: bold; font-size: 14px;")
-        name_label.setTextInteractionFlags(
-            Qt.TextInteractionFlag.TextSelectableByMouse
-        )
+        name_label.setTextInteractionFlags(Qt.TextInteractionFlag.TextSelectableByMouse)
         info_layout.addWidget(name_label)
 
         parts = []

@@ -138,12 +138,8 @@ class Search4Faces:
         logger.info(f"S4F: found {len(profiles)} matches")
         return profiles
 
-    async def search_face(
-        self, image_path: str, max_results: int = 500
-    ) -> list[dict]:
-        return await asyncio.to_thread(
-            self._search_sync, image_path, max_results
-        )
+    async def search_face(self, image_path: str, max_results: int = 500) -> list[dict]:
+        return await asyncio.to_thread(self._search_sync, image_path, max_results)
 
     def download_image_sync(self, url: str) -> bytes | None:
         try:

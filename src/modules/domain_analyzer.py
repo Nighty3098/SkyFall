@@ -147,9 +147,7 @@ class DomainAnalyzer:
         try:
             reversed_ip = ".".join(reversed(ip.split(".")))
             ptr_fqdn = f"{reversed_ip}.in-addr.arpa"
-            answers = await asyncio.to_thread(
-                dns.resolver.resolve, ptr_fqdn, "PTR"
-            )
+            answers = await asyncio.to_thread(dns.resolver.resolve, ptr_fqdn, "PTR")
             result["ptr"] = [str(rdata) for rdata in answers]
         except Exception as e:
             logger.debug(f"PTR lookup failed for {ip}: {e}")
@@ -174,9 +172,7 @@ class DomainAnalyzer:
             )
             if response.status_code == 200 and "error" not in response.text.lower():
                 lines = [
-                    ln.strip()
-                    for ln in response.text.strip().split("\n")
-                    if ln.strip()
+                    ln.strip() for ln in response.text.strip().split("\n") if ln.strip()
                 ]
                 result["hacker_target"] = lines
         except Exception as e:
@@ -268,9 +264,7 @@ class DomainAnalyzer:
             detected = []
             for waf_name, signatures in waf_signatures.items():
                 for sig in signatures:
-                    header_match = any(
-                        sig in str(v).lower() for v in headers.values()
-                    )
+                    header_match = any(sig in str(v).lower() for v in headers.values())
                     if header_match or sig in server:
                         detected.append(waf_name)
                         break

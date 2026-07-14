@@ -144,9 +144,7 @@ def setup_s4f_connectors(controller: "S4FController"):
     controller.ui.runS4FButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.run_search())
     )
-    controller.ui.s4fSearchEdit.returnPressed.connect(
-        controller.search_next
-    )
+    controller.ui.s4fSearchEdit.returnPressed.connect(controller.search_next)
 
 
 def setup_username_connectors(controller: "UsernameController"):

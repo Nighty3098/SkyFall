@@ -34,7 +34,9 @@ class S4FController:
         pixmap = QPixmap(path)
         if not pixmap.isNull():
             scaled = pixmap.scaled(
-                300, 300, Qt.AspectRatioMode.KeepAspectRatio,
+                300,
+                300,
+                Qt.AspectRatioMode.KeepAspectRatio,
                 Qt.TransformationMode.SmoothTransformation,
             )
             self.ui.s4fTargetLabel.setPixmap(scaled)
@@ -56,9 +58,7 @@ class S4FController:
         label = QLabel(text)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         label.setStyleSheet("color: #999; padding: 20px;")
-        label.setSizePolicy(
-            QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed
-        )
+        label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         layout.addWidget(label)
 
     def _get_result_widgets(self) -> list[S4FResultWidget]:
@@ -66,9 +66,7 @@ class S4FController:
         layout = self.ui.s4fResultsLayout
         for i in range(layout.count()):
             child = layout.itemAt(i)
-            if child and child.widget() and isinstance(
-                child.widget(), S4FResultWidget
-            ):
+            if child and child.widget() and isinstance(child.widget(), S4FResultWidget):
                 widgets.append(child.widget())
         return widgets
 

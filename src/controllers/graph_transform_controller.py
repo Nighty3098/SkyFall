@@ -304,6 +304,14 @@ class GraphTransformController:
                     relationship="hosted_by",
                     handler=_transform_domain_nmap,
                 ),
+                TransformDef(
+                    name="Find Domains on IP",
+                    description="Reverse IP lookup - find domains hosted on this IP",
+                    input_types=["IP"],
+                    output_type="Domain",
+                    relationship="hosted_by",
+                    handler=_transform_ip_domains,
+                ),
             ],
             "Email": [
                 TransformDef(
@@ -829,6 +837,44 @@ def _parse_ip_geo(data, ip_addr):
     return TransformResult(children=children, content=content or str(data))
 
 
+def _parse_ip_domains(data, ip_addr):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+
+    children = []
+    all_domains = data.get("all_domains", [])
+    for domain in all_domains:
+        children.append(
+            ChildNodeDef(
+                title=domain,
+                entity_type="Domain",
+                content=domain,
+            )
+        )
+
+    lines = [
+        kv("IP", ip_addr),
+        kv("Total unique domains", data.get("total_unique", 0)),
+        "",
+        section("PTR"),
+    ]
+    for d in data.get("ptr", []):
+        lines.append(bullet(d))
+    lines.append("")
+    lines.append(section("Shodan InternetDB"))
+    for d in data.get("hostnames", []):
+        lines.append(bullet(d))
+    lines.append("")
+    lines.append(section("HackerTarget"))
+    for d in data.get("hacker_target", []):
+        lines.append(bullet(d))
+
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+    )
+
+
 def _parse_email_intelx(raw, email):
     if not raw or "Not found" in raw:
         return TransformResult(content=str(raw))
@@ -1101,6 +1147,12 @@ async def _transform_domain_nmap(domain, modules):
 async def _transform_ip_geo(ip_addr, modules):
     return await _run_transform(
         modules, "domain_analyzer", "get_ip_and_location", ip_addr, _parse_ip_geo
+    )
+
+
+async def _transform_ip_domains(ip_addr, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "get_domains_on_ip", ip_addr, _parse_ip_domains
     )
 
 

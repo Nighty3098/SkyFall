@@ -1,4 +1,5 @@
 import asyncio
+import re
 import socket
 import ssl
 from urllib.parse import urlparse
@@ -138,6 +139,62 @@ class DomainAnalyzer:
             "error": "GEO Error.",
             "details": errors,
         }
+
+    async def get_domains_on_ip(self, ip):
+        logger.debug(f"Trying to find domains on IP: {ip}")
+        result = {"ip": ip, "ptr": [], "hostnames": [], "hacker_target": []}
+
+        try:
+            reversed_ip = ".".join(reversed(ip.split(".")))
+            ptr_fqdn = f"{reversed_ip}.in-addr.arpa"
+            answers = await asyncio.to_thread(
+                dns.resolver.resolve, ptr_fqdn, "PTR"
+            )
+            result["ptr"] = [str(rdata) for rdata in answers]
+        except Exception as e:
+            logger.debug(f"PTR lookup failed for {ip}: {e}")
+
+        try:
+            response = await asyncio.to_thread(
+                requests.get,
+                f"https://internetdb.shodan.io/{ip}",
+                timeout=10,
+            )
+            if response.status_code == 200:
+                data = response.json()
+                result["hostnames"] = data.get("hostnames", [])
+        except Exception as e:
+            logger.debug(f"InternetDB failed for {ip}: {e}")
+
+        try:
+            response = await asyncio.to_thread(
+                requests.get,
+                f"https://api.hackertarget.com/reverseiplookup/?q={ip}",
+                timeout=10,
+            )
+            if response.status_code == 200 and "error" not in response.text.lower():
+                lines = [
+                    ln.strip()
+                    for ln in response.text.strip().split("\n")
+                    if ln.strip()
+                ]
+                result["hacker_target"] = lines
+        except Exception as e:
+            logger.debug(f"HackerTarget failed for {ip}: {e}")
+
+        raw = set(result["ptr"] + result["hostnames"] + result["hacker_target"])
+        all_domains = set()
+        for entry in raw:
+            if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", entry):
+                continue
+            if ":" in entry:
+                continue
+            all_domains.add(entry)
+        result["total_unique"] = len(all_domains)
+        result["all_domains"] = sorted(all_domains)
+        logger.info(f"Domains on IP {ip}: {len(all_domains)} unique domains found")
+
+        return result
 
     async def get_ssl_tls_info(self, domain):
         logger.debug("Trying to get SSL and TLS info")

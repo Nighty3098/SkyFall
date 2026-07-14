@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>15</number>
+         <number>6</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1067,6 +1067,20 @@
            <widget class="QProgressBar" name="domainProgress">
             <property name="value">
              <number>0</number>
+            </property>
+           </widget>
+          </item>
+          <item row="6" column="4">
+           <widget class="QPlainTextEdit" name="domainsOnIpDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="5" column="4">
+           <widget class="QCheckBox" name="domainsOnIpCheck">
+            <property name="text">
+             <string>Find domains on IP</string>
             </property>
            </widget>
           </item>

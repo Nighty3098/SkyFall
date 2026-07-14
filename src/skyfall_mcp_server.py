@@ -234,6 +234,14 @@ async def skyfall_domain_ip(domain: str) -> str:
 
 
 @mcp.tool()
+async def skyfall_ip_domains(ip: str) -> str:
+    """Find all domains hosted on a given IP address (reverse IP lookup)."""
+    da = await _make_da()
+    result = await da.get_domains_on_ip(ip)
+    return _extract_json(result)
+
+
+@mcp.tool()
 async def skyfall_domain_dns(domain: str) -> str:
     """Get DNS records (A, AAAA, MX, TXT, NS, CNAME, SOA) for a domain."""
     da = await _make_da()

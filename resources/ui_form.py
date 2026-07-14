@@ -769,6 +769,16 @@ class Ui_MainWindow(object):
 
         self.gridLayout_2.addWidget(self.domainProgress, 11, 1, 1, 4)
 
+        self.domainsOnIpDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.domainsOnIpDebug.setObjectName(u"domainsOnIpDebug")
+
+        self.gridLayout_2.addWidget(self.domainsOnIpDebug, 6, 4, 1, 1)
+
+        self.domainsOnIpCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainsOnIpCheck.setObjectName(u"domainsOnIpCheck")
+
+        self.gridLayout_2.addWidget(self.domainsOnIpCheck, 5, 4, 1, 1)
+
         self.mainStackedWidget.addTab(self.webAnalyzerTab, "")
         self.metadataTab = QWidget()
         self.metadataTab.setObjectName(u"metadataTab")
@@ -1622,7 +1632,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(15)
+        self.mainStackedWidget.setCurrentIndex(6)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1727,6 +1737,8 @@ class Ui_MainWindow(object):
         self.certTrCheck.setText(QCoreApplication.translate("MainWindow", u"Certificate Transparency ", None))
         self.serverUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL", None))
         self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
+        self.domainsOnIpDebug.setPlaceholderText("")
+        self.domainsOnIpCheck.setText(QCoreApplication.translate("MainWindow", u"Find domains on IP", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
         self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))

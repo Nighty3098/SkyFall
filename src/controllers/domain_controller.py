@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from src.modules.domain_analyzer import DomainAnalyzer
 
 
-STEPS = 13
+STEPS = 14
 
 
 def _val(v):
@@ -171,3 +171,17 @@ class DomainController:
                 await self.domain_analyzer.get_certificate_transparency(self.domain)
             )
         self._update_progress(13)
+
+        if self.ui.domainsOnIpCheck.isChecked():
+            self.ui.domainsOnIpDebug.setPlainText(info("Loading..."))
+            ip_data = await self.domain_analyzer.get_ip_and_location(self.domain)
+            ip_addr = ip_data.get("ip", "")
+            if ip_addr and "error" not in ip_data:
+                self.ui.domainsOnIpDebug.setPlainText(
+                    _fmt(await self.domain_analyzer.get_domains_on_ip(ip_addr))
+                )
+            else:
+                self.ui.domainsOnIpDebug.setPlainText(
+                    info(f"Could not resolve IP for {self.domain}")
+                )
+        self._update_progress(14)

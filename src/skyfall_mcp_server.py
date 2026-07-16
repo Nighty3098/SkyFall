@@ -4,6 +4,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import anyio.to_thread
+
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from loguru import logger
@@ -144,9 +146,7 @@ def _graph_bridge():
     try:
         from src.graph_bridge import GraphBridgeClient
 
-        client = GraphBridgeClient()
-        client._connect()
-        return client
+        return GraphBridgeClient()
     except Exception:
         return None
 
@@ -164,6 +164,13 @@ def _graph_bridge_available() -> bool:
         return True
     except Exception:
         return False
+
+
+async def _graph_bridge_send(bridge, method: str, *args, **kwargs) -> str:
+    """Run a bridge method in a thread to avoid blocking the event loop."""
+    func = getattr(bridge, method)
+    result = await anyio.to_thread.run_sync(lambda: func(*args, **kwargs))
+    return _extract_json(result)
 
 
 def _graph_not_available_bridge() -> str:
@@ -801,7 +808,7 @@ async def skyfall_dorking_search(dork: str, use_searxng: bool = False) -> str:
 
 
 @mcp.tool()
-def skyfall_graph_add_node(
+async def skyfall_graph_add_node(
     title: str,
     content: str = "",
     entity_type: str = "Custom",
@@ -819,12 +826,11 @@ def skyfall_graph_add_node(
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.add_node(title, content, entity_type)
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "add_node", title, content, entity_type)
 
 
 @mcp.tool()
-def skyfall_graph_add_edge(
+async def skyfall_graph_add_edge(
     source_id: str,
     target_id: str,
     relationship: str = "associated_with",
@@ -845,24 +851,24 @@ def skyfall_graph_add_edge(
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.add_edge(source_id, target_id, relationship, label)
-    return _extract_json(result)
+    return await _graph_bridge_send(
+        bridge, "add_edge", source_id, target_id, relationship, label
+    )
 
 
 @mcp.tool()
-def skyfall_graph_get() -> str:
+async def skyfall_graph_get() -> str:
     """Get the current state of the investigation graph as JSON."""
     if not _graph_bridge_available():
         return _graph_not_available_bridge()
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.get_graph()
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "get_graph")
 
 
 @mcp.tool()
-def skyfall_graph_summary() -> str:
+async def skyfall_graph_summary() -> str:
     """Get a human-readable summary of the investigation graph.
     Shows total nodes/edges, entity type breakdown, and lists all nodes and connections.
     Use this to understand the current investigation state before making changes."""
@@ -871,12 +877,11 @@ def skyfall_graph_summary() -> str:
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.graph_summary()
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "graph_summary")
 
 
 @mcp.tool()
-def skyfall_graph_get_node(node_id: str) -> str:
+async def skyfall_graph_get_node(node_id: str) -> str:
     """Get detailed info about a specific graph node including its connections.
 
     Args:
@@ -887,12 +892,11 @@ def skyfall_graph_get_node(node_id: str) -> str:
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.get_node(node_id)
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "get_node", node_id)
 
 
 @mcp.tool()
-def skyfall_graph_update_node(
+async def skyfall_graph_update_node(
     node_id: str,
     title: str | None = None,
     content: str | None = None,
@@ -913,12 +917,13 @@ def skyfall_graph_update_node(
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.update_node(node_id, title, content, entity_type)
-    return _extract_json(result)
+    return await _graph_bridge_send(
+        bridge, "update_node", node_id, title, content, entity_type
+    )
 
 
 @mcp.tool()
-def skyfall_graph_remove_node(node_id: str) -> str:
+async def skyfall_graph_remove_node(node_id: str) -> str:
     """Remove a node and all its connected edges from the graph.
 
     Args:
@@ -929,12 +934,11 @@ def skyfall_graph_remove_node(node_id: str) -> str:
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.remove_node(node_id)
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "remove_node", node_id)
 
 
 @mcp.tool()
-def skyfall_graph_remove_edge(source_id: str, target_id: str) -> str:
+async def skyfall_graph_remove_edge(source_id: str, target_id: str) -> str:
     """Remove an edge between two nodes.
 
     Args:
@@ -946,20 +950,18 @@ def skyfall_graph_remove_edge(source_id: str, target_id: str) -> str:
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.remove_edge(source_id, target_id)
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "remove_edge", source_id, target_id)
 
 
 @mcp.tool()
-def skyfall_graph_clear() -> str:
+async def skyfall_graph_clear() -> str:
     """Clear all nodes and edges from the graph."""
     if not _graph_bridge_available():
         return _graph_not_available_bridge()
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    result = bridge.clear_graph()
-    return _extract_json(result)
+    return await _graph_bridge_send(bridge, "clear_graph")
 
 
 # ── Case Management ──────────────────────────────────────────────────────────

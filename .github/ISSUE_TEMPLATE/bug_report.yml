@@ -1,0 +1,83 @@
+name: Bug report
+description: An issue with SkyFall.
+labels: ["bug"]
+
+body:
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      description: On what OS does the bug happen?
+      multiple: false
+      options:
+        - Linux
+        - Windows
+        - macOS
+    validations:
+      required: true
+  - type: input
+    id: python-version
+    attributes:
+      label: Python version
+      description: Output of `python3 --version`.
+      placeholder: e.g. 3.12.3
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: Output of `git rev-parse HEAD`.
+      placeholder: LATEST IS NOT A VERSION, I NEED THE EXACT COMMIT HASH.
+    validations:
+      required: true
+  - type: textarea
+    id: issue
+    attributes:
+      label: Issue
+      description: Explain your issue in detail.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: What exactly you did to make the bug happen.
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Configuration / API keys
+      description: Which external services you have configured (Ollama, SearXNG, Telegram, VirusTotal, IntelX, GitHub tokens, blockchain API keys, etc.) and their relevant settings. Remove any sensitive values.
+      placeholder: e.g. Ollama running at http://127.0.0.1:11434, SearXNG via Docker, Telegram session files in ~/.skyfall/tg/
+    validations:
+      required: false
+  - type: textarea
+    id: case-data
+    attributes:
+      label: Case data (if applicable)
+      description: If the bug happened while working with a case, attach the relevant data from `~/.skyfall/data/` (or your configured data directory). For graph issues, attach the exported .json graph file.
+      placeholder: Provide exported data if the issue is case-specific.
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs
+      description: Full terminal output or log file. SkyFall uses Loguru — enable debug logging with `-v` flag if possible. Attach any crash tracebacks.
+      placeholder: REQUIRED for crashes and unexpected behavior.
+    validations:
+      required: true
+  - type: checkboxes
+    id: agreement
+    attributes:
+      label: Submission
+      description: Check the boxes to confirm that you have read the lines below.
+      options:
+        - label: I have updated to the latest commit (git pull) to make sure my issue has not been fixed.
+          required: true
+        - label: I have searched the closed and open issues to make sure that this problem has not already been reported.
+          required: true
+        - label: I have checked that the bug is not caused by missing dependencies or misconfiguration of external services (Ollama, SearXNG, Telegram, API keys).
+          required: true

@@ -139,6 +139,8 @@ class GraphBridgeServer:
                 return self._invoke_on_main(self._remove_edge, msg)
             if action == "clear_graph":
                 return self._invoke_on_main(self._clear_graph)
+            if action == "move_node":
+                return self._invoke_on_main(self._move_node, msg)
             if action == "graph_summary":
                 return self._invoke_on_main(self._graph_summary)
             return {"error": f"Unknown action: {action}"}
@@ -174,6 +176,8 @@ class GraphBridgeServer:
         target_id = msg.get("target_id", "")
         relationship = msg.get("relationship", "associated_with")
         label = msg.get("label", "")
+        source_port = msg.get("source_port", "right")
+        target_port = msg.get("target_port", "left")
 
         source = target = None
         for item in gw._scene.items():
@@ -186,7 +190,7 @@ class GraphBridgeServer:
         if source is None or target is None:
             return {"error": "Node(s) not found in graph"}
 
-        edge = gw.add_edge(source, target)
+        edge = gw.add_edge(source, target, source_port, target_port)
         edge.relationship_type = relationship
         edge.label = label
         edge.update()
@@ -196,6 +200,8 @@ class GraphBridgeServer:
             "target_id": target_id,
             "relationship": relationship,
             "label": label,
+            "source_port": source_port,
+            "target_port": target_port,
         }
 
     def _get_graph(self) -> dict:
@@ -252,6 +258,29 @@ class GraphBridgeServer:
         node.update()
         self._graph_widget.viewport().update()
         return {"id": node.id, "title": node.title, "entity_type": node.entity_type}
+
+    def _move_node(self, msg: dict) -> dict:
+        node = self._find_node(msg.get("node_id", ""))
+        if node is None:
+            return {"error": "Node not found"}
+
+        x = msg.get("x")
+        y = msg.get("y")
+        if x is None or y is None:
+            return {"error": "x and y coordinates are required"}
+
+        from PySide6.QtCore import QPointF
+        node.setPos(QPointF(float(x), float(y)))
+        node.update()
+        for edge in node._connected_edges():
+            edge.adjust()
+        self._graph_widget.viewport().update()
+        return {
+            "node_id": node.id,
+            "title": node.title,
+            "x": node.pos().x(),
+            "y": node.pos().y(),
+        }
 
     def _remove_node(self, msg: dict) -> dict:
         from src.libs.graph_lib import EdgeItem
@@ -379,6 +408,8 @@ class GraphBridgeClient:
         target_id: str,
         relationship: str = "associated_with",
         label: str = "",
+        source_port: str = "right",
+        target_port: str = "left",
     ) -> dict:
         return self.send(
             {
@@ -387,6 +418,8 @@ class GraphBridgeClient:
                 "target_id": target_id,
                 "relationship": relationship,
                 "label": label,
+                "source_port": source_port,
+                "target_port": target_port,
             }
         )
 
@@ -411,6 +444,11 @@ class GraphBridgeClient:
         if entity_type is not None:
             msg["entity_type"] = entity_type
         return self.send(msg)
+
+    def move_node(self, node_id: str, x: float, y: float) -> dict:
+        return self.send(
+            {"action": "move_node", "node_id": node_id, "x": x, "y": y}
+        )
 
     def remove_node(self, node_id: str) -> dict:
         return self.send({"action": "remove_node", "node_id": node_id})

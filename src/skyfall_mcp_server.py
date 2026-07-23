@@ -835,6 +835,8 @@ async def skyfall_graph_add_edge(
     target_id: str,
     relationship: str = "associated_with",
     label: str = "",
+    source_port: str = "right",
+    target_port: str = "left",
 ) -> str:
     """Add an edge (connection) between two graph nodes.
 
@@ -845,6 +847,8 @@ async def skyfall_graph_add_edge(
                       located_at, communicates_with, associated_with,
                       works_at, created_by, attends, hosted_by, linked_to
         label: Optional edge label text
+        source_port: Port on source node: left, right, top, bottom (default: right)
+        target_port: Port on target node: left, right, top, bottom (default: left)
     """
     if not _graph_bridge_available():
         return _graph_not_available_bridge()
@@ -852,7 +856,7 @@ async def skyfall_graph_add_edge(
     if bridge is None:
         return _graph_not_available_bridge()
     return await _graph_bridge_send(
-        bridge, "add_edge", source_id, target_id, relationship, label
+        bridge, "add_edge", source_id, target_id, relationship, label, source_port, target_port
     )
 
 
@@ -893,6 +897,27 @@ async def skyfall_graph_get_node(node_id: str) -> str:
     if bridge is None:
         return _graph_not_available_bridge()
     return await _graph_bridge_send(bridge, "get_node", node_id)
+
+
+@mcp.tool()
+async def skyfall_graph_move_node(node_id: str, x: float, y: float) -> str:
+    """Move a graph node to a specific position on the canvas.
+
+    Use this to organize and lay out the graph visually. The (x, y) coordinates
+    are scene coordinates — get current positions via skyfall_graph_get_node
+    or skyfall_graph_get.
+
+    Args:
+        node_id: The node ID to move
+        x: New X coordinate in scene space
+        y: New Y coordinate in scene space
+    """
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    return await _graph_bridge_send(bridge, "move_node", node_id, x, y)
 
 
 @mcp.tool()

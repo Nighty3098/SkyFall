@@ -523,6 +523,19 @@ async def skyfall_phone_full(phone: str, default_region: str = "RU") -> str:
     )
 
 
+@mcp.tool()
+async def skyfall_phone_7tel(phone: str) -> str:
+    """Search phone number on 7tel.ru for caller ID reviews and reputation.
+
+    Returns rating score, carrier info, region, line type, reviews with dates,
+    and similar phone numbers. No API key required.
+    """
+    from src.modules.phone_search import PhoneSearch
+
+    ps = PhoneSearch()
+    return await ps.search_7tel(phone)
+
+
 # ── GitHub OSINT ──────────────────────────────────────────────────────
 
 
@@ -1074,7 +1087,7 @@ def resource_modules() -> str:
         "Domain Analysis: skyfall_domain_*, 11 tools",
         "Username Search: skyfall_username_search, skyfall_maigret_search",
         "Email Search: skyfall_email_* (IntelX, HIBP, combined)",
-        "Phone OSINT: skyfall_phone_* (parse, reverse lookup, leaks)",
+        "Phone OSINT: skyfall_phone_* (parse, reverse lookup, leaks, 7tel.ru)",
         "GitHub OSINT: skyfall_github_* (user, repos, commits, secrets, dork)",
         "Blockchain: skyfall_blockchain_search (10 chains)",
         "MAC Geolocation: skyfall_mac_locate (5 providers)",

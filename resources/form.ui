@@ -1453,15 +1453,22 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="phoneLeakBtn">
-                <property name="text">
-                 <string>Check Leaks</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <spacer name="phoneVerticalSpacer">
+               <item>
+                <widget class="QPushButton" name="phoneLeakBtn">
+                 <property name="text">
+                  <string>Check Leaks</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="phone7telBtn">
+                 <property name="text">
+                  <string>7tel.ru Search</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <spacer name="phoneVerticalSpacer">
                 <property name="orientation">
                  <enum>Qt::Orientation::Vertical</enum>
                 </property>

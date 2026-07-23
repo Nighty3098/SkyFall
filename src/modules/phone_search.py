@@ -311,6 +311,145 @@ class PhoneSearch:
         lines.append(divider())
         return "\n".join(lines)
 
+    async def search_7tel(
+        self,
+        phone: str,
+        on_result: Callable | None = None,
+    ) -> str:
+        """Search phone number on 7tel.ru (caller ID reviews)."""
+        lines = [divider(), title(f"Phone: {phone}"), section("7tel.ru")]
+
+        import re
+
+        digits = re.sub(r"\D", "", phone)
+        if digits.startswith("7") and len(digits) == 11:
+            slug = digits[1:]
+        elif digits.startswith("8") and len(digits) == 11:
+            slug = digits[1:]
+        elif len(digits) == 10:
+            slug = digits
+        else:
+            lines.append(error("Invalid phone number format"))
+            if on_result:
+                on_result(lines[-1])
+            lines.append(divider())
+            return "\n".join(lines)
+
+        url = f"https://xn--7-jtbs0a.xn--p1ai/{slug}"
+        lines.append(kv("URL", url))
+        if on_result:
+            on_result(lines[-1])
+
+        try:
+            async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
+                resp = await client.get(
+                    url,
+                    headers={
+                        "User-Agent": (
+                            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                            "AppleWebKit/537.36 (KHTML, like Gecko) "
+                            "Chrome/120.0.0.0 Safari/537.36"
+                        ),
+                    },
+                )
+        except httpx.RequestError as e:
+            lines.append(error(f"Request failed: {e}"))
+            if on_result:
+                on_result(lines[-1])
+            lines.append(divider())
+            return "\n".join(lines)
+
+        if resp.status_code == 404:
+            lines.append(info("Phone number not found on 7tel.ru"))
+            if on_result:
+                on_result(lines[-1])
+            lines.append(divider())
+            return "\n".join(lines)
+
+        if resp.status_code != 200:
+            lines.append(error(f"HTTP {resp.status_code}"))
+            if on_result:
+                on_result(lines[-1])
+            lines.append(divider())
+            return "\n".join(lines)
+
+        html = resp.text
+
+        score = "unknown"
+        score_m = re.search(r'<span class="score\s+(negative|neutral|positive)"', html)
+        if score_m:
+            score = score_m.group(1)
+        lines.append(kv("Score", score))
+        if on_result:
+            on_result(lines[-1])
+
+        main_info = re.findall(
+            r'<span>([^<]+)</span>',
+            html.split('<div class="MainPhone">')[1].split("</div>")[0]
+            if '<div class="MainPhone">' in html
+            else "",
+        )
+        for item in main_info[1:]:
+            lines.append(kv("Info", item.strip()))
+            if on_result:
+                on_result(lines[-1])
+
+        review_count_m = re.search(r"отрицательные.*?(\d+)", html)
+        if review_count_m:
+            lines.append(line(f"Negative reviews: {review_count_m.group(1)}"))
+            if on_result:
+                on_result(lines[-1])
+
+        review_pattern = re.compile(
+            r'<div class="review">.*?'
+            r'<div class="date">(.*?)</div>.*?'
+            r'itemprop="author">(.*?)</span>.*?'
+            r'class="comment"[^>]*>(.*?)</span>',
+            re.DOTALL,
+        )
+        reviews = []
+        for m in review_pattern.finditer(html):
+            reviews.append(
+                {
+                    "date": m.group(1).strip(),
+                    "author": m.group(2).strip(),
+                    "comment": re.sub(r"<[^>]+>", "", m.group(3)).strip(),
+                }
+            )
+
+        if reviews:
+            lines.append(section(f"Reviews ({len(reviews)})"))
+            if on_result:
+                on_result(lines[-1])
+            for rv in reviews:
+                comment = rv["comment"]
+                lines.append(bullet(f"{rv['date']} by {rv['author']}"))
+                if on_result:
+                    on_result(lines[-1])
+                if comment and "скрыт" not in comment:
+                    lines.append(line(comment[:200]))
+                    if on_result:
+                        on_result(lines[-1])
+
+        similar_m = re.findall(
+            r'<a href="/(\d+)">\+?(\d+)</a>',
+            html.split('<div class="similar">')[1].split("</div>")[0]
+            if '<div class="similar">' in html
+            else "",
+        )
+        if similar_m:
+            lines.append(section("Similar numbers"))
+            if on_result:
+                on_result(lines[-1])
+            for href, num in similar_m[:10]:
+                lines.append(bullet(f"+{num}"))
+                if on_result:
+                    on_result(lines[-1])
+
+        lines.append(end_of("7tel.ru"))
+        lines.append(divider())
+        return "\n".join(lines)
+
     def _number_type_name(self, num) -> str:
         ntype = phonenumbers.number_type(num)
         mapping = {

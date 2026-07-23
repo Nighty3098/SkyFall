@@ -82,6 +82,26 @@ class PhoneController:
             self.ui.phoneProgress.setRange(0, 100)
             self.ui.phoneProgress.setValue(100)
 
+    async def search_7tel(self):
+        number = self._get_number()
+        if not number:
+            self.ui.phoneDebug.appendPlainText(error("Enter a phone number"))
+            return
+
+        self.ui.phoneDebug.clear()
+        self.ui.phoneProgress.setValue(0)
+        self.ui.phoneProgress.setRange(0, 0)
+
+        try:
+            result = await self.phone_search.search_7tel(number)
+            self.ui.phoneDebug.appendPlainText(result)
+            self.ui.phoneDebug.appendPlainText(end_of("7tel.ru"))
+        except Exception as e:
+            self.ui.phoneDebug.appendPlainText(error(f"Error: {e}"))
+        finally:
+            self.ui.phoneProgress.setRange(0, 100)
+            self.ui.phoneProgress.setValue(100)
+
     async def check_leaks(self):
         number = self._get_number()
         if not number:

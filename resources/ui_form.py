@@ -1034,6 +1034,11 @@ class Ui_MainWindow(object):
 
         self.phoneSettingsLayout.addWidget(self.phoneLeakBtn)
 
+        self.phone7telBtn = QPushButton(self.phoneSettingsSection)
+        self.phone7telBtn.setObjectName(u"phone7telBtn")
+
+        self.phoneSettingsLayout.addWidget(self.phone7telBtn)
+
         self.phoneVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.phoneSettingsLayout.addItem(self.phoneVerticalSpacer)
@@ -1831,6 +1836,7 @@ class Ui_MainWindow(object):
         self.phoneParseBtn.setText(QCoreApplication.translate("MainWindow", u"Parse / Validate", None))
         self.phoneLookupBtn.setText(QCoreApplication.translate("MainWindow", u"Reverse Lookup", None))
         self.phoneLeakBtn.setText(QCoreApplication.translate("MainWindow", u"Check Leaks", None))
+        self.phone7telBtn.setText(QCoreApplication.translate("MainWindow", u"7tel.ru Search", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.phoneTab), QCoreApplication.translate("MainWindow", u"PHONE", None))
         self.checkMacAddrButton.setText(QCoreApplication.translate("MainWindow", u"Check", None))
         self.macAddrEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mac Addr", None))

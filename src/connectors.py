@@ -218,6 +218,9 @@ def setup_phone_connectors(controller: "PhoneController"):
     controller.ui.phoneLeakBtn.clicked.connect(
         lambda: asyncio.ensure_future(controller.check_leaks())
     )
+    controller.ui.phone7telBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search_7tel())
+    )
 
 
 def setup_mac_location_connectors(controller: "MacLocationController"):

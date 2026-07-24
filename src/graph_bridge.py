@@ -270,6 +270,7 @@ class GraphBridgeServer:
             return {"error": "x and y coordinates are required"}
 
         from PySide6.QtCore import QPointF
+
         node.setPos(QPointF(float(x), float(y)))
         node.update()
         for edge in node._connected_edges():
@@ -446,9 +447,7 @@ class GraphBridgeClient:
         return self.send(msg)
 
     def move_node(self, node_id: str, x: float, y: float) -> dict:
-        return self.send(
-            {"action": "move_node", "node_id": node_id, "x": x, "y": y}
-        )
+        return self.send({"action": "move_node", "node_id": node_id, "x": x, "y": y})
 
     def remove_node(self, node_id: str) -> dict:
         return self.send({"action": "remove_node", "node_id": node_id})

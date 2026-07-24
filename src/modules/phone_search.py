@@ -384,7 +384,7 @@ class PhoneSearch:
             on_result(lines[-1])
 
         main_info = re.findall(
-            r'<span>([^<]+)</span>',
+            r"<span>([^<]+)</span>",
             html.split('<div class="MainPhone">')[1].split("</div>")[0]
             if '<div class="MainPhone">' in html
             else "",

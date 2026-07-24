@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>13</number>
+         <number>12</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1453,22 +1453,22 @@
                 </property>
                </widget>
               </item>
-               <item>
-                <widget class="QPushButton" name="phoneLeakBtn">
-                 <property name="text">
-                  <string>Check Leaks</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="phone7telBtn">
-                 <property name="text">
-                  <string>7tel.ru Search</string>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <spacer name="phoneVerticalSpacer">
+              <item>
+               <widget class="QPushButton" name="phoneLeakBtn">
+                <property name="text">
+                 <string>Check Leaks</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="phone7telBtn">
+                <property name="text">
+                 <string>7tel.ru Search</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="phoneVerticalSpacer">
                 <property name="orientation">
                  <enum>Qt::Orientation::Vertical</enum>
                 </property>
@@ -1816,16 +1816,16 @@
          </attribute>
          <layout class="QHBoxLayout" name="steganographyLayout">
           <property name="leftMargin">
-           <number>0</number>
+           <number>9</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>9</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>9</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>9</number>
           </property>
           <item>
            <widget class="QSplitter" name="steganographySplitter">

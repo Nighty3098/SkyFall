@@ -869,7 +869,14 @@ async def skyfall_graph_add_edge(
     if bridge is None:
         return _graph_not_available_bridge()
     return await _graph_bridge_send(
-        bridge, "add_edge", source_id, target_id, relationship, label, source_port, target_port
+        bridge,
+        "add_edge",
+        source_id,
+        target_id,
+        relationship,
+        label,
+        source_port,
+        target_port,
     )
 
 

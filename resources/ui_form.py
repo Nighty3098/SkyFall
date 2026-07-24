@@ -1218,7 +1218,7 @@ class Ui_MainWindow(object):
         self.steganographyTab.setObjectName(u"steganographyTab")
         self.steganographyLayout = QHBoxLayout(self.steganographyTab)
         self.steganographyLayout.setObjectName(u"steganographyLayout")
-        self.steganographyLayout.setContentsMargins(0, 0, 0, 0)
+        self.steganographyLayout.setContentsMargins(9, 9, 9, 9)
         self.steganographySplitter = QSplitter(self.steganographyTab)
         self.steganographySplitter.setObjectName(u"steganographySplitter")
         self.steganographySplitter.setOrientation(Qt.Orientation.Horizontal)
@@ -1694,7 +1694,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(13)
+        self.mainStackedWidget.setCurrentIndex(12)
 
 
         QMetaObject.connectSlotsByName(MainWindow)

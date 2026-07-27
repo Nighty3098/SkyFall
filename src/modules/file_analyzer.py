@@ -414,11 +414,10 @@ class FileAnalyzer:
         return await asyncio.to_thread(_extract, path)
 
     async def get_strings(self, path, min_len=4):
-        with open(path, "rb") as f:
-            content = f.read()
+        def _read_and_extract(path):
+            with open(path, "rb") as f:
+                content = f.read()
+            pattern = rb"[ -~]{" + str(min_len).encode() + rb",}"
+            return [s.decode("ascii") for s in _re.findall(pattern, content)]
 
-        # Matches printable ASCII characters: space (32) to ~ (126)
-        # The {min_len,} ensures it only picks up sequences of at least X characters
-        pattern = rb"[ -~]{" + str(min_len).encode() + rb",}"
-
-        return [s.decode("ascii") for s in _re.findall(pattern, content)]
+        return await asyncio.to_thread(_read_and_extract, path)

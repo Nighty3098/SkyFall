@@ -70,7 +70,10 @@ class GraphTransformController:
         return self._registry.get(etype, [])
 
     def execute(self, node, transform_def):
-        asyncio.ensure_future(self._execute_async(node, transform_def))
+        self._active_tasks = getattr(self, "_active_tasks", set())
+        task = asyncio.ensure_future(self._execute_async(node, transform_def))
+        self._active_tasks.add(task)
+        task.add_done_callback(self._active_tasks.discard)
 
     async def _execute_async(self, node, transform_def):
         title = (node.title or "").strip()

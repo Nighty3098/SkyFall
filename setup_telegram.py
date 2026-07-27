@@ -53,8 +53,8 @@ async def main():
     parser.add_argument("--api-hash", help="Telegram API hash")
     args = parser.parse_args()
 
-    api_id = args.api_id or os.getenv("API_ID") or input("API ID: ").strip()
-    api_hash = args.api_hash or os.getenv("API_HASH") or input("API Hash: ").strip()
+    api_id = args.api_id or os.getenv("API_ID") or (await asyncio.to_thread(input, "API ID: ")).strip()
+    api_hash = args.api_hash or os.getenv("API_HASH") or (await asyncio.to_thread(input, "API Hash: ")).strip()
 
     if not api_id or not api_hash:
         print("API_ID and API_HASH are required")

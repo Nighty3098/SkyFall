@@ -163,7 +163,7 @@ class MainWindow(QMainWindow):
         if hasattr(self, "mcpController"):
             self.mcpController.cleanup()
         if hasattr(self, "fileAnalyzer"):
-            asyncio.ensure_future(self.fileAnalyzer.close())
+            self._close_task = asyncio.ensure_future(self.fileAnalyzer.close())
         super().closeEvent(event)
 
     def _wire_case_auto_save(self):
@@ -394,6 +394,6 @@ if __name__ == "__main__":
 
     loop = QEventLoop(app)
     asyncio.set_event_loop(loop)
-    asyncio.ensure_future(widget._async_init())
+    widget._async_init_task = asyncio.ensure_future(widget._async_init())
     loop.run_forever()
     loop.close()

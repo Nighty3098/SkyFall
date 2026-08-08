@@ -41,11 +41,12 @@ class CaseManager:
         "dorksResult": "dorking",
     }
 
-    def __init__(self):
+    def __init__(self, menu=None):
         self.current_case_path: Path | None = None
         self.current_case_name: str = ""
         self._last_saved: dict[str, str] = {}
         self._current_files: dict[str, Path] = {}
+        self._menu = menu
 
     def create_case(self):
         path_str = QFileDialog.getExistingDirectory(
@@ -59,6 +60,7 @@ class CaseManager:
         self._last_saved.clear()
         self._current_files.clear()
         self._ensure_structure()
+        self._update_menu_title()
         logger.info(f"Case created: {self.current_case_name} ({path})")
 
     def open_case(self):
@@ -71,7 +73,16 @@ class CaseManager:
         self._last_saved.clear()
         self._current_files.clear()
         self._ensure_structure()
+        self._update_menu_title()
         logger.info(f"Case opened: {self.current_case_name} ({path})")
+
+    def _update_menu_title(self):
+        if self._menu is None:
+            return
+        if self.current_case_name:
+            self._menu.setTitle(self.current_case_name)
+        else:
+            self._menu.setTitle(" SkyFall")
 
     def _ensure_structure(self):
         if not self.current_case_path:

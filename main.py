@@ -128,7 +128,7 @@ class MainWindow(QMainWindow):
         if self.settings.frameless_window:
             self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
-        self.case_manager = CaseManager()
+        self.case_manager = CaseManager(self.ui.menu_SkyFall)
         self._init_modules()
         self.settings.on_save(self._sync_tokens)
         setup_ui(self)

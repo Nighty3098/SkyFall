@@ -7,6 +7,7 @@ import networkx as nx
 from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import (
     QAction,
+    QActionGroup,
     QBrush,
     QColor,
     QDesktopServices,
@@ -83,6 +84,12 @@ RELATIONSHIP_TYPES = [
     "hosted_by",
     "linked_to",
 ]
+
+EDGE_STYLES = {
+    "normal": {"label": "Normal", "width": 3, "pen_style": Qt.PenStyle.SolidLine},
+    "dashed": {"label": "Dashed", "width": 3, "pen_style": Qt.PenStyle.DashLine},
+    "bold": {"label": "Bold", "width": 6, "pen_style": Qt.PenStyle.SolidLine},
+}
 
 
 def build_edge_path(src, tgt, sdir, tdir):
@@ -352,6 +359,7 @@ class EdgeItem(QGraphicsPathItem):
         target_port="left",
         label="",
         relationship_type="",
+        style="normal",
         parent=None,
     ):
         super().__init__(parent)
@@ -361,10 +369,24 @@ class EdgeItem(QGraphicsPathItem):
         self.target_port = target_port
         self.label = label
         self.relationship_type = relationship_type
-        self.setPen(QPen(_theme_colors()["edge_color"], 3))
+        self.style = style if style in EDGE_STYLES else "normal"
+        self.setPen(self._make_pen())
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.adjust()
+
+    def _make_pen(self):
+        spec = EDGE_STYLES.get(self.style, EDGE_STYLES["normal"])
+        pen = QPen(
+            _theme_colors()["edge_color"],
+            spec["width"],
+            spec["pen_style"],
+            Qt.PenCapStyle.RoundCap,
+            Qt.PenJoinStyle.RoundJoin,
+        )
+        if self.style == "dashed":
+            pen.setDashPattern([6, 4])
+        return pen
 
     def adjust(self):
         src = self.source.mapToScene(self.source.port_pos(self.source_port))
@@ -382,13 +404,8 @@ class EdgeItem(QGraphicsPathItem):
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         c = _theme_colors()
-        pen = QPen(
-            c["edge_color"],
-            3,
-            Qt.PenStyle.SolidLine,
-            Qt.PenCapStyle.RoundCap,
-            Qt.PenJoinStyle.RoundJoin,
-        )
+        spec = EDGE_STYLES.get(self.style, EDGE_STYLES["normal"])
+        pen = self._make_pen()
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(self.path())
@@ -408,7 +425,7 @@ class EdgeItem(QGraphicsPathItem):
             painter.save()
             painter.translate(last_pt)
             painter.rotate(angle)
-            arrow_size = 12
+            arrow_size = 9 + spec["width"]
             painter.setBrush(QBrush(c["edge_color"]))
             painter.setPen(Qt.PenStyle.NoPen)
             arrow_path = QPainterPath()
@@ -988,6 +1005,20 @@ class GraphWidget(QGraphicsView):
             label_action = QAction("Edit Edge", self)
             label_action.triggered.connect(lambda: self.edit_edge_label(item))
             menu.addAction(label_action)
+
+            style_menu = QMenu("Style", self)
+            style_group = QActionGroup(self)
+            style_group.setExclusive(True)
+            for sname in EDGE_STYLES:
+                act = QAction(EDGE_STYLES[sname]["label"], self)
+                act.setCheckable(True)
+                act.setChecked(item.style == sname)
+                act.triggered.connect(
+                    lambda checked, n=item, s=sname: self._set_edge_style(n, s)
+                )
+                style_group.addAction(act)
+                style_menu.addAction(act)
+            menu.addMenu(style_menu)
             menu.addSeparator()
             delete_action = QAction("Delete Edge", self)
             delete_action.triggered.connect(lambda: self.remove_edge(item))
@@ -1068,6 +1099,11 @@ class GraphWidget(QGraphicsView):
         node.evidence = evidence
         node.prepareGeometryChange()
         node.update()
+
+    def _set_edge_style(self, edge, style):
+        edge.style = style if style in EDGE_STYLES else "normal"
+        edge.setPen(edge._make_pen())
+        edge.update()
 
     def edit_edge_label(self, edge: EdgeItem):
         dialog = QDialog(self)
@@ -1349,6 +1385,7 @@ class GraphWidget(QGraphicsView):
                         "target_port": item.target_port,
                         "label": item.label,
                         "relationship_type": item.relationship_type,
+                        "style": item.style,
                     }
                 )
         return {"nodes": nodes, "edges": edges}
@@ -1381,6 +1418,7 @@ class GraphWidget(QGraphicsView):
                     tp,
                     label=e.get("label", ""),
                     relationship_type=e.get("relationship_type", ""),
+                    style=e.get("style", "normal"),
                 )
                 self._scene.addItem(edge)
                 src.add_edge_ref(edge)

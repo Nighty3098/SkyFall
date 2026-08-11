@@ -85,6 +85,29 @@ RELATIONSHIP_TYPES = [
 ]
 
 
+def build_edge_path(src, tgt, sdir, tdir):
+    path = QPainterPath()
+    path.moveTo(src)
+    dist = QLineF(src, tgt).length()
+    if dist <= 0:
+        path.lineTo(tgt)
+        return path
+
+    straight = min(24.0, dist * 0.3)
+    bend = min(max(dist * 0.25, 16.0), 80.0)
+    bend = min(bend, max((dist - 2 * straight) * 0.5, 4.0))
+
+    p1 = QPointF(src.x() + sdir.x() * straight, src.y() + sdir.y() * straight)
+    p2 = QPointF(tgt.x() + tdir.x() * straight, tgt.y() + tdir.y() * straight)
+    c1 = QPointF(p1.x() + sdir.x() * bend, p1.y() + sdir.y() * bend)
+    c2 = QPointF(p2.x() + tdir.x() * bend, p2.y() + tdir.y() * bend)
+
+    path.lineTo(p1)
+    path.cubicTo(c1, c2, p2)
+    path.lineTo(tgt)
+    return path
+
+
 def _theme_colors(dark=None):
     if dark is None:
         ss = QApplication.instance().styleSheet()
@@ -286,14 +309,7 @@ class NodeItem(QGraphicsItem):
             start = self.mapToScene(self.port_pos(self._drag_port))
             end = event.scenePos()
             dx, dy = PORT_DIR[self._drag_port]
-            path = QPainterPath()
-            path.moveTo(start)
-            offset = max(
-                abs(end.x() - start.x()) * 0.4, abs(end.y() - start.y()) * 0.4, 30
-            )
-            ctrl1 = QPointF(start.x() + dx * offset, start.y() + dy * offset)
-            ctrl2 = QPointF(end.x(), end.y())
-            path.cubicTo(ctrl1, ctrl2, end)
+            path = build_edge_path(start, end, QPointF(dx, dy), QPointF())
             self._temp_edge.setPath(path)
         else:
             super().mouseMoveEvent(event)
@@ -345,7 +361,7 @@ class EdgeItem(QGraphicsPathItem):
         self.target_port = target_port
         self.label = label
         self.relationship_type = relationship_type
-        self.setPen(QPen(_theme_colors()["edge_color"], 4))
+        self.setPen(QPen(_theme_colors()["edge_color"], 3))
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.adjust()
@@ -353,18 +369,9 @@ class EdgeItem(QGraphicsPathItem):
     def adjust(self):
         src = self.source.mapToScene(self.source.port_pos(self.source_port))
         tgt = self.target.mapToScene(self.target.port_pos(self.target_port))
-        path = QPainterPath()
-        path.moveTo(src)
-
         sdx, sdy = PORT_DIR[self.source_port]
         tdx, tdy = PORT_DIR[self.target_port]
-        dist = (tgt - src).manhattanLength()
-        offset = max(dist * 0.4, 30)
-
-        ctrl1 = QPointF(src.x() + sdx * offset, src.y() + sdy * offset)
-        ctrl2 = QPointF(tgt.x() + tdx * offset, tgt.y() + tdy * offset)
-        path.cubicTo(ctrl1, ctrl2, tgt)
-
+        path = build_edge_path(src, tgt, QPointF(sdx, sdy), QPointF(tdx, tdy))
         self.setPath(path)
 
     def shape(self):
@@ -377,7 +384,7 @@ class EdgeItem(QGraphicsPathItem):
         c = _theme_colors()
         pen = QPen(
             c["edge_color"],
-            4,
+            3,
             Qt.PenStyle.SolidLine,
             Qt.PenCapStyle.RoundCap,
             Qt.PenJoinStyle.RoundJoin,

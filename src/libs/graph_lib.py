@@ -21,6 +21,7 @@ from PySide6.QtGui import (
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
+    QColorDialog,
     QComboBox,
     QDialog,
     QDockWidget,
@@ -129,6 +130,11 @@ def _theme_colors(dark=None):
     }
 
 
+def _contrast_color(bg: QColor) -> QColor:
+    lum = (bg.red() * 0.299 + bg.green() * 0.587 + bg.blue() * 0.114) / 255.0
+    return QColor("#1a1a1a") if lum > 0.5 else QColor("#f5f5f5")
+
+
 def _center_dialog(dialog):
     screen = QApplication.primaryScreen()
     if not screen:
@@ -151,23 +157,29 @@ class NodeItem(QGraphicsItem):
         self.content = content
         self.entity_type = entity_type if entity_type in ENTITY_NAMES else "Custom"
         self.evidence = []
+        self.color = None
         self._edges = []
         self._width = 160
+        self._height = 120
         self._port_radius = 6
         self._dragging_edge = False
         self._drag_port = None
         self._temp_edge = None
+        self._resizing = False
+        self._resize_start = QPointF()
+        self._resize_size = QPointF()
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemSendsGeometryChanges, True)
+        self.setAcceptHoverEvents(True)
         self.setCacheMode(QGraphicsItem.CacheMode.DeviceCoordinateCache)
 
     def symbol(self):
         return ENTITY_SYMBOLS.get(self.entity_type, "\u2699\ufe0f")
 
     def _get_height(self):
-        return 120
+        return self._height
 
     def boundingRect(self):
         m = self._port_radius + 4
@@ -179,6 +191,23 @@ class NodeItem(QGraphicsItem):
         c = _theme_colors()
         rect = QRectF(0, 0, self._width, self._get_height()).adjusted(1, 1, -1, -1)
         type_color = QColor(ENTITY_COLORS.get(self.entity_type, "#636e72"))
+
+        custom = QColor(self.color) if self.color else None
+        if custom is not None:
+            contrast = _contrast_color(custom)
+            card_bg = custom
+            title_color = contrast
+            content_color = QColor(contrast)
+            content_color.setAlpha(200)
+            port_color = contrast
+            border_color = QColor(contrast)
+            border_color.setAlpha(200 if self.isSelected() else 90)
+        else:
+            card_bg = c["card_bg"]
+            title_color = c["card_title"]
+            content_color = c["card_content"]
+            port_color = c["port_color"]
+            border_color = c["port_color"] if self.isSelected() else c["card_border"]
 
         glow_color = QColor(type_color)
         glow_color.setAlpha(40)
@@ -192,18 +221,17 @@ class NodeItem(QGraphicsItem):
             glow_rect2 = rect.adjusted(-1, -1, 1, 1)
             painter.drawRoundedRect(glow_rect2, 11, 11)
 
-        painter.setBrush(QBrush(c["card_bg"]))
+        painter.setBrush(QBrush(card_bg))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(rect, 10, 10)
 
-        border_color = c["port_color"] if self.isSelected() else c["card_border"]
         border_width = 2 if self.isSelected() else 1
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(border_color, border_width))
         painter.drawRoundedRect(rect, 10, 10)
 
         title_y = 10
-        painter.setPen(c["card_title"])
+        painter.setPen(title_color)
         font_title = QFont("Segoe UI", 10, QFont.Weight.Bold)
         painter.setFont(font_title)
         title_rect = QRectF(10, title_y, self._width - 20, 20)
@@ -217,7 +245,7 @@ class NodeItem(QGraphicsItem):
         content_area = self._get_height() - y_offset - 6
 
         if self.content:
-            painter.setPen(c["card_content"])
+            painter.setPen(content_color)
             font_content = QFont("Segoe UI", 9)
             painter.setFont(font_content)
             content_rect = QRectF(10, y_offset, self._width - 20, content_area)
@@ -225,7 +253,7 @@ class NodeItem(QGraphicsItem):
             opt.setWrapMode(QTextOption.WrapMode.WordWrap)
             painter.drawText(content_rect, self.content, opt)
         elif self.evidence:
-            painter.setPen(c["card_content"])
+            painter.setPen(content_color)
             font_content = QFont("Segoe UI", 7)
             painter.setFont(font_content)
             max_items = min(len(self.evidence), 3)
@@ -246,8 +274,21 @@ class NodeItem(QGraphicsItem):
 
         painter.setPen(Qt.PenStyle.NoPen)
         for _, pos in self._ports().items():
-            painter.setBrush(QBrush(c["port_color"]))
+            painter.setBrush(QBrush(port_color))
             painter.drawEllipse(pos, self._port_radius, self._port_radius)
+
+        if self.isSelected():
+            hr = self._resize_handle_rect().adjusted(3, 3, -3, -3)
+            painter.setBrush(QBrush(type_color))
+            painter.setPen(QPen(type_color, 1))
+            painter.drawRoundedRect(hr, 3, 3)
+
+    def _resize_handle_rect(self):
+        s = 16
+        return QRectF(self._width - s, self._height - s, s, s)
+
+    def _on_resize_handle(self, pos):
+        return self._resize_handle_rect().adjusted(-2, -2, 2, 2).contains(pos)
 
     def _ports(self):
         h = self._get_height()
@@ -285,9 +326,24 @@ class NodeItem(QGraphicsItem):
                 return name
         return None
 
+    def hoverMoveEvent(self, event):
+        if self._on_resize_handle(event.pos()):
+            self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+        elif self._port_at_pos(event.pos()):
+            self.setCursor(Qt.CursorShape.CrossCursor)
+        else:
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+        super().hoverMoveEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self.setCursor(Qt.CursorShape.ArrowCursor)
+        super().hoverLeaveEvent(event)
+
     def mouseDoubleClickEvent(self, event):
-        if event.button() == Qt.MouseButton.LeftButton and not self._port_at_pos(
-            event.pos()
+        if (
+            event.button() == Qt.MouseButton.LeftButton
+            and not self._port_at_pos(event.pos())
+            and not self._on_resize_handle(event.pos())
         ):
             for view in self.scene().views():
                 if isinstance(view, GraphWidget):
@@ -297,6 +353,13 @@ class NodeItem(QGraphicsItem):
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.LeftButton:
+            if self._on_resize_handle(event.pos()):
+                self._resizing = True
+                self._resize_start = event.pos()
+                self._resize_size = QPointF(self._width, self._height)
+                self.setCursor(Qt.CursorShape.SizeFDiagCursor)
+                event.accept()
+                return
             port = self._port_at_pos(event.pos())
             if port:
                 self._drag_port = port
@@ -312,6 +375,19 @@ class NodeItem(QGraphicsItem):
         self._dragging_edge = True
 
     def mouseMoveEvent(self, event):
+        if self._resizing:
+            delta = event.pos() - self._resize_start
+            new_w = max(100, int(self._resize_size.x() + delta.x()))
+            new_h = max(60, int(self._resize_size.y() + delta.y()))
+            if new_w != self._width or new_h != self._height:
+                self.prepareGeometryChange()
+                self._width = new_w
+                self._height = new_h
+                for edge in self._connected_edges():
+                    edge.adjust()
+                self.update()
+            event.accept()
+            return
         if self._dragging_edge and self._temp_edge:
             start = self.mapToScene(self.port_pos(self._drag_port))
             end = event.scenePos()
@@ -322,6 +398,11 @@ class NodeItem(QGraphicsItem):
             super().mouseMoveEvent(event)
 
     def mouseReleaseEvent(self, event):
+        if self._resizing:
+            self._resizing = False
+            self.setCursor(Qt.CursorShape.ArrowCursor)
+            event.accept()
+            return
         if self._dragging_edge:
             self._dragging_edge = False
             if self._temp_edge:
@@ -1030,6 +1111,16 @@ class GraphWidget(QGraphicsView):
             attach_action = QAction("Attach Evidence", self)
             attach_action.triggered.connect(lambda: self.edit_node(item))
             menu.addAction(attach_action)
+
+            color_action = QAction("Set Color...", self)
+            color_action.triggered.connect(lambda: self.set_node_color(item))
+            menu.addAction(color_action)
+            if item.color:
+                reset_color_action = QAction("Reset Color", self)
+                reset_color_action.triggered.connect(
+                    lambda: self.reset_node_color(item)
+                )
+                menu.addAction(reset_color_action)
             menu.addSeparator()
 
             analysis_menu = QMenu("Analysis", self)
@@ -1098,6 +1189,21 @@ class GraphWidget(QGraphicsView):
         node.entity_type = entity_type
         node.evidence = evidence
         node.prepareGeometryChange()
+        node.update()
+
+    def set_node_color(self, node: NodeItem):
+        current = (
+            QColor(node.color)
+            if node.color
+            else QColor(ENTITY_COLORS.get(node.entity_type, "#636e72"))
+        )
+        color = QColorDialog.getColor(current, self, "Node Color")
+        if color.isValid():
+            node.color = color.name()
+            node.update()
+
+    def reset_node_color(self, node: NodeItem):
+        node.color = None
         node.update()
 
     def _set_edge_style(self, edge, style):
@@ -1374,6 +1480,9 @@ class GraphWidget(QGraphicsView):
                         "evidence": item.evidence,
                         "x": item.pos().x(),
                         "y": item.pos().y(),
+                        "width": item._width,
+                        "height": item._height,
+                        "color": item.color,
                     }
                 )
             elif isinstance(item, EdgeItem):
@@ -1402,6 +1511,9 @@ class GraphWidget(QGraphicsView):
                 node_id=nid,
             )
             node.evidence = n.get("evidence", [])
+            node.color = n.get("color")
+            node._width = int(n.get("width", 160))
+            node._height = int(n.get("height", 120))
             node.setPos(n.get("x", 0), n.get("y", 0))
             self._scene.addItem(node)
             node_map[nid] = node

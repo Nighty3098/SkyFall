@@ -30,44 +30,61 @@ class MaigretSearch:
         top_sites=510,
     ) -> str:
         try:
-            sites = self.db.ranked_sites_dict(top=top_sites, disabled=False)
-            all_results = {}
-            sites_list = list(sites.items())
-            total = len(sites_list)
-            chunk_size = max(50, total // 10)
-
-            for i in range(0, total, chunk_size):
-                chunk = dict(sites_list[i : i + chunk_size])
-                try:
-                    results = await maigret_search(
-                        username=username,
-                        site_dict=chunk,
-                        logger=_maigret_logger,
-                        timeout=30,
-                        is_parsing_enabled=True,
-                        max_connections=100,
-                    )
-                    all_results.update(results)
-                except Exception as e:
-                    logger.error(f"Maigret chunk error: {e}")
-
-                done = min(i + chunk_size, total)
-                if on_progress:
-                    on_progress(done, total)
-
+            all_results = await self._search_all(username, on_progress, top_sites)
             return self.report(username, all_results)
-
         except Exception as e:
             error_msg = f"Error during search: {e}"
             logger.error(error_msg)
             return error_msg
 
-    def report(self, username: str, data: dict) -> str:
-        from maigret.result import MaigretCheckStatus
+    async def search_and_report_structured(
+        self,
+        username: str,
+        on_progress=None,
+        top_sites=510,
+    ) -> tuple[str, list[dict]]:
+        try:
+            all_results = await self._search_all(username, on_progress, top_sites)
+            return self.report_structured(username, all_results)
+        except Exception as e:
+            error_msg = f"Error during search: {e}"
+            logger.error(error_msg)
+            return error_msg, []
 
-        output_lines = []
-        output_lines.append(divider())
-        output_lines.append(title(f"Searching: {username}") + "\n")
+    async def _search_all(self, username, on_progress=None, top_sites=510):
+        sites = self.db.ranked_sites_dict(top=top_sites, disabled=False)
+        all_results = {}
+        sites_list = list(sites.items())
+        total = len(sites_list)
+        chunk_size = max(50, total // 10)
+
+        for i in range(0, total, chunk_size):
+            chunk = dict(sites_list[i : i + chunk_size])
+            try:
+                results = await maigret_search(
+                    username=username,
+                    site_dict=chunk,
+                    logger=_maigret_logger,
+                    timeout=30,
+                    is_parsing_enabled=True,
+                    max_connections=100,
+                )
+                all_results.update(results)
+            except Exception as e:
+                logger.error(f"Maigret chunk error: {e}")
+
+            done = min(i + chunk_size, total)
+            if on_progress:
+                on_progress(done, total)
+
+        return all_results
+
+    def report_structured(self, username: str, data: dict) -> tuple[str, list[dict]]:
+        matches, _, _, _ = self._collect_matches(data)
+        return self.report(username, data), matches
+
+    def _collect_matches(self, data: dict) -> tuple[list[dict], list, list, list]:
+        from maigret.result import MaigretCheckStatus
 
         matches = []
         not_found = []
@@ -99,6 +116,15 @@ class MaigretSearch:
                 disabled.append(site_name)
             else:
                 unknown.append(site_name)
+
+        return matches, not_found, unknown, disabled
+
+    def report(self, username: str, data: dict) -> str:
+        matches, not_found, unknown, disabled = self._collect_matches(data)
+
+        output_lines = []
+        output_lines.append(divider())
+        output_lines.append(title(f"Searching: {username}") + "\n")
 
         if matches:
             output_lines.append(info(f"Found accounts: {len(matches)}"))

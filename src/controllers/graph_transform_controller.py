@@ -438,10 +438,6 @@ def _parse_username_search(results, username):
     )
 
 
-def _parse_maigret_search(report, username):
-    return TransformResult(content=report)
-
-
 def _parse_domain_ip(data, domain):
     if not isinstance(data, dict):
         return TransformResult(content=str(data))
@@ -1052,9 +1048,26 @@ async def _transform_username_search(username, modules):
 
 
 async def _transform_maigret_search(username, modules):
-    return await _run_transform(
-        modules, "maigret_search", "search_and_report", username, _parse_maigret_search
-    )
+    engine = modules.get("maigret_search")
+    if not engine:
+        return TransformResult(content="Maigret module not available")
+    report_text, matches = await engine.search_and_report_structured(username)
+    children = []
+    for m in matches:
+        lines = [
+            kv("Status", m.get("status", "")),
+            kv("URL", m.get("url_user", "")),
+        ]
+        lines += [kv(k, v) for k, v in m.get("ids", {}).items() if v not in (None, "")]
+        children.append(
+            ChildNodeDef(
+                title=m["site"],
+                entity_type="Custom",
+                content="\n".join(lines),
+                evidence=[m["url_user"]] if m.get("url_user") else [],
+            )
+        )
+    return TransformResult(children=children, content=report_text)
 
 
 async def _transform_domain_ip(domain, modules):

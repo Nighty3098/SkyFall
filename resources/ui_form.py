@@ -1287,7 +1287,7 @@ class Ui_MainWindow(object):
         self.s4fResultsScrollArea.setWidgetResizable(True)
         self.s4fResultsContainer = QWidget()
         self.s4fResultsContainer.setObjectName(u"s4fResultsContainer")
-        self.s4fResultsContainer.setGeometry(QRect(0, 0, 738, 689))
+        self.s4fResultsContainer.setGeometry(QRect(0, 0, 98, 28))
         self.verticalLayout_26 = QVBoxLayout(self.s4fResultsContainer)
         self.verticalLayout_26.setObjectName(u"verticalLayout_26")
         self.s4fResultsLayout = QVBoxLayout()
@@ -1694,7 +1694,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(12)
+        self.mainStackedWidget.setCurrentIndex(0)
 
 
         QMetaObject.connectSlotsByName(MainWindow)

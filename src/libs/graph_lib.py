@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import sys
 import uuid
@@ -16,8 +17,10 @@ from PySide6.QtGui import (
     QPainterPath,
     QPainterPathStroker,
     QPen,
+    QPixmap,
     QTextOption,
 )
+from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import (
     QAbstractItemView,
     QApplication,
@@ -147,6 +150,72 @@ def _center_dialog(dialog):
     )
 
 
+IMAGE_EXTS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".webp",
+    ".tif",
+    ".tiff",
+    ".ico",
+    ".avif",
+    ".svg",
+}
+
+_MISSING = object()
+
+_HTTP: QNetworkAccessManager | None = None
+_REMOTE_CACHE: dict[str, QPixmap | None] = {}
+_REMOTE_PENDING: set[str] = set()
+
+
+def _is_image_path(path: str) -> bool:
+    return os.path.splitext(path)[1].lower() in IMAGE_EXTS
+
+
+def _http_manager() -> QNetworkAccessManager:
+    global _HTTP
+    if _HTTP is None:
+        _HTTP = QNetworkAccessManager()
+    return _HTTP
+
+
+def _load_remote_pixmap(url: str, node: "NodeItem") -> QPixmap | None:
+    cached = _REMOTE_CACHE.get(url, _MISSING)
+    if cached is not _MISSING:
+        return cached
+    if url in _REMOTE_PENDING:
+        return None
+    _REMOTE_PENDING.add(url)
+    request = QNetworkRequest(QUrl(url))
+    request.setTransferTimeout(15000)
+    request.setHeader(
+        QNetworkRequest.KnownHeaders.UserAgentHeader,
+        "Mozilla/5.0 (X11; Linux x86_64) SkyFall/1.0",
+    )
+    reply = _http_manager().get(request)
+    reply.finished.connect(lambda r=reply: _on_remote_reply(r, url, node))
+    return None
+
+
+def _on_remote_reply(reply, url: str, node: "NodeItem"):
+    _REMOTE_PENDING.discard(url)
+    try:
+        data = bytes(reply.readAll())
+        pix = QPixmap()
+        if data:
+            pix.loadFromData(data)
+        _REMOTE_CACHE[url] = pix if not pix.isNull() else None
+    finally:
+        reply.deleteLater()
+    try:
+        node.update()
+    except RuntimeError:
+        pass
+
+
 class NodeItem(QGraphicsItem):
     def __init__(
         self, title="Node", content="", entity_type="Custom", node_id=None, parent=None
@@ -159,6 +228,7 @@ class NodeItem(QGraphicsItem):
         self.evidence = []
         self.color = None
         self._edges = []
+        self._photo_cache = {}
         self._width = 160
         self._height = 120
         self._port_radius = 6
@@ -177,6 +247,86 @@ class NodeItem(QGraphicsItem):
 
     def symbol(self):
         return ENTITY_SYMBOLS.get(self.entity_type, "\u2699\ufe0f")
+
+    def _photo_evidence(self):
+        if self.entity_type != "Photo":
+            return []
+        photos = []
+        for ev in self.evidence:
+            if not isinstance(ev, str) or not ev:
+                continue
+            if ev.startswith(("http://", "https://")):
+                pix = _REMOTE_CACHE.get(ev, _MISSING)
+                if pix is _MISSING:
+                    pix = _load_remote_pixmap(ev, self)
+            else:
+                pix = self._photo_cache.get(ev, _MISSING)
+                if pix is _MISSING:
+                    pix = None
+                    if _is_image_path(ev) and os.path.exists(ev):
+                        pm = QPixmap(ev)
+                        if not pm.isNull():
+                            pix = pm
+                    self._photo_cache[ev] = pix
+            if pix is not None:
+                photos.append(pix)
+        return photos
+
+    def _draw_scaled_pixmap(self, painter, pm, rect):
+        if rect.width() < 2 or rect.height() < 2:
+            return
+        scaled = pm.scaled(
+            int(rect.width()),
+            int(rect.height()),
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation,
+        )
+        if scaled.isNull():
+            return
+        x = rect.x() + (rect.width() - scaled.width()) / 2.0
+        y = rect.y() + (rect.height() - scaled.height()) / 2.0
+        clip = QPainterPath()
+        clip.addRoundedRect(rect, 6, 6)
+        painter.save()
+        painter.setClipPath(clip)
+        painter.drawPixmap(int(x), int(y), scaled)
+        painter.restore()
+
+    def _paint_photo_gallery(self, painter, photos, y_offset, area_h):
+        count = len(photos)
+        avail_w = self._width - 20
+        gap = 5.0
+        pad = 2.0
+        if count == 0 or area_h <= 0 or avail_w <= 0:
+            return
+        target = 90.0
+        cols = max(1, int((avail_w + gap) / (target + gap)))
+        cols = min(cols, count)
+        rows = math.ceil(count / cols)
+        cell = (avail_w - (cols - 1) * gap) / cols
+        cell = min(cell, (area_h - (rows - 1) * gap) / rows)
+        cell = max(cell, 1.0)
+        max_visible = cols * rows
+        c = _theme_colors()
+        for i, pm in enumerate(photos[:max_visible]):
+            col = i % cols
+            row = i // cols
+            cx = 10 + col * (cell + gap)
+            cy = y_offset + row * (cell + gap)
+            draw_rect = QRectF(cx + pad, cy + pad, cell - 2 * pad, cell - 2 * pad)
+            self._draw_scaled_pixmap(painter, pm, draw_rect)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.setPen(QPen(c["card_border"], 1))
+            painter.drawRoundedRect(draw_rect, 6, 6)
+        extra = count - max_visible
+        if extra > 0:
+            badge = QRectF(10 + avail_w - 42, y_offset + area_h - 26, 36, 20)
+            painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawRoundedRect(badge, 10, 10)
+            painter.setPen(QPen(QColor("#ffffff")))
+            painter.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+            painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, f"+{extra}")
 
     def _get_height(self):
         return self._height
@@ -244,7 +394,10 @@ class NodeItem(QGraphicsItem):
         y_offset = title_y + 22
         content_area = self._get_height() - y_offset - 6
 
-        if self.content:
+        photos = self._photo_evidence() if self.entity_type == "Photo" else None
+        if photos:
+            self._paint_photo_gallery(painter, photos, y_offset, content_area)
+        elif self.content:
             painter.setPen(content_color)
             font_content = QFont("Segoe UI", 9)
             painter.setFont(font_content)
@@ -271,6 +424,14 @@ class NodeItem(QGraphicsItem):
                     f"\u2022 {label}",
                 )
                 y_offset += 16
+        elif self.entity_type == "Photo":
+            painter.setPen(content_color)
+            painter.setFont(QFont("Segoe UI", 8))
+            painter.drawText(
+                QRectF(10, y_offset, self._width - 20, content_area),
+                Qt.AlignmentFlag.AlignCenter,
+                "No photos",
+            )
 
         painter.setPen(Qt.PenStyle.NoPen)
         for _, pos in self._ports().items():
@@ -915,6 +1076,7 @@ class PropertiesPanel(QDockWidget):
         for f in files:
             self._node.evidence.append(f)
             self.evidence_list.addItem(f"{os.path.basename(f)}\n{f}")
+        self._node._photo_cache.clear()
         self._node.update()
 
     def _add_url(self):
@@ -985,6 +1147,7 @@ class PropertiesPanel(QDockWidget):
             if 0 <= idx < len(self._node.evidence):
                 del self._node.evidence[idx]
             self.evidence_list.takeItem(idx)
+        self._node._photo_cache.clear()
         self._node.update()
 
     def _evidence_context_menu(self, pos):
@@ -1188,6 +1351,7 @@ class GraphWidget(QGraphicsView):
         node.content = content
         node.entity_type = entity_type
         node.evidence = evidence
+        node._photo_cache.clear()
         node.prepareGeometryChange()
         node.update()
 

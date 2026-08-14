@@ -97,6 +97,7 @@ class GraphNodeController:
         for f in files:
             self._current_node.evidence.append(f)
             self.ui.nodeEvidenceList.addItem(f"{os.path.basename(f)}\n{f}")
+        self._current_node._photo_cache.clear()
         self._current_node.update()
 
     def _add_url(self):
@@ -167,6 +168,7 @@ class GraphNodeController:
             if 0 <= idx < len(self._current_node.evidence):
                 del self._current_node.evidence[idx]
             self.ui.nodeEvidenceList.takeItem(idx)
+        self._current_node._photo_cache.clear()
         self._current_node.update()
 
     def _evidence_context_menu(self, pos):

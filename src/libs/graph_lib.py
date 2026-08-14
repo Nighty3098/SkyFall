@@ -1,7 +1,9 @@
 import json
 import math
 import os
+import re
 import sys
+import urllib.parse
 import uuid
 
 import networkx as nx
@@ -13,6 +15,7 @@ from PySide6.QtGui import (
     QColor,
     QDesktopServices,
     QFont,
+    QImage,
     QPainter,
     QPainterPath,
     QPainterPathStroker,
@@ -216,6 +219,241 @@ def _on_remote_reply(reply, url: str, node: "NodeItem"):
         pass
 
 
+MAP_ZOOM = 13
+MAP_ZOOM_MIN = 5
+MAP_ZOOM_MAX = 18
+MAP_MAX_GRID = 6
+_MAP_CACHE: dict[tuple, QPixmap | None] = {}
+_MAP_PENDING: dict[tuple, list] = {}
+
+
+def _map_key(lat: float, lon: float, grid: int, zoom: int = MAP_ZOOM) -> tuple:
+    return (round(lat, 5), round(lon, 5), zoom, grid)
+
+
+def _map_grid_for_size(node: "NodeItem", scale: float) -> int:
+    w = (node._width - 20) * scale
+    h = (node._get_height() - 32 - 6) * scale
+    grid = math.ceil(max(w, h) * 1.15 / 256.0)
+    return max(2, min(grid, MAP_MAX_GRID))
+
+
+def _map_zoom_target(node: "NodeItem", scene_pos) -> "NodeItem | None":
+    if node.entity_type != "Geolocation" or _resolve_coordinates(node) is None:
+        return None
+    local = node.mapFromScene(scene_pos)
+    w, h = node._width, node._get_height()
+    map_rect = QRectF(10, 32, w - 20, h - 38)
+    return node if map_rect.contains(local) else None
+
+
+def _parse_coord(text: str) -> float | None:
+    try:
+        return float(text.strip().rstrip("\u00b0"))
+    except ValueError:
+        return None
+
+
+def _node_coordinates(node: "NodeItem") -> tuple[float, float] | None:
+    match = re.fullmatch(
+        r"\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*", node.title or ""
+    )
+    if match:
+        lat, lon = float(match.group(1)), float(match.group(2))
+        if -90 <= lat <= 90 and -180 <= lon <= 180:
+            return lat, lon
+    lat = lon = None
+    for line in (node.content or "").splitlines():
+        if ":" in line:
+            key, value = line.split(":", 1)
+            key = key.strip().lower()
+            if key == "latitude":
+                lat = _parse_coord(value)
+            elif key == "longitude":
+                lon = _parse_coord(value)
+    if lat is not None and lon is not None and -90 <= lat <= 90 and -180 <= lon <= 180:
+        return lat, lon
+    return None
+
+
+def _world_pixel(lat: float, lon: float, zoom: int) -> tuple[float, float]:
+    n = 2**zoom
+    lat_rad = math.radians(lat)
+    x = (lon + 180.0) / 360.0 * n * 256.0
+    y = (1.0 - math.asinh(math.tan(lat_rad)) / math.pi) / 2.0 * n * 256.0
+    return x, y
+
+
+_GEO_CACHE: dict[str, tuple[float, float] | None] = {}
+_GEO_PENDING: set[str] = set()
+
+
+def _location_query(node: "NodeItem") -> str:
+    for source in (node.title, node.content or ""):
+        text = (source or "").strip()
+        if text:
+            return text.splitlines()[0].strip()
+    return ""
+
+
+def _location_label(node: "NodeItem") -> str:
+    coords = _node_coordinates(node)
+    if coords:
+        return f"{coords[0]:.5f}, {coords[1]:.5f}"
+    label = _location_query(node)
+    return label[:48] if label else ""
+
+
+def _geocode_query(query: str, node: "NodeItem"):
+    url = (
+        "https://nominatim.openstreetmap.org/search"
+        f"?format=jsonv2&limit=1&q={urllib.parse.quote(query)}"
+    )
+    request = QNetworkRequest(QUrl(url))
+    request.setTransferTimeout(15000)
+    request.setHeader(
+        QNetworkRequest.KnownHeaders.UserAgentHeader,
+        "Mozilla/5.0 (X11; Linux x86_64) SkyFall/1.0",
+    )
+    reply = _http_manager().get(request)
+    reply.finished.connect(lambda r=reply: _on_geocode_reply(r, query, node))
+
+
+def _on_geocode_reply(reply, query: str, node: "NodeItem"):
+    _GEO_PENDING.discard(query)
+    coords = None
+    try:
+        data = bytes(reply.readAll())
+        if data:
+            try:
+                results = json.loads(data)
+                if results:
+                    lat = _parse_coord(str(results[0].get("lat", "")))
+                    lon = _parse_coord(str(results[0].get("lon", "")))
+                    if lat is not None and lon is not None:
+                        coords = (lat, lon)
+            except ValueError:
+                pass
+    finally:
+        reply.deleteLater()
+    _GEO_CACHE[query] = coords
+    try:
+        node.update()
+    except RuntimeError:
+        pass
+
+
+def _resolve_coordinates(node: "NodeItem") -> tuple[float, float] | None:
+    coords = _node_coordinates(node)
+    if coords:
+        return coords
+    if node.entity_type != "Geolocation":
+        return None
+    query = _location_query(node)
+    if not query:
+        return None
+    cached = _GEO_CACHE.get(query, _MISSING)
+    if cached is not _MISSING:
+        return cached
+    if query not in _GEO_PENDING:
+        _GEO_PENDING.add(query)
+        _geocode_query(query, node)
+    return None
+
+
+def _load_map_pixmap(
+    node: "NodeItem", grid: int = 2, zoom: int = MAP_ZOOM
+) -> QPixmap | None:
+    coords = _resolve_coordinates(node)
+    if coords is None:
+        return None
+    key = _map_key(*coords, grid, zoom)
+    cached = _MAP_CACHE.get(key, _MISSING)
+    if cached is not _MISSING:
+        return cached
+    waiters = _MAP_PENDING.setdefault(key, [])
+    waiters.append(node)
+    if len(waiters) == 1:
+        _download_map_tiles(key, *coords, grid, zoom)
+    return None
+
+
+def _invalidate_map_cache(node: "NodeItem"):
+    coords = _resolve_coordinates(node)
+    if coords is None:
+        return
+    rlat, rlon = round(coords[0], 5), round(coords[1], 5)
+    for key in list(_MAP_CACHE):
+        if key[0] == rlat and key[1] == rlon:
+            del _MAP_CACHE[key]
+    for key in list(_MAP_PENDING):
+        if key[0] == rlat and key[1] == rlon:
+            try:
+                node.update()
+            except RuntimeError:
+                pass
+            del _MAP_PENDING[key]
+
+
+def _download_map_tiles(key: tuple, lat: float, lon: float, grid: int, zoom: int):
+    x, y = _world_pixel(lat, lon, zoom)
+    tx, ty = int(x // 256), int(y // 256)
+    tx0, ty0 = tx - grid // 2, ty - grid // 2
+    pending = {"n": 0}
+    total = grid * grid
+    tiles = [None] * total
+    manager = _http_manager()
+    for i in range(total):
+        xt = tx0 + (i % grid)
+        yt = ty0 + (i // grid)
+        url = f"https://tile.openstreetmap.org/{zoom}/{xt}/{yt}.png"
+        request = QNetworkRequest(QUrl(url))
+        request.setTransferTimeout(15000)
+        request.setHeader(
+            QNetworkRequest.KnownHeaders.UserAgentHeader,
+            "Mozilla/5.0 (X11; Linux x86_64) SkyFall/1.0",
+        )
+        reply = manager.get(request)
+        pending["n"] += 1
+        reply.finished.connect(
+            lambda r=reply, i=i, t=tiles: _on_map_tile(
+                r, key, i, t, pending, grid, tx0, ty0
+            )
+        )
+
+
+def _on_map_tile(
+    reply, key: tuple, index: int, tiles: list, pending: dict, grid, tx0, ty0
+):
+    try:
+        data = bytes(reply.readAll())
+        img = QImage()
+        if data and img.loadFromData(data):
+            tiles[index] = img
+    finally:
+        reply.deleteLater()
+    pending["n"] -= 1
+    if pending["n"] > 0:
+        return
+    size = grid * 256
+    mosaic = QImage(size, size, QImage.Format.Format_RGB32)
+    mosaic.fill(QColor("#DDDDDD"))
+    painter = QPainter(mosaic)
+    for i, tile in enumerate(tiles):
+        if tile is None:
+            continue
+        xt = tx0 + (i % grid)
+        yt = ty0 + (i // grid)
+        painter.drawImage((xt - tx0) * 256, (yt - ty0) * 256, tile)
+    painter.end()
+    _MAP_CACHE[key] = QPixmap.fromImage(mosaic)
+    for node in _MAP_PENDING.pop(key, []):
+        try:
+            node.update()
+        except RuntimeError:
+            pass
+
+
 class NodeItem(QGraphicsItem):
     def __init__(
         self, title="Node", content="", entity_type="Custom", node_id=None, parent=None
@@ -229,6 +467,7 @@ class NodeItem(QGraphicsItem):
         self.color = None
         self._edges = []
         self._photo_cache = {}
+        self._map_zoom = MAP_ZOOM
         self._width = 160
         self._height = 120
         self._port_radius = 6
@@ -328,6 +567,68 @@ class NodeItem(QGraphicsItem):
             painter.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
             painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, f"+{extra}")
 
+    def _paint_map(self, painter, pm, y_offset, area_h, coords, zoom=MAP_ZOOM):
+        rect = QRectF(10, y_offset, self._width - 20, area_h)
+        if rect.width() < 2 or rect.height() < 2:
+            return
+        lat, lon = coords
+        x, y = _world_pixel(lat, lon, zoom)
+        grid = pm.width() // 256
+        tx, ty = int(x // 256), int(y // 256)
+        tx0, ty0 = tx - grid // 2, ty - grid // 2
+        px, py = x - tx0 * 256, y - ty0 * 256
+
+        dst_ar = rect.width() / rect.height()
+        src_ar = pm.width() / pm.height()
+        if src_ar > dst_ar:
+            sw = pm.height() * dst_ar
+            sx = (pm.width() - sw) / 2
+            sy, sh = 0.0, float(pm.height())
+        else:
+            sh = pm.width() / dst_ar
+            sy = (pm.height() - sh) / 2
+            sx, sw = 0.0, float(pm.width())
+
+        clip = QPainterPath()
+        clip.addRoundedRect(rect, 6, 6)
+        painter.save()
+        painter.setClipPath(clip)
+        painter.drawPixmap(rect.toRect(), pm, QRectF(sx, sy, sw, sh).toRect())
+        painter.restore()
+
+        pin_x = rect.x() + (px - sx) / sw * rect.width()
+        pin_y = rect.y() + (py - sy) / sh * rect.height()
+        pin = QPainterPath()
+        pin.addEllipse(QPointF(pin_x, pin_y - 9), 6, 6)
+        pin.moveTo(pin_x - 3.5, pin_y - 2)
+        pin.lineTo(pin_x + 3.5, pin_y - 2)
+        pin.lineTo(pin_x, pin_y + 7)
+        pin.closeSubpath()
+        painter.setBrush(QBrush(QColor("#e74c3c")))
+        painter.setPen(QPen(QColor("#ffffff"), 1.5))
+        painter.drawPath(pin)
+
+        c = _theme_colors()
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(c["card_border"], 1))
+        painter.drawRoundedRect(rect, 6, 6)
+
+        label = f"{lat:.5f}, {lon:.5f}"
+        painter.setFont(QFont("Segoe UI", 7))
+        fm = painter.fontMetrics()
+        tw = fm.horizontalAdvance(label) + 12
+        chip = QRectF(
+            rect.x() + 4,
+            rect.bottom() - 18,
+            min(tw, rect.width() - 8),
+            14,
+        )
+        painter.setBrush(QBrush(QColor(0, 0, 0, 150)))
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(chip, 7, 7)
+        painter.setPen(QPen(QColor("#ffffff")))
+        painter.drawText(chip, Qt.AlignmentFlag.AlignCenter, label)
+
     def _get_height(self):
         return self._height
 
@@ -397,6 +698,43 @@ class NodeItem(QGraphicsItem):
         photos = self._photo_evidence() if self.entity_type == "Photo" else None
         if photos:
             self._paint_photo_gallery(painter, photos, y_offset, content_area)
+        elif self.entity_type == "Geolocation":
+            coords = _resolve_coordinates(self)
+            map_pix = None
+            if coords:
+                zoom = self._map_zoom
+                scale = max(0.5, abs(painter.worldTransform().m11()))
+                grid = _map_grid_for_size(self, scale)
+                map_pix = _load_map_pixmap(self, grid, zoom)
+                if map_pix is None:
+                    for g in range(grid - 1, 1, -1):
+                        pm = _MAP_CACHE.get(_map_key(*coords, g, zoom))
+                        if pm is not None:
+                            map_pix = pm
+                            break
+            if map_pix is not None:
+                self._paint_map(painter, map_pix, y_offset, content_area, coords, zoom)
+            else:
+                label = _location_label(self)
+                if not label:
+                    painter.setPen(content_color)
+                    painter.setFont(QFont("Segoe UI", 8))
+                    painter.drawText(
+                        QRectF(10, y_offset, self._width - 20, content_area),
+                        Qt.AlignmentFlag.AlignCenter,
+                        "No location",
+                    )
+                else:
+                    text = f"\U0001f4cd {label}"
+                    if coords is None:
+                        text += " \u2026"
+                    painter.setPen(content_color)
+                    painter.setFont(QFont("Segoe UI", 8))
+                    painter.drawText(
+                        QRectF(10, y_offset, self._width - 20, content_area),
+                        Qt.AlignmentFlag.AlignCenter,
+                        text,
+                    )
         elif self.content:
             painter.setPen(content_color)
             font_content = QFont("Segoe UI", 9)
@@ -1579,7 +1917,23 @@ class GraphWidget(QGraphicsView):
                 main.statusBar().showMessage(msg, 5000)
 
     def wheelEvent(self, event):
-        factor = 1.15 if event.angleDelta().y() > 0 else 1 / 1.15
+        delta = event.angleDelta().y()
+        scene_pos = self.mapToScene(event.position().toPoint())
+        item = self._scene.itemAt(scene_pos, self.transform())
+        target = None
+        if isinstance(item, NodeItem) and (
+            event.modifiers() & Qt.KeyboardModifier.ControlModifier
+        ):
+            target = _map_zoom_target(item, scene_pos)
+        if target is not None:
+            new_zoom = target._map_zoom + (1 if delta > 0 else -1)
+            if MAP_ZOOM_MIN <= new_zoom <= MAP_ZOOM_MAX:
+                target._map_zoom = new_zoom
+                _invalidate_map_cache(target)
+                target.update()
+                event.accept()
+                return
+        factor = 1.15 if delta > 0 else 1 / 1.15
         self.scale(factor, factor)
 
     def mousePressEvent(self, event):

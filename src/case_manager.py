@@ -39,6 +39,7 @@ class CaseManager:
         "tailDataDetectionDebug": "steganography",
         "aiReportDebug": "reports",
         "dorksResult": "dorking",
+        "downloadFileDebug": "downloads",
     }
 
     def __init__(self, menu=None):
@@ -87,7 +88,7 @@ class CaseManager:
     def _ensure_structure(self):
         if not self.current_case_path:
             return
-        categories = set(self.CATEGORY_MAP.values()) | {"graph"}
+        categories = set(self.CATEGORY_MAP.values()) | {"graph", "downloads"}
         for cat in categories:
             (self.current_case_path / cat).mkdir(parents=True, exist_ok=True)
 
@@ -104,6 +105,15 @@ class CaseManager:
             path.mkdir(parents=True, exist_ok=True)
             return str(path)
         return str(Path.home() / ".skyfall" / "data")
+
+    def get_downloads_dir(self) -> str:
+        if self.current_case_path:
+            path = self.current_case_path / "downloads"
+            path.mkdir(parents=True, exist_ok=True)
+            return str(path)
+        fallback = Path.home() / ".skyfall" / "data" / "downloads"
+        fallback.mkdir(parents=True, exist_ok=True)
+        return str(fallback)
 
     def save_result(self, widget_name: str, content: str):
         if not self.current_case_path or not content.strip():

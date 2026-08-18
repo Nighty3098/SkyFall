@@ -1287,7 +1287,7 @@ class Ui_MainWindow(object):
         self.s4fResultsScrollArea.setWidgetResizable(True)
         self.s4fResultsContainer = QWidget()
         self.s4fResultsContainer.setObjectName(u"s4fResultsContainer")
-        self.s4fResultsContainer.setGeometry(QRect(0, 0, 98, 28))
+        self.s4fResultsContainer.setGeometry(QRect(0, 0, 738, 689))
         self.verticalLayout_26 = QVBoxLayout(self.s4fResultsContainer)
         self.verticalLayout_26.setObjectName(u"verticalLayout_26")
         self.s4fResultsLayout = QVBoxLayout()
@@ -1310,6 +1310,46 @@ class Ui_MainWindow(object):
         self.gridLayout_10.addWidget(self.s4fTargetLabel, 0, 0, 2, 1)
 
         self.mainStackedWidget.addTab(self.s4facesTab, "")
+        self.downloaderTab = QWidget()
+        self.downloaderTab.setObjectName(u"downloaderTab")
+        self.gridLayout_11 = QGridLayout(self.downloaderTab)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.downloadFromLinkProgress = QProgressBar(self.downloaderTab)
+        self.downloadFromLinkProgress.setObjectName(u"downloadFromLinkProgress")
+        self.downloadFromLinkProgress.setValue(24)
+
+        self.gridLayout_11.addWidget(self.downloadFromLinkProgress, 5, 0, 1, 2)
+
+        self.useProxyToDownloadCheck = QCheckBox(self.downloaderTab)
+        self.useProxyToDownloadCheck.setObjectName(u"useProxyToDownloadCheck")
+
+        self.gridLayout_11.addWidget(self.useProxyToDownloadCheck, 1, 0, 1, 2)
+
+        self.downloadFromLinkButton = QPushButton(self.downloaderTab)
+        self.downloadFromLinkButton.setObjectName(u"downloadFromLinkButton")
+
+        self.gridLayout_11.addWidget(self.downloadFromLinkButton, 2, 0, 1, 1)
+
+        self.linkToDownloadEdit = QLineEdit(self.downloaderTab)
+        self.linkToDownloadEdit.setObjectName(u"linkToDownloadEdit")
+
+        self.gridLayout_11.addWidget(self.linkToDownloadEdit, 0, 0, 1, 2)
+
+        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.gridLayout_11.addItem(self.verticalSpacer_7, 3, 0, 1, 2)
+
+        self.openDownloadedFileButton = QPushButton(self.downloaderTab)
+        self.openDownloadedFileButton.setObjectName(u"openDownloadedFileButton")
+
+        self.gridLayout_11.addWidget(self.openDownloadedFileButton, 2, 1, 1, 1)
+
+        self.label_10 = QLabel(self.downloaderTab)
+        self.label_10.setObjectName(u"label_10")
+
+        self.gridLayout_11.addWidget(self.label_10, 4, 0, 1, 2)
+
+        self.mainStackedWidget.addTab(self.downloaderTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
         self.graphMainLayout = QVBoxLayout(self.graphTab)
@@ -1592,6 +1632,18 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.heliusApiKeyEdit)
 
+        self.mcpStatusLabel = QLabel(self.settingsTab)
+        self.mcpStatusLabel.setObjectName(u"mcpStatusLabel")
+        self.mcpStatusLabel.setMinimumSize(QSize(0, 30))
+        self.mcpStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.verticalLayout_4.addWidget(self.mcpStatusLabel)
+
+        self.mcpToggleButton = QPushButton(self.settingsTab)
+        self.mcpToggleButton.setObjectName(u"mcpToggleButton")
+
+        self.verticalLayout_4.addWidget(self.mcpToggleButton)
+
         self.lightThemeCheck = QCheckBox(self.settingsTab)
         self.lightThemeCheck.setObjectName(u"lightThemeCheck")
 
@@ -1601,26 +1653,6 @@ class Ui_MainWindow(object):
         self.framelessCheck.setObjectName(u"framelessCheck")
 
         self.verticalLayout_4.addWidget(self.framelessCheck)
-
-        self.groupBox_6 = QGroupBox(self.settingsTab)
-        self.groupBox_6.setObjectName(u"groupBox_6")
-        self.groupBox_6.setMinimumSize(QSize(0, 0))
-        self.groupBox_6.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.verticalLayout_22 = QVBoxLayout(self.groupBox_6)
-        self.verticalLayout_22.setObjectName(u"verticalLayout_22")
-        self.mcpStatusLabel = QLabel(self.groupBox_6)
-        self.mcpStatusLabel.setObjectName(u"mcpStatusLabel")
-        self.mcpStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.verticalLayout_22.addWidget(self.mcpStatusLabel)
-
-        self.mcpToggleButton = QPushButton(self.groupBox_6)
-        self.mcpToggleButton.setObjectName(u"mcpToggleButton")
-
-        self.verticalLayout_22.addWidget(self.mcpToggleButton)
-
-
-        self.verticalLayout_4.addWidget(self.groupBox_6)
 
         self.pushButton = QPushButton(self.settingsTab)
         self.pushButton.setObjectName(u"pushButton")
@@ -1694,7 +1726,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(0)
+        self.mainStackedWidget.setCurrentIndex(14)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1889,6 +1921,12 @@ class Ui_MainWindow(object):
         self.s4fSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.s4fTargetLabel.setText("")
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.s4facesTab), QCoreApplication.translate("MainWindow", u"SEARCH4FACES", None))
+        self.useProxyToDownloadCheck.setText(QCoreApplication.translate("MainWindow", u"Use proxy", None))
+        self.downloadFromLinkButton.setText(QCoreApplication.translate("MainWindow", u"Download", None))
+        self.linkToDownloadEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Link", None))
+        self.openDownloadedFileButton.setText(QCoreApplication.translate("MainWindow", u"Open file", None))
+        self.label_10.setText(QCoreApplication.translate("MainWindow", u"Support: files, YT videos, github repos", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.downloaderTab), QCoreApplication.translate("MainWindow", u"DOWNLOADER", None))
         self.entitySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import From JSON", None))
@@ -1925,11 +1963,10 @@ class Ui_MainWindow(object):
         self.bscscanApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"BscScan API Key", None))
         self.tonapiApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TON API Key", None))
         self.heliusApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Helius API Key", None))
-        self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
-        self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))
-        self.groupBox_6.setTitle(QCoreApplication.translate("MainWindow", u"MCP Server", None))
         self.mcpStatusLabel.setText(QCoreApplication.translate("MainWindow", u"Stopped", None))
         self.mcpToggleButton.setText(QCoreApplication.translate("MainWindow", u"Start MCP Server", None))
+        self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
+        self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))

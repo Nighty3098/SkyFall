@@ -19,6 +19,7 @@ from src.connectors import (
     setup_blockchain_connectors,
     setup_domain_connectors,
     setup_dorking_connectors,
+    setup_download_connectors,
     setup_github_connectors,
     setup_graph_connectors,
     setup_graph_layout_connectors,
@@ -40,6 +41,7 @@ from src.connectors import (
 from src.controllers.blockchain_controller import BlockchainController
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
+from src.controllers.download_controller import DownloadController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.github_controller import GitHubController
 from src.controllers.graph_layout_controller import GraphLayoutController
@@ -61,6 +63,7 @@ from src.mcp_controller import McpController
 from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
+from src.modules.downloader import DownloadManager
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
@@ -186,6 +189,7 @@ class MainWindow(QMainWindow):
 
         tg_data_path = str(Path.home() / ".skyfall" / "data")
         self.dorksSearchEngine = DorksSearchEngine()
+        self.downloadManager = DownloadManager()
         self.googleDorksDB = GoogleDorksDB()
         self.githubSearch = GitHubSearch(self.settings.github_token)
         self.phoneSearch = PhoneSearch()
@@ -305,6 +309,15 @@ class MainWindow(QMainWindow):
             self.ui, self.googleDorksDB, self.dorksSearchEngine
         )
         await self.dorkingController.load_categories()
+
+        self.downloadController = DownloadController(
+            self.ui,
+            self.downloadManager,
+            settings=self.settings,
+            case_manager=self.case_manager,
+            proxy=self.proxy,
+        )
+        setup_download_connectors(self.downloadController)
 
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)

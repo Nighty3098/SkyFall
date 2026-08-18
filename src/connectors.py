@@ -15,6 +15,7 @@ if TYPE_CHECKING:
     from src.controllers.blockchain_controller import BlockchainController
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
+    from src.controllers.download_controller import DownloadController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.github_controller import GitHubController
     from src.controllers.mac_location_controller import MacLocationController
@@ -60,6 +61,18 @@ def setup_dorking_connectors(controller: "DorkingController"):
 
 def setup_settings_connectors(settings: "Settings"):
     settings.ui.pushButton.clicked.connect(settings.save)
+
+
+def setup_download_connectors(controller: "DownloadController"):
+    controller.ui.downloadFromLinkButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.start_download())
+    )
+    controller.ui.linkToDownloadEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.start_download())
+    )
+    controller.ui.openDownloadedFileButton.clicked.connect(
+        controller.open_last_downloaded
+    )
 
 
 def setup_proxies_connectors(proxy: "Proxy"):

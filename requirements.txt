@@ -153,3 +153,4 @@ Werkzeug==3.1.8
 xlsxwriter==3.2.9
 XMind==1.2.0
 yarl==1.24.2
+yt-dlp==2026.7.4

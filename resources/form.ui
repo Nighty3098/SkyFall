@@ -60,7 +60,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>18</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -1935,8 +1935,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>98</width>
-               <height>28</height>
+               <width>738</width>
+               <height>689</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -1960,6 +1960,58 @@
              <string/>
             </property>
            </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="downloaderTab">
+         <attribute name="title">
+          <string>DOWNLOADER</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_11">
+          <item row="5" column="0" colspan="2">
+           <widget class="QProgressBar" name="downloadFromLinkProgress">
+            <property name="value">
+             <number>24</number>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QCheckBox" name="useProxyToDownloadCheck">
+            <property name="text">
+             <string>Use proxy</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="downloadFromLinkButton">
+            <property name="text">
+             <string>Download</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLineEdit" name="linkToDownloadEdit">
+            <property name="placeholderText">
+             <string>Link</string>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0" colspan="2">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Support: files, YT videos, github repos</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="1">
+           <widget class="QPushButton" name="openDownloadedFileButton">
+            <property name="text">
+             <string>Open file</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QPlainTextEdit" name="downloadFileDebug"/>
           </item>
          </layout>
         </widget>
@@ -2408,6 +2460,29 @@
              </widget>
             </item>
             <item>
+             <widget class="QLabel" name="mcpStatusLabel">
+              <property name="minimumSize">
+               <size>
+                <width>0</width>
+                <height>30</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>Stopped</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="mcpToggleButton">
+              <property name="text">
+               <string>Start MCP Server</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QCheckBox" name="lightThemeCheck">
               <property name="text">
                <string>Light Theme</string>
@@ -2419,41 +2494,6 @@
               <property name="text">
                <string>Frameless Window</string>
               </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QGroupBox" name="groupBox_6">
-              <property name="minimumSize">
-               <size>
-                <width>0</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="title">
-               <string>MCP Server</string>
-              </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
-              </property>
-              <layout class="QVBoxLayout" name="verticalLayout_22">
-               <item>
-                <widget class="QLabel" name="mcpStatusLabel">
-                 <property name="text">
-                  <string>Stopped</string>
-                 </property>
-                 <property name="alignment">
-                  <set>Qt::AlignmentFlag::AlignCenter</set>
-                 </property>
-                </widget>
-               </item>
-               <item>
-                <widget class="QPushButton" name="mcpToggleButton">
-                 <property name="text">
-                  <string>Start MCP Server</string>
-                 </property>
-                </widget>
-               </item>
-              </layout>
              </widget>
             </item>
             <item>
@@ -2504,6 +2544,13 @@
              <widget class="QPlainTextEdit" name="proxyListEdit"/>
             </item>
            </layout>
+          </item>
+          <item>
+           <widget class="QCheckBox" name="useSystemProxyCheck">
+            <property name="text">
+             <string>Use system proxy</string>
+            </property>
+           </widget>
           </item>
           <item>
            <widget class="QPushButton" name="saveProxiesButton">

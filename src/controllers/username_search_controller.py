@@ -20,12 +20,14 @@ class UsernameController:
         ui: "QMainWindow",
         username_search: "UsernameSearch",
         maigret_search: "MaigretSearch",
+        proxy=None,
     ):
         logger.debug("Init: UsernameController")
 
         self.ui = ui
         self.username_search = username_search
         self.maigret_search = maigret_search
+        self.proxy = proxy
 
     async def start_searching(self, username):
         self.ui.usernameScriptDebug.clear()
@@ -44,6 +46,7 @@ class UsernameController:
 
             results = await self.username_search.acheck(
                 username,
+                proxy=(self.proxy.get_proxy_url() if self.proxy else None),
                 on_result=lambda r: self.ui.usernameScriptDebug.appendPlainText(
                     f"[{r['status']}] {r['site']}: {r['url_user']}"
                 ),

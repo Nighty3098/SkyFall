@@ -146,7 +146,7 @@ class TgDownloaderController:
             "pause_duration": self.ui.telegramPause.value(),
             "use_proxy": self.ui.telegramUseProxyCheck.isChecked(),
             "proxy_list": (
-                self.proxy.get_proxies_text()
+                self.proxy.get_proxy_url()
                 if self.proxy
                 else self.ui.proxyListEdit.toPlainText()
             ),

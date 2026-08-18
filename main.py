@@ -204,7 +204,7 @@ class MainWindow(QMainWindow):
                 "api_hash": self.ui.telegramApiHashEdit.text(),
                 "channel": "",
                 "path": tg_data_path,
-                "proxy_list": self.proxy.get_proxies_text(),
+                "proxy_list": self.proxy.get_proxy_url() or "",
             }
         )
         self.fileAnalyzer = FileAnalyzer(self.settings.virustotal_api_key)
@@ -311,7 +311,7 @@ class MainWindow(QMainWindow):
         self.stegController = SteganographyController(self.ui, self.stegAnalyzer)
         self.mailController = MailController(self.ui, self.mailSearchEngine)
         self.usernameController = UsernameController(
-            self.ui, self.usernameSearch, self.maigretSearch
+            self.ui, self.usernameSearch, self.maigretSearch, proxy=self.proxy
         )
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.tgDownloaderController = TgDownloaderController(

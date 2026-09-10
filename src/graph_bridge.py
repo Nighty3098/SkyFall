@@ -143,6 +143,10 @@ class GraphBridgeServer:
                 return self._invoke_on_main(self._move_node, msg)
             if action == "graph_summary":
                 return self._invoke_on_main(self._graph_summary)
+            if action == "import_dict":
+                return self._invoke_on_main(self._import_dict, msg)
+            if action == "export_image":
+                return self._invoke_on_main(self._export_image, msg)
             return {"error": f"Unknown action: {action}"}
         except Exception as e:
             logger.error(f"Graph bridge dispatch error: {e}")
@@ -332,6 +336,33 @@ class GraphBridgeServer:
         gw.viewport().update()
         return {"cleared": count}
 
+    def _import_dict(self, msg: dict) -> dict:
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+        data = msg.get("data", {})
+        gw.from_dict(data)
+        gw.viewport().update()
+        return {
+            "imported_nodes": len(data.get("nodes", [])),
+            "imported_edges": len(data.get("edges", [])),
+        }
+
+    def _export_image(self, msg: dict) -> dict:
+        from src.modules.graph_io import export_scene_image
+
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+        path = msg.get("path", "")
+        if not path:
+            return {"error": "path is required"}
+        try:
+            saved = export_scene_image(gw.scene(), path)
+            return {"saved": saved}
+        except Exception as e:
+            return {"error": str(e)}
+
     def _graph_summary(self) -> dict:
         from src.libs.graph_lib import EdgeItem, NodeItem
 
@@ -462,3 +493,9 @@ class GraphBridgeClient:
 
     def graph_summary(self) -> dict:
         return self.send({"action": "graph_summary"})
+
+    def import_dict(self, data: dict) -> dict:
+        return self.send({"action": "import_dict", "data": data})
+
+    def export_image(self, path: str) -> dict:
+        return self.send({"action": "export_image", "path": path})

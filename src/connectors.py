@@ -215,6 +215,10 @@ def setup_tg_analyzer_connectors(controller: "TgAnalyzerController"):
             controller.run_analysis(controller.build_analysis_params())
         )
     )
+    if hasattr(controller.ui, "tgToGraphButton"):
+        controller.ui.tgToGraphButton.clicked.connect(
+            lambda: asyncio.ensure_future(controller.send_to_main_graph())
+        )
 
 
 def setup_github_connectors(controller: "GitHubController"):
@@ -278,11 +282,38 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
             ui.graphWidget.save_to_json(path)
 
     def import_graph():
+        from src.modules.graph_io import load_graph_file
+
         path, _ = QFileDialog.getOpenFileName(
-            ui, "Import Graph", data_dir, "JSON (*.json)"
+            ui,
+            "Import Graph",
+            data_dir,
+            "Graphs (*.json *.graphml *.gexf *.csv);;JSON (*.json);;"
+            "GraphML (*.graphml);;GEXF (*.gexf);;CSV (*.csv)",
         )
-        if path:
-            ui.graphWidget.load_from_json(path)
+        if not path:
+            return
+        try:
+            ui.graphWidget.from_dict(load_graph_file(path))
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.critical(ui, "Import Graph", f"Failed to import graph:\n{e}")
+
+    def export_graph_image():
+        from src.modules.graph_io import export_scene_image
+
+        path, _ = QFileDialog.getSaveFileName(
+            ui, "Export Graph Image", data_dir, "PNG (*.png);;SVG (*.svg)"
+        )
+        if not path:
+            return
+        try:
+            export_scene_image(ui.graphWidget.scene(), path)
+        except Exception as e:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.critical(ui, "Export Image", f"Failed to export image:\n{e}")
 
     def clear_graph():
         ui.graphWidget._scene.clear()
@@ -310,6 +341,8 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
 
     ui.exportGraphButton.clicked.connect(export_graph)
     ui.importGraphButton.clicked.connect(import_graph)
+    if hasattr(ui, "exportGraphImageButton"):
+        ui.exportGraphImageButton.clicked.connect(export_graph_image)
     ui.graphClearButton.clicked.connect(clear_graph)
     ui.graphSearchEdit.textChanged.connect(on_search_text_changed)
     ui.graphClearFilterButton.clicked.connect(on_clear_filter)

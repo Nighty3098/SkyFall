@@ -173,6 +173,8 @@ python3 main.py -d
 
 **Форматы экспорта:** GraphML, GEXF, JSON (node-link), CSV (nodes/edges), PNG (matplotlib), HTML (pyvis с панелью информации об узле), Obsidian Markdown (файлы каналов/участников с вики-ссылками и встроенными аватарами).
 
+Кнопка **To Main Graph** (`tgToGraphButton`) пересобирает TG-граф из БД с текущими фильтрами и загружает его в главный граф (`src/modules/graph_io.py`: user→Person, channel→Organization, domain→Domain; member→member_of, replier/discussion_reply→communicates_with, forwarded/mentions/linked_chat→linked_to, shared_members→associated_with; spring-раскладка). Там же работает импорт файлов TG-экспорта и экспорт холста в PNG/SVG.
+
 ### Username
 
 Поиск username по сотням сайтов двумя движками.
@@ -310,7 +312,8 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 - `entitySearchEdit` — фильтр палитры.
 - `graphWidget` — холст (см. [Граф](#граф-graph)).
-- `exportGraphButton` / `importGraphButton` — сохранение/загрузка JSON-графа.
+- `exportGraphButton` / `importGraphButton` — сохранение/загрузка JSON-графа; импорт также понимает экспорты TG Analyzer (GraphML/GEXF/node-link JSON/CSV-пара) с маппингом сущностей и автораскладкой.
+- `exportGraphImageButton` — экспорт холста в PNG (x2) / SVG.
 - `graphClearButton` — очистить граф.
 - `graphLayoutCombo` + `graphAutoLayoutButton` — автоматическая раскладка (spring / kamada_kawai / shell / spectral / circular).
 - `graphSearchEdit` + `graphClearFilterButton` + `graphFilterCombo` — фильтрация по тексту и типу сущности.
@@ -381,7 +384,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 ## MCP-серверы
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 64 инструмента
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 66 инструментов
 
 Сервер FastMCP: `--host 127.0.0.1 --port 9877`, транспорты `stdio`/`sse`. Запускается/останавливается с вкладки Settings (кнопка MCP) или через `McpController`.
 
@@ -407,7 +410,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 **Доркинг (1):** поиск через DuckDuckGo/SearXNG.
 
-**Граф (10, требуют запущенного GUI + graph bridge на 127.0.0.1:9878):** add/update/remove/move node, add/remove edge, get, summary, get_node, clear.
+**Граф (12, требуют запущенного GUI + graph bridge на 127.0.0.1:9878):** add/update/remove/move node, add/remove edge, get, summary, get_node, clear, import файла (JSON/GraphML/GEXF/CSV), export PNG/SVG.
 
 **Кейсы (2):** список кейсов, содержимое кейса.
 

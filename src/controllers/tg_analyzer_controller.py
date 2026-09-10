@@ -21,11 +21,12 @@ class _AnalyzerBridge(QObject):
 
 
 class TgAnalyzerController:
-    def __init__(self, ui: QMainWindow, tg_analyzer: TgAnalyzer):
+    def __init__(self, ui: QMainWindow, tg_analyzer: TgAnalyzer, graph_widget=None):
         logger.debug("Init: TgAnalyzerController")
 
         self.ui = ui
         self.tg_analyzer = tg_analyzer
+        self.graph_widget = graph_widget
         self._task = None
         self._bridge = _AnalyzerBridge()
         self._bridge.log_signal.connect(self.ui.telegramAnalyzerDebug.appendPlainText)
@@ -142,4 +143,44 @@ class TgAnalyzerController:
             await self._task
             self._bridge.finished_signal.emit()
         except Exception as e:
+            self.ui.telegramAnalyzerDebug.appendPlainText(f"Error: {e}")
+
+    async def send_to_main_graph(self):
+        """Rebuild the TG graph from DB and load it into the main Graph tab."""
+        from src.modules.graph_io import tg_networkx_to_skyfall
+
+        if self.graph_widget is None:
+            self.ui.telegramAnalyzerDebug.appendPlainText(
+                "Error: main graph widget is not connected."
+            )
+            return
+
+        params = self.build_analysis_params()
+        if not params.get("channels"):
+            self.ui.telegramAnalyzerDebug.appendPlainText(
+                "Error: no channels loaded. Load channels first."
+            )
+            return
+
+        self.ui.telegramAnalyzerDebug.appendPlainText("Building TG graph...")
+        try:
+            graph = await asyncio.to_thread(
+                self.tg_analyzer.build_graph,
+                params["db_path"],
+                channels=params["channels"],
+                min_replies=params["min_replies"],
+                include_forwarded=params["include_forwarded"],
+                include_links=params["include_links"],
+                start_date=params["start_date"],
+                end_date=params["end_date"],
+                log_callback=logger.debug,
+            )
+            data = await asyncio.to_thread(tg_networkx_to_skyfall, graph)
+            self.graph_widget.from_dict(data)
+            self.ui.telegramAnalyzerDebug.appendPlainText(
+                f"Sent to main graph: "
+                f"{len(data['nodes'])} nodes, {len(data['edges'])} edges."
+            )
+        except Exception as e:
+            logger.error(f"Send to main graph failed: {e}")
             self.ui.telegramAnalyzerDebug.appendPlainText(f"Error: {e}")

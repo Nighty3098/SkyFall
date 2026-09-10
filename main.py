@@ -338,7 +338,9 @@ class MainWindow(QMainWindow):
             self.case_manager,
             file_analyzer=self.fileAnalyzer,
         )
-        self.tgAnalyzerController = TgAnalyzerController(self.ui, self.tgAnalyzer)
+        self.tgAnalyzerController = TgAnalyzerController(
+            self.ui, self.tgAnalyzer, graph_widget=self.ui.graphWidget
+        )
         self.githubController = GitHubController(self.ui, self.githubSearch)
         self.phoneController = PhoneController(
             self.ui,

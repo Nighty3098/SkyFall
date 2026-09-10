@@ -1041,6 +1041,45 @@ async def skyfall_graph_clear() -> str:
     return await _graph_bridge_send(bridge, "clear_graph")
 
 
+@mcp.tool()
+async def skyfall_graph_import_file(filepath: str) -> str:
+    """Import a graph file into the main investigation graph (replaces it).
+
+    Accepts SkyFall JSON, TG Analyzer GraphML/GEXF/node-link JSON/CSV.
+    TG graphs get entity mapping + auto-layout.
+
+    Args:
+        filepath: Path to the graph file
+    """
+    from src.modules.graph_io import load_graph_file
+
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    try:
+        data = await anyio.to_thread.run_sync(lambda: load_graph_file(filepath))
+    except Exception as e:
+        return _extract_json({"error": str(e)})
+    return await _graph_bridge_send(bridge, "import_dict", data)
+
+
+@mcp.tool()
+async def skyfall_graph_export_image(filepath: str) -> str:
+    """Export the current investigation graph as PNG or SVG (by suffix).
+
+    Args:
+        filepath: Destination path ending with .png or .svg
+    """
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    return await _graph_bridge_send(bridge, "export_image", filepath)
+
+
 # ── Case Management ──────────────────────────────────────────────────────────
 
 
@@ -1133,7 +1172,7 @@ def resource_modules() -> str:
         "File Analysis: skyfall_file_* (info, metadata, VT, tail, strings)",
         "Steganography: skyfall_steganography_* (LSB, spectral, EOI, tail, ELA, full)",
         "Dorking: skyfall_dorking_search (DDG/SearXNG)",
-        "Graph: skyfall_graph_* (requires GUI)",
+        "Graph: skyfall_graph_* (nodes/edges, TG import, PNG/SVG export, GUI)",
         "Cases: skyfall_cases_*, skyfall_case_get",
         "Report: skyfall_generate_report (via Ollama)",
         "Ollama: skyfall_ollama_* (list, set model, set URL)",

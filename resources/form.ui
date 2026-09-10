@@ -477,13 +477,20 @@
                 </property>
                </spacer>
               </item>
-              <item>
-               <widget class="QPushButton" name="runTelegramAnalyzerBtn">
-                <property name="text">
-                 <string>Run</string>
-                </property>
-               </widget>
-              </item>
+               <item>
+                <widget class="QPushButton" name="runTelegramAnalyzerBtn">
+                 <property name="text">
+                  <string>Run</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="tgToGraphButton">
+                 <property name="text">
+                  <string>To Main Graph</string>
+                 </property>
+                </widget>
+               </item>
               <item>
                <widget class="QProgressBar" name="telegramAnalyzerProgress">
                 <property name="value">
@@ -2093,13 +2100,13 @@
                   </property>
                  </widget>
                 </item>
-                <item>
-                 <widget class="QPushButton" name="importGraphButton">
-                  <property name="text">
-                   <string>Import From JSON</string>
-                  </property>
-                 </widget>
-                </item>
+                 <item>
+                  <widget class="QPushButton" name="importGraphButton">
+                   <property name="text">
+                    <string>Import File</string>
+                   </property>
+                  </widget>
+                 </item>
                 <item>
                  <widget class="QPushButton" name="graphClearButton">
                   <property name="text">
@@ -2117,13 +2124,20 @@
                   </property>
                  </widget>
                 </item>
-                <item>
-                 <widget class="QPushButton" name="graphAutoLayoutButton">
-                  <property name="text">
-                   <string>Auto Layout</string>
-                  </property>
-                 </widget>
-                </item>
+                 <item>
+                  <widget class="QPushButton" name="graphAutoLayoutButton">
+                   <property name="text">
+                    <string>Auto Layout</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QPushButton" name="exportGraphImageButton">
+                   <property name="text">
+                    <string>Export PNG/SVG</string>
+                   </property>
+                  </widget>
+                 </item>
                </layout>
               </item>
               <item>

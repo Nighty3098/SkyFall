@@ -1,10 +1,11 @@
 import asyncio
+import io
 import struct
 from pathlib import Path
 
 import numpy as np
 from loguru import logger
-from PIL import Image
+from PIL import Image, ImageChops, ImageEnhance
 
 from src.ui.output_formatter import (
     divider,
@@ -621,7 +622,112 @@ class SteganographyAnalyzer:
         results["spectral"] = await self.analyze_spectral(path)
         results["eoi"] = await self.analyze_eoi(path)
         results["tail"] = await self.detect_tail_data(path)
+        results["ela"] = await self.analyze_ela(path)
         return results
+
+    async def analyze_ela(self, path: str, quality: int = 90) -> str:
+        result = divider() + "\n"
+        result += title("ELA (Error Level Analysis)") + "\n"
+
+        if not _is_image(path):
+            result += error("File is not a supported image format.") + "\n"
+            result += info("Supported: PNG, JPEG, GIF, BMP, TIFF, WebP") + "\n"
+            result += end_of("ela analysis") + "\n"
+            result += divider() + "\n"
+            return result
+
+        try:
+
+            def _ela(p, q):
+                orig = Image.open(p).convert("RGB")
+                buf = io.BytesIO()
+                orig.save(buf, format="JPEG", quality=q)
+                buf.seek(0)
+                resaved = Image.open(buf).convert("RGB")
+
+                diff = ImageChops.difference(orig, resaved)
+                extrema = diff.getextrema()
+                max_diff = max(e[1] for e in extrema)
+
+                # Amplify for heatmap: scale so max difference maps to 255
+                scale = 255.0 / max_diff if max_diff > 0 else 1.0
+                heatmap = ImageEnhance.Brightness(diff).enhance(scale)
+
+                arr = np.array(diff.convert("L"), dtype=np.float64)
+                mean = float(arr.mean())
+                std = float(arr.std())
+                p95 = float(np.percentile(arr, 95))
+                hot_ratio = float(np.mean(arr > 30))
+
+                # JPEG block-level check: 8x8 grid means, hot blocks share
+                h, w = arr.shape
+                bh, bw = h // 8, w // 8
+                hot_blocks = 0
+                total_blocks = 0
+                block_std = 0.0
+                if bh > 0 and bw > 0:
+                    trimmed = arr[: bh * 8, : bw * 8]
+                    blocks = trimmed.reshape(bh, 8, bw, 8).mean(axis=(1, 3))
+                    block_means = blocks.flatten()
+                    total_blocks = int(blocks.size)
+                    hot_blocks = int(np.sum(blocks > 30))
+                    block_std = float(np.std(block_means))
+
+                heatmap_path = str(Path(p).with_name(Path(p).stem + "_ela.png"))
+                heatmap.save(heatmap_path)
+
+                report = ""
+                report += (
+                    kv("Image dimensions", f"{orig.size[0]}x{orig.size[1]}") + "\n"
+                )
+                report += kv("Recompress quality", f"JPEG Q={q}") + "\n"
+                report += kv("Max channel diff", max_diff) + "\n"
+                report += kv("Mean diff (grayscale)", f"{mean:.2f}") + "\n"
+                report += kv("Std dev", f"{std:.2f}") + "\n"
+                report += kv("95th percentile", f"{p95:.2f}") + "\n"
+                report += kv("Hot pixels (>30)", f"{hot_ratio * 100:.2f}%") + "\n"
+                if total_blocks:
+                    report += (
+                        kv("Hot 8x8 blocks (>30)", f"{hot_blocks}/{total_blocks}")
+                        + "\n"
+                    )
+                    report += kv("Block means std", f"{block_std:.2f}") + "\n"
+                report += kv("Heatmap saved", heatmap_path) + "\n"
+                report += "\n"
+
+                hot_block_frac = hot_blocks / total_blocks if total_blocks else 0.0
+                if max_diff == 0:
+                    report += kv("Verdict", "Zero ELA response - uniform image") + "\n"
+                elif mean > 12 or hot_ratio > 0.25:
+                    report += (
+                        kv(
+                            "Verdict",
+                            "High overall ELA - resaved/low-quality, inconclusive",
+                        )
+                        + "\n"
+                    )
+                elif hot_block_frac > 0.005 or (block_std > 8 and hot_ratio > 0.005):
+                    report += (
+                        kv(
+                            "Verdict",
+                            "LOCALIZED bright regions - possible edit/paste",
+                        )
+                        + "\n"
+                    )
+                else:
+                    report += (
+                        kv("Verdict", "Uniform ELA - no obvious local edits") + "\n"
+                    )
+                return report
+
+            result += await asyncio.to_thread(_ela, path, quality)
+
+        except Exception as e:
+            result += error(f"ELA analysis failed: {e}") + "\n"
+
+        result += end_of("ela analysis") + "\n"
+        result += divider() + "\n"
+        return result
 
     def _hex_dump(self, data: bytes, base_offset: int = 0) -> str:
         result = ""

@@ -115,6 +115,7 @@ class ReportController:
             "maigret_search": self.ui.maigretDebug,
             "mail_search": self.ui.mailSearchDebug,
             "hibp_check": self.ui.hibpDebug,
+            "email_headers": getattr(self.ui, "emailHeaderDebug", None),
             "server_location": self.ui.serverLocationDebug,
             "server_robots": self.ui.serverRobotsDebug,
             "server_tls": self.ui.serverTlsDebug,
@@ -135,11 +136,14 @@ class ReportController:
             "phone": self.ui.phoneDebug,
             "mac_location": self.ui.macAddrLocationDebug,
             "blockchain": self.ui.bcDebug,
+            "steganography_ela": getattr(self.ui, "elaDebug", None),
         }
 
         placeholders = {"REPORT", "INTELX", "HIBP", "METADATA", "VIRUSTOTAL", "STRINGS"}
 
         for name, widget in debug_widgets.items():
+            if widget is None:
+                continue
             text = widget.toPlainText().strip()
             if text and text not in placeholders:
                 data[name] = text

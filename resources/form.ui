@@ -592,13 +592,20 @@
                 </property>
                </widget>
               </item>
-              <item>
-               <widget class="QPushButton" name="startHibpCheckButton">
-                <property name="text">
-                 <string>HIBP Check</string>
-                </property>
-               </widget>
-              </item>
+               <item>
+                <widget class="QPushButton" name="startHibpCheckButton">
+                 <property name="text">
+                  <string>HIBP Check</string>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QPushButton" name="analyzeEmlButton">
+                 <property name="text">
+                  <string>EML / Headers</string>
+                 </property>
+                </widget>
+               </item>
               <item>
                <spacer name="verticalSpacer_6">
                 <property name="orientation">
@@ -632,14 +639,22 @@
                   <string>INTELX</string>
                  </property>
                 </widget>
-                <widget class="QPlainTextEdit" name="hibpDebug">
-                 <property name="plainText">
-                  <string/>
-                 </property>
-                 <property name="placeholderText">
-                  <string>HIBP</string>
-                 </property>
-                </widget>
+                 <widget class="QPlainTextEdit" name="hibpDebug">
+                  <property name="plainText">
+                   <string/>
+                  </property>
+                  <property name="placeholderText">
+                   <string>HIBP</string>
+                  </property>
+                 </widget>
+                 <widget class="QPlainTextEdit" name="emailHeaderDebug">
+                  <property name="plainText">
+                   <string/>
+                  </property>
+                  <property name="placeholderText">
+                   <string>EML HEADERS</string>
+                  </property>
+                 </widget>
                </widget>
               </item>
              </layout>
@@ -1872,11 +1887,16 @@
               <string>EOI/EOD</string>
              </property>
             </widget>
-            <widget class="QPlainTextEdit" name="tailDataDetectionDebug">
-             <property name="placeholderText">
-              <string>Tail Data Detection</string>
-             </property>
-            </widget>
+             <widget class="QPlainTextEdit" name="tailDataDetectionDebug">
+              <property name="placeholderText">
+               <string>Tail Data Detection</string>
+              </property>
+             </widget>
+             <widget class="QPlainTextEdit" name="elaDebug">
+              <property name="placeholderText">
+               <string>ELA</string>
+              </property>
+             </widget>
            </widget>
           </item>
          </layout>

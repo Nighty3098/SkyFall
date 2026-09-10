@@ -104,6 +104,23 @@ def setup_mail_connectors(controller: "MailController"):
         )
     )
 
+    def _analyze_eml():
+        path, _ = QFileDialog.getOpenFileName(
+            controller.ui,
+            "Open EML file",
+            str(Path.home()),
+            "Email (*.eml *.emltpl *.mbox *.txt);;All files (*)",
+        )
+        if path:
+            asyncio.ensure_future(controller.analyze_eml_file(path))
+            return
+        pasted = controller.ui.mailEdit.text()
+        if pasted and ("Received:" in pasted or "Authentication-Results:" in pasted):
+            asyncio.ensure_future(controller.analyze_headers_text(pasted))
+
+    if hasattr(controller.ui, "analyzeEmlButton"):
+        controller.ui.analyzeEmlButton.clicked.connect(_analyze_eml)
+
 
 def setup_metadata_connectors(controller: "FileAnalyzeController"):
     controller.ui.metadataFileDropWidget.file_dropped.connect(

@@ -191,6 +191,7 @@ python3 main.py -d
 - `mailEdit` — email.
 - `startMailSearchButton` — **IntelX** поиск: создание поисковой задачи → опрос результатов → загрузка содержимого bucket'ов. Вывод в `mailSearchDebug`: список баз данных (Found N databases), bucket ID, дата, размер, источник, теги, содержимое.
 - `startHibpCheckButton` — **Have I Been Pwned**: список утечек (имя, домен, дата, число скомпрометированных аккаунтов, типы данных). Вывод в `hibpDebug`. Учитывается `Retry-After` при 429.
+- `analyzeEmlButton` — **EML / Headers**: выбор `.eml`-файла (или вставка сырых заголовков в `mailEdit`) → разбор в `emailHeaderDebug`: конверт (From/Reply-To/Return-Path/Message-ID), цепочка Received (по хопам с IP), SPF/DKIM/DMARC из `Authentication-Results`, DNS-проверка SPF/DMARC записей домена отправителя, гео IP origin (rDNS + ip-api.com: страна/город/ISP/ASN, флаги proxy/hosting), вердикт LOW/MEDIUM/HIGH.
 
 ### Dorking
 
@@ -292,6 +293,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 - `spectralAnalysisDebug` — **спектральный анализ** (FFT): энергия низких/высоких частот, отношения, дисперсия средних частот и диагоналей, аномалии.
 - `EOIDebug` — **конец файла** (EOI/EOD): поиск «хвоста» после маркеров PNG/JPEG/GIF/BMP/TIFF/WebP, hex-дамп и идентификация содержимого (ZIP, GZIP, RAR, ELF, PE, PDF, SQLite, HTML, URL и т.д.).
 - `tailDataDetectionDebug` — общее детектирование скрытых данных в конце файла.
+- `elaDebug` — **ELA (Error Level Analysis)**: пережатие в JPEG Q=90, разница с оригиналом, статистика (mean/std/p95, доля hot-пикселей, hot 8x8-блоков), heatmap сохраняется рядом как `<имя>_ela.png`, вердикт (uniform / localized edit / resaved).
 
 ### Search4Faces
 
@@ -379,7 +381,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 ## MCP-серверы
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 61 инструмент
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 64 инструмента
 
 Сервер FastMCP: `--host 127.0.0.1 --port 9877`, транспорты `stdio`/`sse`. Запускается/останавливается с вкладки Settings (кнопка MCP) или через `McpController`.
 
@@ -389,7 +391,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 **Username (2):** sherlock-поиск (`skyfall_username_search`), maigret (`skyfall_maigret_search`).
 
-**Email (3):** IntelX, HIBP, комбинированный.
+**Email (5):** IntelX, HIBP, комбинированный, разбор `.eml`-файла, разбор вставленных заголовков.
 
 **Телефоны (5):** парсинг, обратный поиск, утечки, полный, 7tel.
 
@@ -401,7 +403,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 **Файлы (5):** инфо, метаданные, VirusTotal, tail-data, строки.
 
-**Стеганография (5):** lsb, spectral, eoi, tail, full.
+**Стеганография (6):** lsb, spectral, eoi, tail, ela, full.
 
 **Доркинг (1):** поиск через DuckDuckGo/SearXNG.
 

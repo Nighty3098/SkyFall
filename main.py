@@ -64,6 +64,7 @@ from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.downloader import DownloadManager
+from src.modules.email_header_analyzer import EmailHeaderAnalyzer
 from src.modules.file_analyzer import FileAnalyzer
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
@@ -218,6 +219,7 @@ class MainWindow(QMainWindow):
             self.settings.intelligent_x_api_key,
             self.settings.hibp_api_key,
         )
+        self.emailHeaderAnalyzer = EmailHeaderAnalyzer()
         self.blockchainSearch = BlockchainSearch(
             {
                 "trongrid_api_key": self.settings.trongrid_api_key,
@@ -322,7 +324,9 @@ class MainWindow(QMainWindow):
         self.domainController = DomainController(self.ui, self.domainAnalyzer)
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.stegController = SteganographyController(self.ui, self.stegAnalyzer)
-        self.mailController = MailController(self.ui, self.mailSearchEngine)
+        self.mailController = MailController(
+            self.ui, self.mailSearchEngine, header_analyzer=self.emailHeaderAnalyzer
+        )
         self.usernameController = UsernameController(
             self.ui, self.usernameSearch, self.maigretSearch, proxy=self.proxy
         )

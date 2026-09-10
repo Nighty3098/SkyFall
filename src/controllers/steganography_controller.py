@@ -29,6 +29,9 @@ class SteganographyController:
         self.ui.spectralAnalysisDebug.setPlainText(info("Loading..."))
         self.ui.EOIDebug.setPlainText(info("Loading..."))
         self.ui.tailDataDetectionDebug.setPlainText(info("Loading..."))
+        ela_widget = getattr(self.ui, "elaDebug", None)
+        if ela_widget is not None:
+            ela_widget.setPlainText(info("Loading..."))
 
         try:
             results = await self.steganography.run_full_analysis(path)
@@ -36,9 +39,13 @@ class SteganographyController:
             self.ui.spectralAnalysisDebug.setPlainText(results.get("spectral", ""))
             self.ui.EOIDebug.setPlainText(results.get("eoi", ""))
             self.ui.tailDataDetectionDebug.setPlainText(results.get("tail", ""))
+            if ela_widget is not None:
+                ela_widget.setPlainText(results.get("ela", ""))
         except Exception as e:
             err = error(f"Analysis failed: {e}")
             self.ui.LSBDebug.setPlainText(err)
             self.ui.spectralAnalysisDebug.setPlainText(err)
             self.ui.EOIDebug.setPlainText(err)
             self.ui.tailDataDetectionDebug.setPlainText(err)
+            if ela_widget is not None:
+                ela_widget.setPlainText(err)

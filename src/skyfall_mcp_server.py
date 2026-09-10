@@ -449,6 +449,24 @@ async def skyfall_email_search(email: str) -> str:
     )
 
 
+@mcp.tool()
+async def skyfall_email_header_file(filepath: str) -> str:
+    """Analyze .eml file headers: Received chain, SPF/DKIM/DMARC, origin IP geo."""
+    from src.modules.email_header_analyzer import EmailHeaderAnalyzer
+
+    analyzer = EmailHeaderAnalyzer()
+    return await analyzer.analyze_file(filepath)
+
+
+@mcp.tool()
+async def skyfall_email_header_text(headers: str) -> str:
+    """Analyze pasted email headers (Received chain, auth, verdict)."""
+    from src.modules.email_header_analyzer import EmailHeaderAnalyzer
+
+    analyzer = EmailHeaderAnalyzer()
+    return await analyzer.analyze_text(headers)
+
+
 # ── Phone Search ──────────────────────────────────────────────────────
 
 
@@ -792,12 +810,26 @@ async def skyfall_steganography_tail(filepath: str) -> str:
 
 @mcp.tool()
 async def skyfall_steganography_full(filepath: str) -> str:
-    """Run full steganography analysis (LSB, spectral, EOI, tail)."""
+    """Run full steganography analysis (LSB, spectral, EOI, tail, ELA)."""
     from src.modules.steganography import SteganographyAnalyzer
 
     sa = SteganographyAnalyzer()
     result = await sa.run_full_analysis(filepath)
     return _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_steganography_ela(filepath: str, quality: int = 90) -> str:
+    """Run Error Level Analysis on an image, save ELA heatmap next to the file.
+
+    Args:
+        filepath: Path to the image
+        quality: JPEG recompress quality for ELA (default: 90)
+    """
+    from src.modules.steganography import SteganographyAnalyzer
+
+    sa = SteganographyAnalyzer()
+    return await sa.analyze_ela(filepath, quality=quality)
 
 
 # ── Dorking ────────────────────────────────────────────────────────────────
@@ -1093,13 +1125,13 @@ def resource_modules() -> str:
     tools = [
         "Domain Analysis: skyfall_domain_*, 11 tools",
         "Username Search: skyfall_username_search, skyfall_maigret_search",
-        "Email Search: skyfall_email_* (IntelX, HIBP, combined)",
+        "Email Search: skyfall_email_* (IntelX, HIBP, combined, headers/EML)",
         "Phone OSINT: skyfall_phone_* (parse, reverse lookup, leaks, 7tel.ru)",
         "GitHub OSINT: skyfall_github_* (user, repos, commits, secrets, dork)",
         "Blockchain: skyfall_blockchain_search (10 chains)",
         "MAC Geolocation: skyfall_mac_locate (5 providers)",
         "File Analysis: skyfall_file_* (info, metadata, VT, tail, strings)",
-        "Steganography: skyfall_steganography_* (LSB, spectral, EOI, tail, full)",
+        "Steganography: skyfall_steganography_* (LSB, spectral, EOI, tail, ELA, full)",
         "Dorking: skyfall_dorking_search (DDG/SearXNG)",
         "Graph: skyfall_graph_* (requires GUI)",
         "Cases: skyfall_cases_*, skyfall_case_get",

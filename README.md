@@ -44,6 +44,33 @@ python3 main.py
 
 ```
 
+## `CONNECT MCP TO OPENCODE`
+
+The project ships an MCP server exposing the OSINT tools. To use it from [opencode](https://opencode.ai):
+
+1. **Start the server** — either run the GUI and click `Start MCP Server` in `SETTINGS`, or launch it standalone:
+
+```bash
+python3 src/skyfall_mcp_server.py --transport sse --host 127.0.0.1 --port 9877
+```
+
+2. **Configure opencode** — add the following to `opencode.json` in your project root (an identical config is already provided):
+
+```json
+{
+  "$schema": "https://opencode.ai/config.json",
+  "mcp": {
+    "skyfall": {
+      "type": "remote",
+      "url": "http://127.0.0.1:9877/sse",
+      "enabled": true
+    }
+  }
+}
+```
+
+3. Restart opencode and verify the server appears in `/mcp`.
+
 ## `DEVELOPMENT`
 
 ```bash

@@ -4,11 +4,11 @@
 
 <br /><br />
 
-<img src="./resources/banner.png" width="95%" />
+<img src="resources/banner.png" width="95%" />
 
 <br /><br /><br /><br />
 
-<img src="./resources/img.png" width="95%" />
+<img src="resources/img.png" width="95%" />
 
 <br /><br />
 
@@ -32,7 +32,37 @@ git clone https://github.com/Nighty3098/SkyFall --recurse-submodules
 
 ```
 
-## `RUN`
+## `INSTALL (Linux)`
+
+System-wide install like wifite2 — copies the app to `/opt/skyfall`,
+creates the `skyfall` launcher, the app-menu entry and icons
+(X11 + Wayland):
+
+```bash
+
+sudo python3 setup.py
+
+# run it
+skyfall
+
+# update after git pull (just re-run)
+git pull
+sudo python3 setup.py
+
+# uninstall
+sudo python3 setup.py uninstall
+
+```
+
+Without root (installs to `~/.local`):
+
+```bash
+
+python3 setup.py --user
+
+```
+
+## `RUN (without install)`
 
 ```bash
 

@@ -413,6 +413,11 @@ if __name__ == "__main__":
         setup_logging(False)
 
     app = QApplication(sys.argv)
+    # Wayland app-id должен совпадать с именем skyfall.desktop,
+    # иначе DE покажет generic-иконку вместо нашей.
+    app.setApplicationName("skyfall")
+    app.setOrganizationName("skyfall")
+    app.setDesktopFileName("skyfall")
     widget = MainWindow()
 
     widget.show()

@@ -99,6 +99,8 @@ python3 main.py -d
 | `numverify_api_key` | `numverifyApiKeyEdit` | NumVerify (телефоны) |
 | `abstractapi_api_key` | `abstractapiApiKeyEdit` | AbstractAPI (телефоны) |
 | `trongrid_api_key` | `trongridApiKeyEdit` | TronGrid (блокчейн) |
+| `abuseipdb_api_key` | `abuseipdbApiKeyEdit` | AbuseIPDB (репутация IP, угроз-интел) |
+| `greynoise_api_key` | `greynoiseApiKeyEdit` | GreyNoise (опционально, повышает лимиты community API) |
 | `etherscan_api_key` | `etherscanApiKeyEdit` | Etherscan (Ethereum + Base) |
 | `bscscan_api_key` | `bscscanApiKeyEdit` | BscScan (BSC) |
 | `tonapi_api_key` | `tonapiApiKeyEdit` | TonAPI (TON) |
@@ -208,7 +210,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 ### Web
 
-Полный анализ домена — 14 шагов (выбор чекбоксами, прогресс `domainProgress`).
+Полный анализ домена — 16 шагов (выбор чекбоксами, прогресс `domainProgress`).
 
 | Чекбокс | Панель | Что делает |
 |---|---|---|
@@ -219,8 +221,10 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 | `domainHeadersCheck` | `serverWafDebug` | HTTP-заголовки, веб-сервер, WAF, стек технологий |
 | `domainWhoisCheck` | `serverWhoisDebug` | WHOIS |
 | `domainNmapCheck` | `serverNmapDebug` | NMAP-скан портов 1-1024 (`--script=vuln`, нужен системный nmap) |
-| `domainMalwareCheck` | `serverMalwareDebug` | Репутация: VirusTotal → Google Safe Browsing → CRDF Labs |
-| `domainSubdomainsCheck` | `serverSubdomainsDebug` | Субдомены через DuckDuckGo (`site:domain`) |
+| `domainMalwareCheck` | `serverMalwareDebug` | Репутация (агрегатор): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + ThreatFox + URLHaus, общий вердикт |
+| `domainSubdomainsCheck` | `serverSubdomainsDebug` | Субдомены: DuckDuckGo + crt.sh + AlienVault OTX + HackerTarget + AnubisDB + DNS brute-force по встроенному топ-списку |
+| `domainJsSecretsCheck` | `serverJsSecretsDebug` | JS Secrets: сбор `<script src>`, скан до 15 JS-файлов на API-ключи/секреты/endpoints (23 regex + keywords из GitHub-поиска), секреты redact'ятся |
+| `domainThreatIntelCheck` | `serverThreatIntelDebug` | Threat Intel в один клик: AbuseIPDB + GreyNoise + ThreatFox + URLHaus с авторезолвом домена в IP |
 | `securityTxtCheck` | `securityTxtDebug` | `/.well-known/security.txt` |
 | `cookiesCheck` | `cookiesDebug` | Cookies сайта |
 | `socialTagsCheck` | `socialTagsDebug` | OpenGraph / Twitter мета-теги |
@@ -373,8 +377,8 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 - Контекстное меню: редактирование узла/ребра, стиль ребра, прикрепление улик, цвет, удаление; **Analysis** — кратчайший путь (по клику), центральность степени (масштабирование узлов + top-5), обнаружение сообществ (greedy modularity).
 - **⚡ Transforms** (обогащение графа, `graph_transform_controller`): из узла строятся дочерние узлы-результаты поиска, расположенные дугой:
   - **Username** → поиск соцсетей, Maigret;
-  - **Domain** → IP, DNS, SSL/TLS, веб-стек, WHOIS, субдомены, Certificate Transparency, соц-теги, репутация, security.txt, cookies, robots.txt, порты;
-  - **IP** → геолокация, порты, домены на IP;
+  - **Domain** → IP, DNS, SSL/TLS, веб-стек, WHOIS, субдомены, Certificate Transparency, соц-теги, репутация, security.txt, cookies, robots.txt, порты, JS Secrets, Threat Intel;
+  - **IP** → геолокация, порты, домены на IP, Threat Intel;
   - **Email** → IntelX;
   - **Phone** → парсинг, обратный поиск, утечки;
   - **MAC** → геолокация.
@@ -384,13 +388,13 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 ## MCP-серверы
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 66 инструментов
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 68 инструментов
 
 Сервер FastMCP: `--host 127.0.0.1 --port 9877`, транспорты `stdio`/`sse`. Запускается/останавливается с вкладки Settings (кнопка MCP) или через `McpController`.
 
 **Ollama (4):** список моделей, установить/получить модель, установить URL.
 
-**Домены (14):** ip, домены на IP, DNS, WHOIS, SSL, заголовки, веб-стек, nmap, WAF, репутация, субдомены, robots.txt, security.txt, соц-теги.
+**Домены (16):** ip, домены на IP, DNS, WHOIS, SSL, заголовки, веб-стек, nmap, WAF, репутация-агрегатор, threat intel, JS secrets, субдомены (passive + brute), robots.txt, security.txt, соц-теги.
 
 **Username (2):** sherlock-поиск (`skyfall_username_search`), maigret (`skyfall_maigret_search`).
 
@@ -449,6 +453,8 @@ src/
   utils.py                  — фильтрация списков, подсветка текста
   searxng_search.py         — клиент локального SearXNG
   modules/                  — сбор данных (UI-независимо)
+    js_secrets.py           — скан JS на ключи/секреты/endpoints (Web)
+    threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus агрегатор
     tg/                     — пакет Telegram: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
   controllers/              — UI-логика по вкладкам
@@ -488,6 +494,12 @@ thirdparty/txfetch/         — вендоренная библиотека по
 | Yandex / Apple / Google / Microsoft / Mylnikov | MAC-геолокация | нет |
 | crt.sh | Certificate Transparency | нет |
 | Shodan InternetDB / HackerTarget | домены на IP | нет |
+| AbuseIPDB | репутация IP (threat intel, malware-агрегатор) | `abuseipdb_api_key` |
+| GreyNoise community | фоновый шум/RIOT сканеров (threat intel) | нет (ключ опционален) |
+| ThreatFox (abuse.ch) | IOC-проверка IP/домена | нет |
+| URLHaus (abuse.ch) | вредоносные URL хоста | нет |
+| AlienVault OTX | passive DNS → субдомены | нет |
+| AnubisDB (jldc.me) | субдомены | нет |
 | CRDF Labs | репутация домена (fallback) | нет |
 | DuckDuckGo (ddgs) | дорки, субдомены | нет |
 | SearXNG (локальный) | дорки | нет |

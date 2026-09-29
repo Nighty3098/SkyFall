@@ -30,6 +30,8 @@ DEFAULT_SETTINGS = {
     "bscscan_api_key": "",
     "tonapi_api_key": "",
     "helius_api_key": "",
+    "abuseipdb_api_key": "",
+    "greynoise_api_key": "",
     "light_theme": False,
     "frameless_window": True,
 }
@@ -52,6 +54,8 @@ FIELD_MAP = {
     "bscscan_api_key": "bscscanApiKeyEdit",
     "tonapi_api_key": "tonapiApiKeyEdit",
     "helius_api_key": "heliusApiKeyEdit",
+    "abuseipdb_api_key": "abuseipdbApiKeyEdit",
+    "greynoise_api_key": "greynoiseApiKeyEdit",
 }
 
 
@@ -77,6 +81,8 @@ class Settings:
         self.bscscan_api_key = ""
         self.tonapi_api_key = ""
         self.helius_api_key = ""
+        self.abuseipdb_api_key = ""
+        self.greynoise_api_key = ""
         self.light_theme = False
         self.frameless_window = True
 

@@ -11,7 +11,7 @@ if TYPE_CHECKING:
     from src.modules.domain_analyzer import DomainAnalyzer
 
 
-STEPS = 14
+STEPS = 16
 
 
 def _val(v):
@@ -101,11 +101,18 @@ class DomainController:
 
         if self.ui.domainHeadersCheck.isChecked():
             self.ui.serverWafDebug.setPlainText(info("Loading..."))
-            self.ui.serverWafDebug.setPlainText(
-                _fmt(
-                    await self.domain_analyzer.analyze_web_stack(self.domain),
-                )
-            )
+            web_stack = await self.domain_analyzer.analyze_web_stack(self.domain)
+            combined = _fmt(web_stack)
+            # JS secrets piggyback: only when no dedicated panel exists in form.ui.
+            if getattr(self.ui, "serverJsSecretsDebug", None) is None:
+                try:
+                    js_text = await self.domain_analyzer.scan_js_secrets(self.domain)
+                except Exception as e:
+                    logger.warning(f"JS secrets scan failed: {e}")
+                    js_text = ""
+                if js_text:
+                    combined = f"{combined}\n\n{js_text}"
+            self.ui.serverWafDebug.setPlainText(combined)
         self._update_progress(5)
 
         if self.ui.domainWhoisCheck.isChecked():
@@ -128,9 +135,17 @@ class DomainController:
 
         if self.ui.domainMalwareCheck.isChecked():
             self.ui.serverMalwareDebug.setPlainText(info("Loading..."))
+            # Skip the intel round here when the dedicated Threat Intel step
+            # runs too — avoids duplicate AbuseIPDB/GreyNoise/ThreatFox/URLHaus calls.
+            threat_separate = (
+                getattr(self.ui, "domainThreatIntelCheck", None) is not None
+                and self.ui.domainThreatIntelCheck.isChecked()
+            )
             self.ui.serverMalwareDebug.setPlainText(
                 _fmt(
-                    await self.domain_analyzer.check_malware_reputation(self.domain),
+                    await self.domain_analyzer.check_malware_reputation(
+                        self.domain, include_intel=not threat_separate
+                    ),
                 )
             )
         self._update_progress(8)
@@ -185,3 +200,34 @@ class DomainController:
                     info(f"Could not resolve IP for {self.domain}")
                 )
         self._update_progress(14)
+
+        # ── Dedicated panels (present in form.ui; getattr keeps back-compat) ──
+        js_check = getattr(self.ui, "domainJsSecretsCheck", None)
+        js_debug = getattr(self.ui, "serverJsSecretsDebug", None)
+        if js_check is not None and js_debug is not None and js_check.isChecked():
+            js_debug.setPlainText(info("Loading..."))
+            try:
+                js_debug.setPlainText(
+                    await self.domain_analyzer.scan_js_secrets(self.domain)
+                )
+            except Exception as e:
+                logger.warning(f"JS secrets scan failed: {e}")
+                js_debug.setPlainText(info(f"JS secrets scan failed: {e}"))
+        self._update_progress(15)
+
+        threat_check = getattr(self.ui, "domainThreatIntelCheck", None)
+        threat_debug = getattr(self.ui, "serverThreatIntelDebug", None)
+        if (
+            threat_check is not None
+            and threat_debug is not None
+            and threat_check.isChecked()
+        ):
+            threat_debug.setPlainText(info("Loading..."))
+            try:
+                threat_debug.setPlainText(
+                    _fmt(await self.domain_analyzer.check_threat_intel(self.domain))
+                )
+            except Exception as e:
+                logger.warning(f"Threat intel check failed: {e}")
+                threat_debug.setPlainText(info(f"Threat intel check failed: {e}"))
+        self._update_progress(16)

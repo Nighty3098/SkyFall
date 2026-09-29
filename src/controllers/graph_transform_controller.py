@@ -289,6 +289,22 @@ class GraphTransformController:
                     relationship="hosted_by",
                     handler=_transform_domain_nmap,
                 ),
+                TransformDef(
+                    name="JS Secrets Scan",
+                    description="Find API keys & endpoints in site JavaScript",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_domain_js_secrets,
+                ),
+                TransformDef(
+                    name="Threat Intel",
+                    description="AbuseIPDB/GreyNoise/ThreatFox/URLHaus",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_domain_threat_intel,
+                ),
             ],
             "IP": [
                 TransformDef(
@@ -314,6 +330,14 @@ class GraphTransformController:
                     output_type="Domain",
                     relationship="hosted_by",
                     handler=_transform_ip_domains,
+                ),
+                TransformDef(
+                    name="Threat Intel",
+                    description="AbuseIPDB/GreyNoise/ThreatFox/URLHaus",
+                    input_types=["IP"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_ip_threat_intel,
                 ),
             ],
             "Email": [
@@ -1199,4 +1223,76 @@ async def _transform_phone_leaks(phone, modules):
 async def _transform_mac_geo(mac, modules):
     return await _run_transform(
         modules, "mac_location", "locate_async", mac, _parse_mac_geo
+    )
+
+
+def _parse_threat_intel(data, target):
+    if not isinstance(data, dict) or "error" in data:
+        return TransformResult(content=str(data))
+    verdict = data.get("verdict", "?")
+    children = []
+    for r in data.get("results", []):
+        status = r.get("status", "?")
+        src = r.get("source", "?")
+        detail = ", ".join(
+            f"{k}={v}"
+            for k, v in r.items()
+            if k not in ("source", "status") and v not in ("", None, [], {})
+        )
+        children.append(
+            ChildNodeDef(
+                title=f"{src}: {status}",
+                entity_type="Custom",
+                content=f"{kv('Source', src)}\n{kv('Status', status)}\n{detail[:400]}",
+            )
+        )
+    lines = [divider(), title(f"Threat Intel: {target}"), kv("Verdict", verdict)]
+    for r in data.get("results", []):
+        lines.append(bullet(f"{r.get('source')}: {r.get('status')}"))
+    lines.append(end_of("threat intel"))
+    lines.append(divider())
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+def _parse_js_secrets(raw, domain):
+    if not raw:
+        return TransformResult(content="JS scan returned nothing")
+    secrets = [
+        ln.strip()
+        for ln in raw.split("\n")
+        if ln.strip().startswith("[HIGH]") or ln.strip().startswith("[MEDIUM]")
+    ]
+    children = []
+    for s in secrets[:CHILD_THRESHOLD]:
+        children.append(ChildNodeDef(title=s[:60], entity_type="Custom", content=s))
+    if len(secrets) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(secrets) - CHILD_THRESHOLD} more findings",
+                entity_type="Custom",
+                content="\n".join(secrets[CHILD_THRESHOLD:]),
+            )
+        )
+    if not children:
+        children.append(
+            ChildNodeDef(title="JS scan done", entity_type="Custom", content=raw[:500])
+        )
+    return TransformResult(children=children, content=raw)
+
+
+async def _transform_domain_js_secrets(domain, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "scan_js_secrets", domain, _parse_js_secrets
+    )
+
+
+async def _transform_domain_threat_intel(domain, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "check_threat_intel", domain, _parse_threat_intel
+    )
+
+
+async def _transform_ip_threat_intel(ip_addr, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "check_threat_intel", ip_addr, _parse_threat_intel
     )

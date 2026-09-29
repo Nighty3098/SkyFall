@@ -201,6 +201,8 @@ class MainWindow(QMainWindow):
             self.settings.virustotal_api_key,
             self.settings.google_safe_api_key,
             self.settings.ipinfo_api_key,
+            getattr(self.settings, "abuseipdb_api_key", ""),
+            getattr(self.settings, "greynoise_api_key", ""),
         )
         self.tgAnalyzer = TgAnalyzer()
         self.tgDownloader = TgDownloader(
@@ -237,6 +239,10 @@ class MainWindow(QMainWindow):
         self.domainAnalyzer.API_KEYS["VIRUSTOTAL"] = settings.virustotal_api_key
         self.domainAnalyzer.API_KEYS["GOOGLE_SAFE"] = settings.google_safe_api_key
         self.domainAnalyzer.API_KEYS["IPINFO"] = settings.ipinfo_api_key
+        self.domainAnalyzer.update_threat_keys(
+            getattr(settings, "abuseipdb_api_key", ""),
+            getattr(settings, "greynoise_api_key", ""),
+        )
 
         self.mailSearchEngine.api_key = settings.intelligent_x_api_key
         self.mailSearchEngine.headers["x-key"] = settings.intelligent_x_api_key

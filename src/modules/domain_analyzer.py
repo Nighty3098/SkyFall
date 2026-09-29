@@ -28,14 +28,27 @@ from src.ui.output_formatter import (
 
 
 class DomainAnalyzer:
-    def __init__(self, virustotal_api_key, google_safe_api_key, ipinfo_api_key) -> None:
+    def __init__(
+        self,
+        virustotal_api_key,
+        google_safe_api_key,
+        ipinfo_api_key,
+        abuseipdb_api_key: str = "",
+        greynoise_api_key: str = "",
+    ) -> None:
         logger.debug("Init: DomainAnalyzer")
         self.API_KEYS = {
             "VIRUSTOTAL": virustotal_api_key,
             "GOOGLE_SAFE": google_safe_api_key,
             "IPINFO": ipinfo_api_key,
+            "ABUSEIPDB": abuseipdb_api_key or "",
+            "GREYNOISE": greynoise_api_key or "",
         }
         self.ua = UserAgent()
+
+    def update_threat_keys(self, abuseipdb_api_key="", greynoise_api_key=""):
+        self.API_KEYS["ABUSEIPDB"] = abuseipdb_api_key or ""
+        self.API_KEYS["GREYNOISE"] = greynoise_api_key or ""
 
     async def get_robots_txt(self, domain):
         logger.debug("Trying to get robots.txt")
@@ -429,8 +442,9 @@ class DomainAnalyzer:
             logger.error(f"Error NMAP: {e}")
             return {"error": f"NMAP not found: {e}"}
 
-    async def check_malware_reputation(self, domain):
+    async def check_malware_reputation(self, domain, include_intel=True):
         logger.debug("Trying to get malware info")
+        sources = []
 
         if self.API_KEYS["VIRUSTOTAL"]:
             try:
@@ -446,14 +460,21 @@ class DomainAnalyzer:
                         .get("attributes", {})
                         .get("last_analysis_stats", {})
                     )
-                    return {
-                        "source": "VirusTotal API",
-                        "malicious_votes": stats.get("malicious", 0),
-                        "status": "OK",
-                    }
+                    malicious = stats.get("malicious", 0)
+                    sources.append(
+                        {
+                            "source": "VirusTotal",
+                            "status": "MALICIOUS" if malicious > 0 else "CLEAN",
+                            "malicious_votes": malicious,
+                            "harmless": stats.get("harmless", 0),
+                            "undetected": stats.get("undetected", 0),
+                        }
+                    )
             except Exception as e:
                 logger.error(f"Error VirusTotal API: {e}")
-                return {"error": f"Error VirusTotal API: {e}"}
+                sources.append(
+                    {"source": "VirusTotal", "status": "ERROR", "note": str(e)[:200]}
+                )
 
         if self.API_KEYS["GOOGLE_SAFE"]:
             try:
@@ -476,58 +497,420 @@ class DomainAnalyzer:
                 )
                 if res.status_code == 200:
                     matches = res.json().get("matches", [])
-                    return {
-                        "source": "Google Safe Browsing",
-                        "status": "DANGER" if matches else "CLEAN",
-                    }
+                    sources.append(
+                        {
+                            "source": "Google Safe Browsing",
+                            "status": "MALICIOUS" if matches else "CLEAN",
+                            "matches": len(matches),
+                        }
+                    )
             except Exception as e:
                 logger.error(f"Error Google Safe Browsing API: {e}")
-                return {"error": f"Error Google Safe Browsing API: {e}"}
+                sources.append(
+                    {
+                        "source": "Google Safe Browsing",
+                        "status": "ERROR",
+                        "note": str(e)[:200],
+                    }
+                )
 
         try:
             url = f"https://www.crdf.fr/{domain}"
             response = await asyncio.to_thread(requests.get, url, timeout=5)
             if response.status_code == 200:
                 data = response.json()
-                return {
-                    "source": "CRDF Labs (FREE)",
-                    "status": "DANGER"
-                    if data.get("danger_score", 0) > 0
-                    else "CLEAN / NOT FOUND IN BLACKLIST",
-                }
+                sources.append(
+                    {
+                        "source": "CRDF Labs (FREE)",
+                        "status": "MALICIOUS"
+                        if data.get("danger_score", 0) > 0
+                        else "CLEAN",
+                    }
+                )
         except Exception as e:
-            logger.error(f"Error: {e}")
+            logger.debug(f"CRDF failed: {e}")
 
-        return {
-            "status": "CLEAN",
-            "note": "API KEYS NOT FOUND",
-        }
+        # ── AbuseIPDB / GreyNoise / ThreatFox / URLHaus ──
+        verdict = ""
+        if include_intel:
+            try:
+                intel = await self.check_threat_intel(domain)
+                if isinstance(intel, dict):
+                    for r in intel.get("results", []):
+                        if r.get("status") not in ("SKIPPED",):
+                            sources.append(r)
+                    verdict = intel.get("verdict", "")
+            except Exception as e:
+                logger.debug(f"Threat intel aggregation failed: {e}")
 
-    async def find_subdomains(self, domain):
-        logger.debug("Trying to find subdomains")
+        if not sources:
+            return {"status": "CLEAN", "note": "API KEYS NOT FOUND", "sources": []}
+
+        overall = "CLEAN"
+        for s in sources:
+            if s.get("status") == "MALICIOUS":
+                overall = "MALICIOUS"
+                break
+        if overall != "MALICIOUS" and any(
+            s.get("status") in ("SUSPICIOUS", "NOISE") for s in sources
+        ):
+            overall = "SUSPICIOUS"
+        return {"status": overall, "verdict": verdict or overall, "sources": sources}
+
+    async def check_threat_intel(self, target):
+        logger.debug("Trying to get threat intel")
+        from src.modules.threat_intel import ThreatIntel
+
+        target = (
+            (target or "")
+            .strip()
+            .lower()
+            .removeprefix("http://")
+            .removeprefix("https://")
+            .split("/")[0]
+        )
+        resolved_ip = ""
         try:
-            dork = f"site:{domain} -www"
-            max_results = 1000000000000
-            discovered_subdomains = set()
+            resolved_ip = await asyncio.to_thread(socket.gethostbyname, target)
+        except Exception:
+            resolved_ip = ""
+        ti = ThreatIntel(
+            abuseipdb_api_key=self.API_KEYS.get("ABUSEIPDB", ""),
+            greynoise_api_key=self.API_KEYS.get("GREYNOISE", ""),
+        )
+        return await ti.aggregate(target, resolved_ip=resolved_ip)
 
-            def _search():
-                local_results = set()
+    async def scan_js_secrets(self, domain, max_files=15):
+        logger.debug("Trying to scan JS secrets")
+        from src.modules.js_secrets import scan_domain_js
+
+        try:
+            text, _ = await scan_domain_js(domain, max_files=max_files)
+            return text
+        except Exception as e:
+            logger.error(f"JS secrets scan error: {e}")
+            return "\n".join(
+                [
+                    divider(),
+                    title(f"JS Secrets: {domain}"),
+                    error(str(e)),
+                    end_of("js secrets"),
+                    divider(),
+                ]
+            )
+
+    SUBDOMAIN_WORDLIST = [
+        "www",
+        "mail",
+        "ftp",
+        "api",
+        "dev",
+        "test",
+        "stage",
+        "staging",
+        "prod",
+        "admin",
+        "portal",
+        "blog",
+        "shop",
+        "forum",
+        "vpn",
+        "remote",
+        "mx",
+        "webmail",
+        "cpanel",
+        "whm",
+        "ns1",
+        "ns2",
+        "dns",
+        "cdn",
+        "static",
+        "assets",
+        "img",
+        "images",
+        "media",
+        "files",
+        "docs",
+        "drive",
+        "cloud",
+        "app",
+        "mobile",
+        "beta",
+        "alpha",
+        "demo",
+        "sandbox",
+        "internal",
+        "intranet",
+        "extranet",
+        "crm",
+        "erp",
+        "hr",
+        "pay",
+        "billing",
+        "secure",
+        "login",
+        "sso",
+        "auth",
+        "oauth",
+        "git",
+        "gitlab",
+        "github",
+        "jira",
+        "confluence",
+        "jenkins",
+        "ci",
+        "cd",
+        "monitoring",
+        "grafana",
+        "kibana",
+        "elastic",
+        "db",
+        "mysql",
+        "postgres",
+        "redis",
+        "mongo",
+        "kafka",
+        "rabbit",
+        "proxy",
+        "gw",
+        "gateway",
+        "edge",
+        "origin",
+        "m",
+        "wap",
+        "old",
+        "new",
+        "v2",
+        "vpn2",
+        "backup",
+        "mirror",
+        "status",
+        "health",
+        "metrics",
+        "logs",
+        "sentry",
+        "analytics",
+        "ads",
+        "cdn1",
+        "cdn2",
+        "s1",
+        "s2",
+        "lb",
+        "balancer",
+        "k8s",
+        "docker",
+        "registry",
+        "artifacts",
+        "packages",
+        "releases",
+        "support",
+        "help",
+        "helpdesk",
+        "ticket",
+        "chat",
+        "meet",
+        "zoom",
+        "call",
+        "video",
+        "stream",
+        "live",
+        "news",
+        "press",
+        "events",
+        "careers",
+        "jobs",
+        "partner",
+        "partners",
+        "reseller",
+        "affiliate",
+        "pay",
+        "checkout",
+        "cart",
+        "order",
+        "account",
+        "profile",
+        "user",
+        "dashboard",
+        "console",
+        "panel",
+        "manage",
+        "my",
+        "id",
+        "account",
+        "devops",
+        "secops",
+        "soc",
+        "siem",
+        "waf",
+        "fw",
+        "ids",
+        "honeypot",
+    ]
+
+    async def _subdomains_ddg(self, domain):
+        def _search():
+            local = set()
+            try:
                 with DDGS() as ddgs:
-                    results = ddgs.text(dork, max_results=max_results)
-                    for r in results:
+                    for r in ddgs.text(f"site:{domain} -www", max_results=200):
                         url = r.get("href")
                         if url:
-                            parsed_url = urlparse(url)
-                            hostname = parsed_url.hostname
-                            if hostname and hostname.endswith(domain):
-                                local_results.add(hostname)
-                return local_results
+                            host = urlparse(url).hostname
+                            if host and (host == domain or host.endswith("." + domain)):
+                                local.add(host.lower())
+            except Exception as e:
+                logger.debug(f"DDG subdomains failed: {e}")
+            return local
 
-            discovered_subdomains = await asyncio.to_thread(_search)
+        return await asyncio.to_thread(_search)
 
+    async def _subdomains_crtsh(self, domain):
+        def _fetch():
+            try:
+                scraper = cloudscraper.create_scraper()
+                resp = scraper.get(
+                    f"https://crt.sh/?q=%25.{domain}&output=json",
+                    timeout=30,
+                    headers={"User-Agent": self.ua.random},
+                )
+                if resp.status_code != 200:
+                    return set()
+                out = set()
+                for entry in resp.json():
+                    for name in str(entry.get("name_value", "")).split("\n"):
+                        name = name.strip().lower().lstrip("*.")
+                        if name == domain or name.endswith("." + domain):
+                            out.add(name)
+                return out
+            except Exception as e:
+                logger.debug(f"crt.sh subdomains failed: {e}")
+                return set()
+
+        return await asyncio.to_thread(_fetch)
+
+    async def _subdomains_otx(self, domain):
+        def _fetch():
+            try:
+                resp = requests.get(
+                    f"https://otx.alienvault.com/api/v1/indicators/domain/{domain}/passive_dns",
+                    timeout=15,
+                    headers={"User-Agent": self.ua.random},
+                )
+                if resp.status_code != 200:
+                    return set()
+                out = set()
+                for row in resp.json().get("passive_dns", []):
+                    host = str(row.get("hostname", "")).lower().lstrip("*.")
+                    if host == domain or host.endswith("." + domain):
+                        out.add(host)
+                return out
+            except Exception as e:
+                logger.debug(f"OTX subdomains failed: {e}")
+                return set()
+
+        return await asyncio.to_thread(_fetch)
+
+    async def _subdomains_hackertarget(self, domain):
+        def _fetch():
+            try:
+                resp = requests.get(
+                    f"https://api.hackertarget.com/hostsearch/?q={domain}", timeout=15
+                )
+                if resp.status_code != 200 or "error" in resp.text.lower():
+                    return set()
+                out = set()
+                for ln in resp.text.strip().split("\n"):
+                    host = ln.split(",")[0].strip().lower()
+                    if host == domain or host.endswith("." + domain):
+                        out.add(host)
+                return out
+            except Exception as e:
+                logger.debug(f"HackerTarget subdomains failed: {e}")
+                return set()
+
+        return await asyncio.to_thread(_fetch)
+
+    async def _subdomains_anubis(self, domain):
+        def _fetch():
+            try:
+                resp = requests.get(
+                    f"https://jldc.me/anubis/subdomains/{domain}",
+                    timeout=15,
+                    headers={"User-Agent": self.ua.random},
+                )
+                if resp.status_code != 200:
+                    return set()
+                data = resp.json()
+                subs = data if isinstance(data, list) else data.get("subdomains", [])
+                out = set()
+                for s in subs:
+                    host = str(s).strip().lower().lstrip("*.")
+                    if host == domain or host.endswith("." + domain):
+                        out.add(host)
+                return out
+            except Exception as e:
+                logger.debug(f"AnubisDB subdomains failed: {e}")
+                return set()
+
+        return await asyncio.to_thread(_fetch)
+
+    async def _subdomains_brute(self, domain, wordlist=None, concurrency=40):
+        words = wordlist or self.SUBDOMAIN_WORDLIST
+        sem = asyncio.Semaphore(concurrency)
+        found = set()
+
+        async def _probe(label):
+            async with sem:
+                host = f"{label}.{domain}"
+                try:
+                    await asyncio.to_thread(socket.gethostbyname, host)
+                    found.add(host.lower())
+                except Exception:
+                    pass
+
+        await asyncio.gather(*[_probe(w) for w in words])
+        return found
+
+    async def find_subdomains(self, domain, use_brute=True, wordlist=None):
+        logger.debug("Trying to find subdomains")
+        try:
+            domain = domain.strip().lower()
+            per_source = {}
+            ddg, crt, otx, ht, anubis = await asyncio.gather(
+                self._subdomains_ddg(domain),
+                self._subdomains_crtsh(domain),
+                self._subdomains_otx(domain),
+                self._subdomains_hackertarget(domain),
+                self._subdomains_anubis(domain),
+            )
+            per_source = {
+                "DuckDuckGo": ddg,
+                "crt.sh": crt,
+                "AlienVault OTX": otx,
+                "HackerTarget": ht,
+                "AnubisDB": anubis,
+            }
+            brute = set()
+            if use_brute:
+                brute = await self._subdomains_brute(domain, wordlist=wordlist)
+                per_source["DNS brute"] = brute
+
+            all_subs = sorted(set().union(*per_source.values())) if per_source else []
             lines = [divider(), title(f"Subdomains: {domain}")]
-            for sub in sorted(discovered_subdomains):
-                lines.append(bullet(sub))
+            lines.append(kv("Total unique", len(all_subs)))
+            for src, subs in per_source.items():
+                lines.append(section(f"{src} ({len(subs)})"))
+                for sub in sorted(subs)[:100]:
+                    lines.append(bullet(sub))
+                if len(subs) > 100:
+                    lines.append(line(f"… +{len(subs) - 100} more from {src}"))
+            if all_subs:
+                lines.append("")
+                lines.append(section(f"Combined ({len(all_subs)})"))
+                for sub in all_subs:
+                    lines.append(bullet(sub))
+            else:
+                lines.append(info("No subdomains found"))
             lines.extend([end_of("subdomains"), divider()])
             return "\n".join(lines)
 

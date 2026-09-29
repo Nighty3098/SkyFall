@@ -860,7 +860,7 @@
           <item row="3" column="1">
            <widget class="QCheckBox" name="domainSubdomainsCheck">
             <property name="text">
-             <string>Subdomains Dorking</string>
+             <string>Subdomains</string>
             </property>
             <property name="checked">
              <bool>true</bool>
@@ -1103,6 +1103,40 @@
            <widget class="QCheckBox" name="domainsOnIpCheck">
             <property name="text">
              <string>Find domains on IP</string>
+            </property>
+           </widget>
+          </item>
+          <item row="7" column="4">
+           <widget class="QCheckBox" name="domainJsSecretsCheck">
+            <property name="text">
+             <string>JS Secrets</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="8" column="4">
+           <widget class="QPlainTextEdit" name="serverJsSecretsDebug">
+            <property name="placeholderText">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item row="9" column="4">
+           <widget class="QCheckBox" name="domainThreatIntelCheck">
+            <property name="text">
+             <string>Threat Intel</string>
+            </property>
+            <property name="checked">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="10" column="4">
+           <widget class="QPlainTextEdit" name="serverThreatIntelDebug">
+            <property name="placeholderText">
+             <string/>
             </property>
            </widget>
           </item>
@@ -2490,6 +2524,20 @@
              <widget class="QLineEdit" name="heliusApiKeyEdit">
               <property name="placeholderText">
                <string>Helius API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="abuseipdbApiKeyEdit">
+              <property name="placeholderText">
+               <string>AbuseIPDB API Key</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="greynoiseApiKeyEdit">
+              <property name="placeholderText">
+               <string>GreyNoise API Key (optional)</string>
               </property>
              </widget>
             </item>

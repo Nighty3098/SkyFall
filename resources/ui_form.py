@@ -379,6 +379,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_17.addWidget(self.runTelegramAnalyzerBtn)
 
+        self.tgToGraphButton = QPushButton(self.analyzerSettingsSection)
+        self.tgToGraphButton.setObjectName(u"tgToGraphButton")
+
+        self.verticalLayout_17.addWidget(self.tgToGraphButton)
+
         self.telegramAnalyzerProgress = QProgressBar(self.analyzerSettingsSection)
         self.telegramAnalyzerProgress.setObjectName(u"telegramAnalyzerProgress")
         self.telegramAnalyzerProgress.setValue(24)
@@ -467,6 +472,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_19.addWidget(self.startHibpCheckButton)
 
+        self.analyzeEmlButton = QPushButton(self.mailSettingsSection)
+        self.analyzeEmlButton.setObjectName(u"analyzeEmlButton")
+
+        self.verticalLayout_19.addWidget(self.analyzeEmlButton)
+
         self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_19.addItem(self.verticalSpacer_6)
@@ -486,6 +496,9 @@ class Ui_MainWindow(object):
         self.hibpDebug = QPlainTextEdit(self.mailDebugSplitter)
         self.hibpDebug.setObjectName(u"hibpDebug")
         self.mailDebugSplitter.addWidget(self.hibpDebug)
+        self.emailHeaderDebug = QPlainTextEdit(self.mailDebugSplitter)
+        self.emailHeaderDebug.setObjectName(u"emailHeaderDebug")
+        self.mailDebugSplitter.addWidget(self.emailHeaderDebug)
 
         self.verticalLayout_20.addWidget(self.mailDebugSplitter)
 
@@ -778,6 +791,28 @@ class Ui_MainWindow(object):
         self.domainsOnIpCheck.setObjectName(u"domainsOnIpCheck")
 
         self.gridLayout_2.addWidget(self.domainsOnIpCheck, 5, 4, 1, 1)
+
+        self.domainJsSecretsCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainJsSecretsCheck.setObjectName(u"domainJsSecretsCheck")
+        self.domainJsSecretsCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainJsSecretsCheck, 7, 4, 1, 1)
+
+        self.serverJsSecretsDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverJsSecretsDebug.setObjectName(u"serverJsSecretsDebug")
+
+        self.gridLayout_2.addWidget(self.serverJsSecretsDebug, 8, 4, 1, 1)
+
+        self.domainThreatIntelCheck = QCheckBox(self.webAnalyzerTab)
+        self.domainThreatIntelCheck.setObjectName(u"domainThreatIntelCheck")
+        self.domainThreatIntelCheck.setChecked(True)
+
+        self.gridLayout_2.addWidget(self.domainThreatIntelCheck, 9, 4, 1, 1)
+
+        self.serverThreatIntelDebug = QPlainTextEdit(self.webAnalyzerTab)
+        self.serverThreatIntelDebug.setObjectName(u"serverThreatIntelDebug")
+
+        self.gridLayout_2.addWidget(self.serverThreatIntelDebug, 10, 4, 1, 1)
 
         self.mainStackedWidget.addTab(self.webAnalyzerTab, "")
         self.metadataTab = QWidget()
@@ -1249,6 +1284,9 @@ class Ui_MainWindow(object):
         self.tailDataDetectionDebug = QPlainTextEdit(self.steganographySplitter)
         self.tailDataDetectionDebug.setObjectName(u"tailDataDetectionDebug")
         self.steganographySplitter.addWidget(self.tailDataDetectionDebug)
+        self.elaDebug = QPlainTextEdit(self.steganographySplitter)
+        self.elaDebug.setObjectName(u"elaDebug")
+        self.steganographySplitter.addWidget(self.elaDebug)
 
         self.steganographyLayout.addWidget(self.steganographySplitter)
 
@@ -1335,19 +1373,20 @@ class Ui_MainWindow(object):
 
         self.gridLayout_11.addWidget(self.linkToDownloadEdit, 0, 0, 1, 2)
 
-        self.verticalSpacer_7 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.label_10 = QLabel(self.downloaderTab)
+        self.label_10.setObjectName(u"label_10")
 
-        self.gridLayout_11.addItem(self.verticalSpacer_7, 3, 0, 1, 2)
+        self.gridLayout_11.addWidget(self.label_10, 4, 0, 1, 2)
 
         self.openDownloadedFileButton = QPushButton(self.downloaderTab)
         self.openDownloadedFileButton.setObjectName(u"openDownloadedFileButton")
 
         self.gridLayout_11.addWidget(self.openDownloadedFileButton, 2, 1, 1, 1)
 
-        self.label_10 = QLabel(self.downloaderTab)
-        self.label_10.setObjectName(u"label_10")
+        self.downloadFileDebug = QPlainTextEdit(self.downloaderTab)
+        self.downloadFileDebug.setObjectName(u"downloadFileDebug")
 
-        self.gridLayout_11.addWidget(self.label_10, 4, 0, 1, 2)
+        self.gridLayout_11.addWidget(self.downloadFileDebug, 3, 0, 1, 2)
 
         self.mainStackedWidget.addTab(self.downloaderTab, "")
         self.graphTab = QWidget()
@@ -1408,6 +1447,11 @@ class Ui_MainWindow(object):
         self.graphAutoLayoutButton.setObjectName(u"graphAutoLayoutButton")
 
         self.graphButtonLayout.addWidget(self.graphAutoLayoutButton)
+
+        self.exportGraphImageButton = QPushButton(self.graphCenterPanel)
+        self.exportGraphImageButton.setObjectName(u"exportGraphImageButton")
+
+        self.graphButtonLayout.addWidget(self.exportGraphImageButton)
 
 
         self.graphCenterLayout.addLayout(self.graphButtonLayout)
@@ -1632,6 +1676,16 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.heliusApiKeyEdit)
 
+        self.abuseipdbApiKeyEdit = QLineEdit(self.settingsTab)
+        self.abuseipdbApiKeyEdit.setObjectName(u"abuseipdbApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.abuseipdbApiKeyEdit)
+
+        self.greynoiseApiKeyEdit = QLineEdit(self.settingsTab)
+        self.greynoiseApiKeyEdit.setObjectName(u"greynoiseApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.greynoiseApiKeyEdit)
+
         self.mcpStatusLabel = QLabel(self.settingsTab)
         self.mcpStatusLabel.setObjectName(u"mcpStatusLabel")
         self.mcpStatusLabel.setMinimumSize(QSize(0, 30))
@@ -1685,6 +1739,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_3.addLayout(self.horizontalLayout_2)
 
+        self.useSystemProxyCheck = QCheckBox(self.proxyTab)
+        self.useSystemProxyCheck.setObjectName(u"useSystemProxyCheck")
+
+        self.verticalLayout_3.addWidget(self.useSystemProxyCheck)
+
         self.saveProxiesButton = QPushButton(self.proxyTab)
         self.saveProxiesButton.setObjectName(u"saveProxiesButton")
 
@@ -1726,7 +1785,7 @@ class Ui_MainWindow(object):
 
         self.retranslateUi(MainWindow)
 
-        self.mainStackedWidget.setCurrentIndex(14)
+        self.mainStackedWidget.setCurrentIndex(18)
 
 
         QMetaObject.connectSlotsByName(MainWindow)
@@ -1782,6 +1841,7 @@ class Ui_MainWindow(object):
         self.checkBox_7.setText(QCoreApplication.translate("MainWindow", u"CheckBox", None))
         self.checkBox_8.setText(QCoreApplication.translate("MainWindow", u"CheckBox", None))
         self.runTelegramAnalyzerBtn.setText(QCoreApplication.translate("MainWindow", u"Run", None))
+        self.tgToGraphButton.setText(QCoreApplication.translate("MainWindow", u"To Main Graph", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegramAnalyzerTab), QCoreApplication.translate("MainWindow", u"TELEGRAM ANALYZER", None))
         self.usernameScriptDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Script", None))
         self.usernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
@@ -1791,10 +1851,13 @@ class Ui_MainWindow(object):
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
         self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"IntelX Search", None))
         self.startHibpCheckButton.setText(QCoreApplication.translate("MainWindow", u"HIBP Check", None))
+        self.analyzeEmlButton.setText(QCoreApplication.translate("MainWindow", u"EML / Headers", None))
         self.mailSearchDebug.setPlainText("")
         self.mailSearchDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"INTELX", None))
         self.hibpDebug.setPlainText("")
         self.hibpDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HIBP", None))
+        self.emailHeaderDebug.setPlainText("")
+        self.emailHeaderDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"EML HEADERS", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mailToolsTab), QCoreApplication.translate("MainWindow", u"MAIL", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
@@ -1806,7 +1869,7 @@ class Ui_MainWindow(object):
         self.useCustomDorkCheck.setText(QCoreApplication.translate("MainWindow", u"Cusom Dork", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.dorkingTab), QCoreApplication.translate("MainWindow", u"DORKING", None))
         self.serverLocationDebug.setPlaceholderText("")
-        self.domainSubdomainsCheck.setText(QCoreApplication.translate("MainWindow", u"Subdomains Dorking", None))
+        self.domainSubdomainsCheck.setText(QCoreApplication.translate("MainWindow", u"Subdomains", None))
         self.serverRobotsDebug.setPlaceholderText("")
         self.serverTlsDebug.setPlaceholderText("")
         self.serverWafDebug.setPlaceholderText("")
@@ -1833,6 +1896,10 @@ class Ui_MainWindow(object):
         self.runUrlScanButton.setText(QCoreApplication.translate("MainWindow", u"Scan", None))
         self.domainsOnIpDebug.setPlaceholderText("")
         self.domainsOnIpCheck.setText(QCoreApplication.translate("MainWindow", u"Find domains on IP", None))
+        self.domainJsSecretsCheck.setText(QCoreApplication.translate("MainWindow", u"JS Secrets", None))
+        self.serverJsSecretsDebug.setPlaceholderText("")
+        self.domainThreatIntelCheck.setText(QCoreApplication.translate("MainWindow", u"Threat Intel", None))
+        self.serverThreatIntelDebug.setPlaceholderText("")
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.webAnalyzerTab), QCoreApplication.translate("MainWindow", u"WEB", None))
         self.metadataDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"METADATA", None))
         self.stringsFileDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"STRINGS", None))
@@ -1915,6 +1982,7 @@ class Ui_MainWindow(object):
         self.spectralAnalysisDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Spectral Analysis", None))
         self.EOIDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"EOI/EOD", None))
         self.tailDataDetectionDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Tail Data Detection", None))
+        self.elaDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"ELA", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.steganographyTab), QCoreApplication.translate("MainWindow", u"STEGANOGRAPHY", None))
         self.label_9.setText(QCoreApplication.translate("MainWindow", u"DROP", None))
         self.runS4FButton.setText(QCoreApplication.translate("MainWindow", u"Run", None))
@@ -1924,14 +1992,15 @@ class Ui_MainWindow(object):
         self.useProxyToDownloadCheck.setText(QCoreApplication.translate("MainWindow", u"Use proxy", None))
         self.downloadFromLinkButton.setText(QCoreApplication.translate("MainWindow", u"Download", None))
         self.linkToDownloadEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Link", None))
-        self.openDownloadedFileButton.setText(QCoreApplication.translate("MainWindow", u"Open file", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Support: files, YT videos, github repos", None))
+        self.openDownloadedFileButton.setText(QCoreApplication.translate("MainWindow", u"Open file", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.downloaderTab), QCoreApplication.translate("MainWindow", u"DOWNLOADER", None))
         self.entitySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
-        self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import From JSON", None))
+        self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import File", None))
         self.graphClearButton.setText(QCoreApplication.translate("MainWindow", u"Clear All", None))
         self.graphAutoLayoutButton.setText(QCoreApplication.translate("MainWindow", u"Auto Layout", None))
+        self.exportGraphImageButton.setText(QCoreApplication.translate("MainWindow", u"Export PNG/SVG", None))
         self.graphSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search nodes...", None))
         self.graphClearFilterButton.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
         self.nodeTitleEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Title", None))
@@ -1963,12 +2032,15 @@ class Ui_MainWindow(object):
         self.bscscanApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"BscScan API Key", None))
         self.tonapiApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"TON API Key", None))
         self.heliusApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Helius API Key", None))
+        self.abuseipdbApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"AbuseIPDB API Key", None))
+        self.greynoiseApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GreyNoise API Key (optional)", None))
         self.mcpStatusLabel.setText(QCoreApplication.translate("MainWindow", u"Stopped", None))
         self.mcpToggleButton.setText(QCoreApplication.translate("MainWindow", u"Start MCP Server", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))
         self.pushButton.setText(QCoreApplication.translate("MainWindow", u"Save", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.settingsTab), QCoreApplication.translate("MainWindow", u"SETTINGS", None))
+        self.useSystemProxyCheck.setText(QCoreApplication.translate("MainWindow", u"Use system proxy", None))
         self.saveProxiesButton.setText(QCoreApplication.translate("MainWindow", u"Save Proxies", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.proxyTab), QCoreApplication.translate("MainWindow", u"PROXY", None))
         self.menuFile.setTitle(QCoreApplication.translate("MainWindow", u"File", None))

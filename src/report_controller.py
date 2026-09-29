@@ -128,6 +128,8 @@ class ReportController:
             "server_dns": self.ui.serverDnsAnalyzeDebug,
             "server_whois": self.ui.serverWhoisDebug,
             "server_malware": self.ui.serverMalwareDebug,
+            "threat_intel": getattr(self.ui, "serverThreatIntelDebug", None),
+            "js_secrets": getattr(self.ui, "serverJsSecretsDebug", None),
             "cert_transparency": self.ui.certTrDebug,
             "metadata": self.ui.metadataDebug,
             "strings": self.ui.stringsFileDebug,

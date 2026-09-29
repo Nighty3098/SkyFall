@@ -87,7 +87,8 @@ mcp = FastMCP(
     port=9877,
     instructions="""
 MCP server for the SkyFall OSINT toolkit. Provides tools to:
-- Analyze domains (DNS, WHOIS, SSL, NMAP, WAF, malware, subdomains)
+- Analyze domains (DNS, WHOIS, SSL, NMAP, WAF, malware, subdomains+brute,
+  threat intel via AbuseIPDB/GreyNoise/ThreatFox/URLHaus, JS secrets scan)
 - Search usernames across 3300+ sites
 - Search emails via IntelX and HIBP
 - Analyze phone numbers
@@ -227,6 +228,8 @@ async def _make_da():
         virustotal_api_key=s.get("virustotal_api_key", ""),
         google_safe_api_key=s.get("google_safe_api_key", ""),
         ipinfo_api_key=s.get("ipinfo_api_key", ""),
+        abuseipdb_api_key=s.get("abuseipdb_api_key", ""),
+        greynoise_api_key=s.get("greynoise_api_key", ""),
     )
 
 
@@ -242,7 +245,7 @@ async def skyfall_domain_ip(domain: str) -> str:
 
 @mcp.tool()
 async def skyfall_ip_domains(ip: str) -> str:
-    """Find all domains hosted on a given IP address (reverse IP lookup)."""
+    """Find domains on an IP via PTR + Shodan InternetDB + HackerTarget."""
     da = await _make_da()
     result = await da.get_domains_on_ip(ip)
     return _extract_json(result)
@@ -323,7 +326,8 @@ async def skyfall_domain_waf(domain: str) -> str:
 
 @mcp.tool()
 async def skyfall_domain_malware(domain: str) -> str:
-    """Check domain against VirusTotal and Google Safe Browsing."""
+    """Check domain reputation across VT, Google Safe Browsing, CRDF Labs,
+    AbuseIPDB, GreyNoise, ThreatFox and URLHaus (aggregated verdict)."""
     da = await _make_da()
     result = await da.check_malware_reputation(domain)
     if isinstance(result, (dict, list)):
@@ -332,11 +336,40 @@ async def skyfall_domain_malware(domain: str) -> str:
 
 
 @mcp.tool()
-async def skyfall_domain_subdomains(domain: str) -> str:
-    """Discover subdomains via DuckDuckGo search."""
+async def skyfall_domain_subdomains(domain: str, use_brute: bool = True) -> str:
+    """Discover subdomains via passive sources + DNS brute-force.
+
+    Args:
+        domain: Target domain (e.g. "example.com")
+        use_brute: Also brute-force common labels via DNS (default: True)
+    """
     da = await _make_da()
-    result = await da.find_subdomains(domain)
+    result = await da.find_subdomains(domain, use_brute=use_brute)
     return result if isinstance(result, str) else str(result)
+
+
+@mcp.tool()
+async def skyfall_domain_threat_intel(target: str) -> str:
+    """One-click reputation: AbuseIPDB + GreyNoise + ThreatFox + URLHaus.
+
+    Args:
+        target: Domain or IP address
+    """
+    da = await _make_da()
+    result = await da.check_threat_intel(target)
+    return result if isinstance(result, str) else _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_domain_js_secrets(domain: str, max_files: int = 15) -> str:
+    """Scan site JavaScript for exposed API keys, secrets and endpoints.
+
+    Args:
+        domain: Target domain (e.g. "example.com")
+        max_files: Max JS files to download and scan (default: 15)
+    """
+    da = await _make_da()
+    return await da.scan_js_secrets(domain, max_files=max_files)
 
 
 @mcp.tool()
@@ -1162,7 +1195,9 @@ def skyfall_generate_report(data: str, language: str = "Russian") -> str:
 def resource_modules() -> str:
     """List all available MCP tools/modules in SkyFall."""
     tools = [
-        "Domain Analysis: skyfall_domain_*, 11 tools",
+        "Domain Analysis: skyfall_domain_* (16 tools: ip, dns, whois, ssl, headers, "
+        "web_stack, nmap, waf, malware, threat_intel, js_secrets, subdomains, "
+        "robots, security_txt, social_tags) + skyfall_ip_domains",
         "Username Search: skyfall_username_search, skyfall_maigret_search",
         "Email Search: skyfall_email_* (IntelX, HIBP, combined, headers/EML)",
         "Phone OSINT: skyfall_phone_* (parse, reverse lookup, leaks, 7tel.ru)",

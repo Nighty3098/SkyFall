@@ -613,6 +613,13 @@
                  </property>
                 </widget>
                </item>
+               <item>
+                <widget class="QPushButton" name="emailAccountsButton">
+                 <property name="text">
+                  <string>Registered Accounts</string>
+                 </property>
+                </widget>
+               </item>
               <item>
                <spacer name="verticalSpacer_6">
                 <property name="orientation">
@@ -662,6 +669,392 @@
                    <string>EML HEADERS</string>
                   </property>
                  </widget>
+                 <widget class="QPlainTextEdit" name="emailAccountsDebug">
+                  <property name="plainText">
+                   <string/>
+                  </property>
+                  <property name="placeholderText">
+                   <string>REGISTERED ACCOUNTS</string>
+                  </property>
+                 </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="socialToolsTab">
+         <attribute name="title">
+          <string>SOCIAL</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="socialHorizontalLayout">
+          <item>
+           <widget class="QSplitter" name="socialSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="socialSettingsSection">
+             <layout class="QVBoxLayout" name="socialSettingsLayout">
+              <item>
+               <widget class="QLineEdit" name="socialUsernameEdit">
+                <property name="placeholderText">
+                 <string>Username / handle</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="socialInstanceEdit">
+                <property name="text">
+                 <string>mastodon.social</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Mastodon instance</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="socialSearchButton">
+                <property name="text">
+                 <string>Search All</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="socialBlueskyButton">
+                <property name="text">
+                 <string>Bluesky</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="socialMastodonButton">
+                <property name="text">
+                 <string>Mastodon</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="socialInstagramButton">
+                <property name="text">
+                 <string>Instagram</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="socialVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="socialDebugSection">
+             <layout class="QVBoxLayout" name="socialDebugLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="socialDebug">
+                <property name="placeholderText">
+                 <string>SOCIAL / MASTODON</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="leaksTab">
+         <attribute name="title">
+          <string>LEAKS</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="leaksHorizontalLayout">
+          <item>
+           <widget class="QSplitter" name="leaksSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="leaksSettingsSection">
+             <layout class="QVBoxLayout" name="leaksSettingsLayout">
+              <item>
+               <widget class="QLineEdit" name="leakTargetEdit">
+                <property name="placeholderText">
+                 <string>Email / username / domain</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="leakSearchAllButton">
+                <property name="text">
+                 <string>Search All</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="leakInfostealerButton">
+                <property name="text">
+                 <string>Infostealer (Hudson Rock)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="leakLeakCheckButton">
+                <property name="text">
+                 <string>LeakCheck</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="leakHibpButton">
+                <property name="text">
+                 <string>Have I Been Pwned</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="leakDehashedButton">
+                <property name="text">
+                 <string>Dehashed</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="leaksVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="leaksDebugSection">
+             <layout class="QVBoxLayout" name="leaksDebugLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="leakDebug">
+                <property name="placeholderText">
+                 <string>LEAKS / INFOSTEALERS</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="geoTab">
+         <attribute name="title">
+          <string>GEO</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="geoHorizontalLayout">
+          <item>
+           <widget class="QSplitter" name="geoSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="geoSettingsSection">
+             <layout class="QVBoxLayout" name="geoSettingsLayout">
+              <item>
+               <widget class="QLineEdit" name="geoCoordEdit">
+                <property name="placeholderText">
+                 <string>Latitude, Longitude</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QDateTimeEdit" name="geoDateTimeEdit">
+                <property name="calendarPopup">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="geoShadowRatioEdit">
+                <property name="text">
+                 <string>1.0</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Shadow ratio (length / height)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="geoShadowBearingEdit">
+                <property name="text">
+                 <string>0</string>
+                </property>
+                <property name="placeholderText">
+                 <string>Shadow bearing (deg)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="geoSunShadowButton">
+                <property name="text">
+                 <string>Sun / Shadow</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="geoShadowSearchButton">
+                <property name="text">
+                 <string>Shadow Geolocation</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="geoFirmsButton">
+                <property name="text">
+                 <string>FIRMS Fires</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="geoGdacsButton">
+                <property name="text">
+                 <string>GDACS Disasters</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="geoFullReportButton">
+                <property name="text">
+                 <string>Full Report</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="geoVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="geoDebugSection">
+             <layout class="QVBoxLayout" name="geoDebugLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="geoDebug">
+                <property name="placeholderText">
+                 <string>GEO / SATELLITE / SHADOW</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="archiveTab">
+         <attribute name="title">
+          <string>ARCHIVE</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="archiveHorizontalLayout">
+          <item>
+           <widget class="QSplitter" name="archiveSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="archiveSettingsSection">
+             <layout class="QVBoxLayout" name="archiveSettingsLayout">
+              <item>
+               <widget class="QLineEdit" name="archiveUrlEdit">
+                <property name="placeholderText">
+                 <string>URL to archive / check</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="archiveCheckButton">
+                <property name="text">
+                 <string>Check Archives</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="archiveAvailabilityButton">
+                <property name="text">
+                 <string>Wayback Closest</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="archiveSnapshotsButton">
+                <property name="text">
+                 <string>Wayback Snapshots</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="archiveSaveButton">
+                <property name="text">
+                 <string>Save to Wayback</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="archiveTodayButton">
+                <property name="text">
+                 <string>archive.today</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="archiveVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="archiveDebugSection">
+             <layout class="QVBoxLayout" name="archiveDebugLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="archiveDebug">
+                <property name="placeholderText">
+                 <string>ARCHIVE / EVIDENCE</string>
+                </property>
                </widget>
               </item>
              </layout>
@@ -2542,6 +2935,34 @@
              </widget>
             </item>
             <item>
+             <widget class="QLineEdit" name="leakcheckApiKeyEdit">
+              <property name="placeholderText">
+               <string>LeakCheck API Key (optional)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="dehashedEmailEdit">
+              <property name="placeholderText">
+               <string>Dehashed account email (optional)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="dehashedApiKeyEdit">
+              <property name="placeholderText">
+               <string>Dehashed API Key (optional)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="firmsMapKeyEdit">
+              <property name="placeholderText">
+               <string>NASA FIRMS MAP KEY (optional)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
              <widget class="QLabel" name="mcpStatusLabel">
               <property name="minimumSize">
                <size>
@@ -2554,6 +2975,16 @@
               </property>
               <property name="alignment">
                <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QCheckBox" name="mcpAuthCheck">
+              <property name="toolTip">
+               <string>Require a bearer token for the MCP server (token stored at ~/.skyfall/mcp_token)</string>
+              </property>
+              <property name="text">
+               <string>Require MCP Auth</string>
               </property>
              </widget>
             </item>

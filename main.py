@@ -16,14 +16,17 @@ from qasync import QEventLoop
 from logger_setup import setup_logging
 from src.case_manager import CaseManager
 from src.connectors import (
+    setup_archive_connectors,
     setup_blockchain_connectors,
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_download_connectors,
+    setup_geo_connectors,
     setup_github_connectors,
     setup_graph_connectors,
     setup_graph_layout_connectors,
     setup_graph_transform_connectors,
+    setup_leak_connectors,
     setup_mac_location_connectors,
     setup_mail_connectors,
     setup_mcp_connectors,
@@ -33,26 +36,31 @@ from src.connectors import (
     setup_report_connectors,
     setup_s4f_connectors,
     setup_settings_connectors,
+    setup_social_connectors,
     setup_steganography_connectors,
     setup_tg_analyzer_connectors,
     setup_tg_downloader_connectors,
     setup_username_connectors,
 )
+from src.controllers.archive_controller import ArchiveController
 from src.controllers.blockchain_controller import BlockchainController
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.download_controller import DownloadController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
+from src.controllers.geo_controller import GeoController
 from src.controllers.github_controller import GitHubController
 from src.controllers.graph_layout_controller import GraphLayoutController
 from src.controllers.graph_node_controller import GraphNodeController
 from src.controllers.graph_transform_controller import GraphTransformController
+from src.controllers.leak_controller import LeakController
 from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.mail_controller import MailController
 from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
 from src.controllers.search4faces_controller import S4FController
 from src.controllers.settings_controller import Settings
+from src.controllers.social_controller import SocialController
 from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
@@ -60,19 +68,24 @@ from src.controllers.username_search_controller import UsernameController
 from src.libs.graph_lib import GraphWidget, NodeItem
 from src.libs.graph_panel import EntityPalette
 from src.mcp_controller import McpController
+from src.modules.archive_search import ArchiveSearch
 from src.modules.blockchain_search import BlockchainSearch
 from src.modules.domain_analyzer import DomainAnalyzer
 from src.modules.dorks_search_engine import DorksSearchEngine
 from src.modules.downloader import DownloadManager
+from src.modules.email_accounts import EmailAccounts
 from src.modules.email_header_analyzer import EmailHeaderAnalyzer
 from src.modules.file_analyzer import FileAnalyzer
+from src.modules.geo_analysis import GeoAnalysis
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
+from src.modules.leak_search import LeakSearch
 from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
 from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.phone_search import PhoneSearch
 from src.modules.search4faces import Search4Faces
+from src.modules.social_search import SocialSearch
 from src.modules.steganography import SteganographyAnalyzer
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
@@ -222,6 +235,11 @@ class MainWindow(QMainWindow):
             self.settings.hibp_api_key,
         )
         self.emailHeaderAnalyzer = EmailHeaderAnalyzer()
+        self.emailAccounts = EmailAccounts()
+        self.socialSearch = SocialSearch()
+        self.leakSearch = LeakSearch()
+        self.geoAnalysis = GeoAnalysis()
+        self.archiveSearch = ArchiveSearch()
         self.blockchainSearch = BlockchainSearch(
             {
                 "trongrid_api_key": self.settings.trongrid_api_key,
@@ -231,6 +249,8 @@ class MainWindow(QMainWindow):
                 "helius_api_key": self.settings.helius_api_key,
             }
         )
+
+        self._sync_tokens(self.settings)
 
     def _sync_tokens(self, settings):
         self.githubSearch._token = settings.github_token
@@ -262,6 +282,20 @@ class MainWindow(QMainWindow):
 
         self.tgDownloader.api_id = settings.tg_api_key
         self.tgDownloader.api_hash = settings.telegram_api_hash
+
+        if hasattr(self, "leakSearch"):
+            self.leakSearch.keys = {
+                "leakcheck_api_key": getattr(settings, "leakcheck_api_key", ""),
+                "dehashed_email": getattr(settings, "dehashed_email", ""),
+                "dehashed_api_key": getattr(settings, "dehashed_api_key", ""),
+                "hibp_api_key": settings.hibp_api_key,
+            }
+            if hasattr(self, "leakController"):
+                self.leakController.keys = self.leakSearch.keys
+        if hasattr(self, "geoAnalysis"):
+            self.geoAnalysis.firms_key = getattr(settings, "firms_map_key", "")
+            if hasattr(self, "geoController"):
+                self.geoController.firms_key = self.geoAnalysis.firms_key
 
     def _show_about(self):
         from PySide6.QtGui import QPixmap
@@ -331,11 +365,31 @@ class MainWindow(QMainWindow):
         self.fileAnalyzeController = FileAnalyzeController(self.ui, self.fileAnalyzer)
         self.stegController = SteganographyController(self.ui, self.stegAnalyzer)
         self.mailController = MailController(
-            self.ui, self.mailSearchEngine, header_analyzer=self.emailHeaderAnalyzer
+            self.ui,
+            self.mailSearchEngine,
+            header_analyzer=self.emailHeaderAnalyzer,
+            email_accounts=self.emailAccounts,
         )
         self.usernameController = UsernameController(
             self.ui, self.usernameSearch, self.maigretSearch, proxy=self.proxy
         )
+        self.socialController = SocialController(self.ui, self.socialSearch)
+        self.leakController = LeakController(
+            self.ui,
+            self.leakSearch,
+            keys={
+                "leakcheck_api_key": getattr(self.settings, "leakcheck_api_key", ""),
+                "dehashed_email": getattr(self.settings, "dehashed_email", ""),
+                "dehashed_api_key": getattr(self.settings, "dehashed_api_key", ""),
+                "hibp_api_key": self.settings.hibp_api_key,
+            },
+        )
+        self.geoController = GeoController(
+            self.ui,
+            self.geoAnalysis,
+            firms_key=getattr(self.settings, "firms_map_key", ""),
+        )
+        self.archiveController = ArchiveController(self.ui, self.archiveSearch)
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.tgDownloaderController = TgDownloaderController(
             self.ui,
@@ -367,6 +421,10 @@ class MainWindow(QMainWindow):
         setup_steganography_connectors(self.stegController)
         setup_mail_connectors(self.mailController)
         setup_username_connectors(self.usernameController)
+        setup_social_connectors(self.socialController)
+        setup_leak_connectors(self.leakController)
+        setup_geo_connectors(self.geoController)
+        setup_archive_connectors(self.archiveController)
         setup_tg_downloader_connectors(self.tgDownloaderController)
         setup_tg_analyzer_connectors(self.tgAnalyzerController)
         setup_proxies_connectors(self.proxy)
@@ -385,6 +443,11 @@ class MainWindow(QMainWindow):
                 "phone_search": self.phoneSearch,
                 "mac_location": self.macLocation,
                 "mail_search": self.mailSearchEngine,
+                "email_accounts": self.emailAccounts,
+                "social_search": self.socialSearch,
+                "leak_search": self.leakSearch,
+                "geo_analysis": self.geoAnalysis,
+                "archive_search": self.archiveSearch,
             },
         )
         self.reportController = ReportController(self.ui, self.case_manager)

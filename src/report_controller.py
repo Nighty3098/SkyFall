@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 from pathlib import Path
 
 from loguru import logger
@@ -33,7 +34,7 @@ class ReportController:
     def _server_params() -> StdioServerParameters:
         server_script = Path(__file__).parent / "ollama_mcp_server.py"
         return StdioServerParameters(
-            command="python",
+            command=sys.executable,
             args=[str(server_script)],
         )
 

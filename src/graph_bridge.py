@@ -5,6 +5,8 @@ import threading
 
 from loguru import logger
 
+from src.security import read_token, tokens_equal
+
 GRAPH_BRIDGE_HOST = "127.0.0.1"
 GRAPH_BRIDGE_PORT = 9878
 
@@ -36,12 +38,14 @@ class GraphBridgeServer:
         self._thread: threading.Thread | None = None
         self._running = False
         self._worker = None
+        self._token = ""
 
-    def start(self, graph_widget, node_item_cls):
+    def start(self, graph_widget, node_item_cls, token: str = ""):
         from PySide6.QtCore import QObject, Signal, Slot
 
         self._graph_widget = graph_widget
         self._node_item_cls = node_item_cls
+        self._token = token or read_token()
 
         class Worker(QObject):
             execute = Signal(object)
@@ -121,6 +125,9 @@ class GraphBridgeServer:
             sock.close()
 
     def _dispatch(self, msg: dict) -> dict:
+        if not tokens_equal(self._token, msg.get("token")):
+            logger.warning("Graph bridge rejected a request with an invalid token")
+            return {"error": "unauthorized"}
         action = msg.get("action")
         try:
             if action == "add_node":
@@ -405,8 +412,9 @@ class GraphBridgeServer:
 
 
 class GraphBridgeClient:
-    def __init__(self):
+    def __init__(self, token: str = ""):
         self._sock: socket.socket | None = None
+        self._token = token or read_token()
 
     def _connect(self) -> socket.socket:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -415,6 +423,7 @@ class GraphBridgeClient:
         return sock
 
     def send(self, msg: dict) -> dict:
+        msg = {**msg, "token": self._token}
         sock = self._connect()
         try:
             _send_msg(sock, msg)

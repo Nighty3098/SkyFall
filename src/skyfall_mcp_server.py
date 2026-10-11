@@ -1,5 +1,7 @@
 import argparse
+import hmac
 import json
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -9,7 +11,16 @@ import anyio.to_thread
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from loguru import logger
+from mcp.server.auth.provider import AccessToken
+from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP
+
+from src.security import (
+    AUTH_ENV,
+    TOKEN_ENV,
+    decrypt_settings,
+    get_or_create_token,
+)
 
 CONFIG_DIR = Path.home() / ".skyfall"
 CONFIG_FILE = CONFIG_DIR / "settings.json"
@@ -18,13 +29,43 @@ CONFIG_FILE = CONFIG_DIR / "settings.json"
 def _load_settings() -> dict:
     if CONFIG_FILE.exists():
         try:
-            return json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            return decrypt_settings(json.loads(CONFIG_FILE.read_text(encoding="utf-8")))
         except Exception:
             return {}
     return {}
 
 
 _settings = _load_settings()
+
+
+def _auth_enabled() -> bool:
+    env = os.environ.get(AUTH_ENV)
+    if env is not None:
+        return env.strip().lower() in ("1", "true", "yes", "on")
+    return bool(_settings.get("mcp_require_auth", False))
+
+
+_AUTH_ENABLED = _auth_enabled()
+_MCP_TOKEN = os.environ.get(TOKEN_ENV) or (
+    get_or_create_token() if _AUTH_ENABLED else ""
+)
+
+
+class _StaticTokenVerifier:
+    """Accept a single pre-shared bearer token (local, non-OAuth deployment)."""
+
+    def __init__(self, token: str):
+        self._token = token
+
+    async def verify_token(self, token: str) -> AccessToken | None:
+        if self._token and hmac.compare_digest(self._token, token):
+            return AccessToken(token=token, client_id="skyfall-local", scopes=[])
+        return None
+
+
+def _auth_settings(host: str = "127.0.0.1", port: int = 9877) -> AuthSettings:
+    url = f"http://{host}:{port}"
+    return AuthSettings(issuer_url=url, resource_server_url=url)
 
 
 class _OllamaClient:
@@ -85,12 +126,19 @@ mcp = FastMCP(
     "SkyFall MCP Server",
     host="127.0.0.1",
     port=9877,
+    auth=_auth_settings() if _AUTH_ENABLED else None,
+    token_verifier=_StaticTokenVerifier(_MCP_TOKEN) if _AUTH_ENABLED else None,
     instructions="""
 MCP server for the SkyFall OSINT toolkit. Provides tools to:
 - Analyze domains (DNS, WHOIS, SSL, NMAP, WAF, malware, subdomains+brute,
   threat intel via AbuseIPDB/GreyNoise/ThreatFox/URLHaus, JS secrets scan)
 - Search usernames across 3300+ sites
-- Search emails via IntelX and HIBP
+- Look up usernames on Bluesky, Mastodon and Instagram
+- Search emails via IntelX and HIBP, and find accounts registered to an email
+- Search leaks and infostealer logs (Hudson Rock, LeakCheck, HIBP, Dehashed)
+- Geo analysis: sun/shadow geometry, shadow geolocation, NASA FIRMS fires,
+  GDACS disaster alerts
+- Web archives: Wayback Machine (check, list, save) and archive.today
 - Analyze phone numbers
 - GitHub OSINT (users, repos, commits, secrets)
 - Blockchain transaction search across 10+ chains
@@ -432,6 +480,26 @@ async def skyfall_maigret_search(username: str) -> str:
     return result
 
 
+@mcp.tool()
+async def skyfall_social_search(username: str, mastodon_instance: str = "") -> str:
+    """Find a username on Bluesky and Mastodon (public APIs, no keys)."""
+    from src.modules.social_search import SocialSearch
+
+    engine = SocialSearch()
+    data = await engine.search_structured(username, mastodon_instance or None)
+    return _extract_json(data)
+
+
+@mcp.tool()
+async def skyfall_instagram_profile(username: str) -> str:
+    """Look up a public Instagram profile by username (via instaloader)."""
+    from src.modules.social_search import SocialSearch
+
+    engine = SocialSearch()
+    data = await engine.instagram_profile(username)
+    return _extract_json(data)
+
+
 # ── Email Search ──────────────────────────────────────────────────────
 
 
@@ -483,6 +551,16 @@ async def skyfall_email_search(email: str) -> str:
 
 
 @mcp.tool()
+async def skyfall_email_accounts(email: str) -> str:
+    """Find services where an email is registered (Gravatar, Microsoft, etc.)."""
+    from src.modules.email_accounts import EmailAccounts
+
+    engine = EmailAccounts()
+    results = await engine.accounts(email)
+    return _extract_json({"email": email, "accounts": results})
+
+
+@mcp.tool()
 async def skyfall_email_header_file(filepath: str) -> str:
     """Analyze .eml file headers: Received chain, SPF/DKIM/DMARC, origin IP geo."""
     from src.modules.email_header_analyzer import EmailHeaderAnalyzer
@@ -498,6 +576,43 @@ async def skyfall_email_header_text(headers: str) -> str:
 
     analyzer = EmailHeaderAnalyzer()
     return await analyzer.analyze_text(headers)
+
+
+# ── Leaks / Infostealers ──────────────────────────────────────────────
+
+
+def _leak_keys() -> dict:
+    s = _settings
+    return {
+        "leakcheck_api_key": s.get("leakcheck_api_key", ""),
+        "dehashed_email": s.get("dehashed_email", ""),
+        "dehashed_api_key": s.get("dehashed_api_key", ""),
+        "hibp_api_key": s.get("hibp_api_key", ""),
+    }
+
+
+@mcp.tool()
+async def skyfall_leak_check(target: str) -> str:
+    """Search leaks and infostealer logs for an email, username or domain.
+
+    Aggregates Hudson Rock (infostealers, no key), LeakCheck, HIBP and
+    Dehashed. Optional providers require API keys in SkyFall settings.
+    """
+    from src.modules.leak_search import LeakSearch
+
+    engine = LeakSearch()
+    data = await engine.search_all(target, _leak_keys())
+    return _extract_json(data)
+
+
+@mcp.tool()
+async def skyfall_infostealer_search(target: str) -> str:
+    """Search Hudson Rock infostealer logs for an email, username or domain."""
+    from src.modules.leak_search import LeakSearch
+
+    engine = LeakSearch()
+    data = await engine.infostealer(target)
+    return _extract_json(data)
 
 
 # ── Phone Search ──────────────────────────────────────────────────────
@@ -737,6 +852,117 @@ def skyfall_mac_locate(mac: str, providers: str = "all") -> str:
     )
     result = ml.locate_json(mac, providers=provider_list)
     return _extract_json(result)
+
+
+# ── Geo Analysis ──────────────────────────────────────────────────────
+
+
+@mcp.tool()
+def skyfall_geo_sun_shadow(latitude: float, longitude: float) -> str:
+    """Compute sun position and cast-shadow geometry for a coordinate (UTC now).
+
+    Returns sun altitude/azimuth, shadow bearing and shadow length ratio.
+    """
+    from src.modules.geo_analysis import GeoAnalysis
+
+    engine = GeoAnalysis()
+    data = engine.sun_shadow(latitude, longitude, datetime.now())
+    return _extract_json(data)
+
+
+@mcp.tool()
+def skyfall_shadow_geolocate(
+    shadow_ratio: float,
+    shadow_bearing: float,
+    iso_time: str = "",
+    step: float = 2.0,
+) -> str:
+    """Find candidate coordinates matching an observed shadow.
+
+    Args:
+        shadow_ratio: Shadow length / object height
+        shadow_bearing: Compass direction the shadow points to (degrees)
+        iso_time: Observation time (ISO 8601, UTC). Defaults to now.
+        step: Grid step in degrees (smaller = slower, more precise)
+    """
+    from src.modules.geo_analysis import GeoAnalysis
+
+    when = datetime.fromisoformat(iso_time) if iso_time else datetime.now()
+    engine = GeoAnalysis()
+    results = engine.shadow_search(shadow_ratio, shadow_bearing, when, step=step)
+    return _extract_json({"count": len(results), "candidates": results})
+
+
+@mcp.tool()
+async def skyfall_firms_fires(
+    latitude: float = 0.0,
+    longitude: float = 0.0,
+    day_range: int = 1,
+) -> str:
+    """Active fires near a coordinate from NASA FIRMS (requires MAP_KEY)."""
+    from src.modules.geo_analysis import GeoAnalysis
+
+    engine = GeoAnalysis()
+    engine.firms_key = _settings.get("firms_map_key", "")
+    bbox = (longitude - 2.0, latitude - 2.0, longitude + 2.0, latitude + 2.0)
+    data = await engine.firms(
+        _settings.get("firms_map_key", ""), bbox=bbox, day_range=day_range
+    )
+    return _extract_json(data)
+
+
+@mcp.tool()
+async def skyfall_gdacs_disasters(
+    event_types: str = "EQ,TC,FL,VO,WF,DR",
+    date_from: str = "",
+    date_to: str = "",
+) -> str:
+    """Recent global disaster alerts from GDACS (no key).
+
+    Args:
+        event_types: Comma list (EQ,TC,FL,VO,WF,DR)
+        date_from: Start date (YYYY-MM-DD)
+        date_to: End date (YYYY-MM-DD)
+    """
+    from src.modules.geo_analysis import GeoAnalysis
+
+    engine = GeoAnalysis()
+    data = await engine.gdacs(event_types, date_from or None, date_to or None)
+    return _extract_json(data)
+
+
+# ── Archive / Evidence ────────────────────────────────────────────────
+
+
+@mcp.tool()
+async def skyfall_archive_url(url: str) -> str:
+    """Check the Wayback Machine and archive.today for an archived URL."""
+    from src.modules.archive_search import ArchiveSearch
+
+    engine = ArchiveSearch()
+    availability = await engine.availability(url)
+    archive_today = await engine.archive_today(url)
+    return _extract_json(
+        {"url": url, "wayback": availability, "archive_today": archive_today}
+    )
+
+
+@mcp.tool()
+async def skyfall_archive_snapshots(url: str, limit: int = 20) -> str:
+    """List Wayback Machine snapshots (CDX) for a URL."""
+    from src.modules.archive_search import ArchiveSearch
+
+    engine = ArchiveSearch()
+    return _extract_json(await engine.snapshots(url, limit))
+
+
+@mcp.tool()
+async def skyfall_archive_save(url: str) -> str:
+    """Submit a URL to the Wayback Machine (best-effort, may take a while)."""
+    from src.modules.archive_search import ArchiveSearch
+
+    engine = ArchiveSearch()
+    return _extract_json(await engine.save(url))
 
 
 # ── File Analysis ──────────────────────────────────────────────────────
@@ -1199,7 +1425,12 @@ def resource_modules() -> str:
         "web_stack, nmap, waf, malware, threat_intel, js_secrets, subdomains, "
         "robots, security_txt, social_tags) + skyfall_ip_domains",
         "Username Search: skyfall_username_search, skyfall_maigret_search",
+        "Social: skyfall_social_search (Bluesky/Mastodon), skyfall_instagram_profile",
         "Email Search: skyfall_email_* (IntelX, HIBP, combined, headers/EML)",
+        "Leaks: skyfall_leak_check, skyfall_infostealer_search (Hudson Rock)",
+        "Geo: skyfall_geo_sun_shadow, skyfall_shadow_geolocate, skyfall_firms_fires, "
+        "skyfall_gdacs_disasters",
+        "Archive: skyfall_archive_url, skyfall_archive_snapshots, skyfall_archive_save",
         "Phone OSINT: skyfall_phone_* (parse, reverse lookup, leaks, 7tel.ru)",
         "GitHub OSINT: skyfall_github_* (user, repos, commits, secrets, dork)",
         "Blockchain: skyfall_blockchain_search (10 chains)",
@@ -1267,12 +1498,19 @@ def main():
 
     mcp.settings.host = args.host
     mcp.settings.port = args.port
+    if _AUTH_ENABLED:
+        mcp.settings.auth = _auth_settings(args.host, args.port)
 
     _ollama.set_base_url(args.ollama_url)
 
     logger.info(f"Starting SkyFall MCP Server ({args.transport})")
     logger.info(f"Ollama URL: {args.ollama_url}")
     logger.info(f"Settings loaded from: {CONFIG_FILE}")
+    logger.info(
+        "MCP auth: enabled (bearer token required)"
+        if _AUTH_ENABLED
+        else "MCP auth: disabled"
+    )
 
     mcp.run(transport=args.transport)
 

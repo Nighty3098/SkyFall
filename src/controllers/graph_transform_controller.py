@@ -3,6 +3,7 @@ import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime
 
 from PySide6.QtCore import QPointF
 
@@ -183,6 +184,22 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_maigret_search,
                 ),
+                TransformDef(
+                    name="Bluesky / Mastodon",
+                    description="Find this username on Bluesky and Mastodon",
+                    input_types=["Username"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_social_search,
+                ),
+                TransformDef(
+                    name="Infostealer / Leaks",
+                    description="Infostealer logs and breach data for this username",
+                    input_types=["Username"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_leak_search,
+                ),
             ],
             "Domain": [
                 TransformDef(
@@ -305,6 +322,22 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_domain_threat_intel,
                 ),
+                TransformDef(
+                    name="Infostealer / Leaks",
+                    description="Infostealer logs and breach data for this domain",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_leak_search,
+                ),
+                TransformDef(
+                    name="Wayback Snapshots",
+                    description="List Wayback Machine snapshots of this domain",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="archived_at",
+                    handler=_transform_archive_snapshots,
+                ),
             ],
             "IP": [
                 TransformDef(
@@ -349,6 +382,22 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_email_intelx,
                 ),
+                TransformDef(
+                    name="Registered Accounts",
+                    description="Find services where this email is registered",
+                    input_types=["Email"],
+                    output_type="Custom",
+                    relationship="registered_at",
+                    handler=_transform_email_accounts,
+                ),
+                TransformDef(
+                    name="Infostealer / Leaks",
+                    description="Infostealer logs and breach data for this email",
+                    input_types=["Email"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_leak_search,
+                ),
             ],
             "Phone": [
                 TransformDef(
@@ -384,6 +433,24 @@ class GraphTransformController:
                     output_type="Geolocation",
                     relationship="located_at",
                     handler=_transform_mac_geo,
+                ),
+            ],
+            "Geolocation": [
+                TransformDef(
+                    name="Sun / Shadow",
+                    description="Sun position and cast-shadow geometry (UTC)",
+                    input_types=["Geolocation"],
+                    output_type="Custom",
+                    relationship="located_at",
+                    handler=_transform_geo_sun_shadow,
+                ),
+                TransformDef(
+                    name="Nearby Disasters",
+                    description="GDACS disaster alerts near this location",
+                    input_types=["Geolocation"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_geo_gdacs,
                 ),
             ],
         }
@@ -1094,6 +1161,71 @@ async def _transform_maigret_search(username, modules):
     return TransformResult(children=children, content=report_text)
 
 
+def _parse_social_search(data, username):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    children = []
+    bsky = data.get("bluesky")
+    if bsky:
+        children.append(
+            ChildNodeDef(
+                title=bsky.get("handle", "Bluesky"),
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Platform", "Bluesky"),
+                        kv("Handle", bsky.get("handle", "?")),
+                        kv("Display", bsky.get("displayName", "")),
+                        kv("Followers", bsky.get("followersCount", "?")),
+                        kv("Posts", bsky.get("postsCount", "?")),
+                    ]
+                ),
+                evidence=[f"https://bsky.app/profile/{bsky.get('handle', '')}"]
+                if bsky.get("handle")
+                else [],
+            )
+        )
+    mstd = data.get("mastodon")
+    if mstd:
+        acct = mstd.get("acct", "")
+        children.append(
+            ChildNodeDef(
+                title=f"@{acct}",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv(
+                            "Platform",
+                            f"Mastodon ({data.get('mastodon_instance', '')})",
+                        ),
+                        kv("Account", acct),
+                        kv("Display", mstd.get("display_name", "")),
+                        kv("Followers", mstd.get("followers_count", "?")),
+                        kv("Posts", mstd.get("statuses_count", "?")),
+                    ]
+                ),
+                evidence=[mstd.get("url", "")] if mstd.get("url") else [],
+            )
+        )
+    lines = [divider(), title(f"Social: {username}")]
+    if bsky:
+        lines.append(bullet(f"Bluesky: {bsky.get('handle', '?')}"))
+    if mstd:
+        lines.append(bullet(f"Mastodon: @{mstd.get('acct', '?')}"))
+    if not children:
+        lines.append(fmt_info("No profiles found"))
+    lines += [end_of("social search"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_social_search(username, modules):
+    engine = modules.get("social_search")
+    if not engine:
+        return TransformResult(content="Social module not available")
+    data = await engine.search_structured(username)
+    return _parse_social_search(data, username)
+
+
 async def _transform_domain_ip(domain, modules):
     return await _run_transform(
         modules, "domain_analyzer", "get_ip_and_location", domain, _parse_domain_ip
@@ -1202,6 +1334,56 @@ async def _transform_email_intelx(email, modules):
     )
 
 
+def _parse_email_accounts(results, email):
+    if not isinstance(results, list) or not results:
+        return TransformResult(content=f"No account data for {email}")
+    registered = [r for r in results if r.get("registered") is True]
+    children = []
+    for r in registered[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=r.get("site", "?"),
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Site", r.get("site", "?")),
+                        kv("Domain", r.get("domain", "")),
+                        kv("Detail", r.get("detail", "")),
+                    ]
+                ),
+            )
+        )
+    if len(registered) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(registered) - CHILD_THRESHOLD} more sites",
+                entity_type="Custom",
+                content="\n".join(r["site"] for r in registered[CHILD_THRESHOLD:]),
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Registered accounts: {email}"),
+        kv("Found", len(registered)),
+        kv("Checked", len(results)),
+    ]
+    for r in registered:
+        detail = f" - {r['detail']}" if r.get("detail") else ""
+        lines.append(bullet(f"{r.get('site', '?')}{detail}"))
+    if not registered:
+        lines.append(fmt_info("No registered accounts found"))
+    lines += [end_of("account check"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_email_accounts(email, modules):
+    engine = modules.get("email_accounts")
+    if not engine:
+        return TransformResult(content="Email accounts module not available")
+    results = await engine.accounts(email)
+    return _parse_email_accounts(results, email)
+
+
 async def _transform_phone_parse(phone, modules):
     return await _run_transform(
         modules, "phone_search", "parse_and_validate", phone, _parse_phone_parse
@@ -1296,3 +1478,259 @@ async def _transform_ip_threat_intel(ip_addr, modules):
     return await _run_transform(
         modules, "domain_analyzer", "check_threat_intel", ip_addr, _parse_threat_intel
     )
+
+
+# ── Leaks / infostealers ──────────────────────────────────────────
+
+
+def _parse_leak_search(data, target):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    children = []
+
+    infostealer = data.get("infostealer") or {}
+    if infostealer and not infostealer.get("error"):
+        if infostealer.get("kind") == "domain":
+            users = infostealer.get("users", 0)
+            if users:
+                children.append(
+                    ChildNodeDef(
+                        title=f"Infostealer: {users} user(s)",
+                        entity_type="Custom",
+                        content=_pack_content(
+                            [
+                                kv("Total records", infostealer.get("total", 0)),
+                                kv("Users", users),
+                                kv("Employees", infostealer.get("employees", 0)),
+                            ]
+                        ),
+                    )
+                )
+        else:
+            stealers = infostealer.get("stealers") or []
+            if stealers:
+                children.append(
+                    ChildNodeDef(
+                        title=f"Infostealer logs: {len(stealers)}",
+                        entity_type="Custom",
+                        content=_pack_content(
+                            [
+                                kv("Infected machines", len(stealers)),
+                                kv(
+                                    "Corporate services",
+                                    infostealer.get("total_corporate_services", 0),
+                                ),
+                                kv(
+                                    "User services",
+                                    infostealer.get("total_user_services", 0),
+                                ),
+                            ]
+                        ),
+                    )
+                )
+
+    leakcheck = data.get("leakcheck") or {}
+    if leakcheck and not leakcheck.get("error") and leakcheck.get("found"):
+        children.append(
+            ChildNodeDef(
+                title=f"LeakCheck: {leakcheck['found']} records",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Engine", leakcheck.get("engine", "public")),
+                        kv("Records", leakcheck.get("found", 0)),
+                    ]
+                ),
+            )
+        )
+        for src in (leakcheck.get("sources") or [])[:CHILD_THRESHOLD]:
+            children.append(
+                ChildNodeDef(
+                    title=str(src.get("name", "?")),
+                    entity_type="Organization",
+                    content=kv("Breach date", src.get("date", "?")),
+                )
+            )
+
+    hibp = data.get("hibp") or {}
+    for breach in (hibp.get("breaches") or [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=str(breach.get("Name", "?")),
+                entity_type="Organization",
+                content=_pack_content(
+                    [
+                        kv("Breach date", breach.get("BreachDate", "?")),
+                        kv("Pwn count", breach.get("PwnCount", "?")),
+                    ]
+                ),
+            )
+        )
+
+    lines = [divider(), title(f"Leaks: {target}")]
+    if infostealer.get("error"):
+        lines.append(fmt_info(f"Infostealer: {infostealer['error']}"))
+    if leakcheck.get("error"):
+        lines.append(fmt_info(f"LeakCheck: {leakcheck['error']}"))
+    elif leakcheck.get("found"):
+        lines.append(bullet(f"LeakCheck: {leakcheck['found']} records"))
+    for breach in hibp.get("breaches") or []:
+        lines.append(bullet(f"HIBP: {breach.get('Name', '?')}"))
+    if not children:
+        lines.append(fmt_info("No leaks found"))
+    lines += [end_of("leak search"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_leak_search(target, modules):
+    engine = modules.get("leak_search")
+    if not engine:
+        return TransformResult(content="Leak module not available")
+    data = await engine.search_all(target)
+    return _parse_leak_search(data, target)
+
+
+# ── Archive ───────────────────────────────────────────────────────
+
+
+def _parse_archive_snapshots(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        err = (data or {}).get("error", "error")
+        return TransformResult(content=f"Wayback snapshots unavailable: {err}")
+    children = []
+    for snap in (data.get("snapshots") or [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=str(snap.get("timestamp", "?")),
+                entity_type="Custom",
+                content=kv("URL", snap.get("url", "?")),
+                evidence=[snap.get("url", "")] if snap.get("url") else [],
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Wayback snapshots: {domain}"),
+        kv("Count", data.get("count", 0)),
+    ]
+    for snap in data.get("snapshots") or []:
+        lines.append(bullet(f"{snap.get('timestamp', '?')} {snap.get('url', '')}"))
+    lines += [end_of("archive lookup"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_archive_snapshots(domain, modules):
+    engine = modules.get("archive_search")
+    if not engine:
+        return TransformResult(content="Archive module not available")
+    data = await engine.snapshots(domain)
+    return _parse_archive_snapshots(data, domain)
+
+
+# ── Geo ───────────────────────────────────────────────────────────
+
+
+def _parse_geo_sun_shadow(data, target):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    content = _pack_content(
+        [
+            divider(),
+            title(f"Sun / shadow: {target}"),
+            kv("Time (UTC)", data.get("time_utc", "?")),
+            kv("Sun altitude", f"{data.get('sun_altitude_deg')} deg"),
+            kv("Sun azimuth", f"{data.get('sun_azimuth_deg')} deg"),
+            kv("Shadow bearing", f"{data.get('shadow_bearing_deg')} deg"),
+            kv("Shadow ratio", data.get("shadow_ratio")),
+            end_of("geo analysis"),
+            divider(),
+        ]
+    )
+    children = [
+        ChildNodeDef(
+            title=f"Shadow {data.get('shadow_bearing_deg')} deg",
+            entity_type="Custom",
+            content=content,
+        )
+    ]
+    return TransformResult(children=children, content=content)
+
+
+def _haversine_km(lat1, lon1, lat2, lon2):
+    radius = 6371.0
+    dlat = math.radians(lat2 - lat1)
+    dlon = math.radians(lon2 - lon1)
+    a = (
+        math.sin(dlat / 2) ** 2
+        + math.cos(math.radians(lat1))
+        * math.cos(math.radians(lat2))
+        * math.sin(dlon / 2) ** 2
+    )
+    return 2 * radius * math.asin(math.sqrt(a))
+
+
+async def _transform_geo_sun_shadow(target, modules):
+    engine = modules.get("geo_analysis")
+    if not engine:
+        return TransformResult(content="Geo module not available")
+    coords = engine.parse_coords(target)
+    if coords is None:
+        return TransformResult(content=f"Invalid coordinates: {target}")
+    data = engine.sun_shadow(coords[0], coords[1], datetime.now(UTC))
+    return _parse_geo_sun_shadow(data, target)
+
+
+def _parse_geo_gdacs(data, target):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(
+            content=f"GDACS unavailable: {(data or {}).get('error', 'error')}"
+        )
+    coords = data.get("_coords") or (None, None)
+    children = []
+    for event in data.get("events") or []:
+        lat, lon = event.get("latitude"), event.get("longitude")
+        distance = ""
+        if coords[0] is not None and lat is not None and lon is not None:
+            distance = kv(
+                "Distance (km)",
+                round(_haversine_km(coords[0], coords[1], lat, lon), 1),
+            )
+        children.append(
+            ChildNodeDef(
+                title=f"{event.get('event_type', '?')}: {event.get('name', '?')}",
+                entity_type="Geolocation",
+                content=_pack_content(
+                    [
+                        kv("Alert level", event.get("alert_level", "?")),
+                        kv("Country", event.get("country", "?")),
+                        kv("Date", event.get("from_date", "?")),
+                        f"{kv('Coordinates', f'{lat}, {lon}')}" if lat else "",
+                        distance,
+                    ]
+                ),
+                evidence=[
+                    f"https://www.gdacs.org/report.aspx?eventtype="
+                    f"{event.get('event_type', '')}&eventid={event.get('event_id', '')}"
+                ],
+            )
+        )
+    lines = [
+        divider(),
+        title(f"GDACS near {target}"),
+        kv("Events", data.get("count", 0)),
+    ]
+    for event in (data.get("events") or [])[:15]:
+        lines.append(bullet(f"{event.get('event_type')}: {event.get('name')}"))
+    lines += [end_of("disaster lookup"), divider()]
+    return TransformResult(
+        children=children[:CHILD_THRESHOLD], content=_pack_content(lines)
+    )
+
+
+async def _transform_geo_gdacs(target, modules):
+    engine = modules.get("geo_analysis")
+    if not engine:
+        return TransformResult(content="Geo module not available")
+    data = await engine.gdacs()
+    coords = engine.parse_coords(target)
+    data["_coords"] = coords or (None, None)
+    return _parse_geo_gdacs(data, target)

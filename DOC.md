@@ -17,6 +17,10 @@
    - [Telegram Analyzer](#telegram-analyzer)
    - [Username](#username)
    - [Mail](#mail)
+   - [Social](#social)
+   - [Leaks](#leaks)
+   - [Geo](#geo)
+   - [Archive](#archive)
    - [Dorking](#dorking)
    - [Web](#web)
    - [File Analyze](#file-analyze)
@@ -105,8 +109,15 @@ python3 main.py -d
 | `bscscan_api_key` | `bscscanApiKeyEdit` | BscScan (BSC) |
 | `tonapi_api_key` | `tonapiApiKeyEdit` | TonAPI (TON) |
 | `helius_api_key` | `heliusApiKeyEdit` | Helius (Solana) |
+| `leakcheck_api_key` | `leakcheckApiKeyEdit` | LeakCheck API v2 (опционально; без ключа — публичный эндпоинт) |
+| `dehashed_email` | `dehashedEmailEdit` | Dehashed — email аккаунта (basic auth) |
+| `dehashed_api_key` | `dehashedApiKeyEdit` | Dehashed API-ключ |
+| `firms_map_key` | `firmsMapKeyEdit` | NASA FIRMS MAP_KEY (активные пожары) |
 | `light_theme` | `lightThemeCheck` | Светлая тема (`style_light.qss`) |
 | `frameless_window` | `framelessCheck` | Окно без рамки |
+| `mcp_require_auth` | `mcpAuthCheck` | Требовать bearer-токен для MCP-сервера |
+
+> **Безопасность.** Все значения из таблицы с ключами (`*_api_key`, `*_token`, `telegram_api_hash`, `telegram_phone`) **шифруются** (Fernet, `enc:v1:`) перед записью в `settings.json`. Ключ хранится в `~/.skyfall/secret.key` с правами `0600`, сам `settings.json` и каталог `~/.skyfall` — `0600`/`0700`. Старые plaintext-файлы читаются как есть и перешифровываются при следующем **Save** (`src/security.py`).
 
 Дополнительно на вкладке Settings — блок **MCP Server** (`mcpStatusLabel`, `mcpToggleButton`) для запуска/остановки встроенного MCP-сервера.
 
@@ -116,7 +127,7 @@ python3 main.py -d
 
 `src/case_manager.py` — концепция «кейса» расследования. Меню **SkyFall → New case / Open case**.
 
-- При создании/открытии кейса формируется структура папок: `domains`, `telegram`, `username`, `email`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking` + `graph`.
+- При создании/открытии кейса формируется структура папок: `domains`, `telegram`, `username`, `email`, `social`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads` + `graph`.
 - **Автосохранение**: содержимое всех debug-панелей автоматически сохраняется в Markdown-файлы с меткой времени (`YYYY-MM-DD_HH-MM-SS_<label>.md`) в соответствующие категории. Повторяющееся (расширенное) содержимое перезаписывает текущий файл вместо создания нового.
 - Название кейса отображается в меню SkyFall.
 - Каталоги: `<case>/graph`, `<case>/reports` (если кейса нет — `~/.skyfall/data`).
@@ -196,6 +207,56 @@ python3 main.py -d
 - `startMailSearchButton` — **IntelX** поиск: создание поисковой задачи → опрос результатов → загрузка содержимого bucket'ов. Вывод в `mailSearchDebug`: список баз данных (Found N databases), bucket ID, дата, размер, источник, теги, содержимое.
 - `startHibpCheckButton` — **Have I Been Pwned**: список утечек (имя, домен, дата, число скомпрометированных аккаунтов, типы данных). Вывод в `hibpDebug`. Учитывается `Retry-After` при 429.
 - `analyzeEmlButton` — **EML / Headers**: выбор `.eml`-файла (или вставка сырых заголовков в `mailEdit`) → разбор в `emailHeaderDebug`: конверт (From/Reply-To/Return-Path/Message-ID), цепочка Received (по хопам с IP), SPF/DKIM/DMARC из `Authentication-Results`, DNS-проверка SPF/DMARC записей домена отправителя, гео IP origin (rDNS + ip-api.com: страна/город/ISP/ASN, флаги proxy/hosting), вердикт LOW/MEDIUM/HIGH.
+- `emailAccountsButton` — **Registered Accounts** («где зарегистрирован email»): параллельная проверка сервисов → `emailAccountsDebug`. Встроенные проверки без ключей: **Gravatar, Microsoft, Mozilla, ProtonMail, Duolingo, Twitter/X**. Дополнительно выполняется полный прогон пакета **`holehe`** (~120 сайтов, входит в `requirements.txt`); вывод группируется на «Registered / Not found / Unknown».
+
+### Social
+
+Поиск имени пользователя в открытых соцсетях, где есть публичные API: **Bluesky** (AT Protocol), **Mastodon** (ActivityPub) и **Instagram** (`instaloader`).
+
+- `socialUsernameEdit` — username/handle; `socialInstanceEdit` — инстанс Mastodon (по умолчанию `mastodon.social`).
+- `socialSearchButton` — **Search All**: профиль + совпадения в обеих сетях. `socialBlueskyButton` / `socialMastodonButton` / `socialInstagramButton` — поиск только в одной.
+- **Bluesky**: `app.bsky.actor.getProfile` (точный профиль, handle `name` или `name.bsky.social`) + `app.bsky.actor.searchActors` (похожие аккаунты).
+- **Mastodon**: `/api/v1/accounts/lookup` (точный аккаунт на инстансе) + `/api/v2/search?type=accounts` (совпадения).
+- **Instagram**: публичный профиль через **`instaloader`** (без логина; Instagram часто ограничивает анонимные запросы — ошибка выводится мягко): имя, подписчики/подписки, посты, приватность, верификация, внешняя ссылка.
+- Вывод — в `socialDebug`: handle, отображаемое имя, подписчики/подписки/посты, дата создания, bio.
+
+### Leaks
+
+Поиск утечек и логов инфостилеров по email, username или домену.
+
+- `leakTargetEdit` — цель (email / username / domain; тип определяется автоматически).
+- `leakSearchAllButton` — **Search All**: агрегирует все доступные источники.
+- `leakInfostealerButton` — **Infostealer (Hudson Rock)**: бесплатный API Cavalier без ключа — заражённые машины, дата компрометации, ОС, top-логины/пароли, IP.
+- `leakLeakCheckButton` — **LeakCheck**: без ключа — публичный эндпоинт (число записей, источники, поля); с `leakcheck_api_key` — API v2.
+- `leakHibpButton` — **Have I Been Pwned** (нужен `hibp_api_key`).
+- `leakDehashedButton` — **Dehashed** (нужны `dehashed_email` + `dehashed_api_key`).
+- Вывод — в `leakDebug`; ошибки/отсутствие ключей выводятся информационно.
+
+### Geo
+
+Геоанализ: солнечно-теневые расчёты (локально, `suncalc`), пожары NASA FIRMS и катастрофы GDACS.
+
+- `geoCoordEdit` — координаты `lat, lon`; `geoDateTimeEdit` — дата/время (UTC) для расчёта солнца.
+- `geoSunShadowButton` — **Sun / Shadow**: азимут/высота солнца, азимут тени и коэффициент длины тени.
+- `geoShadowRatioEdit` / `geoShadowBearingEdit` — коэффициент тени (длина/высота) и азимут тени; `geoShadowSearchButton` — **Shadow Geolocation**: обратный поиск координат (сетка по глобусу, шаг 2°), чьё положение солнца совпадает с наблюдением (аналог ShadowFinder).
+- `geoFirmsButton` — **FIRMS Fires**: активные пожары в области ±2° (нужен `firms_map_key`).
+- `geoGdacsButton` — **GDACS Disasters**: оповещения за последние 30 дней (без ключа).
+- `geoFullReportButton` — **Full Report**: солнце/тень + пожары рядом.
+- Вывод — в `geoDebug`.
+
+> **Примечание.** `shadowfinder`/`timezonefinder`/`cartopy` намеренно **не** используются: они тянут `cffi<2`, что конфликтует с `cryptography`. Для теневых расчётов применён лёгкий `suncalc`.
+
+### Archive
+
+Работа с веб-архивами и фиксация доказательств.
+
+- `archiveUrlEdit` — URL (схема добавляется автоматически).
+- `archiveCheckButton` — **Check Archives**: ближайший снимок Wayback + наличие в archive.today.
+- `archiveAvailabilityButton` — **Wayback Closest**: быстрый запрос availability API (пробует URL со схемой и без).
+- `archiveSnapshotsButton` — **Wayback Snapshots**: список снимков через CDX (медленно на некоторых сетях, ошибки мягкие).
+- `archiveSaveButton` — **Save to Wayback**: отправка URL на архивацию (через `waybackpy`, может занять время).
+- `archiveTodayButton` — **archive.today**: проверка наличия снимка (`archive.ph`).
+- Вывод — в `archiveDebug`.
 
 ### Dorking
 
@@ -376,21 +437,24 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 - **Geolocation-узлы** — встроенная карта (мозаика OpenStreetMap, zoom 5–18, маркер, Ctrl+колесо для зума).
 - Контекстное меню: редактирование узла/ребра, стиль ребра, прикрепление улик, цвет, удаление; **Analysis** — кратчайший путь (по клику), центральность степени (масштабирование узлов + top-5), обнаружение сообществ (greedy modularity).
 - **⚡ Transforms** (обогащение графа, `graph_transform_controller`): из узла строятся дочерние узлы-результаты поиска, расположенные дугой:
-  - **Username** → поиск соцсетей, Maigret;
-  - **Domain** → IP, DNS, SSL/TLS, веб-стек, WHOIS, субдомены, Certificate Transparency, соц-теги, репутация, security.txt, cookies, robots.txt, порты, JS Secrets, Threat Intel;
+  - **Username** → поиск соцсетей, Maigret, Bluesky/Mastodon, Infostealer/Leaks;
+  - **Domain** → IP, DNS, SSL/TLS, веб-стек, WHOIS, субдомены, Certificate Transparency, соц-теги, репутация, security.txt, cookies, robots.txt, порты, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback Snapshots;
   - **IP** → геолокация, порты, домены на IP, Threat Intel;
-  - **Email** → IntelX;
+  - **Email** → IntelX, поиск аккаунтов (Registered Accounts), Infostealer/Leaks;
   - **Phone** → парсинг, обратный поиск, утечки;
-  - **MAC** → геолокация.
+  - **MAC** → геолокация;
+  - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS).
 - Персистентность: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
 
 ---
 
 ## MCP-серверы
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 68 инструментов
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 80 инструментов
 
 Сервер FastMCP: `--host 127.0.0.1 --port 9877`, транспорты `stdio`/`sse`. Запускается/останавливается с вкладки Settings (кнопка MCP) или через `McpController`.
+
+**Авторизация (опционально).** Если включить `mcpAuthCheck` («Require MCP Auth»), сервер требует заголовок `Authorization: Bearer <token>`, иначе отвечает `401`. Токен хранится в `~/.skyfall/mcp_token` (права `0600`, генерируется автоматически). Состояние также можно переопределить переменными окружения `SKYFALL_MCP_REQUIRE_AUTH=1` и `SKYFALL_MCP_TOKEN=<token>` при самостоятельном запуске.
 
 **Ollama (4):** список моделей, установить/получить модель, установить URL.
 
@@ -398,7 +462,15 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 **Username (2):** sherlock-поиск (`skyfall_username_search`), maigret (`skyfall_maigret_search`).
 
-**Email (5):** IntelX, HIBP, комбинированный, разбор `.eml`-файла, разбор вставленных заголовков.
+**Соцсети (2):** поиск в Bluesky + Mastodon (`skyfall_social_search`), профиль Instagram (`skyfall_instagram_profile`).
+
+**Email (6):** IntelX, HIBP, комбинированный, разбор `.eml`-файла, разбор вставленных заголовков, поиск аккаунтов по email (Gravatar/Microsoft/… + holehe).
+
+**Утечки / инфостилеры (2):** `skyfall_leak_check` (Hudson Rock + LeakCheck + HIBP + Dehashed), `skyfall_infostealer_search` (Hudson Rock).
+
+**Гео (4):** `skyfall_geo_sun_shadow` (солнце/тень), `skyfall_shadow_geolocate` (обратный поиск координат), `skyfall_firms_fires` (пожары NASA, нужен `firms_map_key`), `skyfall_gdacs_disasters` (GDACS).
+
+**Архив (3):** `skyfall_archive_url` (Wayback + archive.today), `skyfall_archive_snapshots` (CDX), `skyfall_archive_save` (архивация).
 
 **Телефоны (5):** парсинг, обратный поиск, утечки, полный, 7tel.
 
@@ -432,7 +504,7 @@ Stdio-транспорт, Ollama `http://127.0.0.1:11434`, модель по у�
 
 ### Graph Bridge (`src/graph_bridge.py`)
 
-TCP-мост `127.0.0.1:9878`, протокол: 4-байтовый длинный префикс (big-endian) + JSON. Действия: `add_node`, `add_edge`, `get_graph`, `get_node`, `update_node`, `move_node`, `remove_node`, `remove_edge`, `clear_graph`, `graph_summary`. Все операции маршалируются в поток GUI через Qt-сигнал (thread-safe).
+TCP-мост `127.0.0.1:9878`, протокол: 4-байтовый длинный префикс (big-endian) + JSON. Действия: `add_node`, `add_edge`, `get_graph`, `get_node`, `update_node`, `move_node`, `remove_node`, `remove_edge`, `clear_graph`, `graph_summary`. Все операции маршалируются в поток GUI через Qt-сигнал (thread-safe). Каждый запрос обязан содержать `token` (общий токен из `~/.skyfall/mcp_token`); запросы без валидного токена отклоняются (`{"error": "unauthorized"}`).
 
 ---
 
@@ -445,6 +517,7 @@ logger_setup.py             — настройка логгера (loguru)
 src/
   connectors.py             — связывание сигналов Qt с контроллерами
   case_manager.py           — кейсы расследований, автосохранение
+  security.py               — шифрование настроек и общий токен MCP/моста
   report_controller.py      — AI-отчёт через Ollama
   mcp_controller.py         — жизненный цикл MCP-сервера + graph bridge
   graph_bridge.py           — TCP-мост GUI-графа для MCP
@@ -455,6 +528,11 @@ src/
   modules/                  — сбор данных (UI-независимо)
     js_secrets.py           — скан JS на ключи/секреты/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus агрегатор
+    email_accounts.py       — где зарегистрирован email (Gravatar/Microsoft/… + holehe)
+    social_search.py        — поиск username в Bluesky, Mastodon, Instagram
+    leak_search.py          — утечки и инфостилеры (Hudson Rock, LeakCheck, HIBP, Dehashed)
+    geo_analysis.py         — солнце/тень (suncalc), пожары (NASA FIRMS), катастрофы (GDACS)
+    archive_search.py       — веб-архивы (Wayback Machine, archive.today)
     tg/                     — пакет Telegram: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
   controllers/              — UI-логика по вкладкам
@@ -469,10 +547,10 @@ thirdparty/txfetch/         — вендоренная библиотека по
 
 ## Данные и хранение
 
-- **`~/.skyfall/`**: `settings.json` (настройки/ключи), `proxies.txt`, `logs/`, `data/` (кейсы, `SkyFall_TG.db`, `SkyFall_TG_media/`, графы).
+- **`~/.skyfall/`**: `settings.json` (настройки/ключи; чувствительные значения зашифрованы), `secret.key` (ключ шифрования, `0600`), `mcp_token` (bearer-токен MCP/моста, `0600`), `proxies.txt`, `logs/`, `data/` (кейсы, `SkyFall_TG.db`, `SkyFall_TG_media/`, графы).
 - **`data/dorks.json`** — 14 категорий, ~7 944 дорка. **`data/dorks.xml`** — исходная база GHDB.
 - **`data/username_data.json`** — 481 спецификация сайта для username-поиска (шаблоны URL, коды ошибок, regex).
-- **`resources/form.ui`** — UI (2624 строки), загружается в рантайме.
+- **`resources/form.ui`** — UI (3184 строки), загружается в рантайме.
 - **БД Telegram** — SQLite `SkyFall_TG.db`: таблицы `channels`, `users`, `posts`, `discussions`, `members`, `links`.
 
 ---
@@ -506,5 +584,18 @@ thirdparty/txfetch/         — вендоренная библиотека по
 | Ollama | AI-отчёт | локально |
 | txfetch (TronGrid/Etherscan/BscScan/TonAPI/Helius) | блокчейн | да |
 | Maigret | username | нет |
+| Gravatar / Microsoft / Mozilla / ProtonMail / Duolingo / Twitter(X) | registered accounts (email) | нет |
+| holehe | registered accounts, ~120 сайтов | нет |
+| Hudson Rock Cavalier | infostealer logs (email/username/domain) | нет |
+| LeakCheck | утечки (публичный эндпоинт / API v2) | опционально (`leakcheck_api_key`) |
+| Dehashed | утечки | да (`dehashed_email` + `dehashed_api_key`) |
+| Bluesky (AT Protocol public AppView) | Social: username | нет |
+| Mastodon (ActivityPub API инстанса) | Social: username | нет |
+| Instagram (instaloader) | Social: username | нет |
+| suncalc | Geo: солнце/тень (локально) | нет |
+| NASA FIRMS | Geo: активные пожары | да (`firms_map_key`) |
+| GDACS | Geo: катастрофы | нет |
+| Wayback Machine (availability/CDX/save) | Archive | нет |
+| archive.today (archive.ph) | Archive | нет |
 
 **Лицензия:** MIT (см. `LICENSE`, `THIRD_PARTY_NOTICES.md`).

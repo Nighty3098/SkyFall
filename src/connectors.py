@@ -121,6 +121,126 @@ def setup_mail_connectors(controller: "MailController"):
     if hasattr(controller.ui, "analyzeEmlButton"):
         controller.ui.analyzeEmlButton.clicked.connect(_analyze_eml)
 
+    if hasattr(controller.ui, "emailAccountsButton"):
+        controller.ui.emailAccountsButton.clicked.connect(
+            lambda: asyncio.ensure_future(
+                controller.check_accounts(controller.ui.mailEdit.text())
+            )
+        )
+
+
+def setup_social_connectors(controller):
+    controller.ui.socialSearchButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.search(controller.ui.socialUsernameEdit.text())
+        )
+    )
+    controller.ui.socialUsernameEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(
+            controller.search(controller.ui.socialUsernameEdit.text())
+        )
+    )
+    controller.ui.socialBlueskyButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.search_bluesky(controller.ui.socialUsernameEdit.text())
+        )
+    )
+    controller.ui.socialMastodonButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.search_mastodon(controller.ui.socialUsernameEdit.text())
+        )
+    )
+    if hasattr(controller.ui, "socialInstagramButton"):
+        controller.ui.socialInstagramButton.clicked.connect(
+            lambda: asyncio.ensure_future(
+                controller.search_instagram(controller.ui.socialUsernameEdit.text())
+            )
+        )
+
+
+def setup_leak_connectors(controller):
+    controller.ui.leakSearchAllButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.search_all(controller.ui.leakTargetEdit.text())
+        )
+    )
+    controller.ui.leakTargetEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(
+            controller.search_all(controller.ui.leakTargetEdit.text())
+        )
+    )
+    controller.ui.leakInfostealerButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.infostealer(controller.ui.leakTargetEdit.text())
+        )
+    )
+    controller.ui.leakLeakCheckButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.leakcheck(controller.ui.leakTargetEdit.text())
+        )
+    )
+    controller.ui.leakHibpButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.hibp(controller.ui.leakTargetEdit.text())
+        )
+    )
+    controller.ui.leakDehashedButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.dehashed(controller.ui.leakTargetEdit.text())
+        )
+    )
+
+
+def setup_geo_connectors(controller):
+    controller.ui.geoSunShadowButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.sun_shadow())
+    )
+    controller.ui.geoShadowSearchButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.shadow_search())
+    )
+    controller.ui.geoFirmsButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.firms())
+    )
+    controller.ui.geoGdacsButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.gdacs())
+    )
+    controller.ui.geoFullReportButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.full_report())
+    )
+
+
+def setup_archive_connectors(controller):
+    controller.ui.archiveCheckButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.check(controller.ui.archiveUrlEdit.text())
+        )
+    )
+    controller.ui.archiveUrlEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(
+            controller.check(controller.ui.archiveUrlEdit.text())
+        )
+    )
+    controller.ui.archiveAvailabilityButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.availability(controller.ui.archiveUrlEdit.text())
+        )
+    )
+    controller.ui.archiveSnapshotsButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.snapshots(controller.ui.archiveUrlEdit.text())
+        )
+    )
+    controller.ui.archiveSaveButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.save(controller.ui.archiveUrlEdit.text())
+        )
+    )
+    controller.ui.archiveTodayButton.clicked.connect(
+        lambda: asyncio.ensure_future(
+            controller.archive_today(controller.ui.archiveUrlEdit.text())
+        )
+    )
+
 
 def setup_metadata_connectors(controller: "FileAnalyzeController"):
     controller.ui.metadataFileDropWidget.file_dropped.connect(

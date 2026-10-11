@@ -1,3 +1,4 @@
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -5,6 +6,8 @@ from pathlib import Path
 import httpx
 from loguru import logger
 from PySide6.QtCore import QTimer
+
+from src.security import AUTH_ENV, TOKEN_ENV, get_or_create_token
 
 
 class McpController:
@@ -39,8 +42,13 @@ class McpController:
             logger.warning("MCP server already running")
             return
 
+        token = get_or_create_token()
+        require_auth = bool(
+            getattr(self.ui, "mcpAuthCheck", None) and self.ui.mcpAuthCheck.isChecked()
+        )
+
         if self._graph_bridge and self._graph_widget:
-            self._graph_bridge.start(self._graph_widget, self._node_item_cls)
+            self._graph_bridge.start(self._graph_widget, self._node_item_cls, token)
 
         project_root = Path(__file__).parent.parent
         server_script = str(Path(__file__).parent / "skyfall_mcp_server.py")
@@ -55,6 +63,10 @@ class McpController:
             str(self._port),
         ]
 
+        env = os.environ.copy()
+        env[TOKEN_ENV] = token
+        env[AUTH_ENV] = "1" if require_auth else "0"
+
         logger.info(f"Starting SkyFall MCP Server on {self.url}")
         try:
             self._process = subprocess.Popen(
@@ -62,6 +74,7 @@ class McpController:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 cwd=str(project_root),
+                env=env,
             )
         except Exception as e:
             logger.error(f"Failed to start MCP server: {e}")
@@ -82,7 +95,8 @@ class McpController:
         try:
             with httpx.Client(timeout=3) as client:
                 resp = client.get(f"{self.url}/sse")
-                if resp.status_code in (200, 405, 406):
+                # 401 is expected when "Require MCP Auth" is enabled.
+                if resp.status_code in (200, 401, 405, 406):
                     logger.success(f"MCP server running at {self.url}")
                 else:
                     logger.warning(f"MCP server responded with {resp.status_code}")

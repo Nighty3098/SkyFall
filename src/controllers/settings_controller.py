@@ -5,6 +5,13 @@ from typing import TYPE_CHECKING
 from loguru import logger
 from PySide6.QtWidgets import QApplication
 
+from src.security import (
+    decrypt_settings,
+    encrypt_settings,
+    ensure_config_dir,
+    restrict_file,
+)
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -32,8 +39,13 @@ DEFAULT_SETTINGS = {
     "helius_api_key": "",
     "abuseipdb_api_key": "",
     "greynoise_api_key": "",
+    "leakcheck_api_key": "",
+    "dehashed_email": "",
+    "dehashed_api_key": "",
+    "firms_map_key": "",
     "light_theme": False,
     "frameless_window": True,
+    "mcp_require_auth": False,
 }
 
 FIELD_MAP = {
@@ -56,6 +68,10 @@ FIELD_MAP = {
     "helius_api_key": "heliusApiKeyEdit",
     "abuseipdb_api_key": "abuseipdbApiKeyEdit",
     "greynoise_api_key": "greynoiseApiKeyEdit",
+    "leakcheck_api_key": "leakcheckApiKeyEdit",
+    "dehashed_email": "dehashedEmailEdit",
+    "dehashed_api_key": "dehashedApiKeyEdit",
+    "firms_map_key": "firmsMapKeyEdit",
 }
 
 
@@ -83,8 +99,13 @@ class Settings:
         self.helius_api_key = ""
         self.abuseipdb_api_key = ""
         self.greynoise_api_key = ""
+        self.leakcheck_api_key = ""
+        self.dehashed_email = ""
+        self.dehashed_api_key = ""
+        self.firms_map_key = ""
         self.light_theme = False
         self.frameless_window = True
+        self.mcp_require_auth = False
 
         self._post_save_callbacks = []
 
@@ -103,9 +124,11 @@ class Settings:
 
         try:
             data = json.loads(CONFIG_FILE.read_text(encoding="utf-8"))
+            data = decrypt_settings(data)
             for key in DEFAULT_SETTINGS:
                 setattr(self, key, data.get(key, DEFAULT_SETTINGS[key]))
             self._apply_to_ui()
+            restrict_file(CONFIG_FILE)
         except (json.JSONDecodeError, OSError) as e:
             logger.error(f"Failed to load settings: {e}")
             self._apply_to_ui()
@@ -123,6 +146,10 @@ class Settings:
         frameless = getattr(self.ui, "framelessCheck", None)
         if frameless:
             frameless.setChecked(self.frameless_window)
+
+        mcp_auth = getattr(self.ui, "mcpAuthCheck", None)
+        if mcp_auth:
+            mcp_auth.setChecked(self.mcp_require_auth)
 
     def _apply_theme(self):
         theme = "style_light.qss" if self.light_theme else "style.qss"
@@ -150,12 +177,18 @@ class Settings:
         if frameless:
             self.frameless_window = frameless.isChecked()
 
-        CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+        mcp_auth = getattr(self.ui, "mcpAuthCheck", None)
+        if mcp_auth:
+            self.mcp_require_auth = mcp_auth.isChecked()
+
+        ensure_config_dir()
         data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}
+        data = encrypt_settings(data)
         CONFIG_FILE.write_text(
             json.dumps(data, indent=2, ensure_ascii=False),
             encoding="utf-8",
         )
+        restrict_file(CONFIG_FILE)
         self._apply_theme()
         for cb in self._post_save_callbacks:
             cb(self)

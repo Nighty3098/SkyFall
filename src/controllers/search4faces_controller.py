@@ -57,7 +57,10 @@ class S4FController:
         layout = self.ui.s4fResultsLayout
         label = QLabel(text)
         label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        label.setStyleSheet("color: #999; padding: 20px;")
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        label.setStyleSheet(f"color: {pal['text_muted']}; padding: 20px;")
         label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         layout.addWidget(label)
 
@@ -99,8 +102,13 @@ class S4FController:
                 return
 
     def _highlight_widget(self, widget: S4FResultWidget, on: bool):
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
         if on:
-            widget.setStyleSheet("S4FResultWidget { border: 2px solid #5B9BD5; }")
+            widget.setStyleSheet(
+                f"S4FResultWidget {{ border: 2px solid {pal['accent']}; }}"
+            )
         else:
             widget.setStyleSheet("")
 

@@ -113,7 +113,7 @@ python3 main.py -d
 | `dehashed_email` | `dehashedEmailEdit` | Dehashed — email аккаунта (basic auth) |
 | `dehashed_api_key` | `dehashedApiKeyEdit` | Dehashed API-ключ |
 | `firms_map_key` | `firmsMapKeyEdit` | NASA FIRMS MAP_KEY (активные пожары) |
-| `light_theme` | `lightThemeCheck` | Светлая тема (`style_light.qss`) |
+| `light_theme` | `lightThemeCheck` | Светлая тема (палитра в `src/ui/theme.py`) |
 | `frameless_window` | `framelessCheck` | Окно без рамки |
 | `mcp_require_auth` | `mcpAuthCheck` | Требовать bearer-токен для MCP-сервера |
 
@@ -135,6 +135,13 @@ python3 main.py -d
 ---
 
 ## Вкладки программы
+
+Все 23 вкладки открываются через боковое меню (навигацию), сгруппированное по разделам: **Home**, **Telegram**, **Identity & OSINT**, **Web & Infrastructure**, **Workspace**, **System**. Меню включается/выключается через **View → Toggle Navigation** (или `Ctrl+Shift+B`). Тема UI (тёмная/светлая) формируется из единого шаблона `resources/style.template.qss` + палитры в `src/ui/theme.py` — обе темы используют один набор правил и не «разъезжаются».
+
+Дополнительно (`src/ui/layout_polish.py`):
+- **Скролл в настройках.** Длинная колонка полей вкладки **Settings** обёрнута в `QScrollArea`, поэтому минимальный размер окна больше не диктуется её высотой.
+- **Отзывчивая ширина.** Панель инструментов вкладки **Graph** может сужаться (текст кнопок усекается только при очень узком окне), из-за чего минимальная ширина окна уменьшилась с ~1463 до ~934 px.
+- **Доступность.** Контраст приглушённого текста поднят до ≥4.5:1, добавлены видимые состояния фокуса для полей/списков/чекбоксов, чекбоксы визуально отличаются от радиокнопок (квадрат vs круг), у заливки прогресс-баров подобран тон, на котором читается процент выполнения.
 
 ### Telegram Downloader
 

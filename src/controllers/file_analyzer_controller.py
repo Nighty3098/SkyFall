@@ -19,8 +19,8 @@ LEAFLET_HTML = """<!DOCTYPE html>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <style>
-  body {{ margin: 0; padding: 0; background: #0A0A0A; }}
-  #mapWrap {{ border-radius: 10px; overflow: hidden; width: 100%; height: 100vh; }}
+  body {{ margin: 0; padding: 0; background: {bg}; }}
+  #mapWrap {{ border-radius: {radius}; overflow: hidden; width: 100%; height: 100vh; }}
   #map {{ width: 100%; height: 100%; }}
 </style>
 </head>
@@ -66,7 +66,15 @@ class FileAnalyzeController:
             gps = await self.file_analyzer.get_gps_coordinates(path)
             if gps:
                 lat, lng = gps
-                html = LEAFLET_HTML.format(lat=lat, lng=lng)
+                from src.ui.theme import dialog_palette
+
+                pal = dialog_palette()
+                html = LEAFLET_HTML.format(
+                    lat=lat,
+                    lng=lng,
+                    bg=pal["bg"],
+                    radius=pal["radius"],
+                )
                 self.ui.metadataMapView.setHtml(html)
                 self.ui.metadataMapView.show()
             else:

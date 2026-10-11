@@ -1,0 +1,649 @@
+/* SkyFall theme template.
+ *
+ * Rendered at runtime by src/ui/theme.py: every placeholder is replaced with
+ * a value from the active palette (dark / light).  Do not put literal hex
+ * colours in here — add a token to src/ui/theme.py instead.
+ */
+
+* {
+    outline: none;
+    font-size: $font_size;
+    font-family: "Iosevka Charon Mono", monospace;
+}
+
+MainWindow, QWidget {
+    background: $bg;
+    color: $text;
+}
+
+QWidget#centralwidget {
+    border: none;
+}
+
+QAbstractScrollArea QWidget {
+    background-color: transparent;
+}
+
+/* ---------------------------------------------------------------- file drops */
+
+QWidget#metadataFileDropWidget,
+QWidget#steganoFileDrop,
+QWidget#s4fFileDropWidget,
+QWidget#s4fFileDrop,
+#s4fTargetLabel,
+#s4fResultsScrollArea {
+    border-radius: $radius;
+    border: 1px dashed $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px;
+}
+
+QWidget#metadataFileDropWidget QLabel,
+QWidget#steganoFileDrop QLabel,
+QWidget#s4fFileDropWidget QLabel,
+QWidget#s4fFileDrop QLabel {
+    background: transparent;
+    color: $text;
+    font-size: $font_size_drop;
+    font-style: italic;
+}
+
+/* ------------------------------------------------------------------- tabs */
+
+QTabWidget {
+    border: none;
+}
+
+QTabBar::tab {
+    width: 150px;
+    height: 30px;
+    background: $surface;
+    color: $text_muted;
+    border: 1px solid $border;
+    border-radius: $radius;
+    margin: 5px 10px;
+}
+
+QTabBar::tab:selected {
+    color: $on_accent;
+    background-color: $accent;
+    border: 1px solid $accent;
+}
+
+QTabBar::tab:hover:!selected {
+    background-color: $surface_hover;
+    color: $text;
+}
+
+QTabBar::scroller {
+    width: 60px;
+    background-color: transparent;
+}
+
+QTabBar QToolButton {
+    background-color: $surface;
+    border-radius: 4px;
+    margin: 2px;
+    color: $text;
+}
+
+QTabBar QToolButton:hover {
+    background-color: $accent;
+    color: $on_accent;
+}
+
+QTabBar QToolButton:pressed {
+    background-color: $accent;
+}
+
+QTabBar::tear {
+    background-color: $surface;
+    width: 0px;
+}
+
+/* --------------------------------------------------------------- navigation */
+
+QListWidget#menuListWidget {
+    background: transparent;
+    border: none;
+    outline: 0;
+    margin: 0px;
+    padding: 4px 0px;
+}
+
+QListWidget#menuListWidget::item {
+    background: $surface;
+    color: $text_muted;
+    border-radius: $radius;
+    padding: 6px 12px;
+    margin: 2px 8px;
+}
+
+QListWidget#menuListWidget::item:selected {
+    color: $on_accent;
+    background-color: $accent;
+}
+
+QListWidget#menuListWidget::item:hover:!selected {
+    background-color: $surface_hover;
+    color: $text;
+}
+
+QListWidget#menuListWidget::item:disabled {
+    background: transparent;
+    color: $text_muted;
+    font-size: $font_size_small;
+    font-weight: bold;
+    padding: 8px 12px 2px 12px;
+}
+
+/* ----------------------------------------------------------------- inputs */
+
+QLineEdit, QTextEdit, QPlainTextEdit {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px;
+    selection-background-color: $accent;
+    selection-color: $on_accent;
+}
+
+QLineEdit {
+    height: 20px;
+}
+
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+    border: 1px solid $border_focus;
+}
+
+/* Output-only fields read as disabled-ish: flat background, no surface. */
+QLineEdit:read-only {
+    background-color: $bg;
+}
+
+QLineEdit:disabled, QTextEdit:disabled, QPlainTextEdit:disabled {
+    color: $text_disabled;
+    border-color: $border;
+}
+
+/* ---------------------------------------------------------------- buttons */
+
+QPushButton {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px 12px;
+    height: 20px;
+}
+
+QPushButton:hover {
+    background-color: $surface_hover;
+    border-color: $border_hover;
+}
+
+QPushButton:pressed {
+    background-color: $accent;
+    color: $on_accent;
+}
+
+QPushButton:focus {
+    border-color: $border_focus;
+}
+
+QPushButton:checked {
+    background-color: $accent;
+    color: $on_accent;
+    border-color: $accent;
+}
+
+QPushButton:disabled {
+    color: $text_disabled;
+    background-color: $surface;
+    border-color: $border;
+}
+
+/* Primary action: QPushButton[accent="true"] */
+QPushButton[accent="true"] {
+    background-color: $accent;
+    color: $on_accent;
+    border-color: $accent;
+    font-weight: bold;
+}
+
+QPushButton[accent="true"]:hover {
+    background-color: $accent_hover;
+    border-color: $accent_hover;
+}
+
+QPushButton[accent="true"]:pressed {
+    background-color: $accent_pressed;
+    border-color: $accent_pressed;
+}
+
+QPushButton[accent="true"]:focus {
+    border-color: $border_focus;
+}
+
+QPushButton[accent="true"]:disabled {
+    background-color: $surface;
+    color: $text_disabled;
+    border-color: $border;
+}
+
+/* Destructive action: QPushButton[danger="true"] */
+QPushButton[danger="true"] {
+    color: $danger;
+    border-color: $danger;
+}
+
+QPushButton[danger="true"]:hover {
+    background-color: $danger;
+    color: $on_danger;
+    border-color: $danger;
+}
+
+QPushButton[danger="true"]:pressed {
+    background-color: $danger_hover;
+    color: $on_danger;
+    border-color: $danger_hover;
+}
+
+/* ------------------------------------------------------- spins / combo / date */
+
+QDoubleSpinBox, QSpinBox, QComboBox, QDateTimeEdit {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px;
+}
+
+QDoubleSpinBox:disabled, QSpinBox:disabled, QComboBox:disabled, QDateTimeEdit:disabled {
+    color: $text_disabled;
+    border-color: $border;
+}
+
+QDoubleSpinBox:focus, QSpinBox:focus, QComboBox:focus, QDateTimeEdit:focus {
+    border-color: $border_focus;
+}
+
+QDoubleSpinBox::up-button, QDoubleSpinBox::down-button,
+QSpinBox::up-button, QSpinBox::down-button, QDateTimeEdit::up-button, QDateTimeEdit::down-button {
+    border: none;
+    border-radius: $radius_sm;
+    background: $surface_hover;
+    width: 15px;
+    height: 15px;
+    margin: 4px;
+}
+
+QDoubleSpinBox::up-button:hover, QDoubleSpinBox::down-button:hover,
+QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+    background: $border_hover;
+}
+
+QComboBox::drop-down, QDateTimeEdit::drop-down {
+    border: none;
+    border-radius: $radius_sm;
+    background: $surface_hover;
+    height: 20px;
+    width: 20px;
+    margin-right: 10px;
+    margin-top: 5px;
+}
+
+QComboBox QAbstractItemView {
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    selection-background-color: $accent;
+    selection-color: $on_accent;
+}
+
+/* ------------------------------------------------------------- check / radio */
+
+QCheckBox, QRadioButton {
+    margin: 5px 0;
+    padding-left: 1px;
+    color: $text;
+}
+
+QCheckBox:disabled, QRadioButton:disabled {
+    color: $text_disabled;
+}
+
+QCheckBox::indicator, QRadioButton::indicator {
+    width: 16px;
+    height: 16px;
+    /* Rounded square for checkboxes, circle for radios (overridden below). */
+    border-radius: $radius_sm;
+    border: 1px solid $border;
+    background-color: $surface;
+}
+
+QRadioButton::indicator {
+    border-radius: 8px;
+}
+
+QCheckBox::indicator:unchecked:hover, QRadioButton::indicator:unchecked:hover {
+    border: 1px solid $border_hover;
+}
+
+QCheckBox::indicator:checked, QRadioButton::indicator:checked {
+    background-color: $accent;
+    border: 1px solid $accent;
+}
+
+QCheckBox::indicator:focus, QRadioButton::indicator:focus {
+    border: 1px solid $border_focus;
+}
+
+QCheckBox::indicator:disabled, QRadioButton::indicator:disabled {
+    border: 1px solid $border;
+    background-color: $surface;
+}
+
+/* ---------------------------------------------------------------- group box */
+
+QGroupBox {
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: 10px;
+    margin-top: 0.5em;
+    color: $text;
+}
+
+QGroupBox::title {
+    padding: 0 5px 0 5px;
+    subcontrol-origin: margin;
+    subcontrol-position: top center;
+    left: 10px;
+    font-weight: bold;
+}
+
+QGroupBox::flat {
+    border-radius: 0px;
+    border-left-style: none;
+    border-right-style: none;
+    border-bottom-style: none;
+}
+
+/* ------------------------------------------------------------- progress bar */
+
+QProgressBar {
+    color: $text;
+    background-color: $surface;
+    border: 1px solid $border;
+    border-radius: $radius;
+    outline: none;
+    text-align: center;
+    height: 30px;
+}
+
+QProgressBar::chunk {
+    background-color: $progress_chunk;
+    border-radius: 9px;
+}
+
+/* -------------------------------------------------------------- list widget */
+
+QListWidget {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px;
+}
+
+QListWidget::item {
+    border-radius: $radius_sm;
+    background-color: transparent;
+    color: $text;
+    padding: 5px;
+    margin: 2px;
+}
+
+QListWidget::item:hover {
+    background-color: $surface_hover;
+}
+
+QListWidget::item:selected {
+    background-color: $accent;
+    color: $on_accent;
+}
+
+/* -------------------------------------------------------------------- labels */
+
+QLabel {
+    color: $text;
+}
+
+QLabel#metadataFilePath {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text_muted;
+    padding: 5px;
+    height: 20px;
+}
+
+QLabel#winTitle {
+    color: $text;
+    font-size: $font_size_win_title;
+    font-family: "Bebas Neue", monospace;
+}
+
+/* --------------------------------------------------------------- scrollbars */
+
+QScrollBar:vertical {
+    background: transparent;
+    width: 8px;
+    margin: 0px;
+    border: none;
+}
+
+QScrollBar::handle:vertical {
+    background-color: $scrollbar;
+    min-height: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:vertical:hover {
+    background-color: $scrollbar_hover;
+}
+
+QScrollBar::handle:vertical:pressed {
+    background-color: $accent;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical,
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    background: transparent;
+    height: 0px;
+}
+
+QScrollBar:horizontal {
+    background: transparent;
+    height: 8px;
+    margin: 0px;
+    border: none;
+}
+
+QScrollBar::handle:horizontal {
+    background-color: $scrollbar;
+    min-width: 20px;
+    border-radius: 4px;
+}
+
+QScrollBar::handle:horizontal:hover {
+    background-color: $scrollbar_hover;
+}
+
+QScrollBar::handle:horizontal:pressed {
+    background-color: $accent;
+}
+
+QScrollBar::add-page:horizontal, QScrollBar::sub-page:horizontal,
+QScrollBar::add-line:horizontal, QScrollBar::sub-line:horizontal {
+    background: transparent;
+    width: 0px;
+}
+
+/* ------------------------------------------------------------------- graph */
+
+GraphWidget, QGraphicsView {
+    background-color: $graph_bg;
+    border: 1px solid $border;
+    border-radius: $radius;
+    padding: 0px;
+}
+
+/* -------------------------------------------------------------------- menus */
+
+QMenuBar {
+    padding-top: 10px;
+    padding-bottom: 0px;
+    color: $text;
+}
+
+QMenuBar::item {
+    background-color: transparent;
+    border-radius: 8px;
+    padding: 4px 12px;
+    color: $text;
+}
+
+QMenuBar::item:selected {
+    background-color: $surface_hover;
+    color: $text;
+}
+
+QMenuBar::item:pressed {
+    background-color: $accent;
+    color: $on_accent;
+}
+
+QMenu {
+    background-color: $surface;
+    border: 1px solid $border;
+    padding: 4px;
+    color: $text;
+}
+
+QMenu::item {
+    background-color: transparent;
+    padding: 6px 20px;
+    margin: 2px 4px;
+    border-radius: 6px;
+    color: $text;
+}
+
+QMenu::item:selected {
+    background-color: $surface_hover;
+    color: $text;
+}
+
+QMenu::item:disabled {
+    color: $text_disabled;
+}
+
+QMenu::separator {
+    height: 1px;
+    background: $border;
+    margin: 4px 8px;
+}
+
+/* -------------------------------------------------------------- misc widgets */
+
+QToolTip {
+    background-color: $surface;
+    color: $text;
+    border: 1px solid $border;
+    border-radius: 6px;
+    padding: 4px 8px;
+}
+
+QSplitter::handle {
+    background-color: transparent;
+}
+
+QSplitter::handle:horizontal {
+    width: 6px;
+}
+
+QSplitter::handle:vertical {
+    height: 6px;
+}
+
+QSplitter::handle:hover {
+    background-color: $surface_hover;
+}
+
+/* ------------------------------------------------------------ node edit dialog */
+
+NodeEditDialog {
+    background-color: $bg;
+    color: $text;
+    border: 1px solid $border;
+    border-radius: $radius;
+}
+
+NodeEditDialog QLabel {
+    background: transparent;
+    color: $text;
+    font-weight: bold;
+}
+
+NodeEditDialog QLineEdit,
+NodeEditDialog QPlainTextEdit {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px;
+    selection-background-color: $accent;
+    selection-color: $on_accent;
+}
+
+NodeEditDialog QLineEdit:focus,
+NodeEditDialog QPlainTextEdit:focus {
+    border: 1px solid $border_focus;
+}
+
+NodeEditDialog QPushButton {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 6px 16px;
+    min-height: 24px;
+}
+
+NodeEditDialog QPushButton:hover {
+    background-color: $surface_hover;
+    color: $text;
+    border-color: $border_hover;
+}
+
+NodeEditDialog QPushButton:pressed {
+    background-color: $accent;
+    color: $on_accent;
+}
+
+QPushButton#addNodeButton {
+    border-radius: $radius;
+    border: 1px solid $border;
+    background-color: $surface;
+    color: $text;
+    padding: 5px;
+    min-height: 30px;
+    font-size: $font_size;
+}
+
+QPushButton#addNodeButton:hover {
+    background-color: $surface_hover;
+    border-color: $border_hover;
+}

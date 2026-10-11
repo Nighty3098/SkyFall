@@ -39,18 +39,21 @@
        <widget class="QListWidget" name="menuListWidget">
         <property name="minimumSize">
          <size>
-          <width>150</width>
+          <width>210</width>
           <height>0</height>
          </size>
         </property>
         <property name="maximumSize">
          <size>
-          <width>150</width>
+          <width>210</width>
           <height>16777215</height>
          </size>
         </property>
-        <property name="styleSheet">
-         <string notr="true">padding: 4px;</string>
+        <property name="horizontalScrollBarPolicy">
+         <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+        </property>
+        <property name="textElideMode">
+         <enum>Qt::TextElideMode::ElideRight</enum>
         </property>
        </widget>
       </item>

@@ -154,7 +154,6 @@ class MainWindow(QMainWindow):
         self.ui.actionExit.triggered.connect(self.close)
         self.ui.actionAbout.triggered.connect(self._show_about)
         self.ui.actionOpenGitHub.triggered.connect(self._open_github)
-        self.ui.actionToggleNavigation.triggered.connect(self._toggle_navigation)
         self._shortcuts_manager = ShortcutManager(
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
@@ -336,13 +335,6 @@ class MainWindow(QMainWindow):
         from PySide6.QtGui import QDesktopServices
 
         QDesktopServices.openUrl(QUrl("https://github.com/Nighty3098/SkyFall"))
-
-    def _toggle_navigation(self):
-        nav = self.ui.menuListWidget
-        if nav.isVisible():
-            nav.hide()
-        else:
-            nav.show()
 
     async def _async_init(self):
         logger.debug("Init controllers")

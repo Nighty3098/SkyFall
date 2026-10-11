@@ -24,10 +24,8 @@ class ShortcutManager(QObject):
 
         if current_index + 1 >= num_tabs:
             self._tab_widget.setCurrentIndex(0)
-            self._menu_list_widget.setCurrentRow(0)
         else:
             self._tab_widget.setCurrentIndex(current_index + 1)
-            self._menu_list_widget.setCurrentRow(current_index + 1)
 
     def change_tab_backward(self):
         num_tabs = self._tab_widget.count()
@@ -35,10 +33,8 @@ class ShortcutManager(QObject):
 
         if current_index - 1 < 0:
             self._tab_widget.setCurrentIndex(num_tabs - 1)
-            self._menu_list_widget.setCurrentRow(num_tabs - 1)
         else:
             self._tab_widget.setCurrentIndex(current_index - 1)
-            self._menu_list_widget.setCurrentRow(current_index - 1)
 
     def toggle_tabs(self):
         self._menu_list_widget.setVisible(self._menu_list_widget.isHidden())

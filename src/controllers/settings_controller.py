@@ -3,7 +3,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from PySide6.QtWidgets import QApplication
 
 from src.security import (
     decrypt_settings,
@@ -11,6 +10,7 @@ from src.security import (
     ensure_config_dir,
     restrict_file,
 )
+from src.ui.theme import apply_theme
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -152,15 +152,7 @@ class Settings:
             mcp_auth.setChecked(self.mcp_require_auth)
 
     def _apply_theme(self):
-        theme = "style_light.qss" if self.light_theme else "style.qss"
-        qss_path = Path(__file__).parent.parent.parent / "resources" / theme
-        app = QApplication.instance()
-        if app is None:
-            return
-        try:
-            app.setStyleSheet(qss_path.read_text(encoding="utf-8"))
-        except FileNotFoundError:
-            logger.warning(f"{qss_path} not found, using default theme")
+        apply_theme("light" if self.light_theme else "dark")
 
     def save(self):
         logger.debug("Saving settings")

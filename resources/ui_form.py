@@ -57,9 +57,10 @@ class Ui_MainWindow(object):
         self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
         self.menuListWidget = QListWidget(self.centralwidget)
         self.menuListWidget.setObjectName(u"menuListWidget")
-        self.menuListWidget.setMinimumSize(QSize(150, 0))
-        self.menuListWidget.setMaximumSize(QSize(150, 16777215))
-        self.menuListWidget.setStyleSheet(u"padding: 4px;")
+        self.menuListWidget.setMinimumSize(QSize(210, 0))
+        self.menuListWidget.setMaximumSize(QSize(210, 16777215))
+        self.menuListWidget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.menuListWidget.setTextElideMode(Qt.TextElideMode.ElideRight)
 
         self.horizontalLayout_6.addWidget(self.menuListWidget)
 
@@ -477,6 +478,11 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_19.addWidget(self.analyzeEmlButton)
 
+        self.emailAccountsButton = QPushButton(self.mailSettingsSection)
+        self.emailAccountsButton.setObjectName(u"emailAccountsButton")
+
+        self.verticalLayout_19.addWidget(self.emailAccountsButton)
+
         self.verticalSpacer_6 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_19.addItem(self.verticalSpacer_6)
@@ -499,6 +505,9 @@ class Ui_MainWindow(object):
         self.emailHeaderDebug = QPlainTextEdit(self.mailDebugSplitter)
         self.emailHeaderDebug.setObjectName(u"emailHeaderDebug")
         self.mailDebugSplitter.addWidget(self.emailHeaderDebug)
+        self.emailAccountsDebug = QPlainTextEdit(self.mailDebugSplitter)
+        self.emailAccountsDebug.setObjectName(u"emailAccountsDebug")
+        self.mailDebugSplitter.addWidget(self.emailAccountsDebug)
 
         self.verticalLayout_20.addWidget(self.mailDebugSplitter)
 
@@ -507,6 +516,270 @@ class Ui_MainWindow(object):
         self.horizontalLayout_4.addWidget(self.mailSplitter)
 
         self.mainStackedWidget.addTab(self.mailToolsTab, "")
+        self.socialToolsTab = QWidget()
+        self.socialToolsTab.setObjectName(u"socialToolsTab")
+        self.socialHorizontalLayout = QHBoxLayout(self.socialToolsTab)
+        self.socialHorizontalLayout.setObjectName(u"socialHorizontalLayout")
+        self.socialSplitter = QSplitter(self.socialToolsTab)
+        self.socialSplitter.setObjectName(u"socialSplitter")
+        self.socialSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.socialSettingsSection = QWidget(self.socialSplitter)
+        self.socialSettingsSection.setObjectName(u"socialSettingsSection")
+        self.socialSettingsLayout = QVBoxLayout(self.socialSettingsSection)
+        self.socialSettingsLayout.setObjectName(u"socialSettingsLayout")
+        self.socialSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.socialUsernameEdit = QLineEdit(self.socialSettingsSection)
+        self.socialUsernameEdit.setObjectName(u"socialUsernameEdit")
+
+        self.socialSettingsLayout.addWidget(self.socialUsernameEdit)
+
+        self.socialInstanceEdit = QLineEdit(self.socialSettingsSection)
+        self.socialInstanceEdit.setObjectName(u"socialInstanceEdit")
+
+        self.socialSettingsLayout.addWidget(self.socialInstanceEdit)
+
+        self.socialSearchButton = QPushButton(self.socialSettingsSection)
+        self.socialSearchButton.setObjectName(u"socialSearchButton")
+
+        self.socialSettingsLayout.addWidget(self.socialSearchButton)
+
+        self.socialBlueskyButton = QPushButton(self.socialSettingsSection)
+        self.socialBlueskyButton.setObjectName(u"socialBlueskyButton")
+
+        self.socialSettingsLayout.addWidget(self.socialBlueskyButton)
+
+        self.socialMastodonButton = QPushButton(self.socialSettingsSection)
+        self.socialMastodonButton.setObjectName(u"socialMastodonButton")
+
+        self.socialSettingsLayout.addWidget(self.socialMastodonButton)
+
+        self.socialInstagramButton = QPushButton(self.socialSettingsSection)
+        self.socialInstagramButton.setObjectName(u"socialInstagramButton")
+
+        self.socialSettingsLayout.addWidget(self.socialInstagramButton)
+
+        self.socialVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.socialSettingsLayout.addItem(self.socialVerticalSpacer)
+
+        self.socialSplitter.addWidget(self.socialSettingsSection)
+        self.socialDebugSection = QWidget(self.socialSplitter)
+        self.socialDebugSection.setObjectName(u"socialDebugSection")
+        self.socialDebugLayout = QVBoxLayout(self.socialDebugSection)
+        self.socialDebugLayout.setObjectName(u"socialDebugLayout")
+        self.socialDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.socialDebug = QPlainTextEdit(self.socialDebugSection)
+        self.socialDebug.setObjectName(u"socialDebug")
+
+        self.socialDebugLayout.addWidget(self.socialDebug)
+
+        self.socialSplitter.addWidget(self.socialDebugSection)
+
+        self.socialHorizontalLayout.addWidget(self.socialSplitter)
+
+        self.mainStackedWidget.addTab(self.socialToolsTab, "")
+        self.leaksTab = QWidget()
+        self.leaksTab.setObjectName(u"leaksTab")
+        self.leaksHorizontalLayout = QHBoxLayout(self.leaksTab)
+        self.leaksHorizontalLayout.setObjectName(u"leaksHorizontalLayout")
+        self.leaksSplitter = QSplitter(self.leaksTab)
+        self.leaksSplitter.setObjectName(u"leaksSplitter")
+        self.leaksSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.leaksSettingsSection = QWidget(self.leaksSplitter)
+        self.leaksSettingsSection.setObjectName(u"leaksSettingsSection")
+        self.leaksSettingsLayout = QVBoxLayout(self.leaksSettingsSection)
+        self.leaksSettingsLayout.setObjectName(u"leaksSettingsLayout")
+        self.leaksSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.leakTargetEdit = QLineEdit(self.leaksSettingsSection)
+        self.leakTargetEdit.setObjectName(u"leakTargetEdit")
+
+        self.leaksSettingsLayout.addWidget(self.leakTargetEdit)
+
+        self.leakSearchAllButton = QPushButton(self.leaksSettingsSection)
+        self.leakSearchAllButton.setObjectName(u"leakSearchAllButton")
+
+        self.leaksSettingsLayout.addWidget(self.leakSearchAllButton)
+
+        self.leakInfostealerButton = QPushButton(self.leaksSettingsSection)
+        self.leakInfostealerButton.setObjectName(u"leakInfostealerButton")
+
+        self.leaksSettingsLayout.addWidget(self.leakInfostealerButton)
+
+        self.leakLeakCheckButton = QPushButton(self.leaksSettingsSection)
+        self.leakLeakCheckButton.setObjectName(u"leakLeakCheckButton")
+
+        self.leaksSettingsLayout.addWidget(self.leakLeakCheckButton)
+
+        self.leakHibpButton = QPushButton(self.leaksSettingsSection)
+        self.leakHibpButton.setObjectName(u"leakHibpButton")
+
+        self.leaksSettingsLayout.addWidget(self.leakHibpButton)
+
+        self.leakDehashedButton = QPushButton(self.leaksSettingsSection)
+        self.leakDehashedButton.setObjectName(u"leakDehashedButton")
+
+        self.leaksSettingsLayout.addWidget(self.leakDehashedButton)
+
+        self.leaksVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.leaksSettingsLayout.addItem(self.leaksVerticalSpacer)
+
+        self.leaksSplitter.addWidget(self.leaksSettingsSection)
+        self.leaksDebugSection = QWidget(self.leaksSplitter)
+        self.leaksDebugSection.setObjectName(u"leaksDebugSection")
+        self.leaksDebugLayout = QVBoxLayout(self.leaksDebugSection)
+        self.leaksDebugLayout.setObjectName(u"leaksDebugLayout")
+        self.leaksDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.leakDebug = QPlainTextEdit(self.leaksDebugSection)
+        self.leakDebug.setObjectName(u"leakDebug")
+
+        self.leaksDebugLayout.addWidget(self.leakDebug)
+
+        self.leaksSplitter.addWidget(self.leaksDebugSection)
+
+        self.leaksHorizontalLayout.addWidget(self.leaksSplitter)
+
+        self.mainStackedWidget.addTab(self.leaksTab, "")
+        self.geoTab = QWidget()
+        self.geoTab.setObjectName(u"geoTab")
+        self.geoHorizontalLayout = QHBoxLayout(self.geoTab)
+        self.geoHorizontalLayout.setObjectName(u"geoHorizontalLayout")
+        self.geoSplitter = QSplitter(self.geoTab)
+        self.geoSplitter.setObjectName(u"geoSplitter")
+        self.geoSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.geoSettingsSection = QWidget(self.geoSplitter)
+        self.geoSettingsSection.setObjectName(u"geoSettingsSection")
+        self.geoSettingsLayout = QVBoxLayout(self.geoSettingsSection)
+        self.geoSettingsLayout.setObjectName(u"geoSettingsLayout")
+        self.geoSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.geoCoordEdit = QLineEdit(self.geoSettingsSection)
+        self.geoCoordEdit.setObjectName(u"geoCoordEdit")
+
+        self.geoSettingsLayout.addWidget(self.geoCoordEdit)
+
+        self.geoDateTimeEdit = QDateTimeEdit(self.geoSettingsSection)
+        self.geoDateTimeEdit.setObjectName(u"geoDateTimeEdit")
+        self.geoDateTimeEdit.setCalendarPopup(True)
+
+        self.geoSettingsLayout.addWidget(self.geoDateTimeEdit)
+
+        self.geoShadowRatioEdit = QLineEdit(self.geoSettingsSection)
+        self.geoShadowRatioEdit.setObjectName(u"geoShadowRatioEdit")
+
+        self.geoSettingsLayout.addWidget(self.geoShadowRatioEdit)
+
+        self.geoShadowBearingEdit = QLineEdit(self.geoSettingsSection)
+        self.geoShadowBearingEdit.setObjectName(u"geoShadowBearingEdit")
+
+        self.geoSettingsLayout.addWidget(self.geoShadowBearingEdit)
+
+        self.geoSunShadowButton = QPushButton(self.geoSettingsSection)
+        self.geoSunShadowButton.setObjectName(u"geoSunShadowButton")
+
+        self.geoSettingsLayout.addWidget(self.geoSunShadowButton)
+
+        self.geoShadowSearchButton = QPushButton(self.geoSettingsSection)
+        self.geoShadowSearchButton.setObjectName(u"geoShadowSearchButton")
+
+        self.geoSettingsLayout.addWidget(self.geoShadowSearchButton)
+
+        self.geoFirmsButton = QPushButton(self.geoSettingsSection)
+        self.geoFirmsButton.setObjectName(u"geoFirmsButton")
+
+        self.geoSettingsLayout.addWidget(self.geoFirmsButton)
+
+        self.geoGdacsButton = QPushButton(self.geoSettingsSection)
+        self.geoGdacsButton.setObjectName(u"geoGdacsButton")
+
+        self.geoSettingsLayout.addWidget(self.geoGdacsButton)
+
+        self.geoFullReportButton = QPushButton(self.geoSettingsSection)
+        self.geoFullReportButton.setObjectName(u"geoFullReportButton")
+
+        self.geoSettingsLayout.addWidget(self.geoFullReportButton)
+
+        self.geoVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.geoSettingsLayout.addItem(self.geoVerticalSpacer)
+
+        self.geoSplitter.addWidget(self.geoSettingsSection)
+        self.geoDebugSection = QWidget(self.geoSplitter)
+        self.geoDebugSection.setObjectName(u"geoDebugSection")
+        self.geoDebugLayout = QVBoxLayout(self.geoDebugSection)
+        self.geoDebugLayout.setObjectName(u"geoDebugLayout")
+        self.geoDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.geoDebug = QPlainTextEdit(self.geoDebugSection)
+        self.geoDebug.setObjectName(u"geoDebug")
+
+        self.geoDebugLayout.addWidget(self.geoDebug)
+
+        self.geoSplitter.addWidget(self.geoDebugSection)
+
+        self.geoHorizontalLayout.addWidget(self.geoSplitter)
+
+        self.mainStackedWidget.addTab(self.geoTab, "")
+        self.archiveTab = QWidget()
+        self.archiveTab.setObjectName(u"archiveTab")
+        self.archiveHorizontalLayout = QHBoxLayout(self.archiveTab)
+        self.archiveHorizontalLayout.setObjectName(u"archiveHorizontalLayout")
+        self.archiveSplitter = QSplitter(self.archiveTab)
+        self.archiveSplitter.setObjectName(u"archiveSplitter")
+        self.archiveSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.archiveSettingsSection = QWidget(self.archiveSplitter)
+        self.archiveSettingsSection.setObjectName(u"archiveSettingsSection")
+        self.archiveSettingsLayout = QVBoxLayout(self.archiveSettingsSection)
+        self.archiveSettingsLayout.setObjectName(u"archiveSettingsLayout")
+        self.archiveSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.archiveUrlEdit = QLineEdit(self.archiveSettingsSection)
+        self.archiveUrlEdit.setObjectName(u"archiveUrlEdit")
+
+        self.archiveSettingsLayout.addWidget(self.archiveUrlEdit)
+
+        self.archiveCheckButton = QPushButton(self.archiveSettingsSection)
+        self.archiveCheckButton.setObjectName(u"archiveCheckButton")
+
+        self.archiveSettingsLayout.addWidget(self.archiveCheckButton)
+
+        self.archiveAvailabilityButton = QPushButton(self.archiveSettingsSection)
+        self.archiveAvailabilityButton.setObjectName(u"archiveAvailabilityButton")
+
+        self.archiveSettingsLayout.addWidget(self.archiveAvailabilityButton)
+
+        self.archiveSnapshotsButton = QPushButton(self.archiveSettingsSection)
+        self.archiveSnapshotsButton.setObjectName(u"archiveSnapshotsButton")
+
+        self.archiveSettingsLayout.addWidget(self.archiveSnapshotsButton)
+
+        self.archiveSaveButton = QPushButton(self.archiveSettingsSection)
+        self.archiveSaveButton.setObjectName(u"archiveSaveButton")
+
+        self.archiveSettingsLayout.addWidget(self.archiveSaveButton)
+
+        self.archiveTodayButton = QPushButton(self.archiveSettingsSection)
+        self.archiveTodayButton.setObjectName(u"archiveTodayButton")
+
+        self.archiveSettingsLayout.addWidget(self.archiveTodayButton)
+
+        self.archiveVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.archiveSettingsLayout.addItem(self.archiveVerticalSpacer)
+
+        self.archiveSplitter.addWidget(self.archiveSettingsSection)
+        self.archiveDebugSection = QWidget(self.archiveSplitter)
+        self.archiveDebugSection.setObjectName(u"archiveDebugSection")
+        self.archiveDebugLayout = QVBoxLayout(self.archiveDebugSection)
+        self.archiveDebugLayout.setObjectName(u"archiveDebugLayout")
+        self.archiveDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.archiveDebug = QPlainTextEdit(self.archiveDebugSection)
+        self.archiveDebug.setObjectName(u"archiveDebug")
+
+        self.archiveDebugLayout.addWidget(self.archiveDebug)
+
+        self.archiveSplitter.addWidget(self.archiveDebugSection)
+
+        self.archiveHorizontalLayout.addWidget(self.archiveSplitter)
+
+        self.mainStackedWidget.addTab(self.archiveTab, "")
         self.dorkingTab = QWidget()
         self.dorkingTab.setObjectName(u"dorkingTab")
         self.verticalLayout_12 = QVBoxLayout(self.dorkingTab)
@@ -1686,12 +1959,37 @@ class Ui_MainWindow(object):
 
         self.verticalLayout_4.addWidget(self.greynoiseApiKeyEdit)
 
+        self.leakcheckApiKeyEdit = QLineEdit(self.settingsTab)
+        self.leakcheckApiKeyEdit.setObjectName(u"leakcheckApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.leakcheckApiKeyEdit)
+
+        self.dehashedEmailEdit = QLineEdit(self.settingsTab)
+        self.dehashedEmailEdit.setObjectName(u"dehashedEmailEdit")
+
+        self.verticalLayout_4.addWidget(self.dehashedEmailEdit)
+
+        self.dehashedApiKeyEdit = QLineEdit(self.settingsTab)
+        self.dehashedApiKeyEdit.setObjectName(u"dehashedApiKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.dehashedApiKeyEdit)
+
+        self.firmsMapKeyEdit = QLineEdit(self.settingsTab)
+        self.firmsMapKeyEdit.setObjectName(u"firmsMapKeyEdit")
+
+        self.verticalLayout_4.addWidget(self.firmsMapKeyEdit)
+
         self.mcpStatusLabel = QLabel(self.settingsTab)
         self.mcpStatusLabel.setObjectName(u"mcpStatusLabel")
         self.mcpStatusLabel.setMinimumSize(QSize(0, 30))
         self.mcpStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout_4.addWidget(self.mcpStatusLabel)
+
+        self.mcpAuthCheck = QCheckBox(self.settingsTab)
+        self.mcpAuthCheck.setObjectName(u"mcpAuthCheck")
+
+        self.verticalLayout_4.addWidget(self.mcpAuthCheck)
 
         self.mcpToggleButton = QPushButton(self.settingsTab)
         self.mcpToggleButton.setObjectName(u"mcpToggleButton")
@@ -1852,13 +2150,53 @@ class Ui_MainWindow(object):
         self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"IntelX Search", None))
         self.startHibpCheckButton.setText(QCoreApplication.translate("MainWindow", u"HIBP Check", None))
         self.analyzeEmlButton.setText(QCoreApplication.translate("MainWindow", u"EML / Headers", None))
+        self.emailAccountsButton.setText(QCoreApplication.translate("MainWindow", u"Registered Accounts", None))
         self.mailSearchDebug.setPlainText("")
         self.mailSearchDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"INTELX", None))
         self.hibpDebug.setPlainText("")
         self.hibpDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"HIBP", None))
         self.emailHeaderDebug.setPlainText("")
         self.emailHeaderDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"EML HEADERS", None))
+        self.emailAccountsDebug.setPlainText("")
+        self.emailAccountsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"REGISTERED ACCOUNTS", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.mailToolsTab), QCoreApplication.translate("MainWindow", u"MAIL", None))
+        self.socialUsernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username / handle", None))
+        self.socialInstanceEdit.setText(QCoreApplication.translate("MainWindow", u"mastodon.social", None))
+        self.socialInstanceEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mastodon instance", None))
+        self.socialSearchButton.setText(QCoreApplication.translate("MainWindow", u"Search All", None))
+        self.socialBlueskyButton.setText(QCoreApplication.translate("MainWindow", u"Bluesky", None))
+        self.socialMastodonButton.setText(QCoreApplication.translate("MainWindow", u"Mastodon", None))
+        self.socialInstagramButton.setText(QCoreApplication.translate("MainWindow", u"Instagram", None))
+        self.socialDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SOCIAL / MASTODON", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.socialToolsTab), QCoreApplication.translate("MainWindow", u"SOCIAL", None))
+        self.leakTargetEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Email / username / domain", None))
+        self.leakSearchAllButton.setText(QCoreApplication.translate("MainWindow", u"Search All", None))
+        self.leakInfostealerButton.setText(QCoreApplication.translate("MainWindow", u"Infostealer (Hudson Rock)", None))
+        self.leakLeakCheckButton.setText(QCoreApplication.translate("MainWindow", u"LeakCheck", None))
+        self.leakHibpButton.setText(QCoreApplication.translate("MainWindow", u"Have I Been Pwned", None))
+        self.leakDehashedButton.setText(QCoreApplication.translate("MainWindow", u"Dehashed", None))
+        self.leakDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"LEAKS / INFOSTEALERS", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.leaksTab), QCoreApplication.translate("MainWindow", u"LEAKS", None))
+        self.geoCoordEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Latitude, Longitude", None))
+        self.geoShadowRatioEdit.setText(QCoreApplication.translate("MainWindow", u"1.0", None))
+        self.geoShadowRatioEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Shadow ratio (length / height)", None))
+        self.geoShadowBearingEdit.setText(QCoreApplication.translate("MainWindow", u"0", None))
+        self.geoShadowBearingEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Shadow bearing (deg)", None))
+        self.geoSunShadowButton.setText(QCoreApplication.translate("MainWindow", u"Sun / Shadow", None))
+        self.geoShadowSearchButton.setText(QCoreApplication.translate("MainWindow", u"Shadow Geolocation", None))
+        self.geoFirmsButton.setText(QCoreApplication.translate("MainWindow", u"FIRMS Fires", None))
+        self.geoGdacsButton.setText(QCoreApplication.translate("MainWindow", u"GDACS Disasters", None))
+        self.geoFullReportButton.setText(QCoreApplication.translate("MainWindow", u"Full Report", None))
+        self.geoDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GEO / SATELLITE / SHADOW", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.geoTab), QCoreApplication.translate("MainWindow", u"GEO", None))
+        self.archiveUrlEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"URL to archive / check", None))
+        self.archiveCheckButton.setText(QCoreApplication.translate("MainWindow", u"Check Archives", None))
+        self.archiveAvailabilityButton.setText(QCoreApplication.translate("MainWindow", u"Wayback Closest", None))
+        self.archiveSnapshotsButton.setText(QCoreApplication.translate("MainWindow", u"Wayback Snapshots", None))
+        self.archiveSaveButton.setText(QCoreApplication.translate("MainWindow", u"Save to Wayback", None))
+        self.archiveTodayButton.setText(QCoreApplication.translate("MainWindow", u"archive.today", None))
+        self.archiveDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"ARCHIVE / EVIDENCE", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.archiveTab), QCoreApplication.translate("MainWindow", u"ARCHIVE", None))
         self.customDorkEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Custom Dork", None))
         self.dorkItButton.setText(QCoreApplication.translate("MainWindow", u"Dork", None))
         self.dorksCategorySearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Category Search", None))
@@ -2034,7 +2372,15 @@ class Ui_MainWindow(object):
         self.heliusApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Helius API Key", None))
         self.abuseipdbApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"AbuseIPDB API Key", None))
         self.greynoiseApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"GreyNoise API Key (optional)", None))
+        self.leakcheckApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"LeakCheck API Key (optional)", None))
+        self.dehashedEmailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dehashed account email (optional)", None))
+        self.dehashedApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dehashed API Key (optional)", None))
+        self.firmsMapKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"NASA FIRMS MAP KEY (optional)", None))
         self.mcpStatusLabel.setText(QCoreApplication.translate("MainWindow", u"Stopped", None))
+#if QT_CONFIG(tooltip)
+        self.mcpAuthCheck.setToolTip(QCoreApplication.translate("MainWindow", u"Require a bearer token for the MCP server (token stored at ~/.skyfall/mcp_token)", None))
+#endif // QT_CONFIG(tooltip)
+        self.mcpAuthCheck.setText(QCoreApplication.translate("MainWindow", u"Require MCP Auth", None))
         self.mcpToggleButton.setText(QCoreApplication.translate("MainWindow", u"Start MCP Server", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))

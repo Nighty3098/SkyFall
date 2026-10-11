@@ -103,12 +103,14 @@ class GraphNodeController:
     def _add_url(self):
         if not self._current_node:
             return
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
-        bg = "#0A0A0A" if dark else "#F5F5F5"
-        surface = "#161616" if dark else "#E8E8E8"
-        border = "#262626" if dark else "#D0D0D0"
-        text_color = "#C1C1C1" if dark else "#3A3A3A"
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        bg = pal["bg"]
+        surface = pal["surface"]
+        border = pal["border"]
+        text_color = pal["text"]
+        radius = pal["radius"]
         dialog = QDialog(self.ui)
         dialog.setWindowTitle("Add URL")
         dialog.setStyleSheet(f"""
@@ -116,17 +118,17 @@ class GraphNodeController:
                 background-color: {bg};
                 color: {text_color};
                 border: 1px solid {border};
-                border-radius: 10px;
+                border-radius: {radius};
             }}
             QLineEdit {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text_color};
                 padding: 5px;
             }}
             QPushButton {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text_color};

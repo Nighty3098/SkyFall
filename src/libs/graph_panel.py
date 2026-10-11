@@ -2,7 +2,7 @@ from typing import override
 
 from PySide6.QtCore import QMimeData, Qt
 from PySide6.QtGui import QColor, QDrag, QFont, QPainter, QPixmap
-from PySide6.QtWidgets import QApplication, QListWidget, QListWidgetItem
+from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
 from src.libs.graph_lib import ENTITY_NAMES, ENTITY_SYMBOLS
 
@@ -37,10 +37,11 @@ class EntityPalette(QListWidget):
         mime.setText(etype)
         drag = QDrag(self)
         drag.setMimeData(mime)
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
-        bg = "#161616" if dark else "#E8E8E8"
-        text = "#C1C1C1" if dark else "#3A3A3A"
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        bg = pal["surface"]
+        text = pal["text"]
         pix = QPixmap(120, 28)
         pix.fill(QColor(bg))
         painter = QPainter(pix)

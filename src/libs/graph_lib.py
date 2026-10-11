@@ -123,16 +123,19 @@ def build_edge_path(src, tgt, sdir, tdir):
 
 
 def _theme_colors(dark=None):
+    from src.ui.theme import current_theme, get_palette
+
     if dark is None:
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
+        palette = get_palette(current_theme())
+    else:
+        palette = get_palette("dark" if dark else "light")
     return {
-        "card_bg": QColor("#161616" if dark else "#E8E8E8"),
-        "card_border": QColor("#262626" if dark else "#D0D0D0"),
-        "card_title": QColor("#C1C1C1" if dark else "#3A3A3A"),
-        "card_content": QColor("#888888"),
-        "port_color": QColor("#C1C1C1" if dark else "#3A3A3A"),
-        "edge_color": QColor("#262626" if dark else "#D0D0D0"),
+        "card_bg": QColor(palette["surface"]),
+        "card_border": QColor(palette["border"]),
+        "card_title": QColor(palette["text"]),
+        "card_content": QColor(palette["text_muted"]),
+        "port_color": QColor(palette["text"]),
+        "edge_color": QColor(palette["border"]),
     }
 
 
@@ -1063,22 +1066,24 @@ class NodeEditDialog(QMainWindow):
         super().__init__(parent)
         self.setWindowTitle("Edit Node")
 
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
-        bg = "#0A0A0A" if dark else "#F5F5F5"
-        surface = "#161616" if dark else "#E8E8E8"
-        border = "#262626" if dark else "#D0D0D0"
-        text = "#C1C1C1" if dark else "#3A3A3A"
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        bg = pal["bg"]
+        surface = pal["surface"]
+        border = pal["border"]
+        text = pal["text"]
+        radius = pal["radius"]
 
         self.setStyleSheet(f"""
             NodeEditDialog {{
                 background-color: {bg};
                 color: {text};
                 border: 1px solid {border};
-                border-radius: 10px;
+                border-radius: {radius};
             }}
             NodeEditDialog QLineEdit, NodeEditDialog QPlainTextEdit {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
@@ -1094,7 +1099,7 @@ class NodeEditDialog(QMainWindow):
                 color: {border};
             }}
             NodeEditDialog QPushButton {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
@@ -1195,21 +1200,23 @@ class NodeEditDialog(QMainWindow):
     def _add_url(self):
         dialog = QDialog(self)
         dialog.setWindowTitle("Add URL")
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
-        bg = "#0A0A0A" if dark else "#F5F5F5"
-        surface = "#161616" if dark else "#E8E8E8"
-        border = "#262626" if dark else "#D0D0D0"
-        text = "#C1C1C1" if dark else "#3A3A3A"
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        bg = pal["bg"]
+        surface = pal["surface"]
+        border = pal["border"]
+        text = pal["text"]
+        radius = pal["radius"]
         dialog.setStyleSheet(f"""
             QDialog {{
                 background-color: {bg};
                 color: {text};
                 border: 1px solid {border};
-                border-radius: 10px;
+                border-radius: {radius};
             }}
             QLineEdit {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
@@ -1218,7 +1225,7 @@ class NodeEditDialog(QMainWindow):
                 selection-color: {bg};
             }}
             QPushButton {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
@@ -1420,12 +1427,14 @@ class PropertiesPanel(QDockWidget):
     def _add_url(self):
         if not self._node:
             return
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
-        bg = "#0A0A0A" if dark else "#F5F5F5"
-        surface = "#161616" if dark else "#E8E8E8"
-        border = "#262626" if dark else "#D0D0D0"
-        text = "#C1C1C1" if dark else "#3A3A3A"
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        bg = pal["bg"]
+        surface = pal["surface"]
+        border = pal["border"]
+        text = pal["text"]
+        radius = pal["radius"]
         dialog = QDialog(self)
         dialog.setWindowTitle("Add URL")
         dialog.setStyleSheet(f"""
@@ -1433,17 +1442,17 @@ class PropertiesPanel(QDockWidget):
                 background-color: {bg};
                 color: {text};
                 border: 1px solid {border};
-                border-radius: 10px;
+                border-radius: {radius};
             }}
             QLineEdit {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
                 padding: 5px;
             }}
             QPushButton {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
@@ -1716,21 +1725,23 @@ class GraphWidget(QGraphicsView):
     def edit_edge_label(self, edge: EdgeItem):
         dialog = QDialog(self)
         dialog.setWindowTitle("Edit Edge")
-        ss = QApplication.instance().styleSheet()
-        dark = "#0A0A0A" in ss
-        bg = "#0A0A0A" if dark else "#F5F5F5"
-        surface = "#161616" if dark else "#E8E8E8"
-        border = "#262626" if dark else "#D0D0D0"
-        text = "#C1C1C1" if dark else "#3A3A3A"
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        bg = pal["bg"]
+        surface = pal["surface"]
+        border = pal["border"]
+        text = pal["text"]
+        radius = pal["radius"]
         dialog.setStyleSheet(f"""
             QDialog {{
                 background-color: {bg};
                 color: {text};
                 border: 1px solid {border};
-                border-radius: 10px;
+                border-radius: {radius};
             }}
             QLineEdit, QComboBox {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};
@@ -1739,7 +1750,7 @@ class GraphWidget(QGraphicsView):
                 selection-color: {bg};
             }}
             QPushButton {{
-                border-radius: 10px;
+                border-radius: {radius};
                 border: 1px solid {border};
                 background-color: {surface};
                 color: {text};

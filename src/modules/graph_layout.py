@@ -24,11 +24,35 @@ class LayoutResult:
     positions: dict[str, tuple[float, float]]
 
 
+def _target_span(count: int) -> float:
+    """Bounding-box side that fits ``count`` nodes without overlap."""
+    cell = max(NODE_WIDTH, NODE_HEIGHT)
+    cols = max(1, math.ceil(math.sqrt(max(count, 1))))
+    gap = cell * 0.35
+    return cols * (cell + gap)
+
+
+def _fit_positions(
+    pos: dict[str, tuple[float, float]],
+    span: float,
+) -> dict[str, tuple[float, float]]:
+    """Centre raw layout coordinates and scale them to roughly ``span``."""
+    if not pos:
+        return {}
+    xs = [p[0] for p in pos.values()]
+    ys = [p[1] for p in pos.values()]
+    cx = (min(xs) + max(xs)) / 2.0
+    cy = (min(ys) + max(ys)) / 2.0
+    largest = max(max(xs) - min(xs), max(ys) - min(ys), 1e-9)
+    factor = span / largest
+    return {nid: ((x - cx) * factor, (y - cy) * factor) for nid, (x, y) in pos.items()}
+
+
 def compute_layout(
     nodes: list[dict],
     edges: list[dict],
     algorithm: str = "spring",
-    scale: float = 300.0,
+    scale: float = 1.0,
 ) -> LayoutResult:
     g = nx.Graph()
 
@@ -48,29 +72,34 @@ def compute_layout(
         or algorithm == "hierarchical_tree"
         or algorithm == "tree_topdown"
     ):
-        res = compute_hierarchical_layout(nodes, edges, direction="down", scale=1.0)
-        return res
+        return compute_hierarchical_layout(nodes, edges, direction="down", scale=scale)
+
+    count = len(g.nodes)
+    span = _target_span(count) * max(scale, 0.01)
+
     if algorithm == "spring":
-        pos = nx.spring_layout(g, k=2.0, iterations=50, seed=42)
+        raw = nx.spring_layout(g, k=0.6, iterations=80, seed=42)
     elif algorithm == "kamada_kawai":
         try:
-            pos = nx.kamada_kawai_layout(g)
+            raw = nx.kamada_kawai_layout(g)
         except ImportError:
-            pos = nx.spring_layout(g, k=2.0, iterations=50, seed=42)
+            raw = nx.spring_layout(g, k=0.6, iterations=80, seed=42)
     elif algorithm == "shell":
-        pos = nx.shell_layout(g)
+        raw = nx.shell_layout(g)
     elif algorithm == "spectral":
-        pos = nx.spectral_layout(g)
+        try:
+            raw = nx.spectral_layout(g)
+        except Exception:
+            raw = nx.spring_layout(g, k=0.6, iterations=80, seed=42)
     elif algorithm == "circular":
-        pos = nx.circular_layout(g)
+        raw = nx.circular_layout(g)
     else:
-        pos = nx.spring_layout(g, k=2.0, iterations=50, seed=42)
+        raw = nx.spring_layout(g, k=0.6, iterations=80, seed=42)
 
-    positions = {}
-    for node_id, (x, y) in pos.items():
-        positions[node_id] = (float(x * scale), float(y * scale))
-
-    return LayoutResult(positions=positions)
+    fitted = _fit_positions(
+        {nid: (float(x), float(y)) for nid, (x, y) in raw.items()}, span
+    )
+    return LayoutResult(positions=fitted)
 
 
 # ── Automatic placement ───────────────────────────────────────────────
@@ -258,61 +287,83 @@ def compute_hierarchical_layout(
     edges: list[dict],
     root_id: str | None = None,
     direction: str = "down",
-    h_spacing: float = 90.0,
-    v_spacing: float = 70.0,
+    h_spacing: float | None = None,
+    v_spacing: float | None = None,
     scale: float = 1.0,
 ) -> LayoutResult:
+    """Top-down tree layout (tidy-tree style).
+
+    Parents are centred above their children and siblings get an even,
+    node-sized horizontal gap, so the tree reads top-to-bottom without the
+    uneven level packing of a plain BFS grid.
+    """
     if not nodes:
         return LayoutResult(positions={})
-    g = nx.Graph()
+
+    if h_spacing is None:
+        h_spacing = NODE_WIDTH + 40.0
+    if v_spacing is None:
+        v_spacing = NODE_HEIGHT + 60.0
+
+    g = nx.DiGraph()
     for n in nodes:
         g.add_node(n["id"])
     for e in edges:
-        g.add_edge(e["source"], e["target"])
+        src, tgt = e["source"], e["target"]
+        if src in g and tgt in g and src != tgt:
+            g.add_edge(src, tgt)
 
-    # determine root
-    start = nodes[0]["id"]
+    children = {nid: sorted(g.successors(nid)) for nid in g.nodes}
+    roots = [nid for nid in g.nodes if g.in_degree(nid) == 0]
     if root_id and root_id in g:
-        start = root_id
-    else:
-        deg = {nid: g.degree(nid) for nid in g.nodes}
-        if deg:
-            maxd = -1
-            cand = start
-            for nid, d in deg.items():
-                if d > maxd:
-                    maxd = d
-                    cand = nid
-            start = cand
+        roots = [root_id] + [r for r in roots if r != root_id]
+    if not roots:
+        roots = [max(g.nodes, key=lambda nid: g.out_degree(nid))]
 
-    # BFS
-    from collections import deque
+    level: dict[str, int] = {}
+    column: dict[str, float] = {}
+    visited: set[str] = set()
+    next_col = [0.0]
 
-    level = {start: 0}
-    q = deque([start])
-    visited = {start}
-    while q:
-        cur = q.popleft()
-        for nb in g.neighbors(cur):
-            if nb not in visited:
-                visited.add(nb)
-                level[nb] = level[cur] + 1
-                q.append(nb)
-    for nid in g.nodes:
-        if nid not in level:
-            level[nid] = 0
+    def assign(nid: str, depth: int, path: frozenset[str]) -> float:
+        visited.add(nid)
+        level[nid] = depth
+        kids = [c for c in children[nid] if c not in visited and c not in path]
+        if not kids:
+            col = next_col[0]
+            next_col[0] += 1.0
+        else:
+            child_cols = [assign(c, depth + 1, path | {nid}) for c in kids]
+            col = (min(child_cols) + max(child_cols)) / 2.0
+        column[nid] = col
+        return col
 
-    by_level = {}
-    for nid, lv in level.items():
-        by_level.setdefault(lv, []).append(nid)
+    for root in roots:
+        if root in visited:
+            continue
+        assign(root, 0, frozenset())
+        next_col[0] += 1.0  # gap between disconnected components
 
-    positions = {}
-    for lv, lst in by_level.items():
-        count = len(lst)
-        total_w = (count - 1) * h_spacing if count > 1 else 0
-        start_x = -total_w / 2
-        y = lv * v_spacing if direction == "down" else -lv * v_spacing
-        for i, nid in enumerate(lst):
-            x = start_x + i * h_spacing
-            positions[nid] = (x * scale, y * scale)
+    remaining = [nid for nid in g.nodes if nid not in visited]
+    if remaining:
+        undirected = g.to_undirected()
+        for nid in remaining:
+            if nid in visited:
+                continue
+            component = nx.node_connected_component(undirected, nid)
+            start = max(component, key=lambda x: g.out_degree(x))
+            assign(start, 0, frozenset())
+            next_col[0] += 1.0
+
+    cols = list(column.values())
+    centre = (min(cols) + max(cols)) / 2.0 if cols else 0.0
+
+    positions: dict[str, tuple[float, float]] = {}
+    for nid, col in column.items():
+        x = (col - centre) * h_spacing * scale
+        depth = level.get(nid, 0)
+        y = depth * v_spacing * scale
+        if direction == "up":
+            y = -y
+        positions[nid] = (x, y)
     return LayoutResult(positions=positions)

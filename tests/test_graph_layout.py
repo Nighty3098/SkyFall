@@ -11,6 +11,8 @@ from src.modules.graph_layout import (
     NODE_HEIGHT,
     NODE_WIDTH,
     child_arc_positions,
+    compute_hierarchical_layout,
+    compute_layout,
     find_free_slot,
     graph_centroid,
     rects_overlap,
@@ -58,6 +60,88 @@ class ChildArcTest(unittest.TestCase):
         self.assertEqual(len({(round(x), round(y)) for x, y in positions}), 4)
         ys = [y for _, y in positions]
         self.assertGreater(max(ys) - min(ys), NODE_HEIGHT)
+
+
+class HierarchicalLayoutTest(unittest.TestCase):
+    def _chain(self, length):
+        nodes = [{"id": f"n{i}"} for i in range(length)]
+        edges = [{"source": f"n{i}", "target": f"n{i + 1}"} for i in range(length - 1)]
+        return nodes, edges
+
+    def test_root_is_placed_at_top(self):
+        nodes, edges = self._chain(4)
+        positions = compute_hierarchical_layout(nodes, edges).positions
+        ys = {nid: y for nid, (_, y) in positions.items()}
+        self.assertEqual(min(ys, key=ys.get), "n0")
+        self.assertLess(ys["n0"], ys["n3"])
+
+    def test_levels_have_even_vertical_spacing(self):
+        nodes, edges = self._chain(5)
+        positions = compute_hierarchical_layout(nodes, edges).positions
+        ys = sorted({round(y, 6) for _, y in positions.values()})
+        gaps = {round(b - a, 6) for a, b in zip(ys, ys[1:])}
+        self.assertEqual(len(gaps), 1)
+
+    def test_siblings_do_not_overlap(self):
+        nodes = [
+            {"id": "root"},
+            {"id": "a"},
+            {"id": "b"},
+            {"id": "c"},
+        ]
+        edges = [
+            {"source": "root", "target": "a"},
+            {"source": "root", "target": "b"},
+            {"source": "root", "target": "c"},
+        ]
+        positions = compute_hierarchical_layout(nodes, edges).positions
+        xs = sorted(positions[nid][0] for nid in ("a", "b", "c"))
+        self.assertGreaterEqual(xs[1] - xs[0], NODE_WIDTH)
+        self.assertGreaterEqual(xs[2] - xs[1], NODE_WIDTH)
+
+
+class LayoutAlgorithmTest(unittest.TestCase):
+    ALGORITHMS = (
+        "spring",
+        "kamada_kawai",
+        "shell",
+        "spectral",
+        "circular",
+        "hierarchical",
+    )
+
+    def _graph(self, count):
+        nodes = [{"id": f"n{i}"} for i in range(count)]
+        edges = [{"source": f"n{i}", "target": f"n{i + 1}"} for i in range(count - 1)]
+        return nodes, edges
+
+    def test_every_algorithm_places_all_nodes(self):
+        nodes, edges = self._graph(12)
+        for algorithm in self.ALGORITHMS:
+            with self.subTest(algorithm=algorithm):
+                positions = compute_layout(nodes, edges, algorithm=algorithm).positions
+                self.assertEqual(set(positions), {n["id"] for n in nodes})
+
+    def test_non_hierarchical_span_is_bounded(self):
+        nodes, edges = self._graph(12)
+        for algorithm in self.ALGORITHMS:
+            if algorithm == "hierarchical":
+                continue
+            with self.subTest(algorithm=algorithm):
+                positions = compute_layout(nodes, edges, algorithm=algorithm).positions
+                xs = [x for x, _ in positions.values()]
+                ys = [y for _, y in positions.values()]
+                span = max(max(xs) - min(xs), max(ys) - min(ys))
+                # Roughly four node-widths for a 12 node graph.
+                self.assertLess(span, NODE_WIDTH * 8)
+
+    def test_repeated_layout_does_not_drift(self):
+        nodes, edges = self._graph(10)
+        first = compute_layout(nodes, edges, algorithm="spring").positions
+        second = compute_layout(nodes, edges, algorithm="spring").positions
+        for nid in first:
+            self.assertAlmostEqual(first[nid][0], second[nid][0], places=4)
+            self.assertAlmostEqual(first[nid][1], second[nid][1], places=4)
 
 
 class CentroidTest(unittest.TestCase):

@@ -35,11 +35,7 @@ class GraphLayoutController:
         if not nodes:
             return
 
-        max_x = max(abs(n["x"]) for n in nodes) if nodes else 300
-        max_y = max(abs(n["y"]) for n in nodes) if nodes else 300
-        scale = max(max_x, max_y, 300)
-
-        result = compute_layout(nodes, edges, algorithm=algorithm, scale=scale)
+        result = compute_layout(nodes, edges, algorithm=algorithm)
 
         node_map = {}
         for item in gw._scene.items():

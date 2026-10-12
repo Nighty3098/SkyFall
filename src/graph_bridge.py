@@ -349,10 +349,7 @@ class GraphBridgeServer:
         if not nodes:
             return {"error": "Graph is empty"}
 
-        max_x = max(abs(n["x"]) for n in nodes)
-        max_y = max(abs(n["y"]) for n in nodes)
-        scale = max(max_x, max_y, 320.0)
-        result = compute_layout(nodes, edges, algorithm=algorithm, scale=scale)
+        result = compute_layout(nodes, edges, algorithm=algorithm)
 
         positions = {}
         for node_id, (x, y) in result.positions.items():

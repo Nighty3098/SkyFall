@@ -134,31 +134,45 @@ def _tune_responsive_widgets(ui):
         widget = getattr(ui, name, None)
         if widget is not None:
             widget.setMinimumWidth(width)
-    # The size hints above are cached by the (sub)layouts that own the widgets
-    # and are only recomputed after the pending LayoutRequest is delivered.
-    # Drop those caches now so the window's minimum size is correct on the
-    # very first show.
     _invalidate_widget(ui.graphTab)
 
 
 def _wrap_page_in_scroll_area(host, column_index=1):
-    """Move a page's single tall column of fields into a vertical scroll area.
-
-    Without this the SETTINGS page (two dozen stacked fields) reports a
-    ~1110px minimum height, which forces the whole main window to be taller
-    than most screens.  Inside a scroll area the page collapses to a normal
-    minimum and simply scrolls when the window is short.
-    """
+    """Move the entire settings page (all columns) into a vertical scroll area."""
     outer = host.layout()
     if outer is None:
         return
 
-    moved = outer.takeAt(column_index)
-    column = moved.layout() if moved is not None else None
-    if column is None:
-        if moved is not None:
-            outer.insertItem(column_index, moved)
-        return
+    contents = QWidget()
+    contents.setObjectName(f"{host.objectName()}ScrollContents")
+    column_layout = QVBoxLayout(contents)
+    column_layout.setContentsMargins(0, 0, 0, 0)
+
+    while outer.count():
+        moved = outer.takeAt(0)
+        if moved.widget() is not None:
+            column_layout.addWidget(moved.widget())
+        elif moved.spacerItem() is not None:
+            column_layout.addItem(moved.spacerItem())
+        elif moved.layout() is not None:
+            col = QVBoxLayout()
+            col.setContentsMargins(0, 0, 0, 0)
+            while moved.layout().count():
+                im = moved.layout().takeAt(0)
+                if im.widget():
+                    col.addWidget(im.widget())
+                elif im.spacerItem():
+                    col.addItem(im.spacerItem())
+                elif im.layout():
+                    sub = QVBoxLayout()
+                    while im.layout().count():
+                        iim = im.layout().takeAt(0)
+                        if iim.widget():
+                            sub.addWidget(iim.widget())
+                        elif iim.spacerItem():
+                            sub.addItem(iim.spacerItem())
+                    col.addLayout(sub)
+            column_layout.addLayout(col)
 
     scroll = QScrollArea(host)
     scroll.setObjectName(f"{host.objectName()}ScrollArea")
@@ -166,20 +180,10 @@ def _wrap_page_in_scroll_area(host, column_index=1):
     scroll.setFrameShape(QFrame.Shape.NoFrame)
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-    contents = QWidget()
-    contents.setObjectName(f"{host.objectName()}ScrollContents")
-    column_layout = QVBoxLayout(contents)
-    column_layout.setContentsMargins(0, 0, 0, 0)
-    while column.count():
-        item = column.takeAt(0)
-        if item.widget() is not None:
-            column_layout.addWidget(item.widget())
-        elif item.spacerItem() is not None:
-            column_layout.addItem(item.spacerItem())
-    column.deleteLater()
-
     scroll.setWidget(contents)
-    outer.insertWidget(column_index, scroll)
+    host.setLayout(QVBoxLayout())
+    host.layout().setContentsMargins(0, 0, 0, 0)
+    host.layout().addWidget(scroll)
     _invalidate_widget(host)
     host.updateGeometry()
 

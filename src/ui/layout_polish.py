@@ -190,9 +190,10 @@ def _wrap_page_in_scroll_area(host, column_index=1):
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
     scroll.setWidget(container)
-    host.setLayout(QVBoxLayout())
-    host.layout().setContentsMargins(0, 0, 0, 0)
-    host.layout().addWidget(scroll)
+    outer_wrap = QVBoxLayout(host)
+    outer_wrap.setContentsMargins(0, 0, 0, 0)
+    outer_wrap.setAlignment(Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop)
+    outer_wrap.addWidget(scroll)
     _invalidate_widget(host)
     host.updateGeometry()
 

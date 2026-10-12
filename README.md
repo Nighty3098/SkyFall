@@ -14,14 +14,14 @@
 
 **Desktop OSINT investigation toolkit** — Python 3 + PySide6 (Qt 6).
 
-Domain, Telegram, username, email, phone, MAC, social, leaks, geo, archive,
-blockchain, file and image analysis wired into an interactive relationship
-graph and an AI report generator (local Ollama), plus an MCP server so agents
-can drive the tools.
+Domain, Telegram, username, email, Reddit, phone, MAC, social, leaks, geo,
+archive, blockchain, file and image analysis wired into an interactive
+relationship graph and an AI report generator (local Ollama), plus an MCP
+server so agents can drive the tools.
 
 <br />
 
-[Full feature documentation (RU)](./DOC.md) · [License (MIT)](./LICENSE) · [Issues](https://github.com/Nighty3098/SkyFall/issues)
+[Full feature documentation](./DOC.md) · [License (MIT)](./LICENSE) · [Issues](https://github.com/Nighty3098/SkyFall/issues)
 
 <br /><br />
 
@@ -31,11 +31,12 @@ can drive the tools.
 
 | Module | What it does |
 |---|---|
-| **Web / Domain** | 16-step domain recon: DNS, WHOIS, SSL/TLS, headers + WAF, robots.txt, security.txt, cookies, social tags, subdomains (passive + brute), Certificate Transparency, ports (NMAP), threat intel (AbuseIPDB/GreyNoise/ThreatFox/URLHaus), reputation (VirusTotal/Google Safe Browsing/CRDF), JS secrets scan |
+| **Web / Domain** | 16-step domain recon: IP + geolocation, DNS, WHOIS, SSL/TLS, headers + WAF, robots.txt, security.txt, cookies, social tags, subdomains (passive + brute), Certificate Transparency, ports (NMAP), threat intel (AbuseIPDB/GreyNoise/ThreatFox/URLHaus), reputation aggregator (VirusTotal/Google Safe Browsing/CRDF/AbuseIPDB/GreyNoise/ThreatFox/URLHaus), JS secrets scan, domains on IP (PTR/Shodan InternetDB/HackerTarget) |
 | **Telegram** | Channel/group collection via MTProto into SQLite (posts, members, links, media, avatars) + analyzer that builds a relationship graph and exports GraphML/GEXF/JSON/CSV/PNG/HTML/Obsidian |
-| **Username** | Search across ~500 sites with Maigret + a Sherlock-style engine (WAF detection included) |
+| **Username** | Maigret (~510 sites) + a Sherlock-style engine (~481 sites) with WAF detection; links confirmed by both engines are flagged ✅ at the top, single-engine hits are grouped by source |
 | **Mail** | IntelX search, Have I Been Pwned, `.eml`/header analyzer (SPF/DKIM/DMARC, Received chain, IP geolocation, verdict), and registered-accounts discovery (Gravatar/Microsoft/Mozilla/ProtonMail/Duolingo/Twitter + a `holehe` sweep of ~120 sites) |
 | **Social** | Username lookup on open networks — Bluesky (AT Protocol), Mastodon (ActivityPub) and Instagram (`instaloader`); profile, bio, followers/posts, plus handle matches |
+| **Reddit** | Archival profile OSINT from Arctic Shift + PullPush queried concurrently (no keys): posts/comments merged by id and classified live/removed/deleted, activity histograms + timezone estimate, PII exposure score, top subreddits and technologies, extracted identifiers; optional OAuth live profile |
 | **Leaks** | Leak & infostealer search by email/username/domain: Hudson Rock infostealer logs (no key), LeakCheck, Have I Been Pwned, Dehashed |
 | **Geo** | Sun/shadow geometry and inverse shadow geolocation (local `suncalc`), NASA FIRMS active fires, GDACS disaster alerts |
 | **Archive** | Wayback Machine (closest snapshot, CDX listing, on-demand save) and archive.today checks |
@@ -47,8 +48,9 @@ can drive the tools.
 | **Files** | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats) |
 | **Search4Faces** | Reverse face search (VK photos) |
 | **Dorking** | ~7,900 Google dorks in 14 categories via DuckDuckGo or a local SearXNG |
-| **Graph** | 13 entity types, 12 relation types, drag-and-drop palette, transforms that enrich nodes via the modules above (incl. leaks, archive, geo), shortest path / centrality / community detection, JSON + image export |
-| **AI Report** | Structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers |
+| **Graph** | 13 entity types, 12 relation types, drag-and-drop palette, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo), shortest path / centrality / community detection, JSON + image export |
+| **AI Report** | 7-section structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers |
+| **MCP** | 89 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878` |
 | **Cases** | Investigation workspace with automatic per-module Markdown autosave |
 
 > Detailed per-tab reference, settings and API keys: [`DOC.md`](./DOC.md).

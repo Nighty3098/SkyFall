@@ -452,6 +452,7 @@ class MainWindow(QMainWindow):
                 "domain_analyzer": self.domainAnalyzer,
                 "username_search": self.usernameSearch,
                 "maigret_search": self.maigretSearch,
+                "reddit_osint": self.redditOsint,
                 "phone_search": self.phoneSearch,
                 "mac_location": self.macLocation,
                 "mail_search": self.mailSearchEngine,

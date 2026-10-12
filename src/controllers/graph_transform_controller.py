@@ -7,6 +7,7 @@ from datetime import UTC, datetime
 
 from PySide6.QtCore import QPointF
 
+from src.modules import username_merge
 from src.ui.output_formatter import (
     bullet,
     divider,
@@ -199,6 +200,22 @@ class GraphTransformController:
                     output_type="Custom",
                     relationship="associated_with",
                     handler=_transform_leak_search,
+                ),
+                TransformDef(
+                    name="Sherlock + Maigret (merged)",
+                    description="Cross-check both engines; confirmed matches first",
+                    input_types=["Username"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_username_merged,
+                ),
+                TransformDef(
+                    name="Reddit OSINT",
+                    description="Archive activity, subreddits, identifiers & timezone",
+                    input_types=["Username"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_reddit_osint,
                 ),
             ],
             "Domain": [
@@ -1159,6 +1176,160 @@ async def _transform_maigret_search(username, modules):
             )
         )
     return TransformResult(children=children, content=report_text)
+
+
+async def _transform_username_merged(username, modules):
+    """Run both engines and surface the accounts confirmed by each other."""
+    sherlock = modules.get("username_search")
+    maigret = modules.get("maigret_search")
+    if not sherlock or not maigret:
+        return TransformResult(content="Username engines not available")
+
+    results = await sherlock.acheck(username)
+    claimed = [r for r in results if r.get("status") == "Claimed"]
+    _, matches = await maigret.search_and_report_structured(username)
+    confirmed, sherlock_only, maigret_only = username_merge.merge_sources(
+        claimed, matches
+    )
+
+    children = []
+    for entry, other in confirmed[:CHILD_THRESHOLD]:
+        url = entry.get("url_user") or other.get("url_user", "")
+        site = entry.get("site") or other.get("site")
+        children.append(
+            ChildNodeDef(
+                title=f"{username_merge.CONFIRMED_MARK} {site}",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("URL", url),
+                        kv("Sherlock", entry.get("status", "?")),
+                        kv("Maigret", other.get("status", "?")),
+                    ]
+                ),
+                evidence=[url] if url else [],
+            )
+        )
+    if len(confirmed) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(confirmed) - CHILD_THRESHOLD} confirmed",
+                entity_type="Custom",
+                content="\n".join(
+                    entry.get("url_user") or other.get("url_user", "")
+                    for entry, other in confirmed[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+    return TransformResult(
+        children=children,
+        content=username_merge.render_report(
+            username, confirmed, sherlock_only, maigret_only
+        ),
+    )
+
+
+_REDDIT_IDENTIFIER_TYPES = {
+    "email": "Email",
+    "btc": "Crypto",
+    "eth": "Crypto",
+    "xmr": "Crypto",
+    "phone": "Phone",
+    "mention": "Username",
+}
+
+
+def _parse_reddit_report(report, errors=None):
+    """Build graph children (subreddits, identifiers, domains) from a report."""
+    username = report.get("username", "?")
+    children = []
+
+    for entry in report.get("top_subreddits", [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=f"r/{entry.get('subreddit', '?')}",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Items", entry.get("items", 0)),
+                        kv("Account", f"u/{username}"),
+                    ]
+                ),
+            )
+        )
+
+    for identifier in report.get("identifiers", [])[:CHILD_THRESHOLD]:
+        tag, _, value = identifier.partition(":")
+        if not value:
+            continue
+        children.append(
+            ChildNodeDef(
+                title=value,
+                entity_type=_REDDIT_IDENTIFIER_TYPES.get(tag, "Custom"),
+                content=kv("Type", tag),
+            )
+        )
+
+    for entry in report.get("external_domains", [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=entry.get("domain", "?"),
+                entity_type="Domain",
+                content=kv("Mentions", entry.get("times", 0)),
+            )
+        )
+
+    for entry in report.get("mentioned_users", [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=entry.get("user", "?"),
+                entity_type="Username",
+                content=kv("Mentions", entry.get("times", 0)),
+            )
+        )
+
+    technologies = report.get("technologies", [])
+    if technologies:
+        children.append(
+            ChildNodeDef(
+                title="Technologies",
+                entity_type="Custom",
+                content=", ".join(
+                    f"{item.get('tech')} ×{item.get('times')}" for item in technologies
+                ),
+            )
+        )
+
+    totals = report.get("totals", {})
+    timezone = report.get("timezone_guess", {})
+    lines = [
+        divider(),
+        title(f"Reddit OSINT: u/{username}"),
+        bullet(
+            f"posts {totals.get('posts', 0)} · "
+            f"comments {totals.get('comments', 0)} · items {totals.get('items', 0)}"
+        ),
+        kv("Live", totals.get("live", 0)),
+        kv("Removed by mods", totals.get("removed_by_mods", 0)),
+        kv("Deleted by author", totals.get("deleted_by_author", 0)),
+        kv("Exposure (0-100)", report.get("score_exposure_0_100", 0)),
+        kv("Timezone", timezone.get("estimated_region", "?")),
+        kv("Last activity", totals.get("last_activity") or "?"),
+    ]
+    lines += [fmt_info(message) for message in (errors or [])]
+    lines += [end_of("reddit osint"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_reddit_osint(username, modules):
+    engine = modules.get("reddit_osint")
+    if not engine:
+        return TransformResult(content="Reddit OSINT module not available")
+    try:
+        report, errors = await engine.full_report(username)
+    except Exception as exc:  # noqa: BLE001 - surface everything in the graph
+        return TransformResult(content=f"Reddit OSINT failed: {exc}")
+    return _parse_reddit_report(report, errors)
 
 
 def _parse_social_search(data, username):

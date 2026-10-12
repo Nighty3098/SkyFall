@@ -461,7 +461,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 - **Geolocation-узлы** — встроенная карта (мозаика OpenStreetMap, zoom 5–18, маркер, Ctrl+колесо для зума).
 - Контекстное меню: редактирование узла/ребра, стиль ребра, прикрепление улик, цвет, удаление; **Analysis** — кратчайший путь (по клику), центральность степени (масштабирование узлов + top-5), обнаружение сообществ (greedy modularity).
 - **⚡ Transforms** (обогащение графа, `graph_transform_controller`): из узла строятся дочерние узлы-результаты поиска, расположенные дугой:
-  - **Username** → поиск соцсетей, Maigret, Bluesky/Mastodon, Infostealer/Leaks;
+  - **Username** → поиск соцсетей, Maigret, Sherlock + Maigret (merged — подтверждённые обоими движками ссылки), Bluesky/Mastodon, Reddit OSINT (архивный профиль: топ-сабреддиты, идентификаторы, внешние домены, упомянутые пользователи, технологии), Infostealer/Leaks;
   - **Domain** → IP, DNS, SSL/TLS, веб-стек, WHOIS, субдомены, Certificate Transparency, соц-теги, репутация, security.txt, cookies, robots.txt, порты, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback Snapshots;
   - **IP** → геолокация, порты, домены на IP, Threat Intel;
   - **Email** → IntelX, поиск аккаунтов (Registered Accounts), Infostealer/Leaks;

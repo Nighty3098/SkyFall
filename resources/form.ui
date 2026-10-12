@@ -73,13 +73,17 @@
           <string>SKYFALL</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <layout class="QVBoxLayout" name="verticalLayout_21">
+            <property name="spacing">
+             <number>6</number>
+            </property>
             <property name="bottomMargin">
              <number>0</number>
             </property>
-            <property name="spacing"><number>6</number></property>
             <item>
              <spacer name="verticalSpacer_5">
               <property name="orientation">
@@ -131,7 +135,9 @@
           <string>TELEGRAM DOWNLOADER</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="downloaderSplitter">
             <property name="orientation">
@@ -139,7 +145,9 @@
             </property>
             <widget class="QWidget" name="downloaderSettingsSection">
              <layout class="QVBoxLayout" name="verticalLayout_5">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="telegramUsernameEdit">
                 <property name="placeholderText">
@@ -170,10 +178,14 @@
                  <string>Safety Delays</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_8">
-                 <property name="spacing"><number>6</number></property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout">
-                   <property name="spacing"><number>6</number></property>
+                   <property name="spacing">
+                    <number>6</number>
+                   </property>
                    <item row="2" column="0">
                     <widget class="QLabel" name="label_3">
                      <property name="text">
@@ -225,7 +237,9 @@
                  <string>Collection Options</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_7">
-                 <property name="spacing"><number>6</number></property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
                  <item>
                   <widget class="QCheckBox" name="telegramDownloadMediaCheck">
                    <property name="text">
@@ -295,10 +309,12 @@
             </widget>
             <widget class="QWidget" name="downloaderDebugSection">
              <layout class="QVBoxLayout" name="verticalLayout_6">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QPlainTextEdit" name="telegramDownloaderDebug">
                 <property name="readOnly">
@@ -317,7 +333,9 @@
           <string>TELEGRAM ANALYZER</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_9">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="analyzerSplitter">
             <property name="orientation">
@@ -325,7 +343,9 @@
             </property>
             <widget class="QWidget" name="analyzerSettingsSection">
              <layout class="QVBoxLayout" name="verticalLayout_17">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QPushButton" name="telegramAnalyzerLoadChannelsButton">
                 <property name="text">
@@ -348,13 +368,17 @@
                  <string>Graph Parameters</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_10">
-                 <property name="spacing"><number>6</number></property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_3">
                    <property name="topMargin">
                     <number>0</number>
                    </property>
-                   <property name="spacing"><number>6</number></property>
+                   <property name="spacing">
+                    <number>6</number>
+                   </property>
                    <item row="0" column="0">
                     <widget class="QLabel" name="label_5">
                      <property name="text">
@@ -413,13 +437,17 @@
                  <string>Output Formats</string>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_11">
-                 <property name="spacing"><number>6</number></property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
                  <item>
                   <layout class="QGridLayout" name="gridLayout_4">
                    <property name="bottomMargin">
                     <number>0</number>
                    </property>
-                   <property name="spacing"><number>6</number></property>
+                   <property name="spacing">
+                    <number>6</number>
+                   </property>
                    <item row="1" column="1">
                     <widget class="QCheckBox" name="telegramAnalyzerHTMLCheck">
                      <property name="text">
@@ -519,10 +547,12 @@
             </widget>
             <widget class="QWidget" name="analyzerDebugSection">
              <layout class="QVBoxLayout" name="verticalLayout_18">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QPlainTextEdit" name="telegramAnalyzerDebug">
                 <property name="readOnly">
@@ -541,7 +571,9 @@
           <string>USERNAME</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_8">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item row="2" column="0">
            <widget class="QPlainTextEdit" name="usernameScriptDebug">
             <property name="placeholderText">
@@ -551,10 +583,12 @@
           </item>
           <item row="0" column="0" colspan="2">
            <layout class="QHBoxLayout" name="horizontalLayout_8">
+            <property name="spacing">
+             <number>6</number>
+            </property>
             <property name="bottomMargin">
              <number>0</number>
             </property>
-            <property name="spacing"><number>6</number></property>
             <item>
              <widget class="QLineEdit" name="usernameEdit">
               <property name="placeholderText">
@@ -598,7 +632,9 @@
           <string>MAIL</string>
          </attribute>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="mailSplitter">
             <property name="orientation">
@@ -606,7 +642,9 @@
             </property>
             <widget class="QWidget" name="mailSettingsSection">
              <layout class="QVBoxLayout" name="verticalLayout_19">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="mailEdit">
                 <property name="placeholderText">
@@ -659,10 +697,12 @@
             </widget>
             <widget class="QWidget" name="mailDebugSection">
              <layout class="QVBoxLayout" name="verticalLayout_20">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QSplitter" name="mailDebugSplitter">
                 <property name="orientation">
@@ -713,7 +753,9 @@
           <string>SOCIAL</string>
          </attribute>
          <layout class="QHBoxLayout" name="socialHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="socialSplitter">
             <property name="orientation">
@@ -721,7 +763,9 @@
             </property>
             <widget class="QWidget" name="socialSettingsSection">
              <layout class="QVBoxLayout" name="socialSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="socialUsernameEdit">
                 <property name="placeholderText">
@@ -784,10 +828,12 @@
             </widget>
             <widget class="QWidget" name="socialDebugSection">
              <layout class="QVBoxLayout" name="socialDebugLayout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QPlainTextEdit" name="socialDebug">
                 <property name="placeholderText">
@@ -806,7 +852,9 @@
           <string>LEAKS</string>
          </attribute>
          <layout class="QHBoxLayout" name="leaksHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="leaksSplitter">
             <property name="orientation">
@@ -814,7 +862,9 @@
             </property>
             <widget class="QWidget" name="leaksSettingsSection">
              <layout class="QVBoxLayout" name="leaksSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="leakTargetEdit">
                 <property name="placeholderText">
@@ -874,10 +924,12 @@
             </widget>
             <widget class="QWidget" name="leaksDebugSection">
              <layout class="QVBoxLayout" name="leaksDebugLayout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QPlainTextEdit" name="leakDebug">
                 <property name="placeholderText">
@@ -896,7 +948,9 @@
           <string>GEO</string>
          </attribute>
          <layout class="QHBoxLayout" name="geoHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="geoSplitter">
             <property name="orientation">
@@ -904,7 +958,9 @@
             </property>
             <widget class="QWidget" name="geoSettingsSection">
              <layout class="QVBoxLayout" name="geoSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="geoCoordEdit">
                 <property name="placeholderText">
@@ -991,10 +1047,12 @@
             </widget>
             <widget class="QWidget" name="geoDebugSection">
              <layout class="QVBoxLayout" name="geoDebugLayout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QPlainTextEdit" name="geoDebug">
                 <property name="placeholderText">
@@ -1013,7 +1071,9 @@
           <string>ARCHIVE</string>
          </attribute>
          <layout class="QHBoxLayout" name="archiveHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="archiveSplitter">
             <property name="orientation">
@@ -1021,7 +1081,9 @@
             </property>
             <widget class="QWidget" name="archiveSettingsSection">
              <layout class="QVBoxLayout" name="archiveSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="archiveUrlEdit">
                 <property name="placeholderText">
@@ -1081,10 +1143,12 @@
             </widget>
             <widget class="QWidget" name="archiveDebugSection">
              <layout class="QVBoxLayout" name="archiveDebugLayout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>0</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QPlainTextEdit" name="archiveDebug">
                 <property name="placeholderText">
@@ -1103,13 +1167,19 @@
           <string>DORKING</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_12">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <layout class="QGridLayout" name="gridLayout_5">
-            <property name="spacing"><number>6</number></property>
+            <property name="spacing">
+             <number>6</number>
+            </property>
             <item row="3" column="0" colspan="3">
              <layout class="QHBoxLayout" name="dorkCustomEditLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="customDorkEdit">
                 <property name="placeholderText">
@@ -1151,7 +1221,6 @@
                 <property name="bottomMargin">
                  <number>0</number>
                 </property>
-                <property name="contentsMargins"><rect><x>8</x><y>8</y><width>8</width><height>8</height></rect></property>
                 <item>
                  <widget class="QListWidget" name="dorksCategoryList"/>
                 </item>
@@ -1178,7 +1247,6 @@
                 <property name="bottomMargin">
                  <number>0</number>
                 </property>
-                <property name="contentsMargins"><rect><x>8</x><y>8</y><width>8</width><height>8</height></rect></property>
                 <item>
                  <widget class="QListWidget" name="dorksList">
                   <property name="contextMenuPolicy">
@@ -1209,7 +1277,6 @@
                 <property name="bottomMargin">
                  <number>0</number>
                 </property>
-                <property name="contentsMargins"><rect><x>8</x><y>8</y><width>8</width><height>8</height></rect></property>
                 <item>
                  <widget class="QPlainTextEdit" name="dorksResult"/>
                 </item>
@@ -1236,7 +1303,9 @@
                <string>Settings</string>
               </property>
               <layout class="QHBoxLayout" name="horizontalLayout_5">
-               <property name="spacing"><number>6</number></property>
+               <property name="spacing">
+                <number>6</number>
+               </property>
                <item>
                 <widget class="QCheckBox" name="useSearxngCheck">
                  <property name="text">
@@ -1276,7 +1345,9 @@
           <string>WEB</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_2">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item row="6" column="3">
            <widget class="QPlainTextEdit" name="serverLocationDebug">
             <property name="placeholderText">
@@ -1487,10 +1558,12 @@
           </item>
           <item row="0" column="1" colspan="4">
            <layout class="QHBoxLayout" name="horizontalLayout_9">
+            <property name="spacing">
+             <number>6</number>
+            </property>
             <property name="topMargin">
              <number>0</number>
             </property>
-            <property name="spacing"><number>6</number></property>
             <item>
              <widget class="QLineEdit" name="serverUrlEdit">
               <property name="placeholderText">
@@ -1575,7 +1648,9 @@
           <string>FILE ANALYZE</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_7">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item row="1" column="1" rowspan="3">
            <widget class="QPlainTextEdit" name="metadataDebug">
             <property name="placeholderText">
@@ -1655,7 +1730,9 @@
              </size>
             </property>
             <layout class="QVBoxLayout" name="verticalLayout">
-             <property name="spacing"><number>6</number></property>
+             <property name="spacing">
+              <number>6</number>
+             </property>
              <item>
               <widget class="QLabel" name="metadataStatusLabel">
                <property name="font">
@@ -1720,7 +1797,9 @@
           <string>GITHUB</string>
          </attribute>
          <layout class="QHBoxLayout" name="githubHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="githubSplitter">
             <property name="orientation">
@@ -1728,7 +1807,9 @@
             </property>
             <widget class="QWidget" name="githubSettingsSection">
              <layout class="QVBoxLayout" name="githubSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="githubUserEdit">
                 <property name="placeholderText">
@@ -1805,7 +1886,9 @@
                  <string>GitHub Dorking</string>
                 </property>
                 <layout class="QVBoxLayout" name="githubDorkLayout">
-                 <property name="spacing"><number>6</number></property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
                  <item>
                   <widget class="QLineEdit" name="githubDorkEdit">
                    <property name="placeholderText">
@@ -1815,7 +1898,9 @@
                  </item>
                  <item>
                   <layout class="QHBoxLayout" name="githubDorkTypeLayout">
-                   <property name="spacing"><number>6</number></property>
+                   <property name="spacing">
+                    <number>6</number>
+                   </property>
                    <item>
                     <widget class="QCheckBox" name="githubDorkCodeCheck">
                      <property name="text">
@@ -1890,7 +1975,9 @@
             </widget>
             <widget class="QWidget" name="githubDebugSection">
              <layout class="QVBoxLayout" name="githubDebugLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QPlainTextEdit" name="githubDebug">
                 <property name="readOnly">
@@ -1909,7 +1996,9 @@
           <string>PHONE</string>
          </attribute>
          <layout class="QHBoxLayout" name="phoneHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="phoneSplitter">
             <property name="orientation">
@@ -1917,7 +2006,9 @@
             </property>
             <widget class="QWidget" name="phoneSettingsSection">
              <layout class="QVBoxLayout" name="phoneSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLineEdit" name="phoneNumberEdit">
                 <property name="placeholderText">
@@ -1984,7 +2075,9 @@
             </widget>
             <widget class="QWidget" name="phoneDebugSection">
              <layout class="QVBoxLayout" name="phoneDebugLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QPlainTextEdit" name="phoneDebug">
                 <property name="readOnly">
@@ -2003,7 +2096,9 @@
           <string>MAC ADDR</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_9">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item row="0" column="2">
            <widget class="QPushButton" name="checkMacAddrButton">
             <property name="minimumSize">
@@ -2058,7 +2153,9 @@
           <string>BLOCKCHAIN</string>
          </attribute>
          <layout class="QHBoxLayout" name="bcHorizontalLayout">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <widget class="QSplitter" name="bcSplitter">
             <property name="orientation">
@@ -2066,7 +2163,9 @@
             </property>
             <widget class="QWidget" name="bcSettingsSection">
              <layout class="QVBoxLayout" name="bcSettingsLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QComboBox" name="bcNetworkCombo">
                 <item>
@@ -2294,7 +2393,9 @@
             </widget>
             <widget class="QWidget" name="bcDebugSection">
              <layout class="QVBoxLayout" name="bcDebugLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QPlainTextEdit" name="bcDebug">
                 <property name="readOnly">
@@ -2313,6 +2414,9 @@
           <string>STEGANOGRAPHY</string>
          </attribute>
          <layout class="QHBoxLayout" name="steganographyLayout">
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <property name="leftMargin">
            <number>9</number>
           </property>
@@ -2325,7 +2429,6 @@
           <property name="bottomMargin">
            <number>9</number>
           </property>
-          <property name="spacing"><number>6</number></property>
           <item>
            <widget class="QSplitter" name="steganographySplitter">
             <property name="orientation">
@@ -2333,7 +2436,9 @@
             </property>
             <widget class="DropWidget" name="steganoFileDrop" native="true">
              <layout class="QVBoxLayout" name="verticalLayout_2">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <widget class="QLabel" name="label_8">
                 <property name="minimumSize">
@@ -2391,11 +2496,15 @@
           <string>SEARCH4FACES</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_10">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item row="2" column="0">
            <widget class="DropWidget" name="s4fFileDropWidget" native="true">
             <layout class="QVBoxLayout" name="verticalLayout_24">
-             <property name="spacing"><number>6</number></property>
+             <property name="spacing">
+              <number>6</number>
+             </property>
              <item>
               <widget class="QLabel" name="label_9">
                <property name="minimumSize">
@@ -2417,7 +2526,9 @@
           </item>
           <item row="3" column="0">
            <layout class="QHBoxLayout" name="horizontalLayout_11">
-            <property name="spacing"><number>6</number></property>
+            <property name="spacing">
+             <number>6</number>
+            </property>
             <item>
              <widget class="QPushButton" name="runS4FButton">
               <property name="minimumSize">
@@ -2448,10 +2559,14 @@
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_26">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <layout class="QVBoxLayout" name="s4fResultsLayout">
-                <property name="spacing"><number>6</number></property>
+                <property name="spacing">
+                 <number>6</number>
+                </property>
                </layout>
               </item>
              </layout>
@@ -2479,7 +2594,19 @@
           <string>DOWNLOADER</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_11">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLineEdit" name="linkToDownloadEdit">
+            <property name="placeholderText">
+             <string>Link</string>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="2">
+           <widget class="QPlainTextEdit" name="downloadFileDebug"/>
+          </item>
           <item row="5" column="0" colspan="2">
            <widget class="QProgressBar" name="downloadFromLinkProgress">
             <property name="value">
@@ -2501,13 +2628,6 @@
             </property>
            </widget>
           </item>
-          <item row="0" column="0" colspan="2">
-           <widget class="QLineEdit" name="linkToDownloadEdit">
-            <property name="placeholderText">
-             <string>Link</string>
-            </property>
-           </widget>
-          </item>
           <item row="4" column="0" colspan="2">
            <widget class="QLabel" name="label_10">
             <property name="text">
@@ -2522,9 +2642,6 @@
             </property>
            </widget>
           </item>
-          <item row="3" column="0" colspan="2">
-           <widget class="QPlainTextEdit" name="downloadFileDebug"/>
-          </item>
          </layout>
         </widget>
         <widget class="QWidget" name="graphTab">
@@ -2532,6 +2649,9 @@
           <string>GRAPH</string>
          </attribute>
          <layout class="QVBoxLayout" name="graphMainLayout">
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <property name="leftMargin">
            <number>0</number>
           </property>
@@ -2544,7 +2664,6 @@
           <property name="bottomMargin">
            <number>0</number>
           </property>
-          <property name="spacing"><number>6</number></property>
           <item>
            <widget class="QSplitter" name="graphSplitter">
             <property name="orientation">
@@ -2552,10 +2671,12 @@
             </property>
             <widget class="QWidget" name="entityPanel" native="true">
              <layout class="QVBoxLayout" name="entityLayout">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="rightMargin">
                <number>9</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QLineEdit" name="entitySearchEdit">
                 <property name="placeholderText">
@@ -2572,7 +2693,9 @@
                  </size>
                 </property>
                 <layout class="QVBoxLayout" name="verticalLayout_23">
-                 <property name="spacing"><number>6</number></property>
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
                 </layout>
                </widget>
               </item>
@@ -2580,10 +2703,14 @@
             </widget>
             <widget class="QWidget" name="graphCenterPanel" native="true">
              <layout class="QVBoxLayout" name="graphCenterLayout">
-              <property name="spacing"><number>6</number></property>
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <item>
                <layout class="QHBoxLayout" name="graphButtonLayout">
-                <property name="spacing"><number>6</number></property>
+                <property name="spacing">
+                 <number>6</number>
+                </property>
                 <item>
                  <widget class="QPushButton" name="exportGraphButton">
                   <property name="text">
@@ -2633,7 +2760,9 @@
               </item>
               <item>
                <layout class="QHBoxLayout" name="graphSearchLayout">
-                <property name="spacing"><number>6</number></property>
+                <property name="spacing">
+                 <number>6</number>
+                </property>
                 <item>
                  <widget class="QLineEdit" name="graphSearchEdit">
                   <property name="placeholderText">
@@ -2688,6 +2817,9 @@
               </size>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_13">
+              <property name="spacing">
+               <number>6</number>
+              </property>
               <property name="leftMargin">
                <number>9</number>
               </property>
@@ -2700,7 +2832,6 @@
               <property name="bottomMargin">
                <number>9</number>
               </property>
-              <property name="spacing"><number>6</number></property>
               <item>
                <widget class="QLineEdit" name="nodeTitleEdit">
                 <property name="placeholderText">
@@ -2729,6 +2860,9 @@
               </item>
               <item>
                <layout class="QHBoxLayout" name="nodeEvidenceBtnLayout">
+                <property name="spacing">
+                 <number>6</number>
+                </property>
                 <property name="leftMargin">
                  <number>0</number>
                 </property>
@@ -2741,7 +2875,6 @@
                 <property name="bottomMargin">
                  <number>0</number>
                 </property>
-                <property name="spacing"><number>6</number></property>
                 <item>
                  <widget class="QPushButton" name="nodeEvidenceAddFileBtn">
                   <property name="text">
@@ -2776,7 +2909,9 @@
           <string>AI REPORT</string>
          </attribute>
          <layout class="QGridLayout" name="gridLayout_6">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item row="1" column="0">
            <widget class="QLineEdit" name="aiReportLangEdit">
             <property name="placeholderText">
@@ -2854,7 +2989,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>400</width>
+               <width>1217</width>
                <height>979</height>
               </rect>
              </property>
@@ -2864,7 +2999,9 @@
               </property>
               <item>
                <layout class="QHBoxLayout" name="horizontalLayout">
-                <property name="spacing"><number>6</number></property>
+                <property name="spacing">
+                 <number>6</number>
+                </property>
                 <item>
                  <spacer name="horizontalSpacer">
                   <property name="orientation">
@@ -2880,7 +3017,9 @@
                 </item>
                 <item>
                  <layout class="QVBoxLayout" name="verticalLayout_4">
-                  <property name="spacing"><number>6</number></property>
+                  <property name="spacing">
+                   <number>6</number>
+                  </property>
                   <item>
                    <spacer name="verticalSpacer">
                     <property name="orientation">
@@ -3156,10 +3295,14 @@
           <string>PROXY</string>
          </attribute>
          <layout class="QVBoxLayout" name="verticalLayout_3">
-          <property name="spacing"><number>6</number></property>
+          <property name="spacing">
+           <number>6</number>
+          </property>
           <item>
            <layout class="QHBoxLayout" name="horizontalLayout_2">
-            <property name="spacing"><number>6</number></property>
+            <property name="spacing">
+             <number>6</number>
+            </property>
             <item>
              <widget class="QPlainTextEdit" name="proxyListEdit"/>
             </item>

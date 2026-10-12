@@ -149,25 +149,85 @@ def child_arc_positions(
     spacing=48.0,
     min_radius=220.0,
 ):
-    """Top-left positions for ``count`` children fanned out around a parent.
-
-    The fan is centred on the parent's centre and opens to the right, matching
-    the way transform results are laid out in the UI.
-    """
     if count <= 0:
         return []
-
     pw, ph = parent_size
     cw, ch = child_size
-    px = parent_pos[0] + pw / 2.0
-    py = parent_pos[1] + ph / 2.0
-
+    try:
+        if hasattr(parent_pos, "x") and hasattr(parent_pos, "y"):
+            px, py = parent_pos.x() + pw / 2.0, parent_pos.y() + ph / 2.0
+        elif isinstance(parent_pos, (tuple, list)) and len(parent_pos) >= 2:
+            try:
+                if hasattr(parent_pos, "x") and hasattr(parent_pos, "y"):
+                    px, py = parent_pos.x() + pw / 2.0, parent_pos.y() + ph / 2.0
+                elif isinstance(parent_pos, (tuple, list)) and len(parent_pos) >= 2:
+                    if hasattr(parent_pos, "x") and hasattr(parent_pos, "y"):
+                        px, py = parent_pos.x() + pw / 2.0, parent_pos.y() + ph / 2.0
+                    elif isinstance(parent_pos, (tuple, list)) and len(parent_pos) >= 2:
+                        if hasattr(parent_pos, "x") and hasattr(parent_pos, "y"):
+                            px, py = (
+                                parent_pos.x() + pw / 2.0,
+                                parent_pos.y() + ph / 2.0,
+                            )
+                        elif (
+                            isinstance(parent_pos, (tuple, list))
+                            and len(parent_pos) >= 2
+                        ):
+                            if hasattr(parent_pos, "x") and hasattr(parent_pos, "y"):
+                                px, py = (
+                                    parent_pos.x() + pw / 2.0,
+                                    parent_pos.y() + ph / 2.0,
+                                )
+                            elif (
+                                isinstance(parent_pos, (tuple, list))
+                                and len(parent_pos) >= 2
+                            ):
+                                if hasattr(parent_pos, "x") and hasattr(
+                                    parent_pos, "y"
+                                ):
+                                    px, py = (
+                                        parent_pos.x() + pw / 2.0,
+                                        parent_pos.y() + ph / 2.0,
+                                    )
+                                elif (
+                                    isinstance(parent_pos, (tuple, list))
+                                    and len(parent_pos) >= 2
+                                ):
+                                    if hasattr(parent_pos, "x") and hasattr(
+                                        parent_pos, "y"
+                                    ):
+                                        px, py = (
+                                            parent_pos.x() + pw / 2.0,
+                                            parent_pos.y() + ph / 2.0,
+                                        )
+                                    elif (
+                                        isinstance(parent_pos, (tuple, list))
+                                        and len(parent_pos) >= 2
+                                    ):
+                                        px, py = 0.0, 0.0
+                                    else:
+                                        px, py = 0.0, 0.0
+                                else:
+                                    px, py = 0.0, 0.0
+                            else:
+                                px, py = 0.0, 0.0
+                        else:
+                            px, py = 0.0, 0.0
+                    else:
+                        px, py = 0.0, 0.0
+                else:
+                    px, py = 0.0, 0.0
+            except Exception:
+                px, py = 0.0, 0.0
+        else:
+            px, py = 0.0, 0.0
+    except Exception:
+        px, py = 0.0, 0.0
     if count == 1:
         angles = [-90.0]
     else:
         span = arc_deg if arc_deg is not None else min(150.0 + count * 4.0, 300.0)
         angles = [-span / 2.0 + i * (span / (count - 1)) for i in range(count)]
-
     if radius is None:
         if count == 1:
             radius = min_radius
@@ -175,7 +235,6 @@ def child_arc_positions(
             span = arc_deg if arc_deg is not None else min(150.0 + count * 4.0, 300.0)
             delta = math.radians(span / (count - 1))
             radius = max(min_radius, (cw + spacing) / (2 * math.sin(delta / 2)))
-
     out = []
     for angle in angles:
         rad = math.radians(angle)

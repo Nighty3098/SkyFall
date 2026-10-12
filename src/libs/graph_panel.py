@@ -1,10 +1,29 @@
 from typing import override
 
-from PySide6.QtCore import QMimeData, Qt
-from PySide6.QtGui import QColor, QDrag, QFont, QPainter, QPixmap
+from PySide6.QtCore import QMimeData, QSize, Qt
+from PySide6.QtGui import QColor, QDrag, QPainter, QPainterPath, QPixmap
 from PySide6.QtWidgets import QListWidget, QListWidgetItem
 
-from src.libs.graph_lib import ENTITY_NAMES, ENTITY_SYMBOLS
+from src.libs.graph_lib import (
+    ENTITY_COLORS,
+    ENTITY_DESCRIPTIONS,
+    ENTITY_NAMES,
+    ENTITY_SYMBOLS,
+    _ui_font,
+)
+
+
+def _swatch(color: str) -> QPixmap:
+    """Small rounded colour chip used as the palette item icon."""
+    pix = QPixmap(14, 14)
+    pix.fill(Qt.GlobalColor.transparent)
+    painter = QPainter(pix)
+    painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+    path = QPainterPath()
+    path.addRoundedRect(1, 1, 12, 12, 4, 4)
+    painter.fillPath(path, QColor(color))
+    painter.end()
+    return pix
 
 
 class EntityPalette(QListWidget):
@@ -18,6 +37,12 @@ class EntityPalette(QListWidget):
             sym = ENTITY_SYMBOLS.get(etype, "")
             item = QListWidgetItem(f"  {sym}  {etype}")
             item.setData(Qt.ItemDataRole.UserRole, etype)
+            item.setData(Qt.ItemDataRole.DecorationRole, _swatch(ENTITY_COLORS[etype]))
+            item.setSizeHint(QSize(0, 26))
+            item.setToolTip(
+                f"{etype} \u2014 {ENTITY_DESCRIPTIONS.get(etype, '')}\n"
+                "Drag onto the canvas to create a node."
+            )
             self.addItem(item)
 
     def set_filter(self, text: str):
@@ -42,11 +67,21 @@ class EntityPalette(QListWidget):
         pal = dialog_palette()
         bg = pal["surface"]
         text = pal["text"]
-        pix = QPixmap(120, 28)
-        pix.fill(QColor(bg))
+        accent = QColor(ENTITY_COLORS.get(etype, pal["border"]))
+        pix = QPixmap(140, 30)
+        pix.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pix)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        path = QPainterPath()
+        path.addRoundedRect(0.5, 0.5, 139, 29, 6, 6)
+        painter.fillPath(path, QColor(bg))
+        painter.setPen(QColor(pal["border"]))
+        painter.drawPath(path)
+        painter.setClipPath(path)
+        painter.fillRect(0, 0, 4, 30, accent)
+        painter.setClipping(False)
         painter.setPen(QColor(text))
-        painter.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        painter.setFont(_ui_font(9, bold=True))
         painter.drawText(pix.rect(), Qt.AlignmentFlag.AlignCenter, etype)
         painter.end()
         drag.setPixmap(pix)

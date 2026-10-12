@@ -3692,6 +3692,13 @@
                  </widget>
                 </item>
                 <item>
+                 <widget class="QPushButton" name="graphFitButton">
+                  <property name="text">
+                   <string>Fit View</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
                  <widget class="QComboBox" name="graphLayoutCombo">
                   <property name="minimumSize">
                    <size>
@@ -3772,6 +3779,16 @@
               <item>
                <widget class="GraphWidget" name="graphWidget"/>
               </item>
+              <item>
+               <widget class="QLabel" name="graphStatusLabel">
+                <property name="text">
+                 <string/>
+                </property>
+                <property name="textInteractionFlags">
+                 <set>Qt::TextSelectableByMouse</set>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="verticalWidget" native="true">
@@ -3804,6 +3821,13 @@
                <number>0</number>
               </property>
               <item>
+               <widget class="QLabel" name="graphNodeTitleCaption">
+                <property name="text">
+                 <string>TITLE</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QLineEdit" name="nodeTitleEdit">
                 <property name="placeholderText">
                  <string>Title</string>
@@ -3811,18 +3835,39 @@
                </widget>
               </item>
               <item>
+               <widget class="QLabel" name="graphNodeTypeCaption">
+                <property name="text">
+                 <string>TYPE</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QComboBox" name="nodeTypeCombo"/>
+              </item>
+              <item>
+               <widget class="QLabel" name="graphNodeContentCaption">
+                <property name="text">
+                 <string>CONTENT</string>
+                </property>
+               </widget>
               </item>
               <item>
                <widget class="QPlainTextEdit" name="nodeContentEdit">
                 <property name="minimumSize">
                  <size>
                   <width>250</width>
-                  <height>60</height>
+                  <height>80</height>
                  </size>
                 </property>
                 <property name="placeholderText">
                  <string>Content</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLabel" name="graphNodeEvidenceCaption">
+                <property name="text">
+                 <string>EVIDENCE</string>
                 </property>
                </widget>
               </item>

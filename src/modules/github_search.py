@@ -174,7 +174,7 @@ SECRET_PATTERNS = [
     "SLACK_BOT_TOKEN",
     "SLACK_WEBHOOK_URL",
     "SLACK_OAUTH_TOKEN",
-    # ---- OpenAI и AI-services ----
+    # ---- OpenAI and AI-services ----
     "openai_api_key",
     "openai_secret_key",
     "anthropic_api_key",
@@ -187,7 +187,7 @@ SECRET_PATTERNS = [
     "ANTHROPIC_API_KEY",
     "COHERE_API_KEY",
     "ELEVENLABS_API_KEY",
-    # ---- Twilio, SendGrid, Mailgun и др. ----
+    # ---- Twilio, SendGrid, Mailgun and others ----
     "twilio_account_sid",
     "twilio_auth_token",
     "sendgrid_api_key",
@@ -237,7 +237,7 @@ SECRET_PATTERNS = [
     "gcs_credentials",
     "azure_storage_account",
     "azure_storage_key",
-    # ---- JWT и OAuth ----
+    # ---- JWT and OAuth ----
     "jwt_secret",
     "jwt_private_key",
     "jwt_public_key",

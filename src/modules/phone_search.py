@@ -394,7 +394,7 @@ class PhoneSearch:
             if on_result:
                 on_result(lines[-1])
 
-        review_count_m = re.search(r"отрицательные.*?(\d+)", html)
+        review_count_m = re.search(r"negative.*?(\d+)", html)
         if review_count_m:
             lines.append(line(f"Negative reviews: {review_count_m.group(1)}"))
             if on_result:
@@ -426,7 +426,7 @@ class PhoneSearch:
                 lines.append(bullet(f"{rv['date']} by {rv['author']}"))
                 if on_result:
                     on_result(lines[-1])
-                if comment and "скрыт" not in comment:
+                if comment and "hidden" not in comment:
                     lines.append(line(comment[:200]))
                     if on_result:
                         on_result(lines[-1])

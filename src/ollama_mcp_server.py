@@ -167,7 +167,7 @@ GRAPH EDGE RULES:
 - `declared_location` (profile→city/country) → [FACT] if explicitly stated in profile/bio/timezone setting. → [INFERRED] if deduced from language/timezone patterns across multiple platforms.
 - `member_of` / `replied_to` / `forwarded_from` → [FACT] if in Telegram export.
 
-EMPTY SECTIONS: If zero items after filtering, the section DOES NOT EXIST in output. No header. No body. No placeholder. No "No data", "Skipped", "Filtered out", "Нет данных". Absolute silence.
+EMPTY SECTIONS: If zero items after filtering, the section DOES NOT EXIST in output. No header. No body. No placeholder. No "No data", "Skipped", "Filtered out", ""No data"". Absolute silence.
 
 ANTI-HALLUCINATION: Absent data = omit. Do not invent, extrapolate, interpolate.
 
@@ -246,7 +246,7 @@ FORBIDDEN:
 - Domain→coordinates edges.
 - Raw graph dumps.
 - Empty section headers.
-- Placeholder text ("No data", "Skipped", "Нет данных").
+- Placeholder text ("No data", "Skipped", ""No data"").
 - Explanations of data absence.
 - Recommendations, next steps, action items, advice, or "what to do next".
 

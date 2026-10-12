@@ -21,7 +21,7 @@ from PySide6.QtGui import (
     QPainterPathStroker,
     QPen,
     QPixmap,
-    QTextOption,
+    QPolygonF,
 )
 from PySide6.QtNetwork import QNetworkAccessManager, QNetworkRequest
 from PySide6.QtWidgets import (
@@ -97,6 +97,180 @@ EDGE_STYLES = {
     "dashed": {"label": "Dashed", "width": 3, "pen_style": Qt.PenStyle.DashLine},
     "bold": {"label": "Bold", "width": 6, "pen_style": Qt.PenStyle.SolidLine},
 }
+
+# The application renders its chrome in this bundled monospace face; the graph
+# uses it too so cards do not fall back to an unrelated system font.
+UI_FONT_FAMILY = "Iosevka Charon Mono"
+
+ENTITY_DESCRIPTIONS = {
+    "Person": "A human identity or named individual",
+    "Domain": "A website or hostname",
+    "IP": "An IP address",
+    "Email": "An e-mail address",
+    "Phone": "A phone number",
+    "MAC": "A MAC / BSSID hardware address",
+    "Username": "A handle or account name",
+    "Crypto": "A wallet or blockchain address",
+    "Organization": "A company, group or service",
+    "Passport": "An identity document",
+    "Photo": "An image or photo evidence",
+    "Geolocation": "A location or coordinates",
+    "Custom": "Anything that does not fit another type",
+}
+
+
+def _ui_font(size: int, bold: bool = False) -> QFont:
+    font = QFont(UI_FONT_FAMILY, size)
+    font.setStyleHint(QFont.StyleHint.Monospace)
+    font.setWeight(QFont.Weight.Bold if bold else QFont.Weight.Normal)
+    return font
+
+
+_ENTITY_ALIASES = {
+    "human": "Person",
+    "individual": "Person",
+    "name": "Person",
+    "person": "Person",
+    "hostname": "Domain",
+    "website": "Domain",
+    "url": "Domain",
+    "web": "Domain",
+    "ipaddress": "IP",
+    "ip_address": "IP",
+    "ipv4": "IP",
+    "ipv6": "IP",
+    "mail": "Email",
+    "e-mail": "Email",
+    "telephone": "Phone",
+    "number": "Phone",
+    "msisdn": "Phone",
+    "macaddress": "MAC",
+    "mac_address": "MAC",
+    "bssid": "MAC",
+    "wifi": "MAC",
+    "handle": "Username",
+    "account": "Username",
+    "nickname": "Username",
+    "nick": "Username",
+    "wallet": "Crypto",
+    "bitcoin": "Crypto",
+    "btc": "Crypto",
+    "ethereum": "Crypto",
+    "eth": "Crypto",
+    "company": "Organization",
+    "org": "Organization",
+    "group": "Organization",
+    "employer": "Organization",
+    "service": "Organization",
+    "document": "Passport",
+    "image": "Photo",
+    "picture": "Photo",
+    "media": "Photo",
+    "location": "Geolocation",
+    "geo": "Geolocation",
+    "address": "Geolocation",
+    "coordinates": "Geolocation",
+    "place": "Geolocation",
+    "city": "Geolocation",
+    "country": "Geolocation",
+    "other": "Custom",
+    "unknown": "Custom",
+    "note": "Custom",
+}
+
+_RELATIONSHIP_ALIASES = {
+    "own": "owns",
+    "owned": "owns",
+    "owner": "owns",
+    "has": "owns",
+    "controls": "owns",
+    "registered": "registered_at",
+    "registered_on": "registered_at",
+    "registration": "registered_at",
+    "signup": "registered_at",
+    "signed_up": "registered_at",
+    "resolves": "resolved_to",
+    "resolves_to": "resolved_to",
+    "dns": "resolved_to",
+    "points_to": "resolved_to",
+    "hosted_on": "resolved_to",
+    "member": "member_of",
+    "belongs_to": "member_of",
+    "part_of": "member_of",
+    "affiliated_with": "member_of",
+    "located": "located_at",
+    "location": "located_at",
+    "lives_in": "located_at",
+    "resides_in": "located_at",
+    "communicates": "communicates_with",
+    "communicated_with": "communicates_with",
+    "contacted": "communicates_with",
+    "talked_to": "communicates_with",
+    "messaged": "communicates_with",
+    "associated": "associated_with",
+    "linked": "associated_with",
+    "related_to": "associated_with",
+    "connection": "associated_with",
+    "connected_to": "associated_with",
+    "uses": "associated_with",
+    "employed_by": "works_at",
+    "employee_of": "works_at",
+    "works_for": "works_at",
+    "created": "created_by",
+    "creator": "created_by",
+    "made_by": "created_by",
+    "author": "created_by",
+    "posted_by": "created_by",
+    "attended": "attends",
+    "participates_in": "attends",
+    "provider": "hosted_by",
+    "registrar": "hosted_by",
+    "managed_by": "hosted_by",
+    "link": "linked_to",
+    "url": "linked_to",
+    "same_as": "linked_to",
+    "alias_of": "linked_to",
+    "duplicate_of": "linked_to",
+}
+
+
+def normalize_entity_type(raw) -> str:
+    """Resolve a free-form entity type to a canonical name.
+
+    Returns ``""`` when the value cannot be mapped.
+    """
+    if raw is None:
+        return ""
+    key = str(raw).strip().lower().replace("-", "_").replace(" ", "_")
+    for name in ENTITY_NAMES:
+        if name.lower() == key:
+            return name
+    return _ENTITY_ALIASES.get(key, "")
+
+
+def normalize_relationship(raw) -> str:
+    """Normalise a relationship label to the canonical vocabulary.
+
+    Unknown values are kept (lower-cased, underscored) so domain-specific
+    relations are still allowed.
+    """
+    if raw is None or str(raw).strip() == "":
+        return "associated_with"
+    key = str(raw).strip().lower().replace("-", "_").replace(" ", "_")
+    if key in RELATIONSHIP_TYPES:
+        return key
+    return _RELATIONSHIP_ALIASES.get(key, key)
+
+
+def auto_ports(source, target) -> tuple[str, str]:
+    """Pick sensible ports for an edge based on the nodes' relative position."""
+    sp = source.scenePos()
+    tp = target.scenePos()
+    dx = (tp.x() + target._width / 2.0) - (sp.x() + source._width / 2.0)
+    dy = (tp.y() + target._height / 2.0) - (sp.y() + source._height / 2.0)
+    if abs(dx) >= abs(dy):
+        return ("right", "left") if dx >= 0 else ("left", "right")
+    return ("bottom", "top") if dy >= 0 else ("top", "bottom")
 
 
 def build_edge_path(src, tgt, sdir, tdir):
@@ -480,6 +654,7 @@ class NodeItem(QGraphicsItem):
         self._resizing = False
         self._resize_start = QPointF()
         self._resize_size = QPointF()
+        self._hovered = False
 
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -567,7 +742,7 @@ class NodeItem(QGraphicsItem):
             painter.setPen(Qt.PenStyle.NoPen)
             painter.drawRoundedRect(badge, 10, 10)
             painter.setPen(QPen(QColor("#ffffff")))
-            painter.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+            painter.setFont(_ui_font(8, bold=True))
             painter.drawText(badge, Qt.AlignmentFlag.AlignCenter, f"+{extra}")
 
     def _paint_map(self, painter, pm, y_offset, area_h, coords, zoom=MAP_ZOOM):
@@ -617,7 +792,7 @@ class NodeItem(QGraphicsItem):
         painter.drawRoundedRect(rect, 6, 6)
 
         label = f"{lat:.5f}, {lon:.5f}"
-        painter.setFont(QFont("Segoe UI", 7))
+        painter.setFont(_ui_font(7))
         fm = painter.fontMetrics()
         tw = fm.horizontalAdvance(label) + 12
         chip = QRectF(
@@ -652,50 +827,119 @@ class NodeItem(QGraphicsItem):
             card_bg = custom
             title_color = contrast
             content_color = QColor(contrast)
-            content_color.setAlpha(200)
-            port_color = contrast
+            content_color.setAlpha(210)
             border_color = QColor(contrast)
-            border_color.setAlpha(200 if self.isSelected() else 90)
+            border_color.setAlpha(180)
         else:
             card_bg = c["card_bg"]
             title_color = c["card_title"]
             content_color = c["card_content"]
-            port_color = c["port_color"]
-            border_color = c["port_color"] if self.isSelected() else c["card_border"]
+            border_color = c["card_border"]
 
-        glow_color = QColor(type_color)
-        glow_color.setAlpha(40)
-        painter.setBrush(QBrush(glow_color))
-        painter.setPen(Qt.PenStyle.NoPen)
-        if self.isSelected():
-            glow_rect = rect.adjusted(-3, -3, 3, 3)
-            painter.drawRoundedRect(glow_rect, 12, 12)
-        painter.setBrush(QBrush(glow_color))
-        if self.isSelected():
-            glow_rect2 = rect.adjusted(-1, -1, 1, 1)
-            painter.drawRoundedRect(glow_rect2, 11, 11)
+        selected = self.isSelected()
+        hovered = self._hovered
+        header_h = min(30.0, rect.height() * 0.42)
 
+        # Card body.
         painter.setBrush(QBrush(card_bg))
         painter.setPen(Qt.PenStyle.NoPen)
         painter.drawRoundedRect(rect, 10, 10)
 
-        border_width = 2 if self.isSelected() else 1
-        painter.setBrush(Qt.BrushStyle.NoBrush)
-        painter.setPen(QPen(border_color, border_width))
-        painter.drawRoundedRect(rect, 10, 10)
+        # Entity-coloured header band, clipped to the rounded card.
+        clip = QPainterPath()
+        clip.addRoundedRect(rect, 10, 10)
+        painter.save()
+        painter.setClipPath(clip)
+        band = QColor(type_color)
+        band.setAlpha(64 if custom is not None else 44)
+        painter.fillRect(QRectF(rect.left(), rect.top(), rect.width(), header_h), band)
+        painter.restore()
 
-        title_y = 10
-        painter.setPen(title_color)
-        font_title = QFont("Segoe UI", 10, QFont.Weight.Bold)
-        painter.setFont(font_title)
-        title_rect = QRectF(10, title_y, self._width - 20, 20)
+        # Accent line under the header.
+        accent = QColor(type_color)
+        accent.setAlpha(235 if (selected or hovered) else 175)
+        painter.setPen(QPen(accent, 2))
+        painter.drawLine(
+            QPointF(rect.left() + 1, rect.top() + header_h),
+            QPointF(rect.right() - 1, rect.top() + header_h),
+        )
+
+        # Border: entity colour when engaged, neutral otherwise.
+        if selected:
+            border = QColor(type_color)
+            border.setAlpha(255)
+            border_w = 2.0
+        elif hovered:
+            border = QColor(type_color)
+            border.setAlpha(150)
+            border_w = 2.0
+        else:
+            border = QColor(border_color)
+            border_w = 1.0
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.setPen(QPen(border, border_w))
+        painter.drawRoundedRect(
+            rect.adjusted(border_w / 2, border_w / 2, -border_w / 2, -border_w / 2),
+            10,
+            10,
+        )
+
+        # Symbol chip.
+        chip_r = min(10.0, header_h / 2 - 2)
+        chip_c = QPointF(rect.left() + 15, rect.top() + header_h / 2)
+        chip_bg = QColor(type_color)
+        chip_bg.setAlpha(70)
+        painter.setBrush(QBrush(chip_bg))
+        painter.setPen(QPen(accent, 1))
+        painter.drawEllipse(chip_c, chip_r, chip_r)
+        painter.setPen(QPen(QColor(type_color)))
+        painter.setFont(_ui_font(8, bold=True))
+        painter.drawText(
+            QRectF(
+                chip_c.x() - chip_r,
+                chip_c.y() - chip_r,
+                chip_r * 2,
+                chip_r * 2,
+            ),
+            Qt.AlignmentFlag.AlignCenter,
+            self.symbol(),
+        )
+
+        # Title + entity type caption.
+        title_left = rect.left() + 30
+        title_right = rect.right() - 10
+        if selected or hovered:
+            type_text = self.entity_type.upper()
+            painter.setFont(_ui_font(7, bold=True))
+            fm = painter.fontMetrics()
+            type_w = min(fm.horizontalAdvance(type_text), rect.width() * 0.5)
+            painter.setPen(QPen(accent))
+            painter.drawText(
+                QRectF(title_right - type_w, rect.top(), type_w, header_h),
+                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+                type_text,
+            )
+            title_right -= type_w + 8
+        title_rect = QRectF(
+            title_left,
+            rect.top(),
+            max(10.0, title_right - title_left),
+            header_h,
+        )
+        painter.setFont(_ui_font(9, bold=True))
+        painter.setPen(QPen(title_color))
+        title_fm = painter.fontMetrics()
         painter.drawText(
             title_rect,
             Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
-            self.title,
+            title_fm.elidedText(
+                self.title or self.entity_type,
+                Qt.TextElideMode.ElideRight,
+                int(title_rect.width()),
+            ),
         )
 
-        y_offset = title_y + 22
+        y_offset = header_h + 8
         content_area = self._get_height() - y_offset - 6
 
         photos = self._photo_evidence() if self.entity_type == "Photo" else None
@@ -719,9 +963,9 @@ class NodeItem(QGraphicsItem):
                 self._paint_map(painter, map_pix, y_offset, content_area, coords, zoom)
             else:
                 label = _location_label(self)
+                painter.setPen(content_color)
+                painter.setFont(_ui_font(8))
                 if not label:
-                    painter.setPen(content_color)
-                    painter.setFont(QFont("Segoe UI", 8))
                     painter.drawText(
                         QRectF(10, y_offset, self._width - 20, content_area),
                         Qt.AlignmentFlag.AlignCenter,
@@ -731,8 +975,6 @@ class NodeItem(QGraphicsItem):
                     text = f"\U0001f4cd {label}"
                     if coords is None:
                         text += " \u2026"
-                    painter.setPen(content_color)
-                    painter.setFont(QFont("Segoe UI", 8))
                     painter.drawText(
                         QRectF(10, y_offset, self._width - 20, content_area),
                         Qt.AlignmentFlag.AlignCenter,
@@ -740,24 +982,20 @@ class NodeItem(QGraphicsItem):
                     )
         elif self.content:
             painter.setPen(content_color)
-            font_content = QFont("Segoe UI", 9)
-            painter.setFont(font_content)
+            painter.setFont(_ui_font(8))
             content_rect = QRectF(10, y_offset, self._width - 20, content_area)
-            opt = QTextOption()
-            opt.setWrapMode(QTextOption.WrapMode.WordWrap)
-            painter.drawText(content_rect, self.content, opt)
+            self._draw_wrapped(painter, self.content, content_rect)
         elif self.evidence:
             painter.setPen(content_color)
-            font_content = QFont("Segoe UI", 7)
-            painter.setFont(font_content)
-            max_items = min(len(self.evidence), 3)
+            painter.setFont(_ui_font(7))
+            max_items = min(len(self.evidence), max(1, int(content_area // 16)))
             for i in range(max_items):
                 ev_path = self.evidence[i]
                 label = (
                     os.path.basename(ev_path) if os.path.exists(ev_path) else ev_path
                 )
-                if len(label) > 20:
-                    label = label[:17] + "..."
+                if len(label) > 22:
+                    label = label[:19] + "..."
                 ev_rect = QRectF(12, y_offset, self._width - 24, 14)
                 painter.drawText(
                     ev_rect,
@@ -767,23 +1005,64 @@ class NodeItem(QGraphicsItem):
                 y_offset += 16
         elif self.entity_type == "Photo":
             painter.setPen(content_color)
-            painter.setFont(QFont("Segoe UI", 8))
+            painter.setFont(_ui_font(8))
             painter.drawText(
                 QRectF(10, y_offset, self._width - 20, content_area),
                 Qt.AlignmentFlag.AlignCenter,
                 "No photos",
             )
 
+        # Ports stay subtle until the node is hovered or selected.
+        port_alpha = 235 if (selected or hovered) else 80
+        port_color = QColor(type_color)
+        port_color.setAlpha(port_alpha)
         painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QBrush(port_color))
         for _, pos in self._ports().items():
-            painter.setBrush(QBrush(port_color))
-            painter.drawEllipse(pos, self._port_radius, self._port_radius)
+            painter.drawEllipse(pos, self._port_radius - 1, self._port_radius - 1)
 
-        if self.isSelected():
+        if selected:
             hr = self._resize_handle_rect().adjusted(3, 3, -3, -3)
             painter.setBrush(QBrush(type_color))
             painter.setPen(QPen(type_color, 1))
             painter.drawRoundedRect(hr, 3, 3)
+
+    @staticmethod
+    def _draw_wrapped(painter, text, rect):
+        """Draw wrapped text, eliding the final line instead of clipping it."""
+        fm = painter.fontMetrics()
+        line_h = fm.height()
+        max_lines = max(1, int(rect.height() // line_h))
+        words = str(text).split()
+        lines: list[str] = []
+        current = ""
+        for word in words:
+            candidate = f"{current} {word}".strip()
+            if fm.horizontalAdvance(candidate) <= rect.width() or not current:
+                current = candidate
+            else:
+                lines.append(current)
+                current = word
+            if len(lines) > max_lines:
+                break
+        if current:
+            lines.append(current)
+        if len(lines) > max_lines:
+            lines = lines[:max_lines]
+            lines[-1] = fm.elidedText(
+                lines[-1] + "\u2026", Qt.TextElideMode.ElideRight, int(rect.width())
+            )
+        y = rect.top()
+        painter.save()
+        painter.setClipRect(rect)
+        for line in lines:
+            painter.drawText(
+                QRectF(rect.left(), y, rect.width(), line_h),
+                Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+                line,
+            )
+            y += line_h
+        painter.restore()
 
     def _resize_handle_rect(self):
         s = 16
@@ -828,6 +1107,11 @@ class NodeItem(QGraphicsItem):
                 return name
         return None
 
+    def hoverEnterEvent(self, event):
+        self._hovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
     def hoverMoveEvent(self, event):
         if self._on_resize_handle(event.pos()):
             self.setCursor(Qt.CursorShape.SizeFDiagCursor)
@@ -838,7 +1122,9 @@ class NodeItem(QGraphicsItem):
         super().hoverMoveEvent(event)
 
     def hoverLeaveEvent(self, event):
+        self._hovered = False
         self.setCursor(Qt.CursorShape.ArrowCursor)
+        self.update()
         super().hoverLeaveEvent(event)
 
     def mouseDoubleClickEvent(self, event):
@@ -953,16 +1239,22 @@ class EdgeItem(QGraphicsPathItem):
         self.label = label
         self.relationship_type = relationship_type
         self.style = style if style in EDGE_STYLES else "normal"
+        self._hovered = False
         self.setPen(self._make_pen())
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
+        self.setAcceptHoverEvents(True)
         self.adjust()
 
     def _make_pen(self):
         spec = EDGE_STYLES.get(self.style, EDGE_STYLES["normal"])
+        color = QColor(_theme_colors()["edge_color"])
+        if self.isSelected() or self._hovered:
+            color = QColor(_theme_colors()["card_title"])
+        width = {"normal": 2, "dashed": 2, "bold": 4}.get(self.style, 2)
         pen = QPen(
-            _theme_colors()["edge_color"],
-            spec["width"],
+            color,
+            width,
             spec["pen_style"],
             Qt.PenCapStyle.RoundCap,
             Qt.PenJoinStyle.RoundJoin,
@@ -971,7 +1263,47 @@ class EdgeItem(QGraphicsPathItem):
             pen.setDashPattern([6, 4])
         return pen
 
+    def hoverEnterEvent(self, event):
+        self._hovered = True
+        self.update()
+        super().hoverEnterEvent(event)
+
+    def hoverLeaveEvent(self, event):
+        self._hovered = False
+        self.update()
+        super().hoverLeaveEvent(event)
+
+    def _prefer_topdown_ports(self):
+        try:
+            s = self.source
+            t = self.target
+            sc = s.pos() + QPointF(s._width / 2, s._height / 2)
+            tc = t.pos() + QPointF(t._width / 2, t._height / 2)
+            dy = tc.y() - sc.y()
+            dx = tc.x() - sc.x()
+            if abs(dy) > abs(dx) * 1.15 and abs(dy) > 10:
+                if dy > 0:
+                    self.source_port = "bottom"
+                    self.target_port = "top"
+                    return
+                else:
+                    self.source_port = "top"
+                    self.target_port = "bottom"
+                    return
+            if abs(dx) > 10:
+                if dx > 0:
+                    self.source_port = "right"
+                    self.target_port = "left"
+                    return
+                else:
+                    self.source_port = "left"
+                    self.target_port = "right"
+                    return
+        except Exception:
+            pass
+
     def adjust(self):
+        self._prefer_topdown_ports()
         src = self.source.mapToScene(self.source.port_pos(self.source_port))
         tgt = self.target.mapToScene(self.target.port_pos(self.target_port))
         sdx, sdy = PORT_DIR[self.source_port]
@@ -987,11 +1319,17 @@ class EdgeItem(QGraphicsPathItem):
     def paint(self, painter, option, widget=None):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         c = _theme_colors()
-        spec = EDGE_STYLES.get(self.style, EDGE_STYLES["normal"])
         pen = self._make_pen()
         painter.setPen(pen)
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.drawPath(self.path())
+
+        relation = self.relationship_type or "associated_with"
+        tip = f"{self.source.title} \u2192 {self.target.title}\n{relation}"
+        if self.label:
+            tip += f"\n{self.label}"
+        if self.toolTip() != tip:
+            self.setToolTip(tip)
 
         if self.path().elementCount() > 0:
             last_pt = self.path().currentPosition()
@@ -1008,8 +1346,8 @@ class EdgeItem(QGraphicsPathItem):
             painter.save()
             painter.translate(last_pt)
             painter.rotate(angle)
-            arrow_size = 9 + spec["width"]
-            painter.setBrush(QBrush(c["edge_color"]))
+            arrow_size = 8.0 + pen.widthF()
+            painter.setBrush(QBrush(pen.color()))
             painter.setPen(Qt.PenStyle.NoPen)
             arrow_path = QPainterPath()
             arrow_path.moveTo(0, 0)
@@ -1019,42 +1357,41 @@ class EdgeItem(QGraphicsPathItem):
             painter.drawPath(arrow_path)
             painter.restore()
 
-        display = self.relationship_type or self.label
-        if display:
+        # Edge labels are opt-in: a user label is always shown, the automatic
+        # relationship chip only when the edge is hovered or selected.  This
+        # keeps dense graphs readable instead of painting a chip per edge.
+        user_label = self.label
+        display = user_label or self.relationship_type
+        if display and (user_label or self.isSelected() or self._hovered):
             path_length = self.path().length()
             if path_length > 40:
                 mid = self.path().pointAtPercent(0.5)
                 painter.save()
+                painter.setFont(_ui_font(7))
                 fm = painter.fontMetrics()
                 text_w = fm.horizontalAdvance(display) + 12
                 text_h = fm.height() + 6
                 bg = QRectF(mid.x() - text_w / 2, mid.y() - text_h / 2, text_w, text_h)
-                painter.setBrush(QBrush(c["card_title"]))
-                painter.setPen(Qt.PenStyle.NoPen)
-                painter.drawRoundedRect(bg, 4, 4)
-                painter.setPen(QPen(c["card_bg"]))
+                chip_bg = QColor(c["card_bg"])
+                chip_bg.setAlpha(235)
+                painter.setBrush(QBrush(chip_bg))
+                painter.setPen(QPen(QColor(c["card_border"]), 1))
+                painter.drawRoundedRect(bg, 6, 6)
+                painter.setPen(QPen(c["card_title"]))
                 painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, display)
+                if user_label and self.relationship_type:
+                    painter.setFont(_ui_font(6))
+                    rfm = painter.fontMetrics()
+                    rw = rfm.horizontalAdvance(self.relationship_type) + 8
+                    rh = rfm.height() + 3
+                    rbg = QRectF(mid.x() - rw / 2, bg.bottom() + 2, rw, rh)
+                    painter.setPen(QPen(QColor(c["card_content"])))
+                    painter.drawText(
+                        rbg,
+                        Qt.AlignmentFlag.AlignCenter,
+                        self.relationship_type,
+                    )
                 painter.restore()
-
-        if self.label and self.relationship_type:
-            mid = self.path().pointAtPercent(0.5)
-            painter.save()
-            painter.setFont(QFont("Segoe UI", 7))
-            fm = painter.fontMetrics()
-            text_w = fm.horizontalAdvance(self.label) + 8
-            text_h = fm.height() + 4
-            bg = QRectF(
-                mid.x() - text_w / 2,
-                mid.y() + 10,
-                text_w,
-                text_h,
-            )
-            painter.setBrush(QBrush(c["card_border"]))
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.drawRoundedRect(bg, 3, 3)
-            painter.setPen(QPen(c["card_title"]))
-            painter.drawText(bg, Qt.AlignmentFlag.AlignCenter, self.label)
-            painter.restore()
 
 
 class NodeEditDialog(QMainWindow):
@@ -1544,6 +1881,73 @@ class GraphWidget(QGraphicsView):
         self._accept_drops = True
         self.setAcceptDrops(True)
 
+    def _has_nodes(self) -> bool:
+        return any(isinstance(i, NodeItem) for i in self._scene.items())
+
+    def drawBackground(self, painter, rect):
+        super().drawBackground(painter, rect)
+        from src.ui.theme import current_theme, get_palette
+
+        palette = get_palette(current_theme())
+        painter.fillRect(rect, QColor(palette["graph_bg"]))
+
+        dot = QColor(palette["border"])
+        dot.setAlpha(90)
+        grid = 40.0
+        # Keep the number of dots bounded when the view is zoomed far out.
+        cols = rect.width() / grid
+        if cols > 260:
+            grid *= max(1.0, cols / 260)
+        left = rect.left() - (rect.left() % grid)
+        top = rect.top() - (rect.top() % grid)
+        points: list[QPointF] = []
+        y = top
+        while y < rect.bottom():
+            x = left
+            while x < rect.right():
+                points.append(QPointF(x, y))
+                x += grid
+            y += grid
+        if points:
+            pen = QPen(dot, 2.0)
+            pen.setCapStyle(Qt.PenCapStyle.RoundCap)
+            painter.setPen(pen)
+            painter.setBrush(Qt.BrushStyle.NoBrush)
+            painter.drawPoints(QPolygonF(points))
+
+    def drawForeground(self, painter, rect):
+        super().drawForeground(painter, rect)
+        if self._has_nodes():
+            return
+        from src.ui.theme import current_theme, get_palette
+
+        muted = QColor(get_palette(current_theme())["text_muted"])
+        center = self.mapToScene(self.viewport().rect().center())
+        painter.setPen(QPen(muted))
+        painter.setFont(_ui_font(12, bold=True))
+        title = QRectF(center.x() - 260, center.y() - 34, 520, 26)
+        painter.drawText(
+            title, Qt.AlignmentFlag.AlignCenter, "Empty investigation graph"
+        )
+        painter.setFont(_ui_font(9))
+        hint = QRectF(center.x() - 260, center.y() - 4, 520, 44)
+        painter.drawText(
+            hint,
+            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+            "Drag an entity from the palette, or let the MCP agent build the\n"
+            "graph with skyfall_graph_add_node / skyfall_graph_build.",
+        )
+
+    def fit_to_view(self, margin: float = 80.0) -> bool:
+        if not self._has_nodes():
+            return False
+        bounds = self._scene.itemsBoundingRect()
+        if bounds.isNull():
+            return False
+        bounds = bounds.adjusted(-margin, -margin, margin, margin)
+        self.fitInView(bounds, Qt.AspectRatioMode.KeepAspectRatio)
+        return True
+
     def dragEnterEvent(self, event):
         if event.mimeData().hasText() and event.mimeData().text() in ENTITY_NAMES:
             event.acceptProposedAction()
@@ -1679,7 +2083,31 @@ class GraphWidget(QGraphicsView):
             analysis_all.addAction(cluster_action)
             menu.addMenu(analysis_all)
 
+        menu.addSeparator()
+        view_menu = QMenu("View", self)
+        fit_act = QAction("Fit to View", self)
+        fit_act.triggered.connect(lambda: self.fit_to_view())
+        zin_act = QAction("Zoom In", self)
+        zin_act.triggered.connect(self.zoom_in)
+        zout_act = QAction("Zoom Out", self)
+        zout_act.triggered.connect(self.zoom_out)
+        reset_act = QAction("Reset Zoom", self)
+        reset_act.triggered.connect(self.reset_zoom)
+        for action in (fit_act, zin_act, zout_act, reset_act):
+            view_menu.addAction(action)
+        menu.addMenu(view_menu)
+
         menu.exec(self.viewport().mapToGlobal(pos))
+
+    def zoom_in(self):
+        self.scale(1.25, 1.25)
+
+    def zoom_out(self):
+        self.scale(1 / 1.25, 1 / 1.25)
+
+    def reset_zoom(self):
+        self.resetTransform()
+        self.fit_to_view()
 
     def edit_node(self, node: NodeItem):
         dialog = NodeEditDialog(
@@ -1922,6 +2350,11 @@ class GraphWidget(QGraphicsView):
             self.status_message("Community detection requires networkx 2.x")
 
     def status_message(self, msg):
+        top = self.window()
+        if top is not None:
+            label = top.findChild(QLabel, "graphStatusLabel")
+            if label is not None:
+                label.setText(msg)
         if self.parent():
             main = self.parent().parent().parent()
             if hasattr(main, "statusBar"):
@@ -1992,8 +2425,37 @@ class GraphWidget(QGraphicsView):
                     self.remove_node(item)
                 elif isinstance(item, EdgeItem):
                     self.remove_edge(item)
-        else:
-            super().keyPressEvent(event)
+            return
+        modifiers = event.modifiers()
+        if modifiers & Qt.KeyboardModifier.ControlModifier:
+            if event.key() == Qt.Key.Key_Minus or event.key() == Qt.Key.Key_Underscore:
+                self.scale(1 / 1.25, 1 / 1.25)
+                return
+            if event.key() == Qt.Key.Key_Equal or event.key() == Qt.Key.Key_Plus:
+                self.scale(1.25, 1.25)
+                return
+            if event.key() == Qt.Key.Key_0:
+                self.resetTransform()
+                self.fit_to_view()
+                return
+        step = 80
+        if event.key() == Qt.Key.Key_Up:
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() - step)
+            return
+        if event.key() == Qt.Key.Key_Down:
+            self.verticalScrollBar().setValue(self.verticalScrollBar().value() + step)
+            return
+        if event.key() == Qt.Key.Key_Left:
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() - step
+            )
+            return
+        if event.key() == Qt.Key.Key_Right:
+            self.horizontalScrollBar().setValue(
+                self.horizontalScrollBar().value() + step
+            )
+            return
+        super().keyPressEvent(event)
 
     def to_dict(self):
         nodes = []

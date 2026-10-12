@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from PySide6.QtCore import QPointF
 
 from src.modules import username_merge
+from src.modules.graph_layout import child_arc_positions
 from src.ui.output_formatter import (
     bullet,
     divider,
@@ -142,28 +143,14 @@ class GraphTransformController:
         if count == 0:
             return
 
-        node_w = 180
-        spacing = 20
-
-        if count == 1:
-            radius = 200
-            rad = math.radians(-80)
-            x = parent.pos().x() + radius * math.cos(rad)
-            y = parent.pos().y() + radius * math.sin(rad)
-            children[0].setPos(x, y)
-            return
-
-        arc_deg = min(130 + count * 3, 270)
-        half_arc = arc_deg / 2
-        delta = math.radians(arc_deg / (count - 1))
-        min_radius = (node_w + spacing) / (2 * math.sin(delta / 2))
-        radius = max(min_radius, 200)
-
-        for i, child in enumerate(children):
-            frac = i / (count - 1)
-            angle = math.radians(-half_arc + frac * arc_deg)
-            x = parent.pos().x() + radius * math.cos(angle)
-            y = parent.pos().y() + radius * math.sin(angle)
+        positions = child_arc_positions(
+            parent.pos(),
+            count,
+            parent_size=(parent._width, parent._height),
+            child_size=(children[0]._width, children[0]._height),
+            arc_deg=min(130 + count * 3, 270),
+        )
+        for child, (x, y) in zip(children, positions):
             child.setPos(x, y)
 
     def _build_registry(self):

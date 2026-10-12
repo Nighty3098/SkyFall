@@ -647,3 +647,27 @@ QPushButton#addNodeButton:hover {
     background-color: $surface_hover;
     border-color: $border_hover;
 }
+
+/* -------------------------------------------------------------- graph tab */
+
+QListWidget#entityPalette::item {
+    padding: 4px 6px;
+    margin: 1px 2px;
+}
+
+QLabel#graphNodeTitleCaption,
+QLabel#graphNodeTypeCaption,
+QLabel#graphNodeContentCaption,
+QLabel#graphNodeEvidenceCaption {
+    color: $text_muted;
+    font-size: $font_size_small;
+    padding: 0 2px;
+}
+
+QLabel#graphStatusLabel {
+    color: $text_muted;
+    font-size: $font_size_small;
+    border-top: 1px solid $border;
+    padding: 5px 2px 0 2px;
+    min-height: 18px;
+}

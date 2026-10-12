@@ -452,7 +452,9 @@ See [Settings and API Keys](#settings-and-api-keys). Also the **MCP Server** blo
 
 `owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`, `communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`, `hosted_by`, `linked_to`.
 
-Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bézier curves with an arrow, a relation-type chip, and an optional label.
+Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bézier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `wallet`→…) are normalised to the canonical vocabulary.
+
+Nodes render as cards with an entity-coloured header band, symbol chip, and type caption; ports stay subtle until the node is hovered. The canvas paints a dotted grid, and an empty graph shows a short "how to start" hint.
 
 ### Canvas Capabilities
 
@@ -474,7 +476,7 @@ Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are 
 
 ## MCP Servers
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 89 tools
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 91 tools
 
 FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Started/stopped from the Settings tab (MCP button) or via `McpController`.
 
@@ -512,7 +514,9 @@ FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Starte
 
 **Dorking (1):** search via DuckDuckGo/SearXNG.
 
-**Graph (12, require a running GUI + graph bridge on 127.0.0.1:9878):** add/update/remove/move node, add/remove edge, get, summary, get_node, clear, file import (JSON/GraphML/GEXF/CSV), export PNG/SVG.
+**Graph (14, require a running GUI + graph bridge on 127.0.0.1:9878):** `skyfall_graph_build` (batch node/edge creation with refs and automatic placement), `skyfall_graph_layout` (re-arrange + frame the canvas), add/update/remove/move node, add/remove edge, get, summary, get_node, clear, file import (JSON/GraphML/GEXF/CSV), export PNG/SVG.
+
+The graph tools follow a small rule set: entity types and relationships are normalised (with synonym mapping), `add_node` deduplicates by `(entity_type, title)` and merges content, nodes are positioned automatically (around `anchor_id` when given), duplicate edges are merged, and self-loops are rejected. Call `skyfall_graph_summary` before editing an existing graph.
 
 **Cases (2):** list cases, case contents.
 

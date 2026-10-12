@@ -495,6 +495,8 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
     if hasattr(ui, "exportGraphImageButton"):
         ui.exportGraphImageButton.clicked.connect(export_graph_image)
     ui.graphClearButton.clicked.connect(clear_graph)
+    if hasattr(ui, "graphFitButton"):
+        ui.graphFitButton.clicked.connect(lambda: ui.graphWidget.fit_to_view())
     ui.graphSearchEdit.textChanged.connect(on_search_text_changed)
     ui.graphClearFilterButton.clicked.connect(on_clear_filter)
     ui.graphFilterCombo.currentTextChanged.connect(on_filter_combo_changed)

@@ -49,6 +49,7 @@ class GraphLayoutController:
         for node_id, (x, y) in result.positions.items():
             node = node_map.get(node_id)
             if node:
-                node.setPos(QPointF(x, y))
+                # Layout coordinates are node centres; graph items use top-left.
+                node.setPos(QPointF(x - node._width / 2.0, y - node._height / 2.0))
 
         gw.viewport().update()

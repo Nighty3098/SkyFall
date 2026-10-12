@@ -151,6 +151,28 @@ MCP server for the SkyFall OSINT toolkit. Provides tools to:
 
 Data tools return JSON strings. Report generation returns plain text markdown.
 Graph tools require a running SkyFall GUI. Without GUI they return descriptive errors.
+
+GRAPH BUILDING RULES (investigation graph tools):
+- Model each distinct OSINT artefact as a typed node. Put the bare identifier in
+  the title ("example.com", "@alice", "1.2.3.4"); put short, sourced notes in
+  content. Do not stuff relationships into the title.
+- Entity types: Person, Domain, IP, Email, Phone, MAC, Username, Crypto,
+  Organization, Passport, Photo, Geolocation, Custom. Common synonyms are mapped
+  automatically (handle->Username, wallet->Crypto, location->Geolocation, ...).
+- Titles are canonical. add_node deduplicates by (entity_type, title) and merges
+  content, so call it freely to enrich a node instead of creating duplicates.
+  Set allow_duplicate=true only when two distinct entities share a title.
+- Always connect new nodes to their context: pass anchor_id to add_node (or
+  anchor to a ref inside graph_build) so the node is placed next to its parent.
+- Prefer skyfall_graph_build for anything bigger than a couple of nodes: one call
+  creates and positions everything and returns a ref->node_id map.
+- Relationship vocabulary: owns, registered_at, resolved_to, member_of,
+  located_at, communicates_with, associated_with, works_at, created_by, attends,
+  hosted_by, linked_to. Use associated_with when the link is uncertain. Common
+  aliases are normalised for you.
+- Duplicate edges are merged and self-loops are rejected.
+- Call skyfall_graph_summary before editing an existing graph, and
+  skyfall_graph_layout afterwards if you want a different arrangement.
 """,
 )
 
@@ -1425,21 +1447,33 @@ async def skyfall_graph_add_node(
     title: str,
     content: str = "",
     entity_type: str = "Custom",
+    anchor_id: str = "",
+    allow_duplicate: bool = False,
 ) -> str:
-    """Add a node to the SkyFall investigation graph.
+    """Add (or enrich) a typed node in the SkyFall investigation graph.
+
+    Node titles are canonical: calling this again with the same entity_type and
+    title returns the existing node and merges any new content, so it is safe to
+    call repeatedly.  New nodes are positioned automatically: pass ``anchor_id``
+    to fan the node out around a parent, otherwise it is placed near the graph
+    centre.
 
     Args:
-        title: Node title/name
-        content: Optional description or data
-        entity_type: Type: Person, Domain, IP, Email, Phone, MAC, Username,
-                     Crypto, Organization, Passport, Photo, Geolocation, Custom
+        title: Identifier for the entity (e.g. "example.com", "@alice")
+        content: Short factual note, ideally with its source
+        entity_type: Person, Domain, IP, Email, Phone, MAC, Username, Crypto,
+                     Organization, Passport, Photo, Geolocation, Custom
+        anchor_id: Optional id of a related node to position next to
+        allow_duplicate: Create a second node even if one already matches
     """
     if not _graph_bridge_available():
         return _graph_not_available_bridge()
     bridge = _graph_bridge()
     if bridge is None:
         return _graph_not_available_bridge()
-    return await _graph_bridge_send(bridge, "add_node", title, content, entity_type)
+    return await _graph_bridge_send(
+        bridge, "add_node", title, content, entity_type, anchor_id, allow_duplicate
+    )
 
 
 @mcp.tool()
@@ -1448,20 +1482,24 @@ async def skyfall_graph_add_edge(
     target_id: str,
     relationship: str = "associated_with",
     label: str = "",
-    source_port: str = "right",
-    target_port: str = "left",
+    source_port: str = "",
+    target_port: str = "",
 ) -> str:
-    """Add an edge (connection) between two graph nodes.
+    """Connect two graph nodes with a typed edge.
+
+    Duplicate edges are merged (the relationship is refreshed) and self-loops
+    are rejected.  Connection ports are chosen automatically from the nodes'
+    relative position unless you pass explicit ports.
 
     Args:
         source_id: ID of the source node
         target_id: ID of the target node
-        relationship: Type: owns, registered_at, resolved_to, member_of,
-                      located_at, communicates_with, associated_with,
-                      works_at, created_by, attends, hosted_by, linked_to
-        label: Optional edge label text
-        source_port: Port on source node: left, right, top, bottom (default: right)
-        target_port: Port on target node: left, right, top, bottom (default: left)
+        relationship: owns, registered_at, resolved_to, member_of, located_at,
+                      communicates_with, associated_with, works_at, created_by,
+                      attends, hosted_by, linked_to (aliases accepted)
+        label: Optional free-text edge label
+        source_port: left, right, top, bottom (default: auto)
+        target_port: left, right, top, bottom (default: auto)
     """
     if not _graph_bridge_available():
         return _graph_not_available_bridge()
@@ -1478,6 +1516,58 @@ async def skyfall_graph_add_edge(
         source_port,
         target_port,
     )
+
+
+@mcp.tool()
+async def skyfall_graph_build(nodes: str, edges: str = "[]") -> str:
+    """Build a whole graph in one call — preferred for multi-node graphs.
+
+    Nodes are created and positioned automatically, then edges are added.  Use
+    temporary ``ref`` values inside nodes and reference them from edges; the
+    response maps every ref to its real node id.
+
+    Args:
+        nodes: JSON array of objects, each with:
+               ref (optional temp id), title, entity_type, content (optional),
+               anchor (optional existing node id or earlier ref), x/y (optional)
+        edges: JSON array of objects, each with:
+               source, target (refs or node ids), relationship, label (optional)
+
+    Example:
+        nodes = [{"ref": "p", "title": "@alice", "entity_type": "Username"},
+                 {"ref": "m", "title": "a@b.com", "entity_type": "Email",
+                  "anchor": "p"}]
+        edges = [{"source": "p", "target": "m", "relationship": "registered_at"}]
+    """
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    try:
+        node_list = json.loads(nodes) if isinstance(nodes, str) else nodes
+        edge_list = json.loads(edges) if isinstance(edges, str) else edges
+    except json.JSONDecodeError as e:
+        return _extract_json({"error": f"invalid JSON: {e}"})
+    if not isinstance(node_list, list) or not isinstance(edge_list, list):
+        return _extract_json({"error": "nodes and edges must be JSON arrays"})
+    return await _graph_bridge_send(bridge, "build_graph", node_list, edge_list)
+
+
+@mcp.tool()
+async def skyfall_graph_layout(algorithm: str = "spring", fit_view: bool = True) -> str:
+    """Re-arrange the whole graph with a layout algorithm and frame it.
+
+    Args:
+        algorithm: spring, kamada_kawai, shell, spectral, circular
+        fit_view: Zoom the GUI canvas to fit all nodes (default true)
+    """
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    return await _graph_bridge_send(bridge, "apply_layout", algorithm, fit_view)
 
 
 @mcp.tool()

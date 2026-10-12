@@ -148,6 +148,12 @@ class GraphBridgeServer:
                 return self._invoke_on_main(self._clear_graph)
             if action == "move_node":
                 return self._invoke_on_main(self._move_node, msg)
+            if action == "apply_layout":
+                return self._invoke_on_main(self._apply_layout, msg)
+            if action == "build_graph":
+                return self._invoke_on_main(self._build, msg)
+            if action == "fit_view":
+                return self._invoke_on_main(self._fit_view)
             if action == "graph_summary":
                 return self._invoke_on_main(self._graph_summary)
             if action == "import_dict":
@@ -159,47 +165,143 @@ class GraphBridgeServer:
             logger.error(f"Graph bridge dispatch error: {e}")
             return {"error": str(e)}
 
+    def _occupied_rects(self, gw):
+        return [
+            (item.pos().x(), item.pos().y(), item._width, item._height)
+            for item in gw._scene.items()
+            if isinstance(item, self._node_item_cls)
+        ]
+
     def _add_node(self, msg: dict) -> dict:
         from PySide6.QtCore import QPointF
+
+        from src.libs.graph_lib import ENTITY_NAMES, normalize_entity_type
+        from src.modules.graph_layout import find_free_slot, graph_centroid
 
         gw = self._graph_widget
         if gw is None:
             return {"error": "Graph widget not available"}
 
-        entity_type = msg.get("entity_type", "Custom")
-        title = msg.get("title", "")
-        content = msg.get("content", "")
+        raw_type = msg.get("entity_type", "Custom") or "Custom"
+        entity_type = normalize_entity_type(raw_type)
+        if not entity_type:
+            return {
+                "error": f"Unknown entity_type {raw_type!r}",
+                "valid_entity_types": ENTITY_NAMES,
+            }
 
-        node = gw.add_node(QPointF(0, 0), entity_type=entity_type)
+        title = str(msg.get("title", "") or "").strip()
+        if not title:
+            return {"error": "title is required"}
+        content = str(msg.get("content", "") or "")
+
+        # Upsert: reuse a node with the same type and (case-insensitive) title
+        # so repeated agent calls enrich the graph instead of duplicating it.
+        if not msg.get("allow_duplicate", False):
+            for item in gw._scene.items():
+                if (
+                    isinstance(item, self._node_item_cls)
+                    and item.entity_type == entity_type
+                    and (item.title or "").strip().lower() == title.lower()
+                ):
+                    if content and content not in (item.content or ""):
+                        item.content = (
+                            f"{item.content}\n{content}".strip()
+                            if item.content
+                            else content
+                        )
+                        item.update()
+                        gw.viewport().update()
+                    return {
+                        "node_id": item.id,
+                        "title": item.title,
+                        "entity_type": item.entity_type,
+                        "created": False,
+                        "deduplicated": True,
+                        "position": [item.pos().x(), item.pos().y()],
+                    }
+
+        if msg.get("x") is not None and msg.get("y") is not None:
+            pos = (float(msg["x"]), float(msg["y"]))
+        else:
+            rects = self._occupied_rects(gw)
+            anchor_item = self._find_node(msg.get("anchor_id", ""))
+            if anchor_item is not None:
+                anchor = (
+                    anchor_item.pos().x() + anchor_item._width / 2.0,
+                    anchor_item.pos().y() + anchor_item._height / 2.0,
+                )
+                pos = find_free_slot(rects, anchor=anchor, radius=250.0)
+            else:
+                pos = find_free_slot(rects, anchor=graph_centroid(rects), radius=260.0)
+
+        node = gw.add_node(QPointF(pos[0], pos[1]), entity_type=entity_type)
         node.title = title
         node.content = content
         node.update()
         gw.viewport().update()
-        return {"node_id": node.id, "title": node.title, "entity_type": entity_type}
+        return {
+            "node_id": node.id,
+            "title": node.title,
+            "entity_type": entity_type,
+            "created": True,
+            "deduplicated": False,
+            "anchor_id": msg.get("anchor_id", ""),
+            "position": [pos[0], pos[1]],
+        }
 
     def _add_edge(self, msg: dict) -> dict:
+        from src.libs.graph_lib import (
+            PORT_DIR,
+            RELATIONSHIP_TYPES,
+            EdgeItem,
+            auto_ports,
+            normalize_relationship,
+        )
+
         gw = self._graph_widget
-        node_item_cls = self._node_item_cls
         if gw is None:
             return {"error": "Graph widget not available"}
 
         source_id = msg.get("source_id", "")
         target_id = msg.get("target_id", "")
-        relationship = msg.get("relationship", "associated_with")
-        label = msg.get("label", "")
-        source_port = msg.get("source_port", "right")
-        target_port = msg.get("target_port", "left")
+        if not source_id or not target_id:
+            return {"error": "source_id and target_id are required"}
+        if source_id == target_id:
+            return {"error": "self-loops are not allowed"}
 
-        source = target = None
-        for item in gw._scene.items():
-            if isinstance(item, node_item_cls):
-                if item.id == source_id:
-                    source = item
-                if item.id == target_id:
-                    target = item
+        relationship = normalize_relationship(msg.get("relationship"))
+        label = str(msg.get("label", "") or "")
 
+        source = self._find_node(source_id)
+        target = self._find_node(target_id)
         if source is None or target is None:
             return {"error": "Node(s) not found in graph"}
+
+        # Deduplicate: refresh an existing edge instead of stacking a new one.
+        for item in gw._scene.items():
+            if isinstance(item, EdgeItem) and {
+                item.source.id,
+                item.target.id,
+            } == {source_id, target_id}:
+                item.relationship_type = relationship
+                if label:
+                    item.label = label
+                item.update()
+                gw.viewport().update()
+                return {
+                    "created": False,
+                    "duplicate": True,
+                    "source_id": source_id,
+                    "target_id": target_id,
+                    "relationship": relationship,
+                    "label": item.label,
+                }
+
+        source_port = msg.get("source_port") or ""
+        target_port = msg.get("target_port") or ""
+        if source_port not in PORT_DIR or target_port not in PORT_DIR:
+            source_port, target_port = auto_ports(source, target)
 
         edge = gw.add_edge(source, target, source_port, target_port)
         edge.relationship_type = relationship
@@ -207,13 +309,159 @@ class GraphBridgeServer:
         edge.update()
         gw.viewport().update()
         return {
+            "created": True,
+            "duplicate": False,
             "source_id": source_id,
             "target_id": target_id,
             "relationship": relationship,
+            "relationship_known": relationship in RELATIONSHIP_TYPES,
             "label": label,
             "source_port": source_port,
             "target_port": target_port,
         }
+
+    def _apply_layout(self, msg: dict) -> dict:
+        from src.libs.graph_lib import EdgeItem
+        from src.modules.graph_layout import compute_layout
+
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+
+        algorithm = msg.get("algorithm") or "spring"
+        nodes = []
+        edges = []
+        node_map = {}
+        for item in gw._scene.items():
+            if isinstance(item, self._node_item_cls):
+                nodes.append(
+                    {
+                        "id": item.id,
+                        "title": item.title,
+                        "x": item.pos().x(),
+                        "y": item.pos().y(),
+                    }
+                )
+                node_map[item.id] = item
+            elif isinstance(item, EdgeItem):
+                edges.append({"source": item.source.id, "target": item.target.id})
+
+        if not nodes:
+            return {"error": "Graph is empty"}
+
+        max_x = max(abs(n["x"]) for n in nodes)
+        max_y = max(abs(n["y"]) for n in nodes)
+        scale = max(max_x, max_y, 320.0)
+        result = compute_layout(nodes, edges, algorithm=algorithm, scale=scale)
+
+        positions = {}
+        for node_id, (x, y) in result.positions.items():
+            node = node_map.get(node_id)
+            if node is None:
+                continue
+            node.setPos(x - node._width / 2.0, y - node._height / 2.0)
+            positions[node_id] = [node.pos().x(), node.pos().y()]
+
+        fitted = False
+        if msg.get("fit_view", True):
+            fitted = gw.fit_to_view()
+        gw.viewport().update()
+        return {
+            "algorithm": algorithm,
+            "laid_out": len(positions),
+            "fitted": fitted,
+            "positions": positions,
+        }
+
+    def _build(self, msg: dict) -> dict:
+        """Create a batch of nodes and edges in one call.
+
+        Each node spec may carry a ``ref`` (temporary id) and an ``anchor``
+        pointing at an existing node id or an earlier ``ref``; edges reference
+        refs or node ids.  Returns the mapping of refs to real node ids.
+        """
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+
+        nodes = msg.get("nodes") or []
+        edges = msg.get("edges") or []
+        if not isinstance(nodes, list):
+            return {"error": "nodes must be a list"}
+
+        ref_map: dict[str, str] = {}
+        created_nodes = []
+        for spec in nodes:
+            if not isinstance(spec, dict):
+                return {"error": "each node must be an object"}
+            ref = str(spec.get("ref") or spec.get("id") or "").strip()
+            anchor = str(spec.get("anchor") or spec.get("anchor_ref") or "").strip()
+            anchor = ref_map.get(anchor, anchor)
+            sub = {
+                "title": spec.get("title", ""),
+                "content": spec.get("content", ""),
+                "entity_type": spec.get("entity_type", "Custom"),
+                "anchor_id": anchor,
+                "allow_duplicate": spec.get("allow_duplicate", False),
+            }
+            if spec.get("x") is not None and spec.get("y") is not None:
+                sub["x"] = spec["x"]
+                sub["y"] = spec["y"]
+            res = self._add_node(sub)
+            if res.get("error"):
+                return {"error": res["error"], "failed_node": spec}
+            if ref:
+                ref_map[ref] = res["node_id"]
+            created_nodes.append(
+                {
+                    "ref": ref,
+                    "node_id": res["node_id"],
+                    "title": res.get("title", ""),
+                    "entity_type": res.get("entity_type", ""),
+                    "created": res.get("created", True),
+                }
+            )
+
+        created_edges = []
+        for spec in edges:
+            if not isinstance(spec, dict):
+                return {"error": "each edge must be an object"}
+            src = str(spec.get("source") or spec.get("from") or "").strip()
+            tgt = str(spec.get("target") or spec.get("to") or "").strip()
+            src = ref_map.get(src, src)
+            tgt = ref_map.get(tgt, tgt)
+            res = self._add_edge(
+                {
+                    "source_id": src,
+                    "target_id": tgt,
+                    "relationship": spec.get("relationship", "associated_with"),
+                    "label": spec.get("label", ""),
+                    "source_port": spec.get("source_port") or "",
+                    "target_port": spec.get("target_port") or "",
+                }
+            )
+            entry = {"source": src, "target": tgt}
+            if res.get("error"):
+                entry["error"] = res["error"]
+            else:
+                entry["created"] = res.get("created", False)
+                entry["relationship"] = res.get("relationship", "")
+            created_edges.append(entry)
+
+        gw.viewport().update()
+        return {
+            "nodes": created_nodes,
+            "edges": created_edges,
+            "node_ids": ref_map,
+            "total_nodes": len(created_nodes),
+            "total_edges": len(created_edges),
+        }
+
+    def _fit_view(self) -> dict:
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+        return {"fitted": gw.fit_to_view()}
 
     def _get_graph(self) -> dict:
         gw = self._graph_widget
@@ -432,16 +680,27 @@ class GraphBridgeClient:
             sock.close()
 
     def add_node(
-        self, title: str, content: str = "", entity_type: str = "Custom"
+        self,
+        title: str,
+        content: str = "",
+        entity_type: str = "Custom",
+        anchor_id: str = "",
+        allow_duplicate: bool = False,
+        x: float | None = None,
+        y: float | None = None,
     ) -> dict:
-        return self.send(
-            {
-                "action": "add_node",
-                "title": title,
-                "content": content,
-                "entity_type": entity_type,
-            }
-        )
+        msg = {
+            "action": "add_node",
+            "title": title,
+            "content": content,
+            "entity_type": entity_type,
+            "anchor_id": anchor_id,
+            "allow_duplicate": allow_duplicate,
+        }
+        if x is not None and y is not None:
+            msg["x"] = x
+            msg["y"] = y
+        return self.send(msg)
 
     def add_edge(
         self,
@@ -449,8 +708,8 @@ class GraphBridgeClient:
         target_id: str,
         relationship: str = "associated_with",
         label: str = "",
-        source_port: str = "right",
-        target_port: str = "left",
+        source_port: str | None = None,
+        target_port: str | None = None,
     ) -> dict:
         return self.send(
             {
@@ -459,10 +718,25 @@ class GraphBridgeClient:
                 "target_id": target_id,
                 "relationship": relationship,
                 "label": label,
-                "source_port": source_port,
-                "target_port": target_port,
+                "source_port": source_port or "",
+                "target_port": target_port or "",
             }
         )
+
+    def apply_layout(self, algorithm: str = "spring", fit_view: bool = True) -> dict:
+        return self.send(
+            {
+                "action": "apply_layout",
+                "algorithm": algorithm,
+                "fit_view": fit_view,
+            }
+        )
+
+    def fit_view(self) -> dict:
+        return self.send({"action": "fit_view"})
+
+    def build_graph(self, nodes: list[dict], edges: list[dict]) -> dict:
+        return self.send({"action": "build_graph", "nodes": nodes, "edges": edges})
 
     def get_graph(self) -> dict:
         return self.send({"action": "get_graph"})

@@ -1930,6 +1930,11 @@ class Ui_MainWindow(object):
 
         self.graphButtonLayout.addWidget(self.graphClearButton)
 
+        self.graphFitButton = QPushButton(self.graphCenterPanel)
+        self.graphFitButton.setObjectName(u"graphFitButton")
+
+        self.graphButtonLayout.addWidget(self.graphFitButton)
+
         self.graphLayoutCombo = QComboBox(self.graphCenterPanel)
         self.graphLayoutCombo.setObjectName(u"graphLayoutCombo")
         self.graphLayoutCombo.setMinimumSize(QSize(160, 0))
@@ -1979,6 +1984,12 @@ class Ui_MainWindow(object):
 
         self.graphCenterLayout.addWidget(self.graphWidget)
 
+        self.graphStatusLabel = QLabel(self.graphCenterPanel)
+        self.graphStatusLabel.setObjectName(u"graphStatusLabel")
+        self.graphStatusLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
+
+        self.graphCenterLayout.addWidget(self.graphStatusLabel)
+
         self.graphSplitter.addWidget(self.graphCenterPanel)
         self.verticalWidget = QWidget(self.graphSplitter)
         self.verticalWidget.setObjectName(u"verticalWidget")
@@ -1988,21 +1999,41 @@ class Ui_MainWindow(object):
         self.verticalLayout_13.setSpacing(8)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
         self.verticalLayout_13.setContentsMargins(0, 0, 0, 0)
+        self.graphNodeTitleCaption = QLabel(self.verticalWidget)
+        self.graphNodeTitleCaption.setObjectName(u"graphNodeTitleCaption")
+
+        self.verticalLayout_13.addWidget(self.graphNodeTitleCaption)
+
         self.nodeTitleEdit = QLineEdit(self.verticalWidget)
         self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
 
         self.verticalLayout_13.addWidget(self.nodeTitleEdit)
+
+        self.graphNodeTypeCaption = QLabel(self.verticalWidget)
+        self.graphNodeTypeCaption.setObjectName(u"graphNodeTypeCaption")
+
+        self.verticalLayout_13.addWidget(self.graphNodeTypeCaption)
 
         self.nodeTypeCombo = QComboBox(self.verticalWidget)
         self.nodeTypeCombo.setObjectName(u"nodeTypeCombo")
 
         self.verticalLayout_13.addWidget(self.nodeTypeCombo)
 
+        self.graphNodeContentCaption = QLabel(self.verticalWidget)
+        self.graphNodeContentCaption.setObjectName(u"graphNodeContentCaption")
+
+        self.verticalLayout_13.addWidget(self.graphNodeContentCaption)
+
         self.nodeContentEdit = QPlainTextEdit(self.verticalWidget)
         self.nodeContentEdit.setObjectName(u"nodeContentEdit")
-        self.nodeContentEdit.setMinimumSize(QSize(250, 60))
+        self.nodeContentEdit.setMinimumSize(QSize(250, 80))
 
         self.verticalLayout_13.addWidget(self.nodeContentEdit)
+
+        self.graphNodeEvidenceCaption = QLabel(self.verticalWidget)
+        self.graphNodeEvidenceCaption.setObjectName(u"graphNodeEvidenceCaption")
+
+        self.verticalLayout_13.addWidget(self.graphNodeEvidenceCaption)
 
         self.nodeEvidenceList = QListWidget(self.verticalWidget)
         self.nodeEvidenceList.setObjectName(u"nodeEvidenceList")
@@ -2627,12 +2658,18 @@ class Ui_MainWindow(object):
         self.exportGraphButton.setText(QCoreApplication.translate("MainWindow", u"Export To JSON", None))
         self.importGraphButton.setText(QCoreApplication.translate("MainWindow", u"Import File", None))
         self.graphClearButton.setText(QCoreApplication.translate("MainWindow", u"Clear All", None))
+        self.graphFitButton.setText(QCoreApplication.translate("MainWindow", u"Fit View", None))
         self.graphAutoLayoutButton.setText(QCoreApplication.translate("MainWindow", u"Auto Layout", None))
         self.exportGraphImageButton.setText(QCoreApplication.translate("MainWindow", u"Export PNG/SVG", None))
         self.graphSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search nodes...", None))
         self.graphClearFilterButton.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
+        self.graphStatusLabel.setText("")
+        self.graphNodeTitleCaption.setText(QCoreApplication.translate("MainWindow", u"TITLE", None))
         self.nodeTitleEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Title", None))
+        self.graphNodeTypeCaption.setText(QCoreApplication.translate("MainWindow", u"TYPE", None))
+        self.graphNodeContentCaption.setText(QCoreApplication.translate("MainWindow", u"CONTENT", None))
         self.nodeContentEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Content", None))
+        self.graphNodeEvidenceCaption.setText(QCoreApplication.translate("MainWindow", u"EVIDENCE", None))
         self.nodeEvidenceAddFileBtn.setText(QCoreApplication.translate("MainWindow", u"Add File", None))
         self.nodeEvidenceAddUrlBtn.setText(QCoreApplication.translate("MainWindow", u"Add URL", None))
         self.nodeEvidenceRemoveBtn.setText(QCoreApplication.translate("MainWindow", u"Remove", None))

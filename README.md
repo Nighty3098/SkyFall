@@ -48,9 +48,9 @@ server so agents can drive the tools.
 | **Files** | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats) |
 | **Search4Faces** | Reverse face search (VK photos) |
 | **Dorking** | ~7,900 Google dorks in 14 categories via DuckDuckGo or a local SearXNG |
-| **Graph** | 13 entity types, 12 relation types, drag-and-drop palette, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo), shortest path / centrality / community detection, JSON + image export |
+| **Graph** | 13 entity types, 12 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo), agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export |
 | **AI Report** | 7-section structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers |
-| **MCP** | 89 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878` |
+| **MCP** | 91 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878` |
 | **Cases** | Investigation workspace with automatic per-module Markdown autosave |
 
 > Detailed per-tab reference, settings and API keys: [`DOC.md`](./DOC.md).

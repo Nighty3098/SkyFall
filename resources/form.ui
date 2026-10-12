@@ -763,10 +763,10 @@
           <property name="bottomMargin">
            <number>12</number>
           </property>
-          <item row="2" column="0">
-           <widget class="QPlainTextEdit" name="usernameScriptDebug">
+          <item row="2" column="0" colspan="2">
+           <widget class="QPlainTextEdit" name="usernameResultsDebug">
             <property name="placeholderText">
-             <string>Script</string>
+             <string>Username results (Sherlock + Maigret)</string>
             </property>
            </widget>
           </item>
@@ -813,13 +813,6 @@
            <widget class="QProgressBar" name="usernameSearchProgress">
             <property name="value">
              <number>0</number>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="1">
-           <widget class="QPlainTextEdit" name="maigretDebug">
-            <property name="placeholderText">
-             <string>Maigret</string>
             </property>
            </widget>
           </item>

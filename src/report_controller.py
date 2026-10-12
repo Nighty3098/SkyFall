@@ -112,8 +112,7 @@ class ReportController:
         debug_widgets = {
             "telegram_downloader": self.ui.telegramDownloaderDebug,
             "telegram_analyzer": self.ui.telegramAnalyzerDebug,
-            "username_search": self.ui.usernameScriptDebug,
-            "maigret_search": self.ui.maigretDebug,
+            "username_results": self.ui.usernameResultsDebug,
             "mail_search": self.ui.mailSearchDebug,
             "hibp_check": self.ui.hibpDebug,
             "email_headers": getattr(self.ui, "emailHeaderDebug", None),

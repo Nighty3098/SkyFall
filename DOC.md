@@ -204,8 +204,8 @@ python3 main.py -d
 
 - `usernameEdit` + `searchUsernameButton` — запуск.
 - `usernameSearchProgress` — общий прогресс.
-- `maigretDebug` — результат **Maigret** (движок ~510 сайтов, поиск с разбиением на чанки).
-- `usernameScriptDebug` — результат **Sherlock-подобного** поиска (встроенная база `data/username_data.json`, ~481 сайт; при отсутствии локальной базы — удалённая `https://data.sherlockproject.xyz`).
+- `usernameResultsDebug` — **единый** отчёт обоих движков: **Maigret** (движок ~510 сайтов, поиск с разбиением на чанки) и **Sherlock-подобного** поиска (встроенная база `data/username_data.json`, ~481 сайт; при отсутствии локальной базы — удалённая `https://data.sherlockproject.xyz`).
+- Ссылка, найденная **обоими** движками, считается подтверждённой и выводится **сверху** с отметкой ✅; найденное только одним движком — внизу, сгруппировано по движку-источнику (`src/modules/username_merge.py`). Совпадение определяется по нормализованному URL профиля, при несовпадении — по имени сайта.
 
 Каждый сайт проверяется на занятость username (статусы: CLAIMED / AVAILABLE / UNKNOWN / ILLEGAL / WAF), учитываются WAF-сигнатуры (Cloudflare, AWS WAF, PerimeterX).
 

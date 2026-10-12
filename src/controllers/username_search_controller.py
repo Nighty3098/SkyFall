@@ -2,23 +2,22 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.ui.output_formatter import (
-    end_of,
-    error,
-)
+from src.modules.username_merge import merge_sources, render_report
+from src.modules.username_search import UsernameSearch
+from src.ui.output_formatter import error
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
     from src.modules.maigret_search import MaigretSearch
-    from src.modules.username_search import UsernameSearch
+    from src.modules.username_search import UsernameSearch as UsernameSearchType
 
 
 class UsernameController:
     def __init__(
         self,
         ui: "QMainWindow",
-        username_search: "UsernameSearch",
+        username_search: "UsernameSearchType",
         maigret_search: "MaigretSearch",
         proxy=None,
     ):
@@ -29,36 +28,48 @@ class UsernameController:
         self.maigret_search = maigret_search
         self.proxy = proxy
 
+    def _set_status(self, text: str):
+        field = getattr(self.ui, "usernameResultsDebug", None)
+        if field is not None:
+            field.setPlainText(text)
+
+    def _on_progress(self, done: int, total: int):
+        self.ui.usernameSearchProgress.setRange(0, total)
+        self.ui.usernameSearchProgress.setValue(done)
+
     async def start_searching(self, username):
-        self.ui.usernameScriptDebug.clear()
-        self.ui.maigretDebug.clear()
+        username = (username or "").strip()
+        if not username:
+            self._set_status(error("Enter a username first"))
+            return
+
+        self._set_status(f"Searching Maigret for {username}…")
         self.ui.usernameSearchProgress.setValue(0)
 
         try:
-            maigret_report = await self.maigret_search.search_and_report(
-                username,
-                on_progress=lambda done, total: (
-                    self.ui.usernameSearchProgress.setRange(0, total),
-                    self.ui.usernameSearchProgress.setValue(done),
-                ),
+            _, maigret_matches = await self.maigret_search.search_and_report_structured(
+                username, on_progress=self._on_progress
             )
-            self.ui.maigretDebug.setPlainText(maigret_report)
 
+            self._set_status(
+                f"Maigret found {len(maigret_matches)} account(s) "
+                f"for {username}, running Sherlock…"
+            )
             results = await self.username_search.acheck(
                 username,
                 proxy=(self.proxy.get_proxy_url() if self.proxy else None),
-                on_result=lambda r: self.ui.usernameScriptDebug.appendPlainText(
-                    f"[{r['status']}] {r['site']}: {r['url_user']}"
-                ),
-                on_progress=lambda done, total: (
-                    self.ui.usernameSearchProgress.setRange(0, total),
-                    self.ui.usernameSearchProgress.setValue(done),
-                ),
+                on_progress=self._on_progress,
             )
 
-            found = sum(1 for r in results if r["status"] == "Claimed")
-            self.ui.usernameScriptDebug.appendPlainText(
-                end_of(f"Search completed: {found} found")
+            claimed = UsernameSearch.Status.CLAIMED
+            sherlock_found = [r for r in results if r["status"] == claimed]
+
+            confirmed, sherlock_only, maigret_only = merge_sources(
+                sherlock_found, maigret_matches
+            )
+            self._set_status(
+                render_report(username, confirmed, sherlock_only, maigret_only)
             )
         except Exception as e:
-            self.ui.usernameScriptDebug.appendPlainText(error(f"Error: {e}"))
+            logger.exception("Username search failed")
+            self._set_status(error(f"Error: {e}"))

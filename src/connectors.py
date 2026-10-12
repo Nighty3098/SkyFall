@@ -22,6 +22,7 @@ if TYPE_CHECKING:
     from src.controllers.mail_controller import MailController
     from src.controllers.phone_controller import PhoneController
     from src.controllers.proxy_controller import Proxy
+    from src.controllers.reddit_osint_controller import RedditOsintController
     from src.controllers.search4faces_controller import S4FController
     from src.controllers.settings_controller import Settings
     from src.controllers.steganography_controller import SteganographyController
@@ -207,6 +208,36 @@ def setup_geo_connectors(controller):
     controller.ui.geoFullReportButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.full_report())
     )
+
+
+def setup_reddit_connectors(controller: "RedditOsintController"):
+    ui = controller.ui
+    handlers = {
+        "redditFullReportButton": controller.full_report,
+        "redditPostsButton": controller.posts,
+        "redditCommentsButton": controller.comments,
+        "redditRemovedButton": controller.removed,
+        "redditIdentifiersButton": controller.identifiers,
+        "redditActivityButton": controller.activity,
+        "redditAffiliationsButton": controller.affiliations,
+        "redditArchiveSearchButton": controller.archive_search,
+    }
+    for widget_name, handler in handlers.items():
+        button = getattr(ui, widget_name, None)
+        if button is not None:
+            button.clicked.connect(
+                lambda _=False, h=handler: asyncio.ensure_future(h())
+            )
+    username = getattr(ui, "redditUsernameEdit", None)
+    if username is not None:
+        username.returnPressed.connect(
+            lambda: asyncio.ensure_future(controller.full_report())
+        )
+    keywords = getattr(ui, "redditKeywordsEdit", None)
+    if keywords is not None:
+        keywords.returnPressed.connect(
+            lambda: asyncio.ensure_future(controller.archive_search())
+        )
 
 
 def setup_archive_connectors(controller):

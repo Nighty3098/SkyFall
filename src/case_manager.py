@@ -32,6 +32,7 @@ class CaseManager:
         "emailHeaderDebug": "email",
         "emailAccountsDebug": "email",
         "socialDebug": "social",
+        "redditOsintDebug": "reddit",
         "leakDebug": "leaks",
         "geoDebug": "geo",
         "archiveDebug": "archive",

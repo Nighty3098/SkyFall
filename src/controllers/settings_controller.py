@@ -43,6 +43,8 @@ DEFAULT_SETTINGS = {
     "dehashed_email": "",
     "dehashed_api_key": "",
     "firms_map_key": "",
+    "reddit_client_id": "",
+    "reddit_client_secret": "",
     "light_theme": False,
     "frameless_window": True,
     "mcp_require_auth": False,
@@ -72,6 +74,8 @@ FIELD_MAP = {
     "dehashed_email": "dehashedEmailEdit",
     "dehashed_api_key": "dehashedApiKeyEdit",
     "firms_map_key": "firmsMapKeyEdit",
+    "reddit_client_id": "redditClientIdEdit",
+    "reddit_client_secret": "redditClientSecretEdit",
 }
 
 
@@ -103,6 +107,8 @@ class Settings:
         self.dehashed_email = ""
         self.dehashed_api_key = ""
         self.firms_map_key = ""
+        self.reddit_client_id = ""
+        self.reddit_client_secret = ""
         self.light_theme = False
         self.frameless_window = True
         self.mcp_require_auth = False

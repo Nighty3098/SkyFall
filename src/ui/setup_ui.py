@@ -11,7 +11,7 @@ NAV_GROUPS = [
     ("Telegram", ["TELEGRAM DOWNLOADER", "TELEGRAM ANALYZER"]),
     (
         "Identity & OSINT",
-        ["USERNAME", "MAIL", "SOCIAL", "LEAKS", "GEO", "ARCHIVE"],
+        ["USERNAME", "MAIL", "SOCIAL", "REDDIT", "LEAKS", "GEO", "ARCHIVE"],
     ),
     (
         "Web & Infrastructure",

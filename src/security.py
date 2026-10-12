@@ -55,6 +55,8 @@ SENSITIVE_KEYS = frozenset(
         "helius_api_key",
         "abuseipdb_api_key",
         "greynoise_api_key",
+        "reddit_client_id",
+        "reddit_client_secret",
     }
 )
 

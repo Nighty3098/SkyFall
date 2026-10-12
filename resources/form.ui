@@ -1111,6 +1111,234 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="redditOsintTab">
+         <attribute name="title">
+          <string>REDDIT</string>
+         </attribute>
+         <layout class="QHBoxLayout" name="redditHorizontalLayout">
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <property name="leftMargin">
+           <number>0</number>
+          </property>
+          <property name="topMargin">
+           <number>0</number>
+          </property>
+          <property name="rightMargin">
+           <number>0</number>
+          </property>
+          <property name="bottomMargin">
+           <number>0</number>
+          </property>
+          <item>
+           <widget class="QSplitter" name="redditSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QWidget" name="redditSettingsSection">
+             <layout class="QVBoxLayout" name="redditSettingsLayout">
+              <property name="spacing">
+               <number>8</number>
+              </property>
+              <property name="leftMargin">
+               <number>12</number>
+              </property>
+              <property name="topMargin">
+               <number>12</number>
+              </property>
+              <property name="rightMargin">
+               <number>12</number>
+              </property>
+              <property name="bottomMargin">
+               <number>12</number>
+              </property>
+              <item>
+               <widget class="QLineEdit" name="redditUsernameEdit">
+                <property name="placeholderText">
+                 <string>Reddit username (without u/)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="redditSourceCombo">
+                <item>
+                 <property name="text">
+                  <string>Both archives</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Arctic Shift</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>PullPush</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="redditSubredditEdit">
+                <property name="placeholderText">
+                 <string>Subreddit filter (optional, without r/)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QLineEdit" name="redditKeywordsEdit">
+                <property name="placeholderText">
+                 <string>Keywords for archive search (optional)</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="redditNsfwCombo">
+                <item>
+                 <property name="text">
+                  <string>Any</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>Safe only</string>
+                 </property>
+                </item>
+                <item>
+                 <property name="text">
+                  <string>NSFW only</string>
+                 </property>
+                </item>
+               </widget>
+              </item>
+              <item>
+               <widget class="QSpinBox" name="redditMaxPagesSpin">
+                <property name="toolTip">
+                 <string>Maximum archive pages per feed (100 items each)</string>
+                </property>
+                <property name="minimum">
+                 <number>1</number>
+                </property>
+                <property name="maximum">
+                 <number>200</number>
+                </property>
+                <property name="value">
+                 <number>40</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditFullReportButton">
+                <property name="text">
+                 <string>Full Report</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditPostsButton">
+                <property name="text">
+                 <string>Posts</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditCommentsButton">
+                <property name="text">
+                 <string>Comments</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditRemovedButton">
+                <property name="text">
+                 <string>Removed / Deleted</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditIdentifiersButton">
+                <property name="text">
+                 <string>Identifiers</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditActivityButton">
+                <property name="text">
+                 <string>Activity &amp; Timezone</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditAffiliationsButton">
+                <property name="text">
+                 <string>Subreddits &amp; Tech</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QPushButton" name="redditArchiveSearchButton">
+                <property name="text">
+                 <string>Archive Search</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QProgressBar" name="redditProgressBar">
+                <property name="maximum">
+                 <number>100</number>
+                </property>
+                <property name="value">
+                 <number>0</number>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <spacer name="redditVerticalSpacer">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Vertical</enum>
+                </property>
+                <property name="sizeHint" stdset="0">
+                 <size>
+                  <width>20</width>
+                  <height>40</height>
+                 </size>
+                </property>
+               </spacer>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="redditDebugSection">
+             <layout class="QVBoxLayout" name="redditDebugLayout">
+              <property name="spacing">
+               <number>8</number>
+              </property>
+              <property name="leftMargin">
+               <number>12</number>
+              </property>
+              <property name="topMargin">
+               <number>12</number>
+              </property>
+              <property name="rightMargin">
+               <number>12</number>
+              </property>
+              <property name="bottomMargin">
+               <number>12</number>
+              </property>
+              <item>
+               <widget class="QPlainTextEdit" name="redditOsintDebug">
+                <property name="placeholderText">
+                 <string>REDDIT OSINT</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="leaksTab">
          <attribute name="title">
           <string>LEAKS</string>
@@ -4007,6 +4235,20 @@
                    <widget class="QLineEdit" name="firmsMapKeyEdit">
                     <property name="placeholderText">
                      <string>NASA FIRMS MAP KEY (optional)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="redditClientIdEdit">
+                    <property name="placeholderText">
+                     <string>Reddit Client ID (optional, live profile)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="redditClientSecretEdit">
+                    <property name="placeholderText">
+                     <string>Reddit Client Secret (optional, live profile)</string>
                     </property>
                    </widget>
                   </item>

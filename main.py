@@ -33,6 +33,7 @@ from src.connectors import (
     setup_metadata_connectors,
     setup_phone_connectors,
     setup_proxies_connectors,
+    setup_reddit_connectors,
     setup_report_connectors,
     setup_s4f_connectors,
     setup_settings_connectors,
@@ -58,6 +59,7 @@ from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.mail_controller import MailController
 from src.controllers.phone_controller import PhoneController
 from src.controllers.proxy_controller import Proxy
+from src.controllers.reddit_osint_controller import RedditOsintController
 from src.controllers.search4faces_controller import S4FController
 from src.controllers.settings_controller import Settings
 from src.controllers.social_controller import SocialController
@@ -84,6 +86,7 @@ from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
 from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.phone_search import PhoneSearch
+from src.modules.reddit_osint import RedditOsint
 from src.modules.search4faces import Search4Faces
 from src.modules.social_search import SocialSearch
 from src.modules.steganography import SteganographyAnalyzer
@@ -236,6 +239,10 @@ class MainWindow(QMainWindow):
         self.emailHeaderAnalyzer = EmailHeaderAnalyzer()
         self.emailAccounts = EmailAccounts()
         self.socialSearch = SocialSearch()
+        self.redditOsint = RedditOsint(
+            client_id=getattr(self.settings, "reddit_client_id", ""),
+            client_secret=getattr(self.settings, "reddit_client_secret", ""),
+        )
         self.leakSearch = LeakSearch()
         self.geoAnalysis = GeoAnalysis()
         self.archiveSearch = ArchiveSearch()
@@ -295,6 +302,12 @@ class MainWindow(QMainWindow):
             self.geoAnalysis.firms_key = getattr(settings, "firms_map_key", "")
             if hasattr(self, "geoController"):
                 self.geoController.firms_key = self.geoAnalysis.firms_key
+
+        if hasattr(self, "redditOsint"):
+            self.redditOsint.set_credentials(
+                getattr(settings, "reddit_client_id", ""),
+                getattr(settings, "reddit_client_secret", ""),
+            )
 
     def _show_about(self):
         from PySide6.QtGui import QPixmap
@@ -366,6 +379,12 @@ class MainWindow(QMainWindow):
             self.ui, self.usernameSearch, self.maigretSearch, proxy=self.proxy
         )
         self.socialController = SocialController(self.ui, self.socialSearch)
+        self.redditController = RedditOsintController(
+            self.ui,
+            self.redditOsint,
+            proxy=self.proxy,
+            case_manager=self.case_manager,
+        )
         self.leakController = LeakController(
             self.ui,
             self.leakSearch,
@@ -414,6 +433,7 @@ class MainWindow(QMainWindow):
         setup_mail_connectors(self.mailController)
         setup_username_connectors(self.usernameController)
         setup_social_connectors(self.socialController)
+        setup_reddit_connectors(self.redditController)
         setup_leak_connectors(self.leakController)
         setup_geo_connectors(self.geoController)
         setup_archive_connectors(self.archiveController)

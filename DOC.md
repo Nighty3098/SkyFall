@@ -18,6 +18,7 @@
    - [Username](#username)
    - [Mail](#mail)
    - [Social](#social)
+   - [Reddit](#reddit)
    - [Leaks](#leaks)
    - [Geo](#geo)
    - [Archive](#archive)
@@ -113,6 +114,8 @@ python3 main.py -d
 | `dehashed_email` | `dehashedEmailEdit` | Dehashed — email аккаунта (basic auth) |
 | `dehashed_api_key` | `dehashedApiKeyEdit` | Dehashed API-ключ |
 | `firms_map_key` | `firmsMapKeyEdit` | NASA FIRMS MAP_KEY (активные пожары) |
+| `reddit_client_id` | `redditClientIdEdit` | Reddit OAuth Client ID (опционально; live-профиль) |
+| `reddit_client_secret` | `redditClientSecretEdit` | Reddit OAuth Client Secret (опционально; live-профиль) |
 | `light_theme` | `lightThemeCheck` | Светлая тема (палитра в `src/ui/theme.py`) |
 | `frameless_window` | `framelessCheck` | Окно без рамки |
 | `mcp_require_auth` | `mcpAuthCheck` | Требовать bearer-токен для MCP-сервера |
@@ -127,7 +130,7 @@ python3 main.py -d
 
 `src/case_manager.py` — концепция «кейса» расследования. Меню **SkyFall → New case / Open case**.
 
-- При создании/открытии кейса формируется структура папок: `domains`, `telegram`, `username`, `email`, `social`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads` + `graph`.
+- При создании/открытии кейса формируется структура папок: `domains`, `telegram`, `username`, `email`, `social`, `reddit`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads` + `graph`.
 - **Автосохранение**: содержимое всех debug-панелей автоматически сохраняется в Markdown-файлы с меткой времени (`YYYY-MM-DD_HH-MM-SS_<label>.md`) в соответствующие категории. Повторяющееся (расширенное) содержимое перезаписывает текущий файл вместо создания нового.
 - Название кейса отображается в меню SkyFall.
 - Каталоги: `<case>/graph`, `<case>/reports` (если кейса нет — `~/.skyfall/data`).
@@ -136,7 +139,7 @@ python3 main.py -d
 
 ## Вкладки программы
 
-Все 23 вкладки открываются через боковое меню (навигацию), сгруппированное по разделам: **Home**, **Telegram**, **Identity & OSINT**, **Web & Infrastructure**, **Workspace**, **System**. Меню включается/выключается через **View → Toggle Navigation** (или `Ctrl+Shift+B`). Тема UI (тёмная/светлая) формируется из единого шаблона `resources/style.template.qss` + палитры в `src/ui/theme.py` — обе темы используют один набор правил и не «разъезжаются».
+Все 24 вкладки открываются через боковое меню (навигацию), сгруппированное по разделам: **Home**, **Telegram**, **Identity & OSINT**, **Web & Infrastructure**, **Workspace**, **System**. Меню включается/выключается через **View → Toggle Navigation** (или `Ctrl+Shift+B`). Тема UI (тёмная/светлая) формируется из единого шаблона `resources/style.template.qss` + палитры в `src/ui/theme.py` — обе темы используют один набор правил и не «разъезжаются».
 
 Дополнительно (`src/ui/layout_polish.py`):
 - **Скролл в настройках.** Длинная колонка полей вкладки **Settings** обёрнута в `QScrollArea`, поэтому минимальный размер окна больше не диктуется её высотой.
@@ -226,6 +229,20 @@ python3 main.py -d
 - **Mastodon**: `/api/v1/accounts/lookup` (точный аккаунт на инстансе) + `/api/v2/search?type=accounts` (совпадения).
 - **Instagram**: публичный профиль через **`instaloader`** (без логина; Instagram часто ограничивает анонимные запросы — ошибка выводится мягко): имя, подписчики/подписки, посты, приватность, верификация, внешняя ссылка.
 - Вывод — в `socialDebug`: handle, отображаемое имя, подписчики/подписки/посты, дата создания, bio.
+
+### Reddit
+
+OSINT-профиль Reddit-аккаунта по username через публичные архивы **Arctic Shift** (`arctic-shift.photon-reddit.com`) и **PullPush** (`api.pullpush.io`). Ключи не нужны. В отличие от источника-референса пагинация обоих архивов (посты и комментарии) идёт **параллельно** (`asyncio.gather`), результаты объединяются по `id`, а каждый элемент классифицируется как **live**, **removed** (действие модератора) или **deleted** (действие автора).
+
+- `redditUsernameEdit` — username (можно с `u/`); `redditSourceCombo` — оба архива / только Arctic Shift / только PullPush.
+- `redditSubredditEdit` — фильтр по сабреддиту; `redditKeywordsEdit` — ключевые слова (полнотекстовый поиск и кнопка **Archive Search**).
+- `redditNsfwCombo` — фильтр NSFW (Any / Safe only / NSFW only); `redditMaxPagesSpin` — лимит страниц на источник.
+- Кнопки: **Full Report**, **Posts**, **Comments**, **Removed / Deleted**, **Identifiers**, **Activity & Timezone**, **Subreddits & Tech**, **Archive Search**.
+- Отчёт: счётчики постов/комментариев, статусы, активность за 12 месяцев, **оценка экспозиции PII (0–100)**, гистограммы по часам (UTC)/дням/месяцам, **оценка часового пояса** по «тихим» часам, топ-сабреддиты, идентификаторы (email, BTC/ETH/XMR, Telegram, телефоны, домены, упоминания) и упомянутые технологии.
+- **Live profile** (опционально): при заданных `reddit_client_id` / `reddit_client_secret` модуль получает app-only OAuth-токен и запрашивает `/user/{name}/about` — актуальная карма, дата создания, флаг блокировки. Без ключей используется только архивная статистика.
+- Троттлинг архивов (HTTP 429/5xx) обрабатывается ретраями с экспоненциальной задержкой; при настроенных прокси используется общий список прокси.
+- Вывод — в `redditOsintDebug`; результаты автосохраняются в категорию `reddit` кейса.
+- Код: `src/modules/reddit_osint.py`, `src/controllers/reddit_osint_controller.py`, вкладка `redditOsintTab` в `resources/form.ui`; тесты — `tests/test_reddit_osint.py`.
 
 ### Leaks
 
@@ -537,6 +554,7 @@ src/
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus агрегатор
     email_accounts.py       — где зарегистрирован email (Gravatar/Microsoft/… + holehe)
     social_search.py        — поиск username в Bluesky, Mastodon, Instagram
+    reddit_osint.py         — архивный OSINT Reddit (Arctic Shift + PullPush, OAuth live-профиль)
     leak_search.py          — утечки и инфостилеры (Hudson Rock, LeakCheck, HIBP, Dehashed)
     geo_analysis.py         — солнце/тень (suncalc), пожары (NASA FIRMS), катастрофы (GDACS)
     archive_search.py       — веб-архивы (Wayback Machine, archive.today)

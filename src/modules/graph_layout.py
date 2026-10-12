@@ -41,8 +41,14 @@ def compute_layout(
     if len(g.nodes) == 0:
         return LayoutResult(positions={})
 
-    if algorithm == "hierarchical" or algorithm == "tree" or algorithm == "topdown":
-        res = compute_hierarchical_layout(nodes, edges, direction="down", scale=scale)
+    if (
+        algorithm == "hierarchical"
+        or algorithm == "tree"
+        or algorithm == "topdown"
+        or algorithm == "hierarchical_tree"
+        or algorithm == "tree_topdown"
+    ):
+        res = compute_hierarchical_layout(nodes, edges, direction="down", scale=1.0)
         return res
     if algorithm == "spring":
         pos = nx.spring_layout(g, k=2.0, iterations=50, seed=42)

@@ -8,7 +8,14 @@ tweaks across the 3000-line form.ui file.
 from __future__ import annotations
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import QFrame, QScrollArea, QVBoxLayout, QWidget
+from PySide6.QtWidgets import (
+    QFrame,
+    QGroupBox,
+    QScrollArea,
+    QSplitter,
+    QVBoxLayout,
+    QWidget,
+)
 
 # Left-hand settings pane of a tab; only used to normalise its padding.
 SETTINGS_SECTIONS = (
@@ -71,6 +78,18 @@ COMPACT_MIN_WIDTHS = {
 
 SETTINGS_MARGINS = (12, 12, 12, 12)
 SETTINGS_SPACING = 8
+
+# Unified spacing/margins
+PAGE_MARGINS = (11, 11, 11, 11)
+PAGE_SPACING = 6
+INNER_MARGINS = (8, 8, 8, 8)
+INNER_SPACING = 6
+
+# Skip normalizing these special containers/wrappers
+_SKIP_NORMALIZE_NAMES = {
+    "settingsTabScrollContainer",
+    "settingsTabScrollContents",
+}
 
 
 def _repolish(widget):
@@ -137,6 +156,70 @@ def _tune_responsive_widgets(ui):
     _invalidate_widget(ui.graphTab)
 
 
+def _normalize_layout(layout, *, is_page: bool = False):
+    if layout is None:
+        return
+    if is_page:
+        layout.setContentsMargins(*PAGE_MARGINS)
+        layout.setSpacing(PAGE_SPACING)
+    else:
+        layout.setContentsMargins(*INNER_MARGINS)
+        layout.setSpacing(INNER_SPACING)
+
+
+def _should_skip_widget(widget: QWidget) -> bool:
+    name = widget.objectName() or ""
+    if name in _SKIP_NORMALIZE_NAMES:
+        return True
+    # Also skip if inside scroll wrapper containers
+    parent = widget.parent()
+    while parent is not None:
+        pname = parent.objectName() or ""
+        if pname in _SKIP_NORMALIZE_NAMES:
+            return True
+        parent = parent.parent()
+    return False
+
+
+def _harmonize_ui(ui):
+    """Apply unified padding/spacing across all tabs and nested containers."""
+    from PySide6.QtWidgets import QFrame, QStackedWidget
+
+    stacked: QStackedWidget | None = getattr(ui, "mainStackedWidget", None)
+    if stacked is not None:
+        for i in range(stacked.count()):
+            page = stacked.widget(i)
+            if page is None:
+                continue
+            if _should_skip_widget(page):
+                continue
+            pl = page.layout()
+            if pl is not None:
+                _normalize_layout(pl, is_page=True)
+            # Normalize inner containers
+            for child in page.findChildren(QWidget):
+                if _should_skip_widget(child):
+                    continue
+                if isinstance(child, QGroupBox) or isinstance(child, QFrame):
+                    cl = child.layout()
+                    if cl is not None:
+                        _normalize_layout(cl)
+                if isinstance(child, QSplitter):
+                    for j in range(child.count()):
+                        pane = child.widget(j)
+                        if pane is not None and not _should_skip_widget(pane):
+                            playout = pane.layout()
+                            if playout is not None:
+                                _normalize_layout(playout)
+            # Also normalize any direct child layouts not caught
+            for child in page.children():
+                if isinstance(child, QWidget) and not _should_skip_widget(child):
+                    cl = child.layout()
+                    if cl is not None:
+                        # treat as inner unless it's the page layout
+                        pass
+
+
 def _wrap_page_in_scroll_area(host, column_index=1):
     """Move the entire settings page (all columns) into a vertical scroll area."""
     outer = host.layout()
@@ -174,8 +257,7 @@ def _wrap_page_in_scroll_area(host, column_index=1):
                     col.addLayout(sub)
             column_layout.addLayout(col)
 
-    # Wrap contents in a width-limiting container (400px max) so the form
-    # stays narrow and centered; the outer scroll area handles vertical scroll.
+    # Wrap contents in a width-limiting container (400px max)
     container = QWidget()
     container.setObjectName(f"{host.objectName()}ScrollContainer")
     container_layout = QVBoxLayout(container)
@@ -202,4 +284,5 @@ def polish_ui(parent):
     _tune_section_layouts(parent.ui)
     _mark_primary_buttons(parent.ui)
     _tune_responsive_widgets(parent.ui)
+    _harmonize_ui(parent.ui)
     _wrap_page_in_scroll_area(parent.ui.settingsTab)

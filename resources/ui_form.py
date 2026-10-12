@@ -18,12 +18,12 @@ from PySide6.QtGui import (QAction, QBrush, QColor, QConicalGradient,
     QTransform)
 from PySide6.QtWebEngineWidgets import QWebEngineView
 from PySide6.QtWidgets import (QApplication, QCheckBox, QComboBox, QDateTimeEdit,
-    QDoubleSpinBox, QGridLayout, QGroupBox, QHBoxLayout,
-    QLabel, QLineEdit, QListWidget, QListWidgetItem,
-    QMainWindow, QMenu, QMenuBar, QPlainTextEdit,
-    QProgressBar, QPushButton, QScrollArea, QSizePolicy,
-    QSpacerItem, QSpinBox, QSplitter, QTabWidget,
-    QVBoxLayout, QWidget)
+    QDoubleSpinBox, QFrame, QGridLayout, QGroupBox,
+    QHBoxLayout, QLabel, QLineEdit, QListWidget,
+    QListWidgetItem, QMainWindow, QMenu, QMenuBar,
+    QPlainTextEdit, QProgressBar, QPushButton, QScrollArea,
+    QSizePolicy, QSpacerItem, QSpinBox, QSplitter,
+    QTabWidget, QVBoxLayout, QWidget)
 
 from src.libs.graph_lib import GraphWidget
 from src.libs.graph_panel import EntityPalette
@@ -33,7 +33,7 @@ class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         if not MainWindow.objectName():
             MainWindow.setObjectName(u"MainWindow")
-        MainWindow.resize(1244, 795)
+        MainWindow.resize(1471, 819)
         self.actionNew_case = QAction(MainWindow)
         self.actionNew_case.setObjectName(u"actionNew_case")
         self.actionOpen_case = QAction(MainWindow)
@@ -53,8 +53,9 @@ class Ui_MainWindow(object):
         self.horizontalLayout_10.setObjectName(u"horizontalLayout_10")
         self.horizontalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.horizontalLayout_6 = QHBoxLayout()
+        self.horizontalLayout_6.setSpacing(0)
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
-        self.horizontalLayout_6.setContentsMargins(-1, 0, -1, -1)
+        self.horizontalLayout_6.setContentsMargins(0, 0, 0, 0)
         self.menuListWidget = QListWidget(self.centralwidget)
         self.menuListWidget.setObjectName(u"menuListWidget")
         self.menuListWidget.setMinimumSize(QSize(210, 0))
@@ -71,10 +72,13 @@ class Ui_MainWindow(object):
         self.mainTab = QWidget()
         self.mainTab.setObjectName(u"mainTab")
         self.horizontalLayout_7 = QHBoxLayout(self.mainTab)
+        self.horizontalLayout_7.setSpacing(8)
         self.horizontalLayout_7.setObjectName(u"horizontalLayout_7")
+        self.horizontalLayout_7.setContentsMargins(12, 12, 12, 12)
         self.verticalLayout_21 = QVBoxLayout()
+        self.verticalLayout_21.setSpacing(8)
         self.verticalLayout_21.setObjectName(u"verticalLayout_21")
-        self.verticalLayout_21.setContentsMargins(-1, -1, -1, 0)
+        self.verticalLayout_21.setContentsMargins(0, 0, 0, 0)
         self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_21.addItem(self.verticalSpacer_5)
@@ -100,15 +104,18 @@ class Ui_MainWindow(object):
         self.telegramDownloaderTab = QWidget()
         self.telegramDownloaderTab.setObjectName(u"telegramDownloaderTab")
         self.horizontalLayout_3 = QHBoxLayout(self.telegramDownloaderTab)
+        self.horizontalLayout_3.setSpacing(8)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+        self.horizontalLayout_3.setContentsMargins(0, 0, 0, 0)
         self.downloaderSplitter = QSplitter(self.telegramDownloaderTab)
         self.downloaderSplitter.setObjectName(u"downloaderSplitter")
         self.downloaderSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.downloaderSettingsSection = QWidget(self.downloaderSplitter)
         self.downloaderSettingsSection.setObjectName(u"downloaderSettingsSection")
         self.verticalLayout_5 = QVBoxLayout(self.downloaderSettingsSection)
+        self.verticalLayout_5.setSpacing(8)
         self.verticalLayout_5.setObjectName(u"verticalLayout_5")
-        self.verticalLayout_5.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_5.setContentsMargins(12, 12, 12, 12)
         self.telegramUsernameEdit = QLineEdit(self.downloaderSettingsSection)
         self.telegramUsernameEdit.setObjectName(u"telegramUsernameEdit")
 
@@ -128,9 +135,13 @@ class Ui_MainWindow(object):
         self.groupBox_2 = QGroupBox(self.downloaderSettingsSection)
         self.groupBox_2.setObjectName(u"groupBox_2")
         self.verticalLayout_8 = QVBoxLayout(self.groupBox_2)
+        self.verticalLayout_8.setSpacing(8)
         self.verticalLayout_8.setObjectName(u"verticalLayout_8")
+        self.verticalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.gridLayout = QGridLayout()
+        self.gridLayout.setSpacing(8)
         self.gridLayout.setObjectName(u"gridLayout")
+        self.gridLayout.setContentsMargins(0, 0, 0, 0)
         self.label_3 = QLabel(self.groupBox_2)
         self.label_3.setObjectName(u"label_3")
 
@@ -180,7 +191,9 @@ class Ui_MainWindow(object):
         self.groupBox = QGroupBox(self.downloaderSettingsSection)
         self.groupBox.setObjectName(u"groupBox")
         self.verticalLayout_7 = QVBoxLayout(self.groupBox)
+        self.verticalLayout_7.setSpacing(8)
         self.verticalLayout_7.setObjectName(u"verticalLayout_7")
+        self.verticalLayout_7.setContentsMargins(0, 0, 0, 0)
         self.telegramDownloadMediaCheck = QCheckBox(self.groupBox)
         self.telegramDownloadMediaCheck.setObjectName(u"telegramDownloadMediaCheck")
 
@@ -228,8 +241,9 @@ class Ui_MainWindow(object):
         self.downloaderDebugSection = QWidget(self.downloaderSplitter)
         self.downloaderDebugSection.setObjectName(u"downloaderDebugSection")
         self.verticalLayout_6 = QVBoxLayout(self.downloaderDebugSection)
+        self.verticalLayout_6.setSpacing(8)
         self.verticalLayout_6.setObjectName(u"verticalLayout_6")
-        self.verticalLayout_6.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_6.setContentsMargins(12, 12, 12, 12)
         self.telegramDownloaderDebug = QPlainTextEdit(self.downloaderDebugSection)
         self.telegramDownloaderDebug.setObjectName(u"telegramDownloaderDebug")
         self.telegramDownloaderDebug.setReadOnly(True)
@@ -244,15 +258,18 @@ class Ui_MainWindow(object):
         self.telegramAnalyzerTab = QWidget()
         self.telegramAnalyzerTab.setObjectName(u"telegramAnalyzerTab")
         self.verticalLayout_9 = QVBoxLayout(self.telegramAnalyzerTab)
+        self.verticalLayout_9.setSpacing(8)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+        self.verticalLayout_9.setContentsMargins(0, 0, 0, 0)
         self.analyzerSplitter = QSplitter(self.telegramAnalyzerTab)
         self.analyzerSplitter.setObjectName(u"analyzerSplitter")
         self.analyzerSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.analyzerSettingsSection = QWidget(self.analyzerSplitter)
         self.analyzerSettingsSection.setObjectName(u"analyzerSettingsSection")
         self.verticalLayout_17 = QVBoxLayout(self.analyzerSettingsSection)
+        self.verticalLayout_17.setSpacing(8)
         self.verticalLayout_17.setObjectName(u"verticalLayout_17")
-        self.verticalLayout_17.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_17.setContentsMargins(12, 12, 12, 12)
         self.telegramAnalyzerLoadChannelsButton = QPushButton(self.analyzerSettingsSection)
         self.telegramAnalyzerLoadChannelsButton.setObjectName(u"telegramAnalyzerLoadChannelsButton")
 
@@ -267,10 +284,13 @@ class Ui_MainWindow(object):
         self.groupBox_3 = QGroupBox(self.analyzerSettingsSection)
         self.groupBox_3.setObjectName(u"groupBox_3")
         self.verticalLayout_10 = QVBoxLayout(self.groupBox_3)
+        self.verticalLayout_10.setSpacing(8)
         self.verticalLayout_10.setObjectName(u"verticalLayout_10")
+        self.verticalLayout_10.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_3 = QGridLayout()
+        self.gridLayout_3.setSpacing(8)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.gridLayout_3.setContentsMargins(-1, 0, -1, -1)
+        self.gridLayout_3.setContentsMargins(0, 0, 0, 0)
         self.label_5 = QLabel(self.groupBox_3)
         self.label_5.setObjectName(u"label_5")
 
@@ -321,10 +341,13 @@ class Ui_MainWindow(object):
         self.groupBox_4 = QGroupBox(self.analyzerSettingsSection)
         self.groupBox_4.setObjectName(u"groupBox_4")
         self.verticalLayout_11 = QVBoxLayout(self.groupBox_4)
+        self.verticalLayout_11.setSpacing(8)
         self.verticalLayout_11.setObjectName(u"verticalLayout_11")
+        self.verticalLayout_11.setContentsMargins(0, 0, 0, 0)
         self.gridLayout_4 = QGridLayout()
+        self.gridLayout_4.setSpacing(8)
         self.gridLayout_4.setObjectName(u"gridLayout_4")
-        self.gridLayout_4.setContentsMargins(-1, -1, -1, 0)
+        self.gridLayout_4.setContentsMargins(0, 0, 0, 0)
         self.telegramAnalyzerHTMLCheck = QCheckBox(self.groupBox_4)
         self.telegramAnalyzerHTMLCheck.setObjectName(u"telegramAnalyzerHTMLCheck")
 
@@ -395,8 +418,9 @@ class Ui_MainWindow(object):
         self.analyzerDebugSection = QWidget(self.analyzerSplitter)
         self.analyzerDebugSection.setObjectName(u"analyzerDebugSection")
         self.verticalLayout_18 = QVBoxLayout(self.analyzerDebugSection)
+        self.verticalLayout_18.setSpacing(8)
         self.verticalLayout_18.setObjectName(u"verticalLayout_18")
-        self.verticalLayout_18.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_18.setContentsMargins(12, 12, 12, 12)
         self.telegramAnalyzerDebug = QPlainTextEdit(self.analyzerDebugSection)
         self.telegramAnalyzerDebug.setObjectName(u"telegramAnalyzerDebug")
         self.telegramAnalyzerDebug.setReadOnly(True)
@@ -411,15 +435,18 @@ class Ui_MainWindow(object):
         self.usernameSearchTab = QWidget()
         self.usernameSearchTab.setObjectName(u"usernameSearchTab")
         self.gridLayout_8 = QGridLayout(self.usernameSearchTab)
+        self.gridLayout_8.setSpacing(8)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.usernameScriptDebug = QPlainTextEdit(self.usernameSearchTab)
-        self.usernameScriptDebug.setObjectName(u"usernameScriptDebug")
+        self.gridLayout_8.setContentsMargins(12, 12, 12, 12)
+        self.usernameResultsDebug = QPlainTextEdit(self.usernameSearchTab)
+        self.usernameResultsDebug.setObjectName(u"usernameResultsDebug")
 
-        self.gridLayout_8.addWidget(self.usernameScriptDebug, 2, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.usernameResultsDebug, 2, 0, 1, 2)
 
         self.horizontalLayout_8 = QHBoxLayout()
+        self.horizontalLayout_8.setSpacing(8)
         self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.horizontalLayout_8.setContentsMargins(-1, -1, -1, 0)
+        self.horizontalLayout_8.setContentsMargins(0, 0, 0, 0)
         self.usernameEdit = QLineEdit(self.usernameSearchTab)
         self.usernameEdit.setObjectName(u"usernameEdit")
 
@@ -440,24 +467,22 @@ class Ui_MainWindow(object):
 
         self.gridLayout_8.addWidget(self.usernameSearchProgress, 3, 0, 1, 2)
 
-        self.maigretDebug = QPlainTextEdit(self.usernameSearchTab)
-        self.maigretDebug.setObjectName(u"maigretDebug")
-
-        self.gridLayout_8.addWidget(self.maigretDebug, 2, 1, 1, 1)
-
         self.mainStackedWidget.addTab(self.usernameSearchTab, "")
         self.mailToolsTab = QWidget()
         self.mailToolsTab.setObjectName(u"mailToolsTab")
         self.horizontalLayout_4 = QHBoxLayout(self.mailToolsTab)
+        self.horizontalLayout_4.setSpacing(8)
         self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.horizontalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.mailSplitter = QSplitter(self.mailToolsTab)
         self.mailSplitter.setObjectName(u"mailSplitter")
         self.mailSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.mailSettingsSection = QWidget(self.mailSplitter)
         self.mailSettingsSection.setObjectName(u"mailSettingsSection")
         self.verticalLayout_19 = QVBoxLayout(self.mailSettingsSection)
+        self.verticalLayout_19.setSpacing(8)
         self.verticalLayout_19.setObjectName(u"verticalLayout_19")
-        self.verticalLayout_19.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_19.setContentsMargins(12, 12, 12, 12)
         self.mailEdit = QLineEdit(self.mailSettingsSection)
         self.mailEdit.setObjectName(u"mailEdit")
 
@@ -491,8 +516,9 @@ class Ui_MainWindow(object):
         self.mailDebugSection = QWidget(self.mailSplitter)
         self.mailDebugSection.setObjectName(u"mailDebugSection")
         self.verticalLayout_20 = QVBoxLayout(self.mailDebugSection)
+        self.verticalLayout_20.setSpacing(8)
         self.verticalLayout_20.setObjectName(u"verticalLayout_20")
-        self.verticalLayout_20.setContentsMargins(0, 0, 0, 0)
+        self.verticalLayout_20.setContentsMargins(12, 12, 12, 12)
         self.mailDebugSplitter = QSplitter(self.mailDebugSection)
         self.mailDebugSplitter.setObjectName(u"mailDebugSplitter")
         self.mailDebugSplitter.setOrientation(Qt.Orientation.Vertical)
@@ -519,15 +545,18 @@ class Ui_MainWindow(object):
         self.socialToolsTab = QWidget()
         self.socialToolsTab.setObjectName(u"socialToolsTab")
         self.socialHorizontalLayout = QHBoxLayout(self.socialToolsTab)
+        self.socialHorizontalLayout.setSpacing(8)
         self.socialHorizontalLayout.setObjectName(u"socialHorizontalLayout")
+        self.socialHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.socialSplitter = QSplitter(self.socialToolsTab)
         self.socialSplitter.setObjectName(u"socialSplitter")
         self.socialSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.socialSettingsSection = QWidget(self.socialSplitter)
         self.socialSettingsSection.setObjectName(u"socialSettingsSection")
         self.socialSettingsLayout = QVBoxLayout(self.socialSettingsSection)
+        self.socialSettingsLayout.setSpacing(8)
         self.socialSettingsLayout.setObjectName(u"socialSettingsLayout")
-        self.socialSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.socialSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.socialUsernameEdit = QLineEdit(self.socialSettingsSection)
         self.socialUsernameEdit.setObjectName(u"socialUsernameEdit")
 
@@ -566,8 +595,9 @@ class Ui_MainWindow(object):
         self.socialDebugSection = QWidget(self.socialSplitter)
         self.socialDebugSection.setObjectName(u"socialDebugSection")
         self.socialDebugLayout = QVBoxLayout(self.socialDebugSection)
+        self.socialDebugLayout.setSpacing(8)
         self.socialDebugLayout.setObjectName(u"socialDebugLayout")
-        self.socialDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.socialDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.socialDebug = QPlainTextEdit(self.socialDebugSection)
         self.socialDebug.setObjectName(u"socialDebug")
 
@@ -578,18 +608,143 @@ class Ui_MainWindow(object):
         self.socialHorizontalLayout.addWidget(self.socialSplitter)
 
         self.mainStackedWidget.addTab(self.socialToolsTab, "")
+        self.redditOsintTab = QWidget()
+        self.redditOsintTab.setObjectName(u"redditOsintTab")
+        self.redditHorizontalLayout = QHBoxLayout(self.redditOsintTab)
+        self.redditHorizontalLayout.setSpacing(8)
+        self.redditHorizontalLayout.setObjectName(u"redditHorizontalLayout")
+        self.redditHorizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.redditSplitter = QSplitter(self.redditOsintTab)
+        self.redditSplitter.setObjectName(u"redditSplitter")
+        self.redditSplitter.setOrientation(Qt.Orientation.Horizontal)
+        self.redditSettingsSection = QWidget(self.redditSplitter)
+        self.redditSettingsSection.setObjectName(u"redditSettingsSection")
+        self.redditSettingsLayout = QVBoxLayout(self.redditSettingsSection)
+        self.redditSettingsLayout.setSpacing(8)
+        self.redditSettingsLayout.setObjectName(u"redditSettingsLayout")
+        self.redditSettingsLayout.setContentsMargins(12, 12, 12, 12)
+        self.redditUsernameEdit = QLineEdit(self.redditSettingsSection)
+        self.redditUsernameEdit.setObjectName(u"redditUsernameEdit")
+
+        self.redditSettingsLayout.addWidget(self.redditUsernameEdit)
+
+        self.redditSourceCombo = QComboBox(self.redditSettingsSection)
+        self.redditSourceCombo.addItem("")
+        self.redditSourceCombo.addItem("")
+        self.redditSourceCombo.addItem("")
+        self.redditSourceCombo.setObjectName(u"redditSourceCombo")
+
+        self.redditSettingsLayout.addWidget(self.redditSourceCombo)
+
+        self.redditSubredditEdit = QLineEdit(self.redditSettingsSection)
+        self.redditSubredditEdit.setObjectName(u"redditSubredditEdit")
+
+        self.redditSettingsLayout.addWidget(self.redditSubredditEdit)
+
+        self.redditKeywordsEdit = QLineEdit(self.redditSettingsSection)
+        self.redditKeywordsEdit.setObjectName(u"redditKeywordsEdit")
+
+        self.redditSettingsLayout.addWidget(self.redditKeywordsEdit)
+
+        self.redditNsfwCombo = QComboBox(self.redditSettingsSection)
+        self.redditNsfwCombo.addItem("")
+        self.redditNsfwCombo.addItem("")
+        self.redditNsfwCombo.addItem("")
+        self.redditNsfwCombo.setObjectName(u"redditNsfwCombo")
+
+        self.redditSettingsLayout.addWidget(self.redditNsfwCombo)
+
+        self.redditMaxPagesSpin = QSpinBox(self.redditSettingsSection)
+        self.redditMaxPagesSpin.setObjectName(u"redditMaxPagesSpin")
+        self.redditMaxPagesSpin.setMinimum(1)
+        self.redditMaxPagesSpin.setMaximum(200)
+        self.redditMaxPagesSpin.setValue(40)
+
+        self.redditSettingsLayout.addWidget(self.redditMaxPagesSpin)
+
+        self.redditFullReportButton = QPushButton(self.redditSettingsSection)
+        self.redditFullReportButton.setObjectName(u"redditFullReportButton")
+
+        self.redditSettingsLayout.addWidget(self.redditFullReportButton)
+
+        self.redditPostsButton = QPushButton(self.redditSettingsSection)
+        self.redditPostsButton.setObjectName(u"redditPostsButton")
+
+        self.redditSettingsLayout.addWidget(self.redditPostsButton)
+
+        self.redditCommentsButton = QPushButton(self.redditSettingsSection)
+        self.redditCommentsButton.setObjectName(u"redditCommentsButton")
+
+        self.redditSettingsLayout.addWidget(self.redditCommentsButton)
+
+        self.redditRemovedButton = QPushButton(self.redditSettingsSection)
+        self.redditRemovedButton.setObjectName(u"redditRemovedButton")
+
+        self.redditSettingsLayout.addWidget(self.redditRemovedButton)
+
+        self.redditIdentifiersButton = QPushButton(self.redditSettingsSection)
+        self.redditIdentifiersButton.setObjectName(u"redditIdentifiersButton")
+
+        self.redditSettingsLayout.addWidget(self.redditIdentifiersButton)
+
+        self.redditActivityButton = QPushButton(self.redditSettingsSection)
+        self.redditActivityButton.setObjectName(u"redditActivityButton")
+
+        self.redditSettingsLayout.addWidget(self.redditActivityButton)
+
+        self.redditAffiliationsButton = QPushButton(self.redditSettingsSection)
+        self.redditAffiliationsButton.setObjectName(u"redditAffiliationsButton")
+
+        self.redditSettingsLayout.addWidget(self.redditAffiliationsButton)
+
+        self.redditArchiveSearchButton = QPushButton(self.redditSettingsSection)
+        self.redditArchiveSearchButton.setObjectName(u"redditArchiveSearchButton")
+
+        self.redditSettingsLayout.addWidget(self.redditArchiveSearchButton)
+
+        self.redditProgressBar = QProgressBar(self.redditSettingsSection)
+        self.redditProgressBar.setObjectName(u"redditProgressBar")
+        self.redditProgressBar.setMaximum(100)
+        self.redditProgressBar.setValue(0)
+
+        self.redditSettingsLayout.addWidget(self.redditProgressBar)
+
+        self.redditVerticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.redditSettingsLayout.addItem(self.redditVerticalSpacer)
+
+        self.redditSplitter.addWidget(self.redditSettingsSection)
+        self.redditDebugSection = QWidget(self.redditSplitter)
+        self.redditDebugSection.setObjectName(u"redditDebugSection")
+        self.redditDebugLayout = QVBoxLayout(self.redditDebugSection)
+        self.redditDebugLayout.setSpacing(8)
+        self.redditDebugLayout.setObjectName(u"redditDebugLayout")
+        self.redditDebugLayout.setContentsMargins(12, 12, 12, 12)
+        self.redditOsintDebug = QPlainTextEdit(self.redditDebugSection)
+        self.redditOsintDebug.setObjectName(u"redditOsintDebug")
+
+        self.redditDebugLayout.addWidget(self.redditOsintDebug)
+
+        self.redditSplitter.addWidget(self.redditDebugSection)
+
+        self.redditHorizontalLayout.addWidget(self.redditSplitter)
+
+        self.mainStackedWidget.addTab(self.redditOsintTab, "")
         self.leaksTab = QWidget()
         self.leaksTab.setObjectName(u"leaksTab")
         self.leaksHorizontalLayout = QHBoxLayout(self.leaksTab)
+        self.leaksHorizontalLayout.setSpacing(8)
         self.leaksHorizontalLayout.setObjectName(u"leaksHorizontalLayout")
+        self.leaksHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.leaksSplitter = QSplitter(self.leaksTab)
         self.leaksSplitter.setObjectName(u"leaksSplitter")
         self.leaksSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.leaksSettingsSection = QWidget(self.leaksSplitter)
         self.leaksSettingsSection.setObjectName(u"leaksSettingsSection")
         self.leaksSettingsLayout = QVBoxLayout(self.leaksSettingsSection)
+        self.leaksSettingsLayout.setSpacing(8)
         self.leaksSettingsLayout.setObjectName(u"leaksSettingsLayout")
-        self.leaksSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.leaksSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.leakTargetEdit = QLineEdit(self.leaksSettingsSection)
         self.leakTargetEdit.setObjectName(u"leakTargetEdit")
 
@@ -628,8 +783,9 @@ class Ui_MainWindow(object):
         self.leaksDebugSection = QWidget(self.leaksSplitter)
         self.leaksDebugSection.setObjectName(u"leaksDebugSection")
         self.leaksDebugLayout = QVBoxLayout(self.leaksDebugSection)
+        self.leaksDebugLayout.setSpacing(8)
         self.leaksDebugLayout.setObjectName(u"leaksDebugLayout")
-        self.leaksDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.leaksDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.leakDebug = QPlainTextEdit(self.leaksDebugSection)
         self.leakDebug.setObjectName(u"leakDebug")
 
@@ -643,15 +799,18 @@ class Ui_MainWindow(object):
         self.geoTab = QWidget()
         self.geoTab.setObjectName(u"geoTab")
         self.geoHorizontalLayout = QHBoxLayout(self.geoTab)
+        self.geoHorizontalLayout.setSpacing(8)
         self.geoHorizontalLayout.setObjectName(u"geoHorizontalLayout")
+        self.geoHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.geoSplitter = QSplitter(self.geoTab)
         self.geoSplitter.setObjectName(u"geoSplitter")
         self.geoSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.geoSettingsSection = QWidget(self.geoSplitter)
         self.geoSettingsSection.setObjectName(u"geoSettingsSection")
         self.geoSettingsLayout = QVBoxLayout(self.geoSettingsSection)
+        self.geoSettingsLayout.setSpacing(8)
         self.geoSettingsLayout.setObjectName(u"geoSettingsLayout")
-        self.geoSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.geoSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.geoCoordEdit = QLineEdit(self.geoSettingsSection)
         self.geoCoordEdit.setObjectName(u"geoCoordEdit")
 
@@ -706,8 +865,9 @@ class Ui_MainWindow(object):
         self.geoDebugSection = QWidget(self.geoSplitter)
         self.geoDebugSection.setObjectName(u"geoDebugSection")
         self.geoDebugLayout = QVBoxLayout(self.geoDebugSection)
+        self.geoDebugLayout.setSpacing(8)
         self.geoDebugLayout.setObjectName(u"geoDebugLayout")
-        self.geoDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.geoDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.geoDebug = QPlainTextEdit(self.geoDebugSection)
         self.geoDebug.setObjectName(u"geoDebug")
 
@@ -721,15 +881,18 @@ class Ui_MainWindow(object):
         self.archiveTab = QWidget()
         self.archiveTab.setObjectName(u"archiveTab")
         self.archiveHorizontalLayout = QHBoxLayout(self.archiveTab)
+        self.archiveHorizontalLayout.setSpacing(8)
         self.archiveHorizontalLayout.setObjectName(u"archiveHorizontalLayout")
+        self.archiveHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.archiveSplitter = QSplitter(self.archiveTab)
         self.archiveSplitter.setObjectName(u"archiveSplitter")
         self.archiveSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.archiveSettingsSection = QWidget(self.archiveSplitter)
         self.archiveSettingsSection.setObjectName(u"archiveSettingsSection")
         self.archiveSettingsLayout = QVBoxLayout(self.archiveSettingsSection)
+        self.archiveSettingsLayout.setSpacing(8)
         self.archiveSettingsLayout.setObjectName(u"archiveSettingsLayout")
-        self.archiveSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.archiveSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.archiveUrlEdit = QLineEdit(self.archiveSettingsSection)
         self.archiveUrlEdit.setObjectName(u"archiveUrlEdit")
 
@@ -768,8 +931,9 @@ class Ui_MainWindow(object):
         self.archiveDebugSection = QWidget(self.archiveSplitter)
         self.archiveDebugSection.setObjectName(u"archiveDebugSection")
         self.archiveDebugLayout = QVBoxLayout(self.archiveDebugSection)
+        self.archiveDebugLayout.setSpacing(8)
         self.archiveDebugLayout.setObjectName(u"archiveDebugLayout")
-        self.archiveDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.archiveDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.archiveDebug = QPlainTextEdit(self.archiveDebugSection)
         self.archiveDebug.setObjectName(u"archiveDebug")
 
@@ -783,11 +947,17 @@ class Ui_MainWindow(object):
         self.dorkingTab = QWidget()
         self.dorkingTab.setObjectName(u"dorkingTab")
         self.verticalLayout_12 = QVBoxLayout(self.dorkingTab)
+        self.verticalLayout_12.setSpacing(8)
         self.verticalLayout_12.setObjectName(u"verticalLayout_12")
+        self.verticalLayout_12.setContentsMargins(12, 12, 12, 12)
         self.gridLayout_5 = QGridLayout()
+        self.gridLayout_5.setSpacing(8)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
+        self.gridLayout_5.setContentsMargins(0, 0, 0, 0)
         self.dorkCustomEditLayout = QHBoxLayout()
+        self.dorkCustomEditLayout.setSpacing(8)
         self.dorkCustomEditLayout.setObjectName(u"dorkCustomEditLayout")
+        self.dorkCustomEditLayout.setContentsMargins(0, 0, 0, 0)
         self.customDorkEdit = QLineEdit(self.dorkingTab)
         self.customDorkEdit.setObjectName(u"customDorkEdit")
 
@@ -808,7 +978,7 @@ class Ui_MainWindow(object):
         self.categorySection = QWidget(self.splitter)
         self.categorySection.setObjectName(u"categorySection")
         self.verticalLayout_14 = QVBoxLayout(self.categorySection)
-        self.verticalLayout_14.setSpacing(6)
+        self.verticalLayout_14.setSpacing(8)
         self.verticalLayout_14.setObjectName(u"verticalLayout_14")
         self.verticalLayout_14.setContentsMargins(0, 0, 0, 0)
         self.dorksCategoryList = QListWidget(self.categorySection)
@@ -825,7 +995,7 @@ class Ui_MainWindow(object):
         self.dorksSection = QWidget(self.splitter)
         self.dorksSection.setObjectName(u"dorksSection")
         self.verticalLayout_15 = QVBoxLayout(self.dorksSection)
-        self.verticalLayout_15.setSpacing(6)
+        self.verticalLayout_15.setSpacing(8)
         self.verticalLayout_15.setObjectName(u"verticalLayout_15")
         self.verticalLayout_15.setContentsMargins(0, 0, 0, 0)
         self.dorksList = QListWidget(self.dorksSection)
@@ -843,7 +1013,7 @@ class Ui_MainWindow(object):
         self.resultSection = QWidget(self.splitter)
         self.resultSection.setObjectName(u"resultSection")
         self.verticalLayout_16 = QVBoxLayout(self.resultSection)
-        self.verticalLayout_16.setSpacing(6)
+        self.verticalLayout_16.setSpacing(8)
         self.verticalLayout_16.setObjectName(u"verticalLayout_16")
         self.verticalLayout_16.setContentsMargins(0, 0, 0, 0)
         self.dorksResult = QPlainTextEdit(self.resultSection)
@@ -864,7 +1034,9 @@ class Ui_MainWindow(object):
         self.groupBox_5.setObjectName(u"groupBox_5")
         self.groupBox_5.setMaximumSize(QSize(16777215, 80))
         self.horizontalLayout_5 = QHBoxLayout(self.groupBox_5)
+        self.horizontalLayout_5.setSpacing(8)
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.horizontalLayout_5.setContentsMargins(0, 0, 0, 0)
         self.useSearxngCheck = QCheckBox(self.groupBox_5)
         self.useSearxngCheck.setObjectName(u"useSearxngCheck")
 
@@ -889,7 +1061,9 @@ class Ui_MainWindow(object):
         self.webAnalyzerTab = QWidget()
         self.webAnalyzerTab.setObjectName(u"webAnalyzerTab")
         self.gridLayout_2 = QGridLayout(self.webAnalyzerTab)
+        self.gridLayout_2.setSpacing(8)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
+        self.gridLayout_2.setContentsMargins(12, 12, 12, 12)
         self.serverLocationDebug = QPlainTextEdit(self.webAnalyzerTab)
         self.serverLocationDebug.setObjectName(u"serverLocationDebug")
 
@@ -1033,8 +1207,9 @@ class Ui_MainWindow(object):
         self.gridLayout_2.addWidget(self.certTrDebug, 4, 4, 1, 1)
 
         self.horizontalLayout_9 = QHBoxLayout()
+        self.horizontalLayout_9.setSpacing(8)
         self.horizontalLayout_9.setObjectName(u"horizontalLayout_9")
-        self.horizontalLayout_9.setContentsMargins(-1, 0, -1, -1)
+        self.horizontalLayout_9.setContentsMargins(0, 0, 0, 0)
         self.serverUrlEdit = QLineEdit(self.webAnalyzerTab)
         self.serverUrlEdit.setObjectName(u"serverUrlEdit")
 
@@ -1091,7 +1266,9 @@ class Ui_MainWindow(object):
         self.metadataTab = QWidget()
         self.metadataTab.setObjectName(u"metadataTab")
         self.gridLayout_7 = QGridLayout(self.metadataTab)
+        self.gridLayout_7.setSpacing(8)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.gridLayout_7.setContentsMargins(12, 12, 12, 12)
         self.metadataDebug = QPlainTextEdit(self.metadataTab)
         self.metadataDebug.setObjectName(u"metadataDebug")
 
@@ -1136,7 +1313,9 @@ class Ui_MainWindow(object):
         self.metadataFileDropWidget.setMinimumSize(QSize(300, 0))
         self.metadataFileDropWidget.setMaximumSize(QSize(300, 16777215))
         self.verticalLayout = QVBoxLayout(self.metadataFileDropWidget)
+        self.verticalLayout.setSpacing(8)
         self.verticalLayout.setObjectName(u"verticalLayout")
+        self.verticalLayout.setContentsMargins(0, 0, 0, 0)
         self.metadataStatusLabel = QLabel(self.metadataFileDropWidget)
         self.metadataStatusLabel.setObjectName(u"metadataStatusLabel")
         font1 = QFont()
@@ -1171,15 +1350,18 @@ class Ui_MainWindow(object):
         self.githubTab = QWidget()
         self.githubTab.setObjectName(u"githubTab")
         self.githubHorizontalLayout = QHBoxLayout(self.githubTab)
+        self.githubHorizontalLayout.setSpacing(8)
         self.githubHorizontalLayout.setObjectName(u"githubHorizontalLayout")
+        self.githubHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.githubSplitter = QSplitter(self.githubTab)
         self.githubSplitter.setObjectName(u"githubSplitter")
         self.githubSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.githubSettingsSection = QWidget(self.githubSplitter)
         self.githubSettingsSection.setObjectName(u"githubSettingsSection")
         self.githubSettingsLayout = QVBoxLayout(self.githubSettingsSection)
+        self.githubSettingsLayout.setSpacing(8)
         self.githubSettingsLayout.setObjectName(u"githubSettingsLayout")
-        self.githubSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.githubSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.githubUserEdit = QLineEdit(self.githubSettingsSection)
         self.githubUserEdit.setObjectName(u"githubUserEdit")
 
@@ -1233,14 +1415,18 @@ class Ui_MainWindow(object):
         self.githubDorkGroup = QGroupBox(self.githubSettingsSection)
         self.githubDorkGroup.setObjectName(u"githubDorkGroup")
         self.githubDorkLayout = QVBoxLayout(self.githubDorkGroup)
+        self.githubDorkLayout.setSpacing(8)
         self.githubDorkLayout.setObjectName(u"githubDorkLayout")
+        self.githubDorkLayout.setContentsMargins(0, 0, 0, 0)
         self.githubDorkEdit = QLineEdit(self.githubDorkGroup)
         self.githubDorkEdit.setObjectName(u"githubDorkEdit")
 
         self.githubDorkLayout.addWidget(self.githubDorkEdit)
 
         self.githubDorkTypeLayout = QHBoxLayout()
+        self.githubDorkTypeLayout.setSpacing(8)
         self.githubDorkTypeLayout.setObjectName(u"githubDorkTypeLayout")
+        self.githubDorkTypeLayout.setContentsMargins(0, 0, 0, 0)
         self.githubDorkCodeCheck = QCheckBox(self.githubDorkGroup)
         self.githubDorkCodeCheck.setObjectName(u"githubDorkCodeCheck")
         self.githubDorkCodeCheck.setChecked(True)
@@ -1292,8 +1478,9 @@ class Ui_MainWindow(object):
         self.githubDebugSection = QWidget(self.githubSplitter)
         self.githubDebugSection.setObjectName(u"githubDebugSection")
         self.githubDebugLayout = QVBoxLayout(self.githubDebugSection)
+        self.githubDebugLayout.setSpacing(8)
         self.githubDebugLayout.setObjectName(u"githubDebugLayout")
-        self.githubDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.githubDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.githubDebug = QPlainTextEdit(self.githubDebugSection)
         self.githubDebug.setObjectName(u"githubDebug")
         self.githubDebug.setReadOnly(True)
@@ -1308,15 +1495,18 @@ class Ui_MainWindow(object):
         self.phoneTab = QWidget()
         self.phoneTab.setObjectName(u"phoneTab")
         self.phoneHorizontalLayout = QHBoxLayout(self.phoneTab)
+        self.phoneHorizontalLayout.setSpacing(8)
         self.phoneHorizontalLayout.setObjectName(u"phoneHorizontalLayout")
+        self.phoneHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.phoneSplitter = QSplitter(self.phoneTab)
         self.phoneSplitter.setObjectName(u"phoneSplitter")
         self.phoneSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.phoneSettingsSection = QWidget(self.phoneSplitter)
         self.phoneSettingsSection.setObjectName(u"phoneSettingsSection")
         self.phoneSettingsLayout = QVBoxLayout(self.phoneSettingsSection)
+        self.phoneSettingsLayout.setSpacing(8)
         self.phoneSettingsLayout.setObjectName(u"phoneSettingsLayout")
-        self.phoneSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.phoneSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.phoneNumberEdit = QLineEdit(self.phoneSettingsSection)
         self.phoneNumberEdit.setObjectName(u"phoneNumberEdit")
 
@@ -1361,8 +1551,9 @@ class Ui_MainWindow(object):
         self.phoneDebugSection = QWidget(self.phoneSplitter)
         self.phoneDebugSection.setObjectName(u"phoneDebugSection")
         self.phoneDebugLayout = QVBoxLayout(self.phoneDebugSection)
+        self.phoneDebugLayout.setSpacing(8)
         self.phoneDebugLayout.setObjectName(u"phoneDebugLayout")
-        self.phoneDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.phoneDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.phoneDebug = QPlainTextEdit(self.phoneDebugSection)
         self.phoneDebug.setObjectName(u"phoneDebug")
         self.phoneDebug.setReadOnly(True)
@@ -1377,7 +1568,9 @@ class Ui_MainWindow(object):
         self.macAddrTab = QWidget()
         self.macAddrTab.setObjectName(u"macAddrTab")
         self.gridLayout_9 = QGridLayout(self.macAddrTab)
+        self.gridLayout_9.setSpacing(8)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
+        self.gridLayout_9.setContentsMargins(12, 12, 12, 12)
         self.checkMacAddrButton = QPushButton(self.macAddrTab)
         self.checkMacAddrButton.setObjectName(u"checkMacAddrButton")
         self.checkMacAddrButton.setMinimumSize(QSize(150, 0))
@@ -1409,15 +1602,18 @@ class Ui_MainWindow(object):
         self.blockchainTab = QWidget()
         self.blockchainTab.setObjectName(u"blockchainTab")
         self.bcHorizontalLayout = QHBoxLayout(self.blockchainTab)
+        self.bcHorizontalLayout.setSpacing(8)
         self.bcHorizontalLayout.setObjectName(u"bcHorizontalLayout")
+        self.bcHorizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.bcSplitter = QSplitter(self.blockchainTab)
         self.bcSplitter.setObjectName(u"bcSplitter")
         self.bcSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.bcSettingsSection = QWidget(self.bcSplitter)
         self.bcSettingsSection.setObjectName(u"bcSettingsSection")
         self.bcSettingsLayout = QVBoxLayout(self.bcSettingsSection)
+        self.bcSettingsLayout.setSpacing(8)
         self.bcSettingsLayout.setObjectName(u"bcSettingsLayout")
-        self.bcSettingsLayout.setContentsMargins(0, 0, 0, 0)
+        self.bcSettingsLayout.setContentsMargins(12, 12, 12, 12)
         self.bcNetworkCombo = QComboBox(self.bcSettingsSection)
         self.bcNetworkCombo.addItem("")
         self.bcNetworkCombo.addItem("")
@@ -1509,8 +1705,9 @@ class Ui_MainWindow(object):
         self.bcDebugSection = QWidget(self.bcSplitter)
         self.bcDebugSection.setObjectName(u"bcDebugSection")
         self.bcDebugLayout = QVBoxLayout(self.bcDebugSection)
+        self.bcDebugLayout.setSpacing(8)
         self.bcDebugLayout.setObjectName(u"bcDebugLayout")
-        self.bcDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.bcDebugLayout.setContentsMargins(12, 12, 12, 12)
         self.bcDebug = QPlainTextEdit(self.bcDebugSection)
         self.bcDebug.setObjectName(u"bcDebug")
         self.bcDebug.setReadOnly(True)
@@ -1525,15 +1722,18 @@ class Ui_MainWindow(object):
         self.steganographyTab = QWidget()
         self.steganographyTab.setObjectName(u"steganographyTab")
         self.steganographyLayout = QHBoxLayout(self.steganographyTab)
+        self.steganographyLayout.setSpacing(8)
         self.steganographyLayout.setObjectName(u"steganographyLayout")
-        self.steganographyLayout.setContentsMargins(9, 9, 9, 9)
+        self.steganographyLayout.setContentsMargins(12, 12, 12, 12)
         self.steganographySplitter = QSplitter(self.steganographyTab)
         self.steganographySplitter.setObjectName(u"steganographySplitter")
         self.steganographySplitter.setOrientation(Qt.Orientation.Horizontal)
         self.steganoFileDrop = DropWidget(self.steganographySplitter)
         self.steganoFileDrop.setObjectName(u"steganoFileDrop")
         self.verticalLayout_2 = QVBoxLayout(self.steganoFileDrop)
+        self.verticalLayout_2.setSpacing(8)
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
+        self.verticalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.label_8 = QLabel(self.steganoFileDrop)
         self.label_8.setObjectName(u"label_8")
         self.label_8.setMinimumSize(QSize(200, 0))
@@ -1567,11 +1767,15 @@ class Ui_MainWindow(object):
         self.s4facesTab = QWidget()
         self.s4facesTab.setObjectName(u"s4facesTab")
         self.gridLayout_10 = QGridLayout(self.s4facesTab)
+        self.gridLayout_10.setSpacing(8)
         self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.gridLayout_10.setContentsMargins(12, 12, 12, 12)
         self.s4fFileDropWidget = DropWidget(self.s4facesTab)
         self.s4fFileDropWidget.setObjectName(u"s4fFileDropWidget")
         self.verticalLayout_24 = QVBoxLayout(self.s4fFileDropWidget)
+        self.verticalLayout_24.setSpacing(8)
         self.verticalLayout_24.setObjectName(u"verticalLayout_24")
+        self.verticalLayout_24.setContentsMargins(0, 0, 0, 0)
         self.label_9 = QLabel(self.s4fFileDropWidget)
         self.label_9.setObjectName(u"label_9")
         self.label_9.setMinimumSize(QSize(300, 0))
@@ -1583,7 +1787,9 @@ class Ui_MainWindow(object):
         self.gridLayout_10.addWidget(self.s4fFileDropWidget, 2, 0, 1, 1)
 
         self.horizontalLayout_11 = QHBoxLayout()
+        self.horizontalLayout_11.setSpacing(8)
         self.horizontalLayout_11.setObjectName(u"horizontalLayout_11")
+        self.horizontalLayout_11.setContentsMargins(0, 0, 0, 0)
         self.runS4FButton = QPushButton(self.s4facesTab)
         self.runS4FButton.setObjectName(u"runS4FButton")
         self.runS4FButton.setMinimumSize(QSize(150, 0))
@@ -1598,11 +1804,15 @@ class Ui_MainWindow(object):
         self.s4fResultsScrollArea.setWidgetResizable(True)
         self.s4fResultsContainer = QWidget()
         self.s4fResultsContainer.setObjectName(u"s4fResultsContainer")
-        self.s4fResultsContainer.setGeometry(QRect(0, 0, 738, 689))
+        self.s4fResultsContainer.setGeometry(QRect(0, 0, 905, 707))
         self.verticalLayout_26 = QVBoxLayout(self.s4fResultsContainer)
+        self.verticalLayout_26.setSpacing(8)
         self.verticalLayout_26.setObjectName(u"verticalLayout_26")
+        self.verticalLayout_26.setContentsMargins(0, 0, 0, 0)
         self.s4fResultsLayout = QVBoxLayout()
+        self.s4fResultsLayout.setSpacing(8)
         self.s4fResultsLayout.setObjectName(u"s4fResultsLayout")
+        self.s4fResultsLayout.setContentsMargins(0, 0, 0, 0)
 
         self.verticalLayout_26.addLayout(self.s4fResultsLayout)
 
@@ -1624,7 +1834,19 @@ class Ui_MainWindow(object):
         self.downloaderTab = QWidget()
         self.downloaderTab.setObjectName(u"downloaderTab")
         self.gridLayout_11 = QGridLayout(self.downloaderTab)
+        self.gridLayout_11.setSpacing(8)
         self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.gridLayout_11.setContentsMargins(12, 12, 12, 12)
+        self.linkToDownloadEdit = QLineEdit(self.downloaderTab)
+        self.linkToDownloadEdit.setObjectName(u"linkToDownloadEdit")
+
+        self.gridLayout_11.addWidget(self.linkToDownloadEdit, 0, 0, 1, 2)
+
+        self.downloadFileDebug = QPlainTextEdit(self.downloaderTab)
+        self.downloadFileDebug.setObjectName(u"downloadFileDebug")
+
+        self.gridLayout_11.addWidget(self.downloadFileDebug, 3, 0, 1, 2)
+
         self.downloadFromLinkProgress = QProgressBar(self.downloaderTab)
         self.downloadFromLinkProgress.setObjectName(u"downloadFromLinkProgress")
         self.downloadFromLinkProgress.setValue(24)
@@ -1641,11 +1863,6 @@ class Ui_MainWindow(object):
 
         self.gridLayout_11.addWidget(self.downloadFromLinkButton, 2, 0, 1, 1)
 
-        self.linkToDownloadEdit = QLineEdit(self.downloaderTab)
-        self.linkToDownloadEdit.setObjectName(u"linkToDownloadEdit")
-
-        self.gridLayout_11.addWidget(self.linkToDownloadEdit, 0, 0, 1, 2)
-
         self.label_10 = QLabel(self.downloaderTab)
         self.label_10.setObjectName(u"label_10")
 
@@ -1656,25 +1873,22 @@ class Ui_MainWindow(object):
 
         self.gridLayout_11.addWidget(self.openDownloadedFileButton, 2, 1, 1, 1)
 
-        self.downloadFileDebug = QPlainTextEdit(self.downloaderTab)
-        self.downloadFileDebug.setObjectName(u"downloadFileDebug")
-
-        self.gridLayout_11.addWidget(self.downloadFileDebug, 3, 0, 1, 2)
-
         self.mainStackedWidget.addTab(self.downloaderTab, "")
         self.graphTab = QWidget()
         self.graphTab.setObjectName(u"graphTab")
         self.graphMainLayout = QVBoxLayout(self.graphTab)
+        self.graphMainLayout.setSpacing(8)
         self.graphMainLayout.setObjectName(u"graphMainLayout")
-        self.graphMainLayout.setContentsMargins(0, 0, 0, 0)
+        self.graphMainLayout.setContentsMargins(12, 12, 12, 12)
         self.graphSplitter = QSplitter(self.graphTab)
         self.graphSplitter.setObjectName(u"graphSplitter")
         self.graphSplitter.setOrientation(Qt.Orientation.Horizontal)
         self.entityPanel = QWidget(self.graphSplitter)
         self.entityPanel.setObjectName(u"entityPanel")
         self.entityLayout = QVBoxLayout(self.entityPanel)
+        self.entityLayout.setSpacing(8)
         self.entityLayout.setObjectName(u"entityLayout")
-        self.entityLayout.setContentsMargins(-1, -1, 9, -1)
+        self.entityLayout.setContentsMargins(0, 0, 0, 0)
         self.entitySearchEdit = QLineEdit(self.entityPanel)
         self.entitySearchEdit.setObjectName(u"entitySearchEdit")
 
@@ -1684,7 +1898,9 @@ class Ui_MainWindow(object):
         self.entityPalette.setObjectName(u"entityPalette")
         self.entityPalette.setMinimumSize(QSize(200, 0))
         self.verticalLayout_23 = QVBoxLayout(self.entityPalette)
+        self.verticalLayout_23.setSpacing(8)
         self.verticalLayout_23.setObjectName(u"verticalLayout_23")
+        self.verticalLayout_23.setContentsMargins(0, 0, 0, 0)
 
         self.entityLayout.addWidget(self.entityPalette)
 
@@ -1692,9 +1908,13 @@ class Ui_MainWindow(object):
         self.graphCenterPanel = QWidget(self.graphSplitter)
         self.graphCenterPanel.setObjectName(u"graphCenterPanel")
         self.graphCenterLayout = QVBoxLayout(self.graphCenterPanel)
+        self.graphCenterLayout.setSpacing(8)
         self.graphCenterLayout.setObjectName(u"graphCenterLayout")
+        self.graphCenterLayout.setContentsMargins(0, 0, 0, 0)
         self.graphButtonLayout = QHBoxLayout()
+        self.graphButtonLayout.setSpacing(8)
         self.graphButtonLayout.setObjectName(u"graphButtonLayout")
+        self.graphButtonLayout.setContentsMargins(0, 0, 0, 0)
         self.exportGraphButton = QPushButton(self.graphCenterPanel)
         self.exportGraphButton.setObjectName(u"exportGraphButton")
 
@@ -1730,7 +1950,9 @@ class Ui_MainWindow(object):
         self.graphCenterLayout.addLayout(self.graphButtonLayout)
 
         self.graphSearchLayout = QHBoxLayout()
+        self.graphSearchLayout.setSpacing(8)
         self.graphSearchLayout.setObjectName(u"graphSearchLayout")
+        self.graphSearchLayout.setContentsMargins(0, 0, 0, 0)
         self.graphSearchEdit = QLineEdit(self.graphCenterPanel)
         self.graphSearchEdit.setObjectName(u"graphSearchEdit")
         self.graphSearchEdit.setClearButtonEnabled(True)
@@ -1763,8 +1985,9 @@ class Ui_MainWindow(object):
         self.verticalWidget.setMinimumSize(QSize(0, 0))
         self.verticalWidget.setMaximumSize(QSize(16777215, 16777215))
         self.verticalLayout_13 = QVBoxLayout(self.verticalWidget)
+        self.verticalLayout_13.setSpacing(8)
         self.verticalLayout_13.setObjectName(u"verticalLayout_13")
-        self.verticalLayout_13.setContentsMargins(9, 9, 9, 9)
+        self.verticalLayout_13.setContentsMargins(0, 0, 0, 0)
         self.nodeTitleEdit = QLineEdit(self.verticalWidget)
         self.nodeTitleEdit.setObjectName(u"nodeTitleEdit")
 
@@ -1787,6 +2010,7 @@ class Ui_MainWindow(object):
         self.verticalLayout_13.addWidget(self.nodeEvidenceList)
 
         self.nodeEvidenceBtnLayout = QHBoxLayout()
+        self.nodeEvidenceBtnLayout.setSpacing(8)
         self.nodeEvidenceBtnLayout.setObjectName(u"nodeEvidenceBtnLayout")
         self.nodeEvidenceBtnLayout.setContentsMargins(0, 0, 0, 0)
         self.nodeEvidenceAddFileBtn = QPushButton(self.verticalWidget)
@@ -1815,7 +2039,9 @@ class Ui_MainWindow(object):
         self.reportTab = QWidget()
         self.reportTab.setObjectName(u"reportTab")
         self.gridLayout_6 = QGridLayout(self.reportTab)
+        self.gridLayout_6.setSpacing(8)
         self.gridLayout_6.setObjectName(u"gridLayout_6")
+        self.gridLayout_6.setContentsMargins(12, 12, 12, 12)
         self.aiReportLangEdit = QLineEdit(self.reportTab)
         self.aiReportLangEdit.setObjectName(u"aiReportLangEdit")
 
@@ -1851,162 +2077,192 @@ class Ui_MainWindow(object):
         self.mainStackedWidget.addTab(self.reportTab, "")
         self.settingsTab = QWidget()
         self.settingsTab.setObjectName(u"settingsTab")
-        self.horizontalLayout = QHBoxLayout(self.settingsTab)
+        self.settingsTabOuterLayout = QVBoxLayout(self.settingsTab)
+        self.settingsTabOuterLayout.setSpacing(8)
+        self.settingsTabOuterLayout.setObjectName(u"settingsTabOuterLayout")
+        self.settingsTabOuterLayout.setContentsMargins(12, 12, 12, 12)
+        self.settingsTabScrollArea = QScrollArea(self.settingsTab)
+        self.settingsTabScrollArea.setObjectName(u"settingsTabScrollArea")
+        self.settingsTabScrollArea.setFrameShape(QFrame.Shape.NoFrame)
+        self.settingsTabScrollArea.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.settingsTabScrollArea.setWidgetResizable(True)
+        self.settingsTabScrollContainer = QWidget()
+        self.settingsTabScrollContainer.setObjectName(u"settingsTabScrollContainer")
+        self.settingsTabScrollContainer.setGeometry(QRect(0, 0, 1217, 979))
+        self.settingsTabScrollContainerLayout = QVBoxLayout(self.settingsTabScrollContainer)
+        self.settingsTabScrollContainerLayout.setSpacing(8)
+        self.settingsTabScrollContainerLayout.setObjectName(u"settingsTabScrollContainerLayout")
+        self.settingsTabScrollContainerLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setSpacing(8)
         self.horizontalLayout.setObjectName(u"horizontalLayout")
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
         self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.horizontalLayout.addItem(self.horizontalSpacer)
 
         self.verticalLayout_4 = QVBoxLayout()
+        self.verticalLayout_4.setSpacing(8)
         self.verticalLayout_4.setObjectName(u"verticalLayout_4")
+        self.verticalLayout_4.setContentsMargins(0, 0, 0, 0)
         self.verticalSpacer = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.verticalLayout_4.addItem(self.verticalSpacer)
 
-        self.pathToStorageEdit = QLineEdit(self.settingsTab)
+        self.pathToStorageEdit = QLineEdit(self.settingsTabScrollContainer)
         self.pathToStorageEdit.setObjectName(u"pathToStorageEdit")
         self.pathToStorageEdit.setMinimumSize(QSize(500, 0))
 
         self.verticalLayout_4.addWidget(self.pathToStorageEdit)
 
-        self.tgApiKeyEdit = QLineEdit(self.settingsTab)
+        self.tgApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.tgApiKeyEdit.setObjectName(u"tgApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.tgApiKeyEdit)
 
-        self.telegramApiHashEdit = QLineEdit(self.settingsTab)
+        self.telegramApiHashEdit = QLineEdit(self.settingsTabScrollContainer)
         self.telegramApiHashEdit.setObjectName(u"telegramApiHashEdit")
 
         self.verticalLayout_4.addWidget(self.telegramApiHashEdit)
 
-        self.telegramPhoneEdit = QLineEdit(self.settingsTab)
+        self.telegramPhoneEdit = QLineEdit(self.settingsTabScrollContainer)
         self.telegramPhoneEdit.setObjectName(u"telegramPhoneEdit")
 
         self.verticalLayout_4.addWidget(self.telegramPhoneEdit)
 
-        self.intelligentXApiKeyEdit = QLineEdit(self.settingsTab)
+        self.intelligentXApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.intelligentXApiKeyEdit.setObjectName(u"intelligentXApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.intelligentXApiKeyEdit)
 
-        self.hibpApiKeyEdit = QLineEdit(self.settingsTab)
+        self.hibpApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.hibpApiKeyEdit.setObjectName(u"hibpApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.hibpApiKeyEdit)
 
-        self.virustotalApiKeyEdit = QLineEdit(self.settingsTab)
+        self.virustotalApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.virustotalApiKeyEdit.setObjectName(u"virustotalApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.virustotalApiKeyEdit)
 
-        self.googleSafeApiKeyEdit = QLineEdit(self.settingsTab)
+        self.googleSafeApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.googleSafeApiKeyEdit.setObjectName(u"googleSafeApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.googleSafeApiKeyEdit)
 
-        self.ipinfoApiKeyEdit = QLineEdit(self.settingsTab)
+        self.ipinfoApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.ipinfoApiKeyEdit.setObjectName(u"ipinfoApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.ipinfoApiKeyEdit)
 
-        self.githubTokenEdit = QLineEdit(self.settingsTab)
+        self.githubTokenEdit = QLineEdit(self.settingsTabScrollContainer)
         self.githubTokenEdit.setObjectName(u"githubTokenEdit")
 
         self.verticalLayout_4.addWidget(self.githubTokenEdit)
 
-        self.numverifyApiKeyEdit = QLineEdit(self.settingsTab)
+        self.numverifyApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.numverifyApiKeyEdit.setObjectName(u"numverifyApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.numverifyApiKeyEdit)
 
-        self.abstractapiApiKeyEdit = QLineEdit(self.settingsTab)
+        self.abstractapiApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.abstractapiApiKeyEdit.setObjectName(u"abstractapiApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.abstractapiApiKeyEdit)
 
-        self.trongridApiKeyEdit = QLineEdit(self.settingsTab)
+        self.trongridApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.trongridApiKeyEdit.setObjectName(u"trongridApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.trongridApiKeyEdit)
 
-        self.etherscanApiKeyEdit = QLineEdit(self.settingsTab)
+        self.etherscanApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.etherscanApiKeyEdit.setObjectName(u"etherscanApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.etherscanApiKeyEdit)
 
-        self.bscscanApiKeyEdit = QLineEdit(self.settingsTab)
+        self.bscscanApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.bscscanApiKeyEdit.setObjectName(u"bscscanApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.bscscanApiKeyEdit)
 
-        self.tonapiApiKeyEdit = QLineEdit(self.settingsTab)
+        self.tonapiApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.tonapiApiKeyEdit.setObjectName(u"tonapiApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.tonapiApiKeyEdit)
 
-        self.heliusApiKeyEdit = QLineEdit(self.settingsTab)
+        self.heliusApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.heliusApiKeyEdit.setObjectName(u"heliusApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.heliusApiKeyEdit)
 
-        self.abuseipdbApiKeyEdit = QLineEdit(self.settingsTab)
+        self.abuseipdbApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.abuseipdbApiKeyEdit.setObjectName(u"abuseipdbApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.abuseipdbApiKeyEdit)
 
-        self.greynoiseApiKeyEdit = QLineEdit(self.settingsTab)
+        self.greynoiseApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.greynoiseApiKeyEdit.setObjectName(u"greynoiseApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.greynoiseApiKeyEdit)
 
-        self.leakcheckApiKeyEdit = QLineEdit(self.settingsTab)
+        self.leakcheckApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.leakcheckApiKeyEdit.setObjectName(u"leakcheckApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.leakcheckApiKeyEdit)
 
-        self.dehashedEmailEdit = QLineEdit(self.settingsTab)
+        self.dehashedEmailEdit = QLineEdit(self.settingsTabScrollContainer)
         self.dehashedEmailEdit.setObjectName(u"dehashedEmailEdit")
 
         self.verticalLayout_4.addWidget(self.dehashedEmailEdit)
 
-        self.dehashedApiKeyEdit = QLineEdit(self.settingsTab)
+        self.dehashedApiKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.dehashedApiKeyEdit.setObjectName(u"dehashedApiKeyEdit")
 
         self.verticalLayout_4.addWidget(self.dehashedApiKeyEdit)
 
-        self.firmsMapKeyEdit = QLineEdit(self.settingsTab)
+        self.firmsMapKeyEdit = QLineEdit(self.settingsTabScrollContainer)
         self.firmsMapKeyEdit.setObjectName(u"firmsMapKeyEdit")
 
         self.verticalLayout_4.addWidget(self.firmsMapKeyEdit)
 
-        self.mcpStatusLabel = QLabel(self.settingsTab)
+        self.redditClientIdEdit = QLineEdit(self.settingsTabScrollContainer)
+        self.redditClientIdEdit.setObjectName(u"redditClientIdEdit")
+
+        self.verticalLayout_4.addWidget(self.redditClientIdEdit)
+
+        self.redditClientSecretEdit = QLineEdit(self.settingsTabScrollContainer)
+        self.redditClientSecretEdit.setObjectName(u"redditClientSecretEdit")
+
+        self.verticalLayout_4.addWidget(self.redditClientSecretEdit)
+
+        self.mcpStatusLabel = QLabel(self.settingsTabScrollContainer)
         self.mcpStatusLabel.setObjectName(u"mcpStatusLabel")
         self.mcpStatusLabel.setMinimumSize(QSize(0, 30))
         self.mcpStatusLabel.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.verticalLayout_4.addWidget(self.mcpStatusLabel)
 
-        self.mcpAuthCheck = QCheckBox(self.settingsTab)
+        self.mcpAuthCheck = QCheckBox(self.settingsTabScrollContainer)
         self.mcpAuthCheck.setObjectName(u"mcpAuthCheck")
 
         self.verticalLayout_4.addWidget(self.mcpAuthCheck)
 
-        self.mcpToggleButton = QPushButton(self.settingsTab)
+        self.mcpToggleButton = QPushButton(self.settingsTabScrollContainer)
         self.mcpToggleButton.setObjectName(u"mcpToggleButton")
 
         self.verticalLayout_4.addWidget(self.mcpToggleButton)
 
-        self.lightThemeCheck = QCheckBox(self.settingsTab)
+        self.lightThemeCheck = QCheckBox(self.settingsTabScrollContainer)
         self.lightThemeCheck.setObjectName(u"lightThemeCheck")
 
         self.verticalLayout_4.addWidget(self.lightThemeCheck)
 
-        self.framelessCheck = QCheckBox(self.settingsTab)
+        self.framelessCheck = QCheckBox(self.settingsTabScrollContainer)
         self.framelessCheck.setObjectName(u"framelessCheck")
 
         self.verticalLayout_4.addWidget(self.framelessCheck)
 
-        self.pushButton = QPushButton(self.settingsTab)
+        self.pushButton = QPushButton(self.settingsTabScrollContainer)
         self.pushButton.setObjectName(u"pushButton")
 
         self.verticalLayout_4.addWidget(self.pushButton)
@@ -2022,13 +2278,24 @@ class Ui_MainWindow(object):
 
         self.horizontalLayout.addItem(self.horizontalSpacer_2)
 
+
+        self.settingsTabScrollContainerLayout.addLayout(self.horizontalLayout)
+
+        self.settingsTabScrollArea.setWidget(self.settingsTabScrollContainer)
+
+        self.settingsTabOuterLayout.addWidget(self.settingsTabScrollArea)
+
         self.mainStackedWidget.addTab(self.settingsTab, "")
         self.proxyTab = QWidget()
         self.proxyTab.setObjectName(u"proxyTab")
         self.verticalLayout_3 = QVBoxLayout(self.proxyTab)
+        self.verticalLayout_3.setSpacing(8)
         self.verticalLayout_3.setObjectName(u"verticalLayout_3")
+        self.verticalLayout_3.setContentsMargins(12, 12, 12, 12)
         self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setSpacing(8)
         self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.horizontalLayout_2.setContentsMargins(0, 0, 0, 0)
         self.proxyListEdit = QPlainTextEdit(self.proxyTab)
         self.proxyListEdit.setObjectName(u"proxyListEdit")
 
@@ -2057,7 +2324,7 @@ class Ui_MainWindow(object):
         MainWindow.setCentralWidget(self.centralwidget)
         self.menuBar = QMenuBar(MainWindow)
         self.menuBar.setObjectName(u"menuBar")
-        self.menuBar.setGeometry(QRect(0, 0, 1244, 22))
+        self.menuBar.setGeometry(QRect(0, 0, 1471, 24))
         self.menuFile = QMenu(self.menuBar)
         self.menuFile.setObjectName(u"menuFile")
         self.menuView = QMenu(self.menuBar)
@@ -2141,10 +2408,9 @@ class Ui_MainWindow(object):
         self.runTelegramAnalyzerBtn.setText(QCoreApplication.translate("MainWindow", u"Run", None))
         self.tgToGraphButton.setText(QCoreApplication.translate("MainWindow", u"To Main Graph", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.telegramAnalyzerTab), QCoreApplication.translate("MainWindow", u"TELEGRAM ANALYZER", None))
-        self.usernameScriptDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Script", None))
+        self.usernameResultsDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username results (Sherlock + Maigret)", None))
         self.usernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Username", None))
         self.searchUsernameButton.setText(QCoreApplication.translate("MainWindow", u"Search", None))
-        self.maigretDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Maigret", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.usernameSearchTab), QCoreApplication.translate("MainWindow", u"USERNAME", None))
         self.mailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Mail", None))
         self.startMailSearchButton.setText(QCoreApplication.translate("MainWindow", u"IntelX Search", None))
@@ -2169,6 +2435,30 @@ class Ui_MainWindow(object):
         self.socialInstagramButton.setText(QCoreApplication.translate("MainWindow", u"Instagram", None))
         self.socialDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"SOCIAL / MASTODON", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.socialToolsTab), QCoreApplication.translate("MainWindow", u"SOCIAL", None))
+        self.redditUsernameEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Reddit username (without u/)", None))
+        self.redditSourceCombo.setItemText(0, QCoreApplication.translate("MainWindow", u"Both archives", None))
+        self.redditSourceCombo.setItemText(1, QCoreApplication.translate("MainWindow", u"Arctic Shift", None))
+        self.redditSourceCombo.setItemText(2, QCoreApplication.translate("MainWindow", u"PullPush", None))
+
+        self.redditSubredditEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Subreddit filter (optional, without r/)", None))
+        self.redditKeywordsEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Keywords for archive search (optional)", None))
+        self.redditNsfwCombo.setItemText(0, QCoreApplication.translate("MainWindow", u"Any", None))
+        self.redditNsfwCombo.setItemText(1, QCoreApplication.translate("MainWindow", u"Safe only", None))
+        self.redditNsfwCombo.setItemText(2, QCoreApplication.translate("MainWindow", u"NSFW only", None))
+
+#if QT_CONFIG(tooltip)
+        self.redditMaxPagesSpin.setToolTip(QCoreApplication.translate("MainWindow", u"Maximum archive pages per feed (100 items each)", None))
+#endif // QT_CONFIG(tooltip)
+        self.redditFullReportButton.setText(QCoreApplication.translate("MainWindow", u"Full Report", None))
+        self.redditPostsButton.setText(QCoreApplication.translate("MainWindow", u"Posts", None))
+        self.redditCommentsButton.setText(QCoreApplication.translate("MainWindow", u"Comments", None))
+        self.redditRemovedButton.setText(QCoreApplication.translate("MainWindow", u"Removed / Deleted", None))
+        self.redditIdentifiersButton.setText(QCoreApplication.translate("MainWindow", u"Identifiers", None))
+        self.redditActivityButton.setText(QCoreApplication.translate("MainWindow", u"Activity & Timezone", None))
+        self.redditAffiliationsButton.setText(QCoreApplication.translate("MainWindow", u"Subreddits & Tech", None))
+        self.redditArchiveSearchButton.setText(QCoreApplication.translate("MainWindow", u"Archive Search", None))
+        self.redditOsintDebug.setPlaceholderText(QCoreApplication.translate("MainWindow", u"REDDIT OSINT", None))
+        self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.redditOsintTab), QCoreApplication.translate("MainWindow", u"REDDIT", None))
         self.leakTargetEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Email / username / domain", None))
         self.leakSearchAllButton.setText(QCoreApplication.translate("MainWindow", u"Search All", None))
         self.leakInfostealerButton.setText(QCoreApplication.translate("MainWindow", u"Infostealer (Hudson Rock)", None))
@@ -2327,9 +2617,9 @@ class Ui_MainWindow(object):
         self.s4fSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search", None))
         self.s4fTargetLabel.setText("")
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.s4facesTab), QCoreApplication.translate("MainWindow", u"SEARCH4FACES", None))
+        self.linkToDownloadEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Link", None))
         self.useProxyToDownloadCheck.setText(QCoreApplication.translate("MainWindow", u"Use proxy", None))
         self.downloadFromLinkButton.setText(QCoreApplication.translate("MainWindow", u"Download", None))
-        self.linkToDownloadEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Link", None))
         self.label_10.setText(QCoreApplication.translate("MainWindow", u"Support: files, YT videos, github repos", None))
         self.openDownloadedFileButton.setText(QCoreApplication.translate("MainWindow", u"Open file", None))
         self.mainStackedWidget.setTabText(self.mainStackedWidget.indexOf(self.downloaderTab), QCoreApplication.translate("MainWindow", u"DOWNLOADER", None))
@@ -2376,6 +2666,8 @@ class Ui_MainWindow(object):
         self.dehashedEmailEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dehashed account email (optional)", None))
         self.dehashedApiKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Dehashed API Key (optional)", None))
         self.firmsMapKeyEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"NASA FIRMS MAP KEY (optional)", None))
+        self.redditClientIdEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Reddit Client ID (optional, live profile)", None))
+        self.redditClientSecretEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Reddit Client Secret (optional, live profile)", None))
         self.mcpStatusLabel.setText(QCoreApplication.translate("MainWindow", u"Stopped", None))
 #if QT_CONFIG(tooltip)
         self.mcpAuthCheck.setToolTip(QCoreApplication.translate("MainWindow", u"Require a bearer token for the MCP server (token stored at ~/.skyfall/mcp_token)", None))

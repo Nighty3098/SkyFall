@@ -174,13 +174,22 @@ def _wrap_page_in_scroll_area(host, column_index=1):
                     col.addLayout(sub)
             column_layout.addLayout(col)
 
+    # Wrap contents in a width-limiting container (400px max) so the form
+    # stays narrow and centered; the outer scroll area handles vertical scroll.
+    container = QWidget()
+    container.setObjectName(f"{host.objectName()}ScrollContainer")
+    container_layout = QVBoxLayout(container)
+    container_layout.setContentsMargins(0, 0, 0, 0)
+    container_layout.addWidget(contents)
+    container.setMaximumWidth(400)
+
     scroll = QScrollArea(host)
     scroll.setObjectName(f"{host.objectName()}ScrollArea")
     scroll.setWidgetResizable(True)
     scroll.setFrameShape(QFrame.Shape.NoFrame)
     scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
 
-    scroll.setWidget(contents)
+    scroll.setWidget(container)
     host.setLayout(QVBoxLayout())
     host.layout().setContentsMargins(0, 0, 0, 0)
     host.layout().addWidget(scroll)

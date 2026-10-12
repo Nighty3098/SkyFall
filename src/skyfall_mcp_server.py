@@ -132,8 +132,9 @@ mcp = FastMCP(
 MCP server for the SkyFall OSINT toolkit. Provides tools to:
 - Analyze domains (DNS, WHOIS, SSL, NMAP, WAF, malware, subdomains+brute,
   threat intel via AbuseIPDB/GreyNoise/ThreatFox/URLHaus, JS secrets scan)
-- Search usernames across 3300+ sites
+- Search usernames across 3300+ sites (Sherlock + Maigret merged view)
 - Look up usernames on Bluesky, Mastodon and Instagram
+- Reconstruct Reddit activity from public archives (Arctic Shift, PullPush)
 - Search emails via IntelX and HIBP, and find accounts registered to an email
 - Search leaks and infostealer logs (Hudson Rock, LeakCheck, HIBP, Dehashed)
 - Geo analysis: sun/shadow geometry, shadow geolocation, NASA FIRMS fires,
@@ -481,6 +482,52 @@ async def skyfall_maigret_search(username: str) -> str:
 
 
 @mcp.tool()
+async def skyfall_username_merged(username: str) -> str:
+    """Cross-check a username with both engines and confirm shared matches.
+
+    Runs the Sherlock-style engine and Maigret, matches the two result sets by
+    normalised profile URL (falling back to the site name) and reports the
+    accounts found by **both** engines as confirmed.
+    """
+    from src.modules.maigret_search import MaigretSearch
+    from src.modules.username_merge import merge_sources
+    from src.modules.username_search import UsernameSearch
+
+    try:
+        results = await UsernameSearch().acheck(username)
+        claimed = [r for r in results if r["status"] == UsernameSearch.Status.CLAIMED]
+        _, matches = await MaigretSearch().search_and_report_structured(username)
+        confirmed, sherlock_only, maigret_only = merge_sources(claimed, matches)
+    except Exception as e:
+        return _extract_json({"error": str(e)})
+
+    def _row(entry: dict) -> dict:
+        return {
+            "site": entry.get("site", ""),
+            "url": entry.get("url_user", ""),
+            "status": entry.get("status", ""),
+        }
+
+    return _extract_json(
+        {
+            "username": username,
+            "confirmed_count": len(confirmed),
+            "sherlock_only_count": len(sherlock_only),
+            "maigret_only_count": len(maigret_only),
+            "confirmed": [
+                {
+                    **_row(sherlock),
+                    "maigret_status": maigret.get("status", ""),
+                }
+                for sherlock, maigret in confirmed
+            ],
+            "sherlock_only": [_row(r) for r in sherlock_only],
+            "maigret_only": [_row(r) for r in maigret_only],
+        }
+    )
+
+
+@mcp.tool()
 async def skyfall_social_search(username: str, mastodon_instance: str = "") -> str:
     """Find a username on Bluesky and Mastodon (public APIs, no keys)."""
     from src.modules.social_search import SocialSearch
@@ -498,6 +545,268 @@ async def skyfall_instagram_profile(username: str) -> str:
     engine = SocialSearch()
     data = await engine.instagram_profile(username)
     return _extract_json(data)
+
+
+# ── Reddit OSINT ──────────────────────────────────────────────────────
+
+_REDDIT_SOURCES = {
+    "both": ("arctic", "pullpush"),
+    "arctic": ("arctic",),
+    "pullpush": ("pullpush",),
+}
+_REDDIT_TTL = 900
+_REDDIT_CACHE: dict[tuple, tuple[float, dict, list[str]]] = {}
+
+
+async def _reddit_report(
+    username: str,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> tuple[dict, list[str]]:
+    """Collect and analyze a Reddit account, reusing a 15-minute cache."""
+    import time
+
+    from src.modules.reddit_osint import RedditOsint
+
+    key = (username, source, subreddit, keywords, max_pages)
+    cached = _REDDIT_CACHE.get(key)
+    now = time.monotonic()
+    if cached and now - cached[0] < _REDDIT_TTL:
+        return cached[1], cached[2]
+
+    engine = RedditOsint(
+        client_id=_settings.get("reddit_client_id", ""),
+        client_secret=_settings.get("reddit_client_secret", ""),
+    )
+    sources = _REDDIT_SOURCES.get((source or "both").lower(), ("arctic", "pullpush"))
+    report, errors = await engine.full_report(
+        username,
+        sources=sources,
+        subreddit=subreddit or None,
+        keywords=keywords or None,
+        max_pages=max_pages,
+    )
+    _REDDIT_CACHE[key] = (now, report, errors)
+    return report, errors
+
+
+@mcp.tool()
+async def skyfall_reddit_report(
+    username: str,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """Reconstruct a Reddit account profile from public archives.
+
+    Queries the Arctic Shift and PullPush archives for posts and comments,
+    classifies items (live / removed by mods / deleted by author) and returns
+    the aggregated report without the raw item list.
+
+    Args:
+        username: Reddit username (with or without ``u/``)
+        source: ``both`` (default), ``arctic`` or ``pullpush``
+        subreddit: optional subreddit filter
+        keywords: optional full-text filter
+        max_pages: page limit per archive feed (default 40)
+    """
+    try:
+        report, errors = await _reddit_report(
+            username, source, subreddit, keywords, max_pages
+        )
+    except Exception as e:
+        return _extract_json({"error": str(e)})
+
+    slim = {key: value for key, value in report.items() if key != "items"}
+    slim["errors"] = errors
+    return _extract_json(slim)
+
+
+@mcp.tool()
+async def skyfall_reddit_posts(
+    username: str,
+    limit: int = 100,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """Return the newest archived posts of a Reddit account."""
+    report, errors = await _reddit_report(
+        username, source, subreddit, keywords, max_pages
+    )
+    posts = [i for i in report.get("items", []) if i.get("kind") == "posts"]
+    posts = list(reversed(posts))[:limit]
+    return _extract_json(
+        {
+            "username": report.get("username"),
+            "count": len(posts),
+            "posts": posts,
+            "errors": errors,
+        }
+    )
+
+
+@mcp.tool()
+async def skyfall_reddit_comments(
+    username: str,
+    limit: int = 100,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """Return the newest archived comments of a Reddit account."""
+    report, errors = await _reddit_report(
+        username, source, subreddit, keywords, max_pages
+    )
+    comments = [i for i in report.get("items", []) if i.get("kind") == "comments"]
+    comments = list(reversed(comments))[:limit]
+    return _extract_json(
+        {
+            "username": report.get("username"),
+            "count": len(comments),
+            "comments": comments,
+            "errors": errors,
+        }
+    )
+
+
+@mcp.tool()
+async def skyfall_reddit_removed(
+    username: str,
+    limit: int = 100,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """List posts/comments removed by moderators or deleted by the author."""
+    report, errors = await _reddit_report(
+        username, source, subreddit, keywords, max_pages
+    )
+    flagged = report.get("deleted_removed_items", [])[:limit]
+    return _extract_json(
+        {
+            "username": report.get("username"),
+            "totals": report.get("totals", {}),
+            "count": len(flagged),
+            "items": flagged,
+            "errors": errors,
+        }
+    )
+
+
+@mcp.tool()
+async def skyfall_reddit_identifiers(
+    username: str,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """Extract identifiers (email, crypto, telegram, domains, mentions)."""
+    report, errors = await _reddit_report(
+        username, source, subreddit, keywords, max_pages
+    )
+    return _extract_json(
+        {
+            "username": report.get("username"),
+            "exposure_score_0_100": report.get("score_exposure_0_100", 0),
+            "identifiers": report.get("identifiers", []),
+            "external_domains": report.get("external_domains", []),
+            "mentioned_users": report.get("mentioned_users", []),
+            "errors": errors,
+        }
+    )
+
+
+@mcp.tool()
+async def skyfall_reddit_activity(
+    username: str,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """Return the activity histogram and timezone estimate of a Reddit account."""
+    report, errors = await _reddit_report(
+        username, source, subreddit, keywords, max_pages
+    )
+    return _extract_json(
+        {
+            "username": report.get("username"),
+            "totals": report.get("totals", {}),
+            "timezone_guess": report.get("timezone_guess", {}),
+            "activity_by_hour_utc": report.get("activity_by_hour_utc", []),
+            "activity_by_weekday": report.get("activity_by_weekday", {}),
+            "activity_by_month": report.get("activity_by_month", {}),
+            "errors": errors,
+        }
+    )
+
+
+@mcp.tool()
+async def skyfall_reddit_affiliations(
+    username: str,
+    source: str = "both",
+    subreddit: str = "",
+    keywords: str = "",
+    max_pages: int = 40,
+) -> str:
+    """Return the top subreddits and mentioned technologies of a Reddit account."""
+    report, errors = await _reddit_report(
+        username, source, subreddit, keywords, max_pages
+    )
+    return _extract_json(
+        {
+            "username": report.get("username"),
+            "top_subreddits": report.get("top_subreddits", []),
+            "technologies": report.get("technologies", []),
+            "errors": errors,
+        }
+    )
+
+
+@mcp.tool()
+async def skyfall_reddit_archive_search(
+    keywords: str,
+    kind: str = "posts",
+    subreddit: str = "",
+    author: str = "",
+    limit: int = 50,
+) -> str:
+    """Full-text phrase search across the Reddit archive (Arctic Shift).
+
+    Args:
+        keywords: phrase to search for
+        kind: ``posts`` (default) or ``comments``
+        subreddit: optional subreddit scope
+        author: optional author scope
+        limit: maximum number of hits (default 50)
+    """
+    from src.modules.reddit_osint import RedditOsint
+
+    engine = RedditOsint(
+        client_id=_settings.get("reddit_client_id", ""),
+        client_secret=_settings.get("reddit_client_secret", ""),
+    )
+    try:
+        rows = await engine.search_archive(
+            keywords=keywords,
+            kind=kind,
+            subreddit=subreddit or None,
+            author=author or None,
+            limit=limit,
+        )
+    except Exception as e:
+        return _extract_json({"error": str(e)})
+    return _extract_json(
+        {"keywords": keywords, "kind": kind, "count": len(rows), "results": rows}
+    )
 
 
 # ── Email Search ──────────────────────────────────────────────────────
@@ -1424,8 +1733,11 @@ def resource_modules() -> str:
         "Domain Analysis: skyfall_domain_* (16 tools: ip, dns, whois, ssl, headers, "
         "web_stack, nmap, waf, malware, threat_intel, js_secrets, subdomains, "
         "robots, security_txt, social_tags) + skyfall_ip_domains",
-        "Username Search: skyfall_username_search, skyfall_maigret_search",
+        "Username Search: skyfall_username_search, skyfall_maigret_search, "
+        "skyfall_username_merged (confirmed by both engines)",
         "Social: skyfall_social_search (Bluesky/Mastodon), skyfall_instagram_profile",
+        "Reddit OSINT: skyfall_reddit_* (report, posts, comments, removed, "
+        "identifiers, activity, affiliations, archive_search)",
         "Email Search: skyfall_email_* (IntelX, HIBP, combined, headers/EML)",
         "Leaks: skyfall_leak_check, skyfall_infostealer_search (Hudson Rock)",
         "Geo: skyfall_geo_sun_shadow, skyfall_shadow_geolocate, skyfall_firms_fires, "

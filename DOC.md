@@ -474,7 +474,7 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 ## MCP-серверы
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 80 инструментов
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 89 инструментов
 
 Сервер FastMCP: `--host 127.0.0.1 --port 9877`, транспорты `stdio`/`sse`. Запускается/останавливается с вкладки Settings (кнопка MCP) или через `McpController`.
 
@@ -484,9 +484,11 @@ Google-дорки по базе `data/dorks.json` (14 категорий, ~7 944
 
 **Домены (16):** ip, домены на IP, DNS, WHOIS, SSL, заголовки, веб-стек, nmap, WAF, репутация-агрегатор, threat intel, JS secrets, субдомены (passive + brute), robots.txt, security.txt, соц-теги.
 
-**Username (2):** sherlock-поиск (`skyfall_username_search`), maigret (`skyfall_maigret_search`).
+**Username (3):** sherlock-поиск (`skyfall_username_search`), maigret (`skyfall_maigret_search`), кросс-проверка обоих движков с подтверждением совпадений (`skyfall_username_merged`).
 
 **Соцсети (2):** поиск в Bluesky + Mastodon (`skyfall_social_search`), профиль Instagram (`skyfall_instagram_profile`).
+
+**Reddit (8):** `skyfall_reddit_report` (агрегированный профиль из архивов Arctic Shift + PullPush), `skyfall_reddit_posts`, `skyfall_reddit_comments`, `skyfall_reddit_removed` (удалено модераторами/автором), `skyfall_reddit_identifiers` (email, крипта, Telegram, домены, упоминания, оценка экспозиции), `skyfall_reddit_activity` (гистограмма по часам/дням/месяцам + часовой пояс), `skyfall_reddit_affiliations` (топ-сабреддиты, технологии), `skyfall_reddit_archive_search` (полнотекстовый поиск по архиву). Отчёты кешируются на 15 минут.
 
 **Email (6):** IntelX, HIBP, комбинированный, разбор `.eml`-файла, разбор вставленных заголовков, поиск аккаунтов по email (Gravatar/Microsoft/… + holehe).
 

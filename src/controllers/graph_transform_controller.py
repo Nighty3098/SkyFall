@@ -580,13 +580,13 @@ def _parse_domain_dns(data, domain):
         return TransformResult(content="DNS lookup failed")
     lines = [divider(), title(f"DNS: {domain}")]
     children = []
-    for rtype in ["A", "MX", "TXT", "NS", "CNAME"]:
+    for rtype in ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]:
         records = data.get(rtype, [])
         if records:
             lines.append(section(rtype))
             for rec in records[:3]:
                 lines.append(bullet(str(rec)))
-                child_type = "IP" if rtype == "A" else "Custom"
+                child_type = "IP" if rtype in ("A", "AAAA") else "Custom"
                 children.append(ChildNodeDef(title=str(rec), entity_type=child_type))
     soa = data.get("SOA", {})
     if soa:

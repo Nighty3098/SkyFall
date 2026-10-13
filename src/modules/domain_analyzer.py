@@ -3,6 +3,7 @@ import ipaddress
 import socket
 import ssl
 import uuid
+from pathlib import Path
 from urllib.parse import urlparse
 
 import cloudscraper
@@ -26,6 +27,39 @@ from src.ui.output_formatter import (
     section,
     title,
 )
+
+#: Used when the OS resolver configuration cannot be read by dnspython
+#: (for example a dangling ``/etc/resolv.conf`` symlink).  dnspython raises
+#: ``NoResolverConfiguration`` in that case and every DNS query silently
+#: returned nothing.
+_FALLBACK_NAMESERVERS = ("1.1.1.1", "8.8.8.8")
+
+#: Locations that may describe the system resolver, most specific first.
+_RESOLV_CONF_CANDIDATES = (
+    "/run/systemd/resolve/resolv.conf",
+    "/run/systemd/resolve/stub-resolv.conf",
+    "/etc/resolv.conf",
+)
+
+
+def _read_system_nameservers():
+    """Best-effort list of nameservers from the system resolver files."""
+    for path in _RESOLV_CONF_CANDIDATES:
+        try:
+            text = Path(path).read_text(encoding="utf-8")
+        except OSError:
+            continue
+        servers = []
+        for raw in text.splitlines():
+            line = raw.strip()
+            if not line.startswith("nameserver"):
+                continue
+            parts = line.split()
+            if len(parts) >= 2:
+                servers.append(parts[1])
+        if servers:
+            return servers
+    return []
 
 
 class DomainAnalyzer:
@@ -77,12 +111,13 @@ class DomainAnalyzer:
         return value.strip().strip(".").lower()
 
     @staticmethod
-    def _resolve_type(host, rtype):
-        """Synchronously resolve ``host`` for one record type; never raises."""
+    def _system_ips(host):
+        """Resolve through the OS stack; returns a set of IP strings."""
         try:
-            return {str(r) for r in dns.resolver.resolve(host, rtype)}
-        except Exception:
+            infos = socket.getaddrinfo(host, None)
+        except OSError:
             return set()
+        return {info[4][0] for info in infos}
 
     async def _resolve_ips(self, host):
         """Return every A/AAAA address for ``host`` as a set of strings."""
@@ -94,11 +129,41 @@ class DomainAnalyzer:
             return {host}
         except ValueError:
             pass
-        a, aaaa = await asyncio.gather(
-            asyncio.to_thread(self._resolve_type, host, "A"),
-            asyncio.to_thread(self._resolve_type, host, "AAAA"),
-        )
-        return a | aaaa
+        return await asyncio.to_thread(self._system_ips, host)
+
+    _fallback_resolver = None
+
+    @classmethod
+    def _record_resolver(cls):
+        """Explicitly configured resolver used when the system one is unreadable."""
+        if cls._fallback_resolver is None:
+            resolver = dns.resolver.Resolver(configure=False)
+            servers = _read_system_nameservers() or list(_FALLBACK_NAMESERVERS)
+            resolver.nameservers = servers
+            resolver.timeout = 3
+            resolver.lifetime = 5
+            cls._fallback_resolver = resolver
+            logger.debug(f"DNS fallback resolver using nameservers: {servers}")
+        return cls._fallback_resolver
+
+    @classmethod
+    def _dns_answer(cls, host, rtype):
+        """Resolve ``rtype`` for ``host`` and never raise.
+
+        Falls back to an explicitly configured resolver when dnspython cannot
+        read the system resolver configuration, so DNS based fields keep
+        working instead of coming back empty.
+        """
+        try:
+            return list(dns.resolver.resolve(host, rtype))
+        except dns.resolver.NoResolverConfiguration:
+            pass
+        except Exception:
+            return []
+        try:
+            return list(cls._record_resolver().resolve(host, rtype))
+        except Exception:
+            return []
 
     async def get_robots_txt(self, domain):
         logger.debug("Trying to get robots.txt")
@@ -365,23 +430,18 @@ class DomainAnalyzer:
     async def get_dns(self, domain):
         logger.debug("Trying to get DNS info")
         try:
-            record_types = ["A", "MX", "TXT", "NS", "CNAME"]
+            domain = self._normalize_host(domain)
+            if not domain:
+                return {"error": "Error DNS: empty domain"}
+            record_types = ["A", "AAAA", "MX", "TXT", "NS", "CNAME"]
             dns_results = {}
             for r_type in record_types:
-                try:
-                    answers = await asyncio.to_thread(
-                        dns.resolver.resolve, domain, r_type
-                    )
-                    dns_results[r_type] = [str(rdata) for rdata in answers]
-                except Exception:
-                    dns_results[r_type] = []
+                answers = await asyncio.to_thread(self._dns_answer, domain, r_type)
+                dns_results[r_type] = [str(rdata) for rdata in answers]
 
-            soa = {}
-            try:
-                soa_record = await asyncio.to_thread(
-                    dns.resolver.resolve, domain, "SOA"
-                )
-                soa = soa_record[0]
+            soa_answer = await asyncio.to_thread(self._dns_answer, domain, "SOA")
+            if soa_answer:
+                soa = soa_answer[0]
                 dns_results["SOA"] = {
                     "mname": str(soa.mname),
                     "rname": str(soa.rname),
@@ -391,16 +451,13 @@ class DomainAnalyzer:
                     "expire": soa.expire,
                     "minimum": soa.minimum,
                 }
-            except Exception:
+            else:
                 dns_results["SOA"] = {}
 
             ns_ips = {}
             for ns in dns_results.get("NS", []):
-                try:
-                    answers = await asyncio.to_thread(dns.resolver.resolve, ns, "A")
-                    ns_ips[ns] = [str(rdata) for rdata in answers]
-                except Exception:
-                    ns_ips[ns] = []
+                answers = await asyncio.to_thread(self._dns_answer, ns.rstrip("."), "A")
+                ns_ips[ns] = [str(rdata) for rdata in answers]
             dns_results["NS_IP"] = ns_ips
 
             return dns_results
@@ -833,29 +890,51 @@ class DomainAnalyzer:
 
         return await asyncio.to_thread(_search)
 
-    async def _subdomains_crtsh(self, domain):
+    async def _crtsh_json(self, query):
+        """Fetch crt.sh JSON for ``query`` with one retry on server errors.
+
+        crt.sh regularly answers ``502`` under load; a single short retry turns
+        a transient failure into a usable result instead of an empty field.
+        """
+
         def _fetch():
-            try:
-                scraper = cloudscraper.create_scraper()
-                resp = scraper.get(
-                    f"https://crt.sh/?q=%25.{domain}&output=json",
-                    timeout=30,
-                    headers={"User-Agent": self.ua.random},
-                )
-                if resp.status_code != 200:
-                    return set()
-                out = set()
-                for entry in resp.json():
-                    for name in str(entry.get("name_value", "")).split("\n"):
-                        name = name.strip().lower().lstrip("*.")
-                        if name == domain or name.endswith("." + domain):
-                            out.add(name)
-                return out
-            except Exception as e:
-                logger.debug(f"crt.sh subdomains failed: {e}")
-                return set()
+            last = None
+            for _ in range(2):
+                try:
+                    scraper = cloudscraper.create_scraper()
+                    resp = scraper.get(
+                        f"https://crt.sh/?q={query}&output=json",
+                        timeout=30,
+                        headers={"User-Agent": self.ua.random},
+                    )
+                except Exception as e:  # network/timeout
+                    last = e
+                    continue
+                if resp.status_code == 200:
+                    try:
+                        return resp.json()
+                    except Exception as e:
+                        last = e
+                        continue
+                last = f"HTTP {resp.status_code}"
+                if resp.status_code < 500:
+                    break
+            logger.debug(f"crt.sh request failed: {last}")
+            return None
 
         return await asyncio.to_thread(_fetch)
+
+    async def _subdomains_crtsh(self, domain):
+        data = await self._crtsh_json(f"%25.{domain}")
+        if not data:
+            return set()
+        out = set()
+        for entry in data:
+            for name in str(entry.get("name_value", "")).split("\n"):
+                name = name.strip().lower().lstrip("*.")
+                if name == domain or name.endswith("." + domain):
+                    out.add(name)
+        return out
 
     async def _subdomains_otx(self, domain):
         def _fetch():
@@ -923,6 +1002,47 @@ class DomainAnalyzer:
 
         return await asyncio.to_thread(_fetch)
 
+    async def _certspotter_issuances(self, domain):
+        """Return Cert Spotter issuances for ``domain`` or ``None`` on failure.
+
+        Cert Spotter is a free, key-less Certificate Transparency API used as a
+        fallback when crt.sh is unavailable and to enrich subdomain discovery.
+        """
+
+        def _fetch():
+            try:
+                resp = requests.get(
+                    "https://api.certspotter.com/v1/issuances",
+                    params={
+                        "domain": domain,
+                        "include_subdomains": "true",
+                        "expand": "dns_names",
+                    },
+                    timeout=20,
+                    headers={"User-Agent": self.ua.random},
+                )
+                if resp.status_code != 200:
+                    return None
+                data = resp.json()
+                return data if isinstance(data, list) else None
+            except Exception as e:
+                logger.debug(f"Cert Spotter failed: {e}")
+                return None
+
+        return await asyncio.to_thread(_fetch)
+
+    async def _subdomains_certspotter(self, domain):
+        data = await self._certspotter_issuances(domain)
+        if not data:
+            return set()
+        out = set()
+        for entry in data:
+            for name in entry.get("dns_names", []):
+                host = str(name).strip().lower().lstrip("*.")
+                if host == domain or host.endswith("." + domain):
+                    out.add(host)
+        return out
+
     async def _subdomains_brute(self, domain, wordlist=None, concurrency=40):
         words = wordlist or self.SUBDOMAIN_WORDLIST
         sem = asyncio.Semaphore(concurrency)
@@ -957,9 +1077,10 @@ class DomainAnalyzer:
             if not domain:
                 return "\n".join([divider(), error("Invalid domain"), divider()])
             per_source = {}
-            ddg, crt, otx, ht, anubis = await asyncio.gather(
+            ddg, crt, certspotter, otx, ht, anubis = await asyncio.gather(
                 self._subdomains_ddg(domain),
                 self._subdomains_crtsh(domain),
+                self._subdomains_certspotter(domain),
                 self._subdomains_otx(domain),
                 self._subdomains_hackertarget(domain),
                 self._subdomains_anubis(domain),
@@ -967,6 +1088,7 @@ class DomainAnalyzer:
             per_source = {
                 "DuckDuckGo": ddg,
                 "crt.sh": crt,
+                "Cert Spotter": certspotter,
                 "AlienVault OTX": otx,
                 "HackerTarget": ht,
                 "AnubisDB": anubis,
@@ -1075,18 +1197,25 @@ class DomainAnalyzer:
     async def get_certificate_transparency(self, domain):
         logger.debug("Trying to get Certificate Transparency logs")
         try:
-            scraper = cloudscraper.create_scraper()
-            url = f"https://crt.sh/?q={domain}&output=json"
-            response = await asyncio.to_thread(
-                scraper.get,
-                url,
-                timeout=30,
-                headers={"User-Agent": self.ua.random},
-            )
-            if response.status_code != 200:
-                return error(f"crt.sh returned {response.status_code}")
-
-            data = response.json()
+            data = await self._crtsh_json(domain)
+            source = "crt.sh"
+            if data is None:
+                cs = await self._certspotter_issuances(domain)
+                if cs is None:
+                    return error("crt.sh and Cert Spotter unavailable")
+                source = "Cert Spotter"
+                data = [
+                    {
+                        "id": e.get("id"),
+                        "name_value": "\n".join(e.get("dns_names", [])),
+                        "issuer_name": "",
+                        "common_name": (e.get("dns_names") or [""])[0],
+                        "not_before": e.get("not_before", ""),
+                        "not_after": e.get("not_after", ""),
+                        "serial_number": str(e.get("cert_sha256", ""))[:16],
+                    }
+                    for e in cs
+                ]
             if not data:
                 return info("No certificates found")
 
@@ -1113,6 +1242,7 @@ class DomainAnalyzer:
             lines = [
                 divider(),
                 title("Certificate Transparency: detail"),
+                kv("Source", source),
                 kv("Total certs found", min(len(data), 100)),
                 kv("Unique domains", len(unique_domains)),
                 kv("Unique issuers (CAs)", len(unique_issuers)),

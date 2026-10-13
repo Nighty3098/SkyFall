@@ -159,6 +159,16 @@
               </property>
              </spacer>
             </item>
+            <item>
+             <widget class="QLabel" name="sourceCodeLinkLabel">
+              <property name="text">
+               <string>Source Code By Nighty3098</string>
+              </property>
+              <property name="alignment">
+               <set>Qt::AlignmentFlag::AlignCenter</set>
+              </property>
+             </widget>
+            </item>
            </layout>
           </item>
          </layout>

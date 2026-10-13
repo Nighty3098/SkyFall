@@ -115,8 +115,17 @@ def setup_view_menu(parent):
         action.triggered.connect(lambda checked, idx=i: tabs.setCurrentIndex(idx))
 
 
+def setup_source_code_link(parent):
+    label = getattr(parent.ui, "sourceCodeLinkLabel", None)
+    if label is None:
+        return
+    label.setCursor(Qt.CursorShape.PointingHandCursor)
+    label.installEventFilter(parent)
+
+
 def setup_ui(self):
     setup_navbar(self)
     setup_view_menu(self)
     setup_navigation_action(self)
+    setup_source_code_link(self)
     polish_ui(self)

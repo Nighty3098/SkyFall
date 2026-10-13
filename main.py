@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "thirdparty" / "txfetch"))
 
 from loguru import logger
-from PySide6.QtCore import Qt
+from PySide6.QtCore import QEvent, Qt
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -184,6 +184,15 @@ class MainWindow(QMainWindow):
         if hasattr(self, "fileAnalyzer"):
             self._close_task = asyncio.ensure_future(self.fileAnalyzer.close())
         super().closeEvent(event)
+
+    def eventFilter(self, obj, event):
+        if obj is getattr(self.ui, "sourceCodeLinkLabel", None) and event.type() in (
+            QEvent.Type.MouseButtonRelease,
+            QEvent.Type.MouseButtonDblClick,
+        ):
+            self._open_github()
+            return True
+        return super().eventFilter(obj, event)
 
     def _wire_case_auto_save(self):
         widget_names = list(self.case_manager.CATEGORY_MAP)

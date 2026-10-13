@@ -421,6 +421,12 @@ QLabel {
     color: $text;
 }
 
+QLabel#sourceCodeLinkLabel {
+    text-decoration: none;
+    color: $text;
+    font-family: "Bebas Neue", monospace;
+}
+
 QLabel#metadataFilePath {
     border-radius: $radius;
     border: 1px solid $border;

@@ -1,7 +1,8 @@
 import asyncio
-import re
+import ipaddress
 import socket
 import ssl
+import uuid
 from urllib.parse import urlparse
 
 import cloudscraper
@@ -50,6 +51,55 @@ class DomainAnalyzer:
         self.API_KEYS["ABUSEIPDB"] = abuseipdb_api_key or ""
         self.API_KEYS["GREYNOISE"] = greynoise_api_key or ""
 
+    @staticmethod
+    def _normalize_host(value):
+        """Reduce a user supplied value to a bare lower-case host name.
+
+        Accepts full URLs (``https://host/path``), ``host:port`` pairs, IPv4 /
+        IPv6 literals and values with a trailing dot; returns ``""`` when
+        nothing usable is left.
+        """
+        value = (value or "").strip()
+        if not value:
+            return ""
+        try:
+            return str(ipaddress.ip_address(value))
+        except ValueError:
+            pass
+        if "://" in value:
+            value = urlparse(value).hostname or ""
+        else:
+            value = value.split("/")[0]
+        if value.startswith("["):  # bracketed IPv6 with optional port
+            value = value[1:].split("]", 1)[0]
+        elif value.count(":") == 1:  # host:port
+            value = value.split(":", 1)[0]
+        return value.strip().strip(".").lower()
+
+    @staticmethod
+    def _resolve_type(host, rtype):
+        """Synchronously resolve ``host`` for one record type; never raises."""
+        try:
+            return {str(r) for r in dns.resolver.resolve(host, rtype)}
+        except Exception:
+            return set()
+
+    async def _resolve_ips(self, host):
+        """Return every A/AAAA address for ``host`` as a set of strings."""
+        host = self._normalize_host(host)
+        if not host:
+            return set()
+        try:
+            ipaddress.ip_address(host)
+            return {host}
+        except ValueError:
+            pass
+        a, aaaa = await asyncio.gather(
+            asyncio.to_thread(self._resolve_type, host, "A"),
+            asyncio.to_thread(self._resolve_type, host, "AAAA"),
+        )
+        return a | aaaa
+
     async def get_robots_txt(self, domain):
         logger.debug("Trying to get robots.txt")
         try:
@@ -84,10 +134,14 @@ class DomainAnalyzer:
 
     async def get_ip_and_location(self, domain):
         logger.debug("Trying to get IP and location")
-        try:
-            ip = await asyncio.to_thread(socket.gethostbyname, domain)
-        except Exception as e:
-            return {"error": f"GET IP: Domain not resolve IP: {e}"}
+        ips = await self._resolve_ips(domain)
+        if not ips:
+            return {"error": "GET IP: Domain did not resolve to any IP"}
+
+        # Geo providers (the free ip-api tier in particular) are IPv4-only, so
+        # pick an IPv4 address when one exists and keep the rest for callers.
+        ip = next((addr for addr in sorted(ips) if ":" not in addr), sorted(ips)[0])
+        all_ips = sorted(ips)
 
         ipinfo_url = f"https://ipinfo.io/{ip}/json"
         if self.API_KEYS["IPINFO"]:
@@ -142,13 +196,16 @@ class DomainAnalyzer:
                     data = response.json()
                     if data.get("status") == "fail":
                         continue
-                    return provider["parser"](data)
+                    result = provider["parser"](data)
+                    result["all_ips"] = all_ips
+                    return result
             except Exception as err:
                 logger.error(f"Error {provider['url']}: {err}")
                 errors.append(f"Error {provider['url']}: {err}")
 
         return {
             "ip": ip,
+            "all_ips": all_ips,
             "error": "GEO Error.",
             "details": errors,
         }
@@ -158,10 +215,24 @@ class DomainAnalyzer:
         result = {"ip": ip, "ptr": [], "hostnames": [], "hacker_target": []}
 
         try:
-            reversed_ip = ".".join(reversed(ip.split(".")))
-            ptr_fqdn = f"{reversed_ip}.in-addr.arpa"
-            answers = await asyncio.to_thread(dns.resolver.resolve, ptr_fqdn, "PTR")
-            result["ptr"] = [str(rdata) for rdata in answers]
+            ip_addr = ipaddress.ip_address(ip.strip())
+        except ValueError:
+            result["error"] = f"Invalid IP address: {ip}"
+            return result
+
+        def _clean(entries):
+            cleaned = []
+            for entry in entries:
+                host = str(entry).strip().rstrip(".").lower()
+                if host:
+                    cleaned.append(host)
+            return cleaned
+
+        try:
+            answers = await asyncio.to_thread(
+                dns.resolver.resolve, ip_addr.reverse_pointer, "PTR"
+            )
+            result["ptr"] = _clean(str(rdata) for rdata in answers)
         except Exception as e:
             logger.debug(f"PTR lookup failed for {ip}: {e}")
 
@@ -173,7 +244,7 @@ class DomainAnalyzer:
             )
             if response.status_code == 200:
                 data = response.json()
-                result["hostnames"] = data.get("hostnames", [])
+                result["hostnames"] = _clean(data.get("hostnames", []))
         except Exception as e:
             logger.debug(f"InternetDB failed for {ip}: {e}")
 
@@ -184,19 +255,19 @@ class DomainAnalyzer:
                 timeout=10,
             )
             if response.status_code == 200 and "error" not in response.text.lower():
-                lines = [
-                    ln.strip() for ln in response.text.strip().split("\n") if ln.strip()
-                ]
-                result["hacker_target"] = lines
+                result["hacker_target"] = _clean(response.text.strip().split("\n"))
         except Exception as e:
             logger.debug(f"HackerTarget failed for {ip}: {e}")
 
         raw = set(result["ptr"] + result["hostnames"] + result["hacker_target"])
         all_domains = set()
         for entry in raw:
-            if re.match(r"^\d{1,3}(\.\d{1,3}){3}$", entry):
+            try:
+                ipaddress.ip_address(entry)
                 continue
-            if ":" in entry:
+            except ValueError:
+                pass
+            if ":" in entry:  # leftover IPv6 / port notation
                 continue
             all_domains.add(entry)
         result["total_unique"] = len(all_domains)
@@ -340,16 +411,16 @@ class DomainAnalyzer:
     async def get_hosts(self, domain):
         logger.debug("Trying to get associated hosts")
         try:
-            associated_hosts = []
-            for sub in ["www", "mail", "dev", "api", "test"]:
-                try:
-                    sub_domain = f"{sub}.{domain}"
-                    await asyncio.to_thread(socket.gethostbyname, sub_domain)
-                    associated_hosts.append(sub_domain)
-                except socket.gaierror:
-                    pass
-
-            return associated_hosts
+            domain = self._normalize_host(domain)
+            if not domain:
+                return []
+            # Reuse the shared brute-force wordlist instead of a second,
+            # hard-coded list so the check stays consistent with
+            # ``find_subdomains``.
+            labels = self.SUBDOMAIN_WORDLIST[:8]
+            hosts = [f"{label}.{domain}" for label in labels]
+            resolved = await asyncio.gather(*[self._resolve_ips(h) for h in hosts])
+            return [host for host, ips in zip(hosts, resolved, strict=True) if ips]
         except Exception as e:
             logger.error(f"Error hosts: {e}")
             return {"error": f"Error hosts: {e}"}
@@ -723,7 +794,6 @@ class DomainAnalyzer:
         "partners",
         "reseller",
         "affiliate",
-        "pay",
         "checkout",
         "cart",
         "order",
@@ -736,7 +806,6 @@ class DomainAnalyzer:
         "manage",
         "my",
         "id",
-        "account",
         "devops",
         "secops",
         "soc",
@@ -859,14 +928,24 @@ class DomainAnalyzer:
         sem = asyncio.Semaphore(concurrency)
         found = set()
 
+        # Detect wildcard DNS first: if ``*.domain`` resolves, every label
+        # would otherwise appear to exist and flood the results.
+        wildcard = await self._resolve_ips(f"{uuid.uuid4().hex}.{domain}")
+        if wildcard:
+            logger.info(
+                f"Wildcard DNS detected for {domain} "
+                f"({', '.join(sorted(wildcard))}); filtering brute hits"
+            )
+
         async def _probe(label):
             async with sem:
                 host = f"{label}.{domain}"
-                try:
-                    await asyncio.to_thread(socket.gethostbyname, host)
-                    found.add(host.lower())
-                except Exception:
-                    pass
+                ips = await self._resolve_ips(host)
+                if not ips:
+                    return
+                if wildcard and ips <= wildcard:
+                    return
+                found.add(host.lower())
 
         await asyncio.gather(*[_probe(w) for w in words])
         return found
@@ -874,7 +953,9 @@ class DomainAnalyzer:
     async def find_subdomains(self, domain, use_brute=True, wordlist=None):
         logger.debug("Trying to find subdomains")
         try:
-            domain = domain.strip().lower()
+            domain = self._normalize_host(domain)
+            if not domain:
+                return "\n".join([divider(), error("Invalid domain"), divider()])
             per_source = {}
             ddg, crt, otx, ht, anubis = await asyncio.gather(
                 self._subdomains_ddg(domain),

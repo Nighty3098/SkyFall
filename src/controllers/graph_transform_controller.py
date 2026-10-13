@@ -489,6 +489,14 @@ async def _run_transform(
     return parser(result, input_value)
 
 
+def _safe_float(value):
+    """Best-effort float conversion; returns None instead of raising."""
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
 # ── Parsers ───────────────────────────────────────────────────────
 
 
@@ -553,9 +561,9 @@ def _parse_domain_ip(data, domain):
                 ),
             ),
         )
-    lat = data.get("lat")
-    lon = data.get("lon")
-    if lat and lon:
+    lat = _safe_float(data.get("lat"))
+    lon = _safe_float(data.get("lon"))
+    if lat is not None and lon is not None:
         children.append(
             ChildNodeDef(
                 title=f"{lat:.2f}, {lon:.2f}",
@@ -710,9 +718,18 @@ def _parse_domain_subdomains(raw, domain):
     if not isinstance(raw, str) or not raw or "Error" in raw:
         return TransformResult(content=str(raw))
     result_lines = raw.split("\n")
-    subs = [
-        ln.strip().lstrip("- ").strip() for ln in result_lines if ln.startswith("  - ")
-    ]
+    # ``find_subdomains`` lists every host per source and again under
+    # "Combined", so collapse the repeated entries while keeping the order.
+    seen = set()
+    subs = []
+    for ln in result_lines:
+        if not ln.startswith("  - "):
+            continue
+        host = ln.strip().removeprefix("- ").strip().lower()
+        if not host or host in seen:
+            continue
+        seen.add(host)
+        subs.append(host)
     children = []
     for sub in subs[:CHILD_THRESHOLD]:
         children.append(ChildNodeDef(title=sub, entity_type="Domain"))
@@ -903,10 +920,10 @@ def _parse_domain_nmap(data, domain):
 def _parse_ip_geo(data, ip_addr):
     if not isinstance(data, dict):
         return TransformResult(content=str(data))
-    lat = data.get("lat")
-    lon = data.get("lon")
+    lat = _safe_float(data.get("lat"))
+    lon = _safe_float(data.get("lon"))
     children = []
-    if lat and lon:
+    if lat is not None and lon is not None:
         children.append(
             ChildNodeDef(
                 title=f"{lat:.2f}, {lon:.2f}",
@@ -935,8 +952,17 @@ def _parse_ip_domains(data, ip_addr):
     if not isinstance(data, dict) or "error" in data:
         return TransformResult(content=str(data))
 
+    domain_re = _PATTERNS["Domain"]
+    seen = set()
+    all_domains = []
+    for domain in data.get("all_domains", []):
+        host = str(domain).strip().rstrip(".").lower()
+        if not host or host in seen or not domain_re.fullmatch(host):
+            continue
+        seen.add(host)
+        all_domains.append(host)
+
     children = []
-    all_domains = data.get("all_domains", [])
     for domain in all_domains:
         children.append(
             ChildNodeDef(

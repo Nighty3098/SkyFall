@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>0</number>
+         <number>11</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -2011,215 +2011,7 @@
           <property name="spacing">
            <number>8</number>
           </property>
-          <item row="6" column="3">
-           <widget class="QPlainTextEdit" name="serverLocationDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="1">
-           <widget class="QCheckBox" name="domainSubdomainsCheck">
-            <property name="text">
-             <string>Subdomains</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="2">
-           <widget class="QPlainTextEdit" name="serverRobotsDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="1">
-           <widget class="QPlainTextEdit" name="serverTlsDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="1">
-           <widget class="QPlainTextEdit" name="serverWafDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="2">
-           <widget class="QPlainTextEdit" name="cookiesDebug"/>
-          </item>
-          <item row="5" column="3">
-           <widget class="QCheckBox" name="domainLocationCheck">
-            <property name="text">
-             <string>Server Location</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="1">
-           <widget class="QPlainTextEdit" name="securityTxtDebug"/>
-          </item>
-          <item row="3" column="2">
-           <widget class="QCheckBox" name="domainDNSCheck">
-            <property name="text">
-             <string>DNS</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="1">
-           <widget class="QPlainTextEdit" name="serverSubdomainsDebug">
-            <property name="documentTitle">
-             <string/>
-            </property>
-            <property name="plainText">
-             <string/>
-            </property>
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="1">
-           <widget class="QCheckBox" name="domainHeadersCheck">
-            <property name="text">
-             <string>Headers</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="3">
-           <widget class="QCheckBox" name="domainNmapCheck">
-            <property name="text">
-             <string>Open Ports</string>
-            </property>
-            <property name="checked">
-             <bool>false</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="3">
-           <widget class="QPlainTextEdit" name="socialTagsDebug"/>
-          </item>
-          <item row="7" column="3">
-           <widget class="QCheckBox" name="domainMalwareCheck">
-            <property name="text">
-             <string>Malware</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="3">
-           <widget class="QPlainTextEdit" name="serverNmapDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="2">
-           <widget class="QCheckBox" name="domainWhoisCheck">
-            <property name="text">
-             <string>Whois</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="1">
-           <widget class="QCheckBox" name="securityTxtCheck">
-            <property name="text">
-             <string>Security.txt</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="5" column="1">
-           <widget class="QCheckBox" name="domainSSLCheck">
-            <property name="text">
-             <string>SSL / TLS</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="2">
-           <widget class="QPlainTextEdit" name="serverDnsAnalyzeDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="6" column="2">
-           <widget class="QPlainTextEdit" name="serverWhoisDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="3">
-           <widget class="QPlainTextEdit" name="serverMalwareDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="3">
-           <widget class="QCheckBox" name="socialTagsCheck">
-            <property name="text">
-             <string>Social Tags</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="2">
-           <widget class="QCheckBox" name="cookiesCheck">
-            <property name="text">
-             <string>Cookies</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="7" column="2">
-           <widget class="QCheckBox" name="domainRobotsCheck">
-            <property name="text">
-             <string>Robots</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="4">
-           <widget class="QCheckBox" name="certTrCheck">
-            <property name="text">
-             <string>Certificate Transparency </string>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="4">
-           <widget class="QPlainTextEdit" name="certTrDebug"/>
-          </item>
-          <item row="0" column="1" colspan="4">
+          <item row="0" column="0" colspan="4">
            <layout class="QHBoxLayout" name="horizontalLayout_9">
             <property name="spacing">
              <number>8</number>
@@ -2258,59 +2050,310 @@
             </item>
            </layout>
           </item>
-          <item row="11" column="1" colspan="4">
+          <item row="1" column="0" colspan="4">
            <widget class="QProgressBar" name="domainProgress">
             <property name="value">
              <number>0</number>
             </property>
            </widget>
           </item>
-          <item row="6" column="4">
-           <widget class="QPlainTextEdit" name="domainsOnIpDebug">
-            <property name="placeholderText">
-             <string/>
+          <item row="2" column="0" colspan="4">
+           <widget class="QGroupBox" name="webGroupTransport">
+            <property name="title">
+             <string>WEBSITE/TRANSPORT</string>
             </property>
+            <layout class="QGridLayout" name="webTransportGrid">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="domainSSLCheck">
+               <property name="text">
+                <string>SSL / TLS</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPlainTextEdit" name="serverTlsDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="domainHeadersCheck">
+               <property name="text">
+                <string>Headers</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPlainTextEdit" name="serverWafDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QCheckBox" name="certTrCheck">
+               <property name="text">
+                <string>Certificate Transparency</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPlainTextEdit" name="certTrDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QCheckBox" name="securityTxtCheck">
+               <property name="text">
+                <string>Security.txt</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPlainTextEdit" name="securityTxtDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="cookiesCheck">
+               <property name="text">
+                <string>Cookies</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QPlainTextEdit" name="cookiesDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QCheckBox" name="socialTagsCheck">
+               <property name="text">
+                <string>Social Tags</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPlainTextEdit" name="socialTagsDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
-          <item row="5" column="4">
-           <widget class="QCheckBox" name="domainsOnIpCheck">
-            <property name="text">
-             <string>Find domains on IP</string>
+          <item row="3" column="0" colspan="4">
+           <widget class="QGroupBox" name="webGroupDns">
+            <property name="title">
+             <string>DNS/NETWORK</string>
             </property>
+            <layout class="QGridLayout" name="webDnsGrid">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="domainDNSCheck">
+               <property name="text">
+                <string>DNS</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPlainTextEdit" name="serverDnsAnalyzeDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="domainSubdomainsCheck">
+               <property name="text">
+                <string>Subdomains</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPlainTextEdit" name="serverSubdomainsDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QCheckBox" name="domainLocationCheck">
+               <property name="text">
+                <string>Server Location</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPlainTextEdit" name="serverLocationDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QCheckBox" name="domainNmapCheck">
+               <property name="text">
+                <string>Open Ports</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPlainTextEdit" name="serverNmapDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="0">
+              <widget class="QCheckBox" name="domainsOnIpCheck">
+               <property name="text">
+                <string>Find domains on IP</string>
+               </property>
+               <property name="checked">
+                <bool>false</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="0">
+              <widget class="QPlainTextEdit" name="domainsOnIpDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="2" column="1">
+              <widget class="QCheckBox" name="domainWhoisCheck">
+               <property name="text">
+                <string>Whois</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="3" column="1">
+              <widget class="QPlainTextEdit" name="serverWhoisDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
-          <item row="7" column="4">
-           <widget class="QCheckBox" name="domainJsSecretsCheck">
-            <property name="text">
-             <string>JS Secrets</string>
+          <item row="4" column="0" colspan="4">
+           <widget class="QGroupBox" name="webGroupSecurity">
+            <property name="title">
+             <string>SECURITY/REPUTATION</string>
             </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="4">
-           <widget class="QPlainTextEdit" name="serverJsSecretsDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
-           </widget>
-          </item>
-          <item row="9" column="4">
-           <widget class="QCheckBox" name="domainThreatIntelCheck">
-            <property name="text">
-             <string>Threat Intel</string>
-            </property>
-            <property name="checked">
-             <bool>true</bool>
-            </property>
-           </widget>
-          </item>
-          <item row="10" column="4">
-           <widget class="QPlainTextEdit" name="serverThreatIntelDebug">
-            <property name="placeholderText">
-             <string/>
-            </property>
+            <layout class="QGridLayout" name="webSecurityGrid">
+             <item row="0" column="0">
+              <widget class="QCheckBox" name="domainMalwareCheck">
+               <property name="text">
+                <string>Malware</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="0">
+              <widget class="QPlainTextEdit" name="serverMalwareDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="1">
+              <widget class="QCheckBox" name="domainThreatIntelCheck">
+               <property name="text">
+                <string>Threat Intel</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="1">
+              <widget class="QPlainTextEdit" name="serverThreatIntelDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="2">
+              <widget class="QCheckBox" name="domainJsSecretsCheck">
+               <property name="text">
+                <string>JS Secrets</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="2">
+              <widget class="QPlainTextEdit" name="serverJsSecretsDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="3">
+              <widget class="QCheckBox" name="domainRobotsCheck">
+               <property name="text">
+                <string>Robots</string>
+               </property>
+               <property name="checked">
+                <bool>true</bool>
+               </property>
+              </widget>
+             </item>
+             <item row="1" column="3">
+              <widget class="QPlainTextEdit" name="serverRobotsDebug">
+               <property name="placeholderText">
+                <string/>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </widget>
           </item>
          </layout>

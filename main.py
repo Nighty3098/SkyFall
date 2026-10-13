@@ -133,9 +133,9 @@ class MainWindow(QMainWindow):
 │           |::.. . |           |::.|                             │
 │           `-------'           `---'                             │
 │                                                                 │
-│                    SkyFall Ver. 1.0.1                           │
-│                    Coded by Nighty3098                          │
-│               https://nighty3098.vercel.app                     │
+│                       SkyFall Ver 1.0.1                         │
+│                      Coded by Nighty3098                        │
+│                 https://nighty3098.vercel.app                   │
 └─────────────────────────────────────────────────────────────────┘
             """)
         super().__init__(parent)

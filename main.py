@@ -320,7 +320,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout(dlg)
         layout.setAlignment(Qt.AlignCenter)
 
-        icon_path = Path(__file__).parent / "resources" / "icon.jpg"
+        icon_path = Path(__file__).parent / "resources" / "icon.png"
         if icon_path.exists():
             pixmap = QPixmap(str(icon_path))
             icon = QLabel()

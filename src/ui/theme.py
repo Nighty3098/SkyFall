@@ -18,7 +18,7 @@ STYLE_TEMPLATE = RESOURCES_DIR / "style.template.qss"
 
 # Common typography / geometry tokens shared by every palette.
 BASE_TOKENS = {
-    "font_size": "11pt",
+    "font_size": "10pt",
     "font_size_small": "9pt",
     "font_size_drop": "50px",
     "font_size_win_title": "200px",

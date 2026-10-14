@@ -158,6 +158,7 @@ def report(
     if not unconfirmed:
         unconfirmed = {"Note": "Nothing unconfirmed"}
 
+
 def render_report(
     username: str,
     confirmed: list[tuple[dict, dict]],
@@ -203,8 +204,8 @@ def render_report(
         url = entry.get("url_user") or other.get("url_user") or ""
         if url:
             label += f" — {url}"
-        return bullet(label) + "\n" + line(
-            _details(entry, source="Sherlock", other=other)
+        return (
+            bullet(label) + "\n" + line(_details(entry, source="Sherlock", other=other))
         )
 
     def _render_single(entry: dict, source: str) -> str:

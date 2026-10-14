@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-VENV_DIR=".qtcreator"
-ACTIVATES=( "$VENV_DIR"/Python_3_14_*venv/bin/activate )
+VENV_DIR="venv"
+ACTIVATES=( "$VENV_DIR"/bin/activate )
 
 if [ ! -f "${ACTIVATES[0]}" ]; then
-    echo "❌ Virtual environment not found at $VENV_DIR/Python_3_14_*venv/bin/activate"
+    echo "❌ Virtual environment not found at $ACTIVATES"
     exit 1
 fi
 

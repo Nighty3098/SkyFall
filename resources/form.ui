@@ -2995,6 +2995,79 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="wifiTab">
+         <attribute name="title">
+          <string>WIFI</string>
+         </attribute>
+         <layout class="QGridLayout" name="wifiGridLayout">
+          <property name="leftMargin">
+           <number>12</number>
+          </property>
+          <property name="topMargin">
+           <number>12</number>
+          </property>
+          <property name="rightMargin">
+           <number>12</number>
+          </property>
+          <property name="bottomMargin">
+           <number>12</number>
+          </property>
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <item row="0" column="0">
+           <widget class="QLineEdit" name="wifiCityEdit">
+            <property name="placeholderText">
+             <string>City (e.g. Amsterdam) or lat, lng</string>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="1">
+           <widget class="QPushButton" name="wifiSearchButton">
+            <property name="minimumSize">
+             <size>
+              <width>150</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Search</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="2">
+           <widget class="QSplitter" name="wifiSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QPlainTextEdit" name="wifiDebug">
+             <property name="placeholderText">
+              <string>PUBLIC WIFI HOTSPOTS</string>
+             </property>
+            </widget>
+            <widget class="QWebEngineView" name="wifiMapView">
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="visible">
+              <bool>false</bool>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-radius: 15px;</string>
+             </property>
+             <property name="url">
+              <url>
+               <string>about:blank</string>
+              </url>
+             </property>
+            </widget>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="blockchainTab">
          <attribute name="title">
           <string>BLOCKCHAIN</string>

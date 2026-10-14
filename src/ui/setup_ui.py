@@ -22,6 +22,7 @@ NAV_GROUPS = [
             "GITHUB",
             "PHONE",
             "MAC ADDR",
+            "WIFI",
             "BLOCKCHAIN",
             "STEGANOGRAPHY",
             "SEARCH4FACES",

@@ -28,6 +28,7 @@ if TYPE_CHECKING:
     from src.controllers.steganography_controller import SteganographyController
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
     from src.controllers.tg_downloader_controller import TgDownloaderController
+    from src.controllers.wifi_map_controller import WifiMapController
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -411,6 +412,15 @@ def setup_phone_connectors(controller: "PhoneController"):
 def setup_mac_location_connectors(controller: "MacLocationController"):
     controller.ui.checkMacAddrButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.start_searching())
+    )
+
+
+def setup_wifi_map_connectors(controller: "WifiMapController"):
+    controller.ui.wifiSearchButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search())
+    )
+    controller.ui.wifiCityEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.search())
     )
 
 

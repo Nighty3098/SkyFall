@@ -38,6 +38,7 @@ class CaseManager:
         "githubDebug": "github",
         "phoneDebug": "phone",
         "macAddrLocationDebug": "mac",
+        "wifiDebug": "wifi",
         "bcDebug": "blockchain",
         "metadataDebug": "files",
         "stringsFileDebug": "files",

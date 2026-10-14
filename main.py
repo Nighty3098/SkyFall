@@ -42,6 +42,7 @@ from src.connectors import (
     setup_tg_analyzer_connectors,
     setup_tg_downloader_connectors,
     setup_username_connectors,
+    setup_wifi_map_connectors,
 )
 from src.controllers.archive_controller import ArchiveController
 from src.controllers.blockchain_controller import BlockchainController
@@ -67,6 +68,7 @@ from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
+from src.controllers.wifi_map_controller import WifiMapController
 from src.libs.graph_lib import GraphWidget, NodeItem
 from src.libs.graph_panel import EntityPalette
 from src.mcp_controller import McpController
@@ -93,6 +95,7 @@ from src.modules.steganography import SteganographyAnalyzer
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
 from src.modules.username_search import UsernameSearch
+from src.modules.wifi_map import WifiMap
 from src.report_controller import ReportController
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
@@ -220,6 +223,7 @@ class MainWindow(QMainWindow):
         self.phoneSearch = PhoneSearch()
         self.usernameSearch = UsernameSearch()
         self.macLocation = MacLocation()
+        self.wifiMap = WifiMap()
         self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
             self.settings.virustotal_api_key,
@@ -411,6 +415,7 @@ class MainWindow(QMainWindow):
         )
         self.archiveController = ArchiveController(self.ui, self.archiveSearch)
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
+        self.wifiMapController = WifiMapController(self.ui, self.wifiMap)
         self.tgDownloaderController = TgDownloaderController(
             self.ui,
             self.tgDownloader,
@@ -452,6 +457,7 @@ class MainWindow(QMainWindow):
         setup_github_connectors(self.githubController)
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
+        setup_wifi_map_connectors(self.wifiMapController)
         setup_blockchain_connectors(self.blockchainController)
         setup_s4f_connectors(self.s4fController)
 

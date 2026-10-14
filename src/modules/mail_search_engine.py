@@ -98,8 +98,10 @@ class MailSearchEngine:
             for i in range(5):
                 await asyncio.sleep(2)
                 try:
-                    result_url = f"""{self.base_url}/intelligent/search/result?id=
-                    {search_id}&limit=100000"""
+                    result_url = (
+                        f"{self.base_url}/intelligent/search/result"
+                        f"?id={search_id}&limit=1000&statistics=1&previewlines=8"
+                    )
                     res_response = await asyncio.to_thread(
                         requests.get, result_url, headers=self.headers
                     )

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QFileDialog
 
 from src.context_menus import open_dorks_list_menu
 from src.controllers.username_search_controller import UsernameController
-from src.libs.graph_lib import ENTITY_NAMES
+from src.libs.graph_lib import ENTITY_NAMES, GraphDropFilter
 from src.modules.metadata_cleaner import remove_metadata
 from src.utils import filter_list, find_text
 
@@ -435,7 +435,7 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
     def import_graph():
         from PySide6.QtWidgets import QMessageBox
 
-        from src.modules.graph_io import load_graph_file
+        from src.modules.graph_io import GRAPH_FILE_FILTER, load_graph_file
 
         if ui.graphWidget._has_nodes():
             answer = QMessageBox.question(
@@ -451,8 +451,8 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
             ui,
             "Import Graph",
             data_dir,
-            "Graphs (*.json *.graphml *.gexf *.csv);;JSON (*.json);;"
-            "GraphML (*.graphml);;GEXF (*.gexf);;CSV (*.csv)",
+            f"{GRAPH_FILE_FILTER};;JSON (*.json);;GraphML (*.graphml);;"
+            "GEXF (*.gexf);;CSV (*.csv)",
         )
         if not path:
             return
@@ -524,6 +524,10 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
     focus_search = QShortcut(QKeySequence("Ctrl+F"), ui.graphTab)
     focus_search.activated.connect(ui.graphWidget.focus_search)
 
+    # Let the whole graph tab open a dropped graph file, not only the canvas.
+    ui.graphTab.setAcceptDrops(True)
+    ui.graphTab.installEventFilter(GraphDropFilter(ui.graphWidget, ui.graphTab))
+
     ui.entitySearchEdit.textChanged.connect(ui.entityPalette.set_filter)
 
     ui.nodeTypeCombo.addItems(ENTITY_NAMES)
@@ -556,7 +560,8 @@ _GRAPH_TOOLTIPS = {
     "graphFilterCombo": "Show only one entity type",
     "graphWidget": (
         "Drag to select \u00b7 middle-drag to pan \u00b7 scroll to zoom\n"
-        "F fits the view \u00b7 Ctrl+F searches \u00b7 Delete removes the selection"
+        "F fits the view \u00b7 Ctrl+F searches \u00b7 Delete removes the selection\n"
+        "Drop a .json / .graphml / .gexf / .csv file to open it"
     ),
 }
 

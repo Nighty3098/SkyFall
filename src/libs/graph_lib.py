@@ -5,9 +5,10 @@ import re
 import sys
 import urllib.parse
 import uuid
+from pathlib import Path
 
 import networkx as nx
-from PySide6.QtCore import QLineF, QPointF, QRectF, Qt, QUrl, Signal
+from PySide6.QtCore import QEvent, QLineF, QObject, QPointF, QRectF, Qt, QUrl, Signal
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -1955,19 +1956,52 @@ class GraphWidget(QGraphicsView):
         self.fitInView(bounds, Qt.AspectRatioMode.KeepAspectRatio)
         return True
 
+    def _dropped_graph_file(self, mime):
+        """Return the first local path in a drop that is a supported graph file."""
+        if not mime.hasUrls():
+            return None
+        from src.modules.graph_io import GRAPH_FILE_SUFFIXES
+
+        for url in mime.urls():
+            if not url.isLocalFile():
+                continue
+            path = url.toLocalFile()
+            if Path(path).suffix.lower() in GRAPH_FILE_SUFFIXES:
+                return path
+        return None
+
     def dragEnterEvent(self, event):
-        if event.mimeData().hasText() and event.mimeData().text() in ENTITY_NAMES:
+        mime = event.mimeData()
+        if mime.hasUrls():
+            if self._dropped_graph_file(mime) is not None:
+                event.acceptProposedAction()
+            else:
+                event.ignore()
+            return
+        if mime.hasText() and mime.text() in ENTITY_NAMES:
             event.acceptProposedAction()
         else:
             super().dragEnterEvent(event)
 
     def dragMoveEvent(self, event):
-        if event.mimeData().hasText() and event.mimeData().text() in ENTITY_NAMES:
+        mime = event.mimeData()
+        if mime.hasUrls():
+            if self._dropped_graph_file(mime) is not None:
+                event.acceptProposedAction()
+            else:
+                event.ignore()
+            return
+        if mime.hasText() and mime.text() in ENTITY_NAMES:
             event.acceptProposedAction()
         else:
             super().dragMoveEvent(event)
 
     def dropEvent(self, event):
+        path = self._dropped_graph_file(event.mimeData())
+        if path is not None:
+            self.load_graph_path(path)
+            event.acceptProposedAction()
+            return
         etype = event.mimeData().text()
         if etype in ENTITY_NAMES:
             scene_pos = self.mapToScene(event.position().toPoint())
@@ -1977,6 +2011,30 @@ class GraphWidget(QGraphicsView):
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
+
+    def load_graph_path(self, path):
+        """Load a supported graph file into the canvas and frame it.
+
+        Used both by drag & drop and, indirectly, by the import action.
+        Returns ``True`` on success.
+        """
+        from src.modules.graph_io import load_graph_file
+
+        name = Path(path).name
+        try:
+            data = load_graph_file(path)
+            self.from_dict(data)
+        except Exception as e:  # noqa: BLE001 - surface any loader error to the user
+            self.status_message(f"Failed to load {name}: {e}")
+            return False
+        self.fit_to_view()
+        nodes = sum(1 for i in self._scene.items() if isinstance(i, NodeItem))
+        edges = sum(1 for i in self._scene.items() if isinstance(i, EdgeItem))
+        self.status_message(
+            f"Loaded {nodes} node{'s' if nodes != 1 else ''} · "
+            f"{edges} edge{'s' if edges != 1 else ''} from {name}"
+        )
+        return True
 
     def set_filter(self, text: str):
         """Filter nodes by free text (title / type / content)."""
@@ -2663,6 +2721,36 @@ class GraphWidget(QGraphicsView):
         with open(filepath, encoding="utf-8") as f:
             data = json.load(f)
         self.from_dict(data)
+
+
+class GraphDropFilter(QObject):
+    """Route file drops that land outside the canvas to the ``GraphWidget``.
+
+    The canvas accepts drops itself; this filter lets the surrounding graph
+    tab (toolbar, panels, splitter) also open a dropped graph file.  It only
+    intercepts drags that carry a supported graph file, so palette drags and
+    other interactions are left untouched.
+    """
+
+    def __init__(self, graph_widget: "GraphWidget", parent=None):
+        super().__init__(parent or graph_widget)
+        self._graph = graph_widget
+
+    def eventFilter(self, obj, event):
+        event_type = event.type()
+        if event_type in (QEvent.Type.DragEnter, QEvent.Type.DragMove):
+            if self._graph._dropped_graph_file(event.mimeData()) is not None:
+                event.acceptProposedAction()
+                return True
+            return False
+        if event_type == QEvent.Type.Drop:
+            path = self._graph._dropped_graph_file(event.mimeData())
+            if path is not None:
+                self._graph.load_graph_path(path)
+                event.acceptProposedAction()
+                return True
+            return False
+        return False
 
 
 if __name__ == "__main__":

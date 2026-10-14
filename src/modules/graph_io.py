@@ -17,6 +17,11 @@ import networkx as nx
 from loguru import logger
 from networkx.readwrite import json_graph
 
+# File extensions ``load_graph_file`` can read (used by the import dialog and
+# by drag & drop onto the graph canvas).
+GRAPH_FILE_SUFFIXES = (".json", ".graphml", ".gexf", ".csv")
+GRAPH_FILE_FILTER = "Graphs (*.json *.graphml *.gexf *.csv)"
+
 # TG Analyzer node ``node_type`` -> SkyFall entity type
 TG_NODE_ENTITY = {
     "user": "Person",

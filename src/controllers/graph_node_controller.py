@@ -33,15 +33,38 @@ def _center_dialog(dialog):
 
 
 class GraphNodeController:
+    # Editors that only make sense while a node is selected.
+    _EDIT_WIDGETS = (
+        "nodeTitleEdit",
+        "nodeTypeCombo",
+        "nodeContentEdit",
+        "nodeEvidenceList",
+        "nodeEvidenceAddFileBtn",
+        "nodeEvidenceAddUrlBtn",
+        "nodeEvidenceRemoveBtn",
+    )
+
     def __init__(self, ui: "QMainWindow"):
         self.ui = ui
         self._current_node = None
+        self._set_editable(False)
+
+    def _set_editable(self, enabled: bool):
+        for name in self._EDIT_WIDGETS:
+            widget = getattr(self.ui, name, None)
+            if widget is not None:
+                widget.setEnabled(enabled)
+        if hasattr(self.ui, "nodeTitleEdit"):
+            self.ui.nodeTitleEdit.setPlaceholderText(
+                "Title" if enabled else "Select a node to edit"
+            )
 
     def show_node(self, node):
         if node is None:
             self.clear()
             return
         self._current_node = node
+        self._set_editable(True)
         self.ui.nodeTitleEdit.blockSignals(True)
         self.ui.nodeTitleEdit.setText(node.title)
         self.ui.nodeTitleEdit.blockSignals(False)
@@ -63,6 +86,7 @@ class GraphNodeController:
 
     def clear(self):
         self._current_node = None
+        self._set_editable(False)
         self.ui.nodeTitleEdit.blockSignals(True)
         self.ui.nodeTitleEdit.setText("")
         self.ui.nodeTitleEdit.blockSignals(False)

@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QFileDialog
 
 from src.context_menus import open_dorks_list_menu
 from src.controllers.username_search_controller import UsernameController
-from src.libs.graph_lib import ENTITY_NAMES, NodeItem
+from src.libs.graph_lib import ENTITY_NAMES
 from src.modules.metadata_cleaner import remove_metadata
 from src.utils import filter_list, find_text
 
@@ -433,8 +433,20 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
             ui.graphWidget.save_to_json(path)
 
     def import_graph():
+        from PySide6.QtWidgets import QMessageBox
+
         from src.modules.graph_io import load_graph_file
 
+        if ui.graphWidget._has_nodes():
+            answer = QMessageBox.question(
+                ui,
+                "Import Graph",
+                "Importing replaces the current graph.\nContinue?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
         path, _ = QFileDialog.getOpenFileName(
             ui,
             "Import Graph",
@@ -447,8 +459,6 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
         try:
             ui.graphWidget.from_dict(load_graph_file(path))
         except Exception as e:
-            from PySide6.QtWidgets import QMessageBox
-
             QMessageBox.critical(ui, "Import Graph", f"Failed to import graph:\n{e}")
 
     def export_graph_image():
@@ -467,28 +477,30 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
             QMessageBox.critical(ui, "Export Image", f"Failed to export image:\n{e}")
 
     def clear_graph():
-        ui.graphWidget._scene.clear()
+        from PySide6.QtWidgets import QMessageBox
+
+        if ui.graphWidget._has_nodes():
+            answer = QMessageBox.question(
+                ui,
+                "Clear Graph",
+                "Remove every node and edge from the canvas?\nThis cannot be undone.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if answer != QMessageBox.StandardButton.Yes:
+                return
+        ui.graphWidget.clear_graph()
 
     def on_search_text_changed(text):
         ui.graphWidget.set_filter(text)
 
     def on_filter_combo_changed(text):
-        if text == "All Types":
-            for item in ui.graphWidget._scene.items():
-                if isinstance(item, NodeItem):
-                    item.setVisible(True)
-            ui.graphWidget._scene.update()
-            ui.graphSearchEdit.setText("")
-            return
-        for item in ui.graphWidget._scene.items():
-            if isinstance(item, NodeItem):
-                match = item.entity_type == text
-                item.setVisible(match)
-        ui.graphWidget._scene.update()
+        ui.graphWidget.set_type_filter(text)
 
     def on_clear_filter():
         ui.graphSearchEdit.setText("")
         ui.graphFilterCombo.setCurrentIndex(0)
+        ui.graphWidget.clear_filters()
 
     ui.exportGraphButton.clicked.connect(export_graph)
     ui.importGraphButton.clicked.connect(import_graph)
@@ -505,6 +517,13 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
     for etype in ENTITY_NAMES:
         ui.graphFilterCombo.addItem(etype)
 
+    _add_graph_tooltips(ui)
+
+    from PySide6.QtGui import QKeySequence, QShortcut
+
+    focus_search = QShortcut(QKeySequence("Ctrl+F"), ui.graphTab)
+    focus_search.activated.connect(ui.graphWidget.focus_search)
+
     ui.entitySearchEdit.textChanged.connect(ui.entityPalette.set_filter)
 
     ui.nodeTypeCombo.addItems(ENTITY_NAMES)
@@ -520,6 +539,33 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
     ui.nodeEvidenceAddUrlBtn.clicked.connect(node_controller._add_url)
     ui.nodeEvidenceRemoveBtn.clicked.connect(node_controller._remove_evidence)
     ui.graphWidget.selectionChanged.connect(node_controller.show_node)
+
+
+# Short but useful hints for the graph toolbar; kept out of form.ui so all the
+# copy lives next to the connectors that make the buttons work.
+_GRAPH_TOOLTIPS = {
+    "exportGraphButton": "Save the graph as a JSON file",
+    "importGraphButton": "Load a graph (JSON, GraphML, GEXF or CSV)",
+    "exportGraphImageButton": "Export the canvas as PNG or SVG",
+    "graphClearButton": "Remove every node and edge",
+    "graphFitButton": "Zoom to fit all nodes (F)",
+    "graphAutoLayoutButton": "Re-arrange the graph with the selected algorithm",
+    "graphLayoutCombo": "Choose the automatic layout algorithm",
+    "graphSearchEdit": "Filter nodes by title, type or content (Ctrl+F)",
+    "graphClearFilterButton": "Reset the search and type filters",
+    "graphFilterCombo": "Show only one entity type",
+    "graphWidget": (
+        "Drag to select \u00b7 middle-drag to pan \u00b7 scroll to zoom\n"
+        "F fits the view \u00b7 Ctrl+F searches \u00b7 Delete removes the selection"
+    ),
+}
+
+
+def _add_graph_tooltips(ui):
+    for name, tip in _GRAPH_TOOLTIPS.items():
+        widget = getattr(ui, name, None)
+        if widget is not None:
+            widget.setToolTip(tip)
 
 
 def setup_graph_transform_connectors(ui, controller):

@@ -1855,6 +1855,12 @@ class GraphWidget(QGraphicsView):
     edgeAdded = Signal(object)
     selectionChanged = Signal(object)
 
+    # Manual zoom is clamped to this range so the graph can never be lost by
+    # scrolling all the way in or out.  ``fit_to_view`` may go below the
+    # minimum for very large graphs.
+    ZOOM_MIN = 0.02
+    ZOOM_MAX = 6.0
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setRenderHints(
@@ -1873,6 +1879,7 @@ class GraphWidget(QGraphicsView):
         self._panning = False
         self._pan_start = QPointF()
         self._filter_text = ""
+        self._filter_type = ""
         self._path_source = None
 
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
@@ -1972,22 +1979,72 @@ class GraphWidget(QGraphicsView):
             super().dropEvent(event)
 
     def set_filter(self, text: str):
-        self._filter_text = text.lower().strip()
+        """Filter nodes by free text (title / type / content)."""
+        self._filter_text = (text or "").lower().strip()
+        return self._apply_filters()
+
+    def set_type_filter(self, entity_type: str):
+        """Filter nodes by entity type; ``All Types`` / empty clears it."""
+        if not entity_type or entity_type == "All Types":
+            self._filter_type = ""
+        else:
+            self._filter_type = entity_type
+        return self._apply_filters()
+
+    def clear_filters(self):
+        self._filter_text = ""
+        self._filter_type = ""
+        return self._apply_filters()
+
+    def _apply_filters(self):
+        """Hide nodes that fail either filter and any now-dangling edges."""
+        nodes = [i for i in self._scene.items() if isinstance(i, NodeItem)]
+        visible = 0
+        filtered = bool(self._filter_text or self._filter_type)
+        for item in nodes:
+            match = True
+            if self._filter_text:
+                haystack = f"{item.title}\n{item.entity_type}\n{item.content}".lower()
+                match = self._filter_text in haystack
+            if match and self._filter_type:
+                match = item.entity_type == self._filter_type
+            item.setVisible(match)
+            visible += int(match)
         for item in self._scene.items():
-            if isinstance(item, NodeItem):
-                match = (
-                    not self._filter_text
-                    or self._filter_text in item.title.lower()
-                    or self._filter_text in item.entity_type.lower()
-                    or self._filter_text in item.content.lower()
-                )
-                item.setVisible(match)
+            if isinstance(item, EdgeItem):
+                item.setVisible(item.source.isVisible() and item.target.isVisible())
         self._scene.update()
+        if filtered:
+            self._set_status(f"Showing {visible} of {len(nodes)} nodes")
+        else:
+            self._update_summary()
+        return visible, len(nodes)
+
+    def _set_status(self, text: str):
+        top = self.window()
+        if top is None:
+            return
+        label = top.findChild(QLabel, "graphStatusLabel")
+        if label is not None:
+            label.setText(text)
+
+    def _update_summary(self):
+        """Show node/edge counts on the persistent canvas status line."""
+        nodes = sum(1 for i in self._scene.items() if isinstance(i, NodeItem))
+        edges = sum(1 for i in self._scene.items() if isinstance(i, EdgeItem))
+        if nodes:
+            suffix = "" if nodes == 1 else "s"
+            self._set_status(
+                f"{nodes} node{suffix} · {edges} edge{'s' if edges != 1 else ''}"
+            )
+        else:
+            self._set_status("")
 
     def _on_selection_changed(self):
         selected = self._scene.selectedItems()
-        if len(selected) == 1 and isinstance(selected[0], NodeItem):
-            self.selectionChanged.emit(selected[0])
+        nodes = [i for i in selected if isinstance(i, NodeItem)]
+        if len(nodes) == 1:
+            self.selectionChanged.emit(nodes[0])
         else:
             self.selectionChanged.emit(None)
 
@@ -1997,7 +2054,7 @@ class GraphWidget(QGraphicsView):
         menu = QMenu(self)
 
         if isinstance(item, EdgeItem):
-            label_action = QAction("Edit Edge", self)
+            label_action = QAction("Edit Edge\u2026", self)
             label_action.triggered.connect(lambda: self.edit_edge_label(item))
             menu.addAction(label_action)
 
@@ -2019,14 +2076,15 @@ class GraphWidget(QGraphicsView):
             delete_action.triggered.connect(lambda: self.remove_edge(item))
             menu.addAction(delete_action)
         elif isinstance(item, NodeItem):
-            edit_action = QAction("Edit", self)
+            edit_action = QAction("Edit Node\u2026", self)
             edit_action.triggered.connect(lambda: self.edit_node(item))
             menu.addAction(edit_action)
-            attach_action = QAction("Attach Evidence", self)
-            attach_action.triggered.connect(lambda: self.edit_node(item))
-            menu.addAction(attach_action)
 
-            color_action = QAction("Set Color...", self)
+            center_action = QAction("Center on Node", self)
+            center_action.triggered.connect(lambda: self.center_on_node(item))
+            menu.addAction(center_action)
+
+            color_action = QAction("Set Color\u2026", self)
             color_action.triggered.connect(lambda: self.set_node_color(item))
             menu.addAction(color_action)
             if item.color:
@@ -2099,15 +2157,50 @@ class GraphWidget(QGraphicsView):
 
         menu.exec(self.viewport().mapToGlobal(pos))
 
+    def _current_zoom(self) -> float:
+        return self.transform().m11() or 1.0
+
+    def _zoom_by(self, factor: float):
+        """Scale by ``factor`` while staying inside the manual zoom range."""
+        current = self._current_zoom()
+        target = current * factor
+        if current >= self.ZOOM_MIN and target < self.ZOOM_MIN:
+            target = self.ZOOM_MIN
+        elif current <= self.ZOOM_MAX and target > self.ZOOM_MAX:
+            target = self.ZOOM_MAX
+        factor = target / current
+        if abs(factor - 1.0) > 1e-9:
+            self.scale(factor, factor)
+
     def zoom_in(self):
-        self.scale(1.25, 1.25)
+        self._zoom_by(1.25)
 
     def zoom_out(self):
-        self.scale(1 / 1.25, 1 / 1.25)
+        self._zoom_by(1 / 1.25)
 
     def reset_zoom(self):
         self.resetTransform()
         self.fit_to_view()
+
+    def center_on_node(self, node: NodeItem):
+        """Scroll the view so ``node`` is centred without changing zoom."""
+        self.centerOn(node)
+        node.setSelected(True)
+
+    def focus_search(self):
+        """Move keyboard focus to the graph search box (Ctrl+F)."""
+        top = self.window()
+        if top is None:
+            return
+        edit = top.findChild(QLineEdit, "graphSearchEdit")
+        if edit is not None:
+            edit.setFocus(Qt.FocusReason.ShortcutFocusReason)
+            edit.selectAll()
+
+    def select_all_nodes(self):
+        for item in self._scene.items():
+            if isinstance(item, NodeItem) and item.isVisible():
+                item.setSelected(True)
 
     def edit_node(self, node: NodeItem):
         dialog = NodeEditDialog(
@@ -2230,6 +2323,7 @@ class GraphWidget(QGraphicsView):
         node.setPos(scene_pos)
         self._scene.addItem(node)
         self.nodeAdded.emit(node)
+        self._update_summary()
         return node
 
     def add_edge(
@@ -2240,17 +2334,28 @@ class GraphWidget(QGraphicsView):
         source_node.add_edge_ref(edge)
         target_node.add_edge_ref(edge)
         self.edgeAdded.emit(edge)
+        self._update_summary()
         return edge
 
     def remove_node(self, node: NodeItem):
         for edge in node._connected_edges():
             self.remove_edge(edge)
         self._scene.removeItem(node)
+        self._update_summary()
 
     def remove_edge(self, edge: EdgeItem):
         edge.source.remove_edge_ref(edge)
         edge.target.remove_edge_ref(edge)
         self._scene.removeItem(edge)
+        self._update_summary()
+
+    def clear_graph(self):
+        """Remove every item and reset filters/selection state."""
+        self._path_source = None
+        self._filter_text = ""
+        self._filter_type = ""
+        self._scene.clear()
+        self._update_summary()
 
     def _to_networkx(self):
         g = nx.Graph()
@@ -2274,6 +2379,11 @@ class GraphWidget(QGraphicsView):
         self._path_source.setOpacity(1.0)
         msg = f"Click target node for shortest path from '{source_node.title}'"
         self.status_message(msg)
+
+    def _cancel_shortest_path(self):
+        self._path_source = None
+        self._clear_highlights()
+        self.status_message("Shortest path cancelled")
 
     def _finish_shortest_path(self, target_node):
         if not self._path_source:
@@ -2350,15 +2460,10 @@ class GraphWidget(QGraphicsView):
             self.status_message("Community detection requires networkx 2.x")
 
     def status_message(self, msg):
+        self._set_status(msg)
         top = self.window()
-        if top is not None:
-            label = top.findChild(QLabel, "graphStatusLabel")
-            if label is not None:
-                label.setText(msg)
-        if self.parent():
-            main = self.parent().parent().parent()
-            if hasattr(main, "statusBar"):
-                main.statusBar().showMessage(msg, 5000)
+        if top is not None and hasattr(top, "statusBar"):
+            top.statusBar().showMessage(msg, 5000)
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y()
@@ -2378,7 +2483,7 @@ class GraphWidget(QGraphicsView):
                 event.accept()
                 return
         factor = 1.15 if delta > 0 else 1 / 1.15
-        self.scale(factor, factor)
+        self._zoom_by(factor)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.MiddleButton:
@@ -2419,38 +2524,57 @@ class GraphWidget(QGraphicsView):
         super().mouseReleaseEvent(event)
 
     def keyPressEvent(self, event):
-        if event.key() == Qt.Key.Key_Delete:
+        key = event.key()
+        modifiers = event.modifiers()
+        ctrl = bool(modifiers & Qt.KeyboardModifier.ControlModifier)
+
+        if key == Qt.Key.Key_Delete:
             for item in self._scene.selectedItems():
                 if isinstance(item, NodeItem):
                     self.remove_node(item)
                 elif isinstance(item, EdgeItem):
                     self.remove_edge(item)
             return
-        modifiers = event.modifiers()
-        if modifiers & Qt.KeyboardModifier.ControlModifier:
-            if event.key() == Qt.Key.Key_Minus or event.key() == Qt.Key.Key_Underscore:
-                self.scale(1 / 1.25, 1 / 1.25)
+        if key == Qt.Key.Key_Escape:
+            if self._path_source:
+                self._cancel_shortest_path()
+            else:
+                self._clear_highlights()
+                self._scene.clearSelection()
+            return
+        if ctrl and key == Qt.Key.Key_F:
+            self.focus_search()
+            return
+        if ctrl and key == Qt.Key.Key_A:
+            self.select_all_nodes()
+            return
+        if ctrl:
+            if key == Qt.Key.Key_Minus or key == Qt.Key.Key_Underscore:
+                self._zoom_by(1 / 1.25)
                 return
-            if event.key() == Qt.Key.Key_Equal or event.key() == Qt.Key.Key_Plus:
-                self.scale(1.25, 1.25)
+            if key == Qt.Key.Key_Equal or key == Qt.Key.Key_Plus:
+                self._zoom_by(1.25)
                 return
-            if event.key() == Qt.Key.Key_0:
+            if key == Qt.Key.Key_0:
                 self.resetTransform()
                 self.fit_to_view()
                 return
+        if key == Qt.Key.Key_F:
+            self.fit_to_view()
+            return
         step = 80
-        if event.key() == Qt.Key.Key_Up:
+        if key == Qt.Key.Key_Up:
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() - step)
             return
-        if event.key() == Qt.Key.Key_Down:
+        if key == Qt.Key.Key_Down:
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() + step)
             return
-        if event.key() == Qt.Key.Key_Left:
+        if key == Qt.Key.Key_Left:
             self.horizontalScrollBar().setValue(
                 self.horizontalScrollBar().value() - step
             )
             return
-        if event.key() == Qt.Key.Key_Right:
+        if key == Qt.Key.Key_Right:
             self.horizontalScrollBar().setValue(
                 self.horizontalScrollBar().value() + step
             )
@@ -2492,6 +2616,9 @@ class GraphWidget(QGraphicsView):
 
     def from_dict(self, data):
         self._scene.clear()
+        self._filter_text = ""
+        self._filter_type = ""
+        self._path_source = None
         node_map = {}
         for n in data.get("nodes", []):
             nid = str(n.get("id", uuid.uuid4().hex))
@@ -2526,6 +2653,7 @@ class GraphWidget(QGraphicsView):
                 self._scene.addItem(edge)
                 src.add_edge_ref(edge)
                 tgt.add_edge_ref(edge)
+        self._update_summary()
 
     def save_to_json(self, filepath):
         with open(filepath, "w", encoding="utf-8") as f:

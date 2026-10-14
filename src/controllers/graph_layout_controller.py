@@ -1,7 +1,8 @@
-from PySide6.QtCore import QPointF
+from PySide6.QtCore import QPointF, Qt
+from PySide6.QtGui import QGuiApplication
 
 from src.libs.graph_lib import EdgeItem, NodeItem
-from src.modules.graph_layout import compute_layout
+from src.modules.graph_layout import LAYOUT_ALGORITHMS, compute_layout
 
 
 class GraphLayoutController:
@@ -33,9 +34,16 @@ class GraphLayoutController:
                 )
 
         if not nodes:
+            gw.status_message("Nothing to lay out \u2014 the graph is empty")
             return
 
-        result = compute_layout(nodes, edges, algorithm=algorithm)
+        label = LAYOUT_ALGORITHMS.get(algorithm, algorithm)
+        gw.status_message(f"Applying {label} layout\u2026")
+        QGuiApplication.setOverrideCursor(Qt.CursorShape.WaitCursor)
+        try:
+            result = compute_layout(nodes, edges, algorithm=algorithm)
+        finally:
+            QGuiApplication.restoreOverrideCursor()
 
         node_map = {}
         for item in gw._scene.items():
@@ -49,3 +57,5 @@ class GraphLayoutController:
                 node.setPos(QPointF(x - node._width / 2.0, y - node._height / 2.0))
 
         gw.viewport().update()
+        gw.fit_to_view()
+        gw.status_message(f"Applied {label} layout to {len(result.positions)} nodes")

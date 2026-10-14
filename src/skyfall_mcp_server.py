@@ -1563,7 +1563,7 @@ async def skyfall_graph_layout(algorithm: str = "spring", fit_view: bool = True)
     """Re-arrange the whole graph with a layout algorithm and frame it.
 
     Args:
-        algorithm: spring, kamada_kawai, shell, spectral, circular
+        algorithm: spring, kamada_kawai, shell, spectral, circular, hierarchical
         fit_view: Zoom the GUI canvas to fit all nodes (default true)
     """
     if not _graph_bridge_available():

@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import render
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -34,17 +36,18 @@ class MailController:
         self.email_accounts = email_accounts
 
     async def start_intelx_search(self, email):
-        self.ui.mailSearchDebug.setPlainText(
-            await self.mail_search_engine.get_data(email)
-        )
+        result = await self.mail_search_engine.get_data(email)
+        self.ui.mailSearchDebug.setPlainText(render(result, title=f"IntelX: {email}"))
 
     async def start_hibp_check(self, email):
-        self.ui.hibpDebug.setPlainText(await self.mail_search_engine.check_hibp(email))
+        result = await self.mail_search_engine.check_hibp(email)
+        self.ui.hibpDebug.setPlainText(render(result, title=f"HIBP: {email}"))
 
     async def check_accounts(self, email):
         widget = getattr(self.ui, "emailAccountsDebug", None) or self.ui.mailSearchDebug
         widget.setPlainText("Checking registered accounts...")
-        widget.setPlainText(await self.email_accounts.check(email))
+        result = await self.email_accounts.check(email)
+        widget.setPlainText(render(result, title=f"Registered accounts: {email}"))
 
     def _eml_debug_widget(self):
         return getattr(self.ui, "emailHeaderDebug", None) or self.ui.mailSearchDebug

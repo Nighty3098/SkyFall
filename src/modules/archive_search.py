@@ -13,17 +13,6 @@ import asyncio
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    info,
-    kv,
-    section,
-    title,
-)
-
 TIMEOUT = 20.0
 SAVE_TIMEOUT = 120.0
 USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"
@@ -160,76 +149,16 @@ class ArchiveSearch:
             "status": resp.status_code,
         }
 
-    # ── Text rendering ────────────────────────────────────────────
+    # ── Aggregate check ───────────────────────────────────────────
 
-    def render_availability(self, data: dict) -> str:
-        lines = [title("Wayback Machine")]
-        if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            lines.append(divider())
-            return "\n".join(lines)
-        lines.append(kv("URL", data["url"]))
-        snap = data.get("snapshot") or {}
-        if snap:
-            lines.append(kv("Snapshot", snap.get("url", "?")))
-            lines.append(kv("Timestamp", snap.get("timestamp", "?")))
-            lines.append(kv("Status", snap.get("status", "?")))
-            lines.append(kv("Available", snap.get("available", False)))
-        else:
-            lines.append(info("No snapshot found"))
-        lines.append(divider())
-        return "\n".join(lines)
-
-    def render_save(self, data: dict) -> str:
-        lines = [title("Wayback save")]
-        if data.get("error"):
-            lines.append(info(f"Save failed: {data['error']}"))
-        else:
-            lines.append(kv("Archived", data.get("archive_url", "?")))
-        lines.append(divider())
-        return "\n".join(lines)
-
-    def render_snapshots(self, data: dict) -> str:
-        lines = [title("Wayback snapshots")]
-        if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            lines.append(divider())
-            return "\n".join(lines)
-        lines.append(kv("Snapshots", data.get("count", 0)))
-        for s in (data.get("snapshots") or [])[:30]:
-            lines.append(
-                bullet(f"{s['timestamp']} ({s.get('statuscode', '?')}) {s['url']}")
-            )
-        lines.append(divider())
-        return "\n".join(lines)
-
-    def render_archive_today(self, data: dict) -> str:
-        lines = [title("archive.today")]
-        if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-        elif data.get("found"):
-            lines.append(kv("Snapshot", data.get("snapshot", "?")))
-        else:
-            lines.append(info(f"No snapshot (HTTP {data.get('status', '?')})"))
-        lines.append(divider())
-        return "\n".join(lines)
-
-    def render_all(self, results: dict) -> str:
-        lines = [title(f"Archive: {results.get('url', '')}")]
-        lines.append(section("Wayback"))
-        lines.append(self.render_availability(results.get("availability", {})).strip())
-        lines.append(section("archive.today"))
-        today = self.render_archive_today(results.get("archive_today", {})).strip()
-        lines.append(today)
-        lines.append(end_of("archive lookup"))
-        return "\n".join(lines)
-
-    async def check(self, url: str) -> str:
+    async def check(self, url: str) -> dict:
         url = normalize_url(url)
         if not url:
-            return error("Empty URL")
+            return {"error": "Empty URL"}
         availability = await self.availability(url)
         archive_today = await self.archive_today(url)
-        return self.render_all(
-            {"url": url, "availability": availability, "archive_today": archive_today}
-        )
+        return {
+            "url": url,
+            "wayback": availability,
+            "archive_today": archive_today,
+        }

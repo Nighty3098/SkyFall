@@ -21,16 +21,6 @@ from __future__ import annotations
 
 import re
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    info,
-    line,
-    section,
-    title,
-)
-
 #: Marker next to an account that both engines reported.
 CONFIRMED_MARK = "✅"
 #: Marker next to an account that only one engine reported.
@@ -124,34 +114,49 @@ def _site(entry: dict, fallback: dict | None = None) -> str:
     )
 
 
-def _details(entry: dict, *, source: str, other: dict | None = None) -> str:
-    status = entry.get("status") or "?"
-    if other is not None:
-        other_status = other.get("status") or "?"
-        parts = [f"Sherlock: {status}", f"Maigret: {other_status}"]
-    else:
-        parts = [f"{source}: {status}"]
-    ids = entry.get("ids") or (other or {}).get("ids") or {}
+def _row(entry: dict) -> dict:
+    row = {
+        "site": _site(entry),
+        "url": entry.get("url_user") or "",
+        "status": entry.get("status") or "?",
+    }
+    ids = entry.get("ids") or {}
     if ids:
-        parts.append(", ".join(f"{k}={v}" for k, v in ids.items()))
-    return " · ".join(parts)
+        row["ids"] = ids
+    return row
 
 
-def _render_confirmed(entry: dict, other: dict) -> str:
-    label = f"{CONFIRMED_MARK} {_site(entry, other)}"
-    url = entry.get("url_user") or other.get("url_user") or ""
-    if url:
-        label += f" — {url}"
-    return bullet(label) + "\n" + line(_details(entry, source="Sherlock", other=other))
+def report(
+    username: str,
+    confirmed: list[tuple[dict, dict]],
+    sherlock_only: list[dict],
+    maigret_only: list[dict],
+) -> dict:
+    """Build a structured merged username report (display-ready)."""
+    if confirmed:
+        confirmed_rows = []
+        for entry, other in confirmed:
+            row = _row(entry)
+            row["site"] = _site(entry, other)
+            row["maigret_status"] = other.get("status") or "?"
+            url = other.get("url_user") or ""
+            if url and not row.get("url"):
+                row["url"] = url
+            ids = other.get("ids") or {}
+            if ids:
+                existing = row.get("ids") or {}
+                row["ids"] = {**existing, **ids} if existing else ids
+            confirmed_rows.append(row)
+    else:
+        confirmed_rows = ["No account was confirmed by both engines"]
 
-
-def _render_single(entry: dict, source: str) -> str:
-    label = f"{UNCONFIRMED_MARK} {_site(entry)}"
-    url = entry.get("url_user") or ""
-    if url:
-        label += f" — {url}"
-    return bullet(label) + "\n" + line(_details(entry, source=source))
-
+    unconfirmed = {}
+    if sherlock_only:
+        unconfirmed["Sherlock only"] = [_row(e) for e in sherlock_only]
+    if maigret_only:
+        unconfirmed["Maigret only"] = [_row(e) for e in maigret_only]
+    if not unconfirmed:
+        unconfirmed = {"Note": "Nothing unconfirmed"}
 
 def render_report(
     username: str,
@@ -159,16 +164,65 @@ def render_report(
     sherlock_only: list[dict],
     maigret_only: list[dict],
 ) -> str:
-    """Render the merged username report as plain text."""
+    """Backwards-compatible text renderer for existing tests/UI."""
+    from src.ui.output_formatter import (
+        bullet,
+        divider,
+        end_of,
+        info,
+        line,
+        section,
+        title,
+    )
+
+    confirmed_mark = "✅"
+    unconfirmed_mark = "·"
+
+    def _site(entry: dict, fallback: dict | None = None) -> str:
+        return (
+            entry.get("site")
+            or (fallback or {}).get("site")
+            or entry.get("url_user")
+            or "?"
+        )
+
+    def _details(entry: dict, *, source: str, other: dict | None = None) -> str:
+        status = entry.get("status") or "?"
+        if other is not None:
+            other_status = other.get("status") or "?"
+            parts = [f"Sherlock: {status}", f"Maigret: {other_status}"]
+        else:
+            parts = [f"{source}: {status}"]
+        ids = entry.get("ids") or (other or {}).get("ids") or {}
+        if ids:
+            parts.append(", ".join(f"{k}={v}" for k, v in ids.items()))
+        return " · ".join(parts)
+
+    def _render_confirmed(entry: dict, other: dict) -> str:
+        label = f"{confirmed_mark} {_site(entry, other)}"
+        url = entry.get("url_user") or other.get("url_user") or ""
+        if url:
+            label += f" — {url}"
+        return bullet(label) + "\n" + line(
+            _details(entry, source="Sherlock", other=other)
+        )
+
+    def _render_single(entry: dict, source: str) -> str:
+        label = f"{unconfirmed_mark} {_site(entry)}"
+        url = entry.get("url_user") or ""
+        if url:
+            label += f" — {url}"
+        return bullet(label) + "\n" + line(_details(entry, source=source))
+
     lines = [divider(), title(f"Username OSINT: {username}")]
     lines.append(
         "  "
-        f"{CONFIRMED_MARK} confirmed {len(confirmed)} · "
+        f"{confirmed_mark} confirmed {len(confirmed)} · "
         f"Sherlock only {len(sherlock_only)} · "
         f"Maigret only {len(maigret_only)}"
     )
 
-    lines.append(section(f"Confirmed by both engines {CONFIRMED_MARK}"))
+    lines.append(section(f"Confirmed by both engines {confirmed_mark}"))
     if confirmed:
         for entry, other in confirmed:
             lines.append(_render_confirmed(entry, other))

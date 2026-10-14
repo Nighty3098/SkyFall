@@ -2,9 +2,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.ui.output_formatter import (
-    info,
-)
+from src.ui.output_formatter import info, render
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -58,10 +56,15 @@ class FileAnalyzeController:
     async def start_file_analyzer(self, path):
         if self.ui.fileMetadataCheck.isChecked():
             self.ui.metadataDebug.setPlainText(info("Loading..."))
-            result = await self.file_analyzer.get_metadata(path)
-            result += "\n\n"
-            result += await self.file_analyzer.check_tail_data(path)
-            self.ui.metadataDebug.setPlainText(result)
+            metadata = await self.file_analyzer.get_metadata(path)
+            tail = await self.file_analyzer.check_tail_data(path)
+            report = {
+                "Metadata": metadata,
+                "Tail data": tail,
+            }
+            self.ui.metadataDebug.setPlainText(
+                render(report, title=f"File analysis: {path}")
+            )
 
             gps = await self.file_analyzer.get_gps_coordinates(path)
             if gps:
@@ -88,7 +91,9 @@ class FileAnalyzeController:
         if self.ui.fileVirustotalCheck.isChecked():
             self.ui.virustotalFileDebug.setPlainText(info("Loading..."))
             virustotal_result = await self.file_analyzer.virustotal_analyze(path)
-            self.ui.virustotalFileDebug.setPlainText(virustotal_result)
+            self.ui.virustotalFileDebug.setPlainText(
+                render(virustotal_result, title="VirusTotal")
+            )
 
     def get_file_type(self, path):
         return self.file_analyzer.get_file_type(path)

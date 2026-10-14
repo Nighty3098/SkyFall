@@ -18,16 +18,6 @@ from datetime import UTC, datetime, timedelta
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    info,
-    kv,
-    section,
-    title,
-)
-
 TIMEOUT = 30.0
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"
 
@@ -264,82 +254,74 @@ class GeoAnalysis:
             "events": events,
         }
 
-    # ── Text rendering ────────────────────────────────────────────
+    # ── Summaries (structured, display-ready) ─────────────────────
 
-    def render_sun_shadow(self, data: dict) -> str:
-        lines = [title("Sun / shadow geometry")]
-        lines.append(kv("Coordinates", f"{data['latitude']}, {data['longitude']}"))
-        lines.append(kv("Time (UTC)", data["time_utc"]))
-        lines.append(kv("Sun altitude", f"{data['sun_altitude_deg']} deg"))
-        lines.append(kv("Sun azimuth", f"{data['sun_azimuth_deg']} deg"))
+    @staticmethod
+    def summarize_sun_shadow(data: dict) -> dict:
+        out: dict = {
+            "Coordinates": f"{data['latitude']}, {data['longitude']}",
+            "Time (UTC)": data["time_utc"],
+            "Sun altitude (deg)": data["sun_altitude_deg"],
+            "Sun azimuth (deg)": data["sun_azimuth_deg"],
+        }
         if data["sun_up"]:
-            lines.append(kv("Shadow bearing", f"{data['shadow_bearing_deg']} deg"))
-            lines.append(kv("Shadow length ratio", f"{data['shadow_ratio']} x height"))
+            out["Shadow bearing (deg)"] = data["shadow_bearing_deg"]
+            out["Shadow length ratio"] = f"{data['shadow_ratio']} x height"
         else:
-            lines.append(info("Sun is below the horizon"))
-        lines.append(divider())
-        return "\n".join(lines)
+            out["Status"] = "Sun is below the horizon"
+        return out
 
-    def render_shadow_search(self, results: list[dict], params: dict) -> str:
-        lines = [title("Shadow geolocation candidates")]
-        lines.append(
-            info(
-                f"ratio={params['ratio']} bearing={params['bearing']} deg "
-                f"@ {params['time']} | {len(results)} candidate(s)"
-            )
-        )
-        if not results:
-            lines.append(info("No matching coordinates found"))
-        for r in results[:30]:
-            lines.append(
-                bullet(
+    @staticmethod
+    def summarize_shadow_search(results: list[dict], params: dict) -> dict:
+        return {
+            "Ratio": params["ratio"],
+            "Bearing (deg)": params["bearing"],
+            "Time (UTC)": params["time"],
+            "Candidates": len(results),
+            "Matches": (
+                [
                     f"{r['latitude']}, {r['longitude']} "
-                    f"(alt {r['sun_altitude_deg']} deg, err {r['error_deg']} deg)"
-                )
-            )
-        lines.append(divider())
-        return "\n".join(lines)
+                    f"(alt {r['sun_altitude_deg']} deg, "
+                    f"err {r['error_deg']} deg)"
+                    for r in results[:30]
+                ]
+                if results
+                else ["No matching coordinates found"]
+            ),
+        }
 
-    def render_firms(self, data: dict) -> str:
-        lines = [title("NASA FIRMS - active fires")]
+    @staticmethod
+    def summarize_firms(data: dict) -> dict:
         if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            lines.append(divider())
-            return "\n".join(lines)
-        lines.append(kv("Source", data.get("source", "?")))
-        lines.append(kv("Area", data.get("area", "?")))
-        lines.append(kv("Detections", data.get("count", 0)))
-        for f in (data.get("fires") or [])[:25]:
-            lines.append(
-                bullet(
-                    f"{f['latitude']}, {f['longitude']} "
-                    f"(FRP {f.get('frp', '?')}, "
-                    f"{f.get('date', '?')} {f.get('time', '?')})"
-                )
-            )
-        lines.append(divider())
-        return "\n".join(lines)
+            return {"error": data["error"]}
+        return {
+            "Source": data.get("source", "?"),
+            "Area": data.get("area", "?"),
+            "Detections": data.get("count", 0),
+            "Fires": [
+                f"{f['latitude']}, {f['longitude']} "
+                f"(FRP {f.get('frp', '?')}, "
+                f"{f.get('date', '?')} {f.get('time', '?')})"
+                for f in (data.get("fires") or [])[:25]
+            ],
+        }
 
-    def render_gdacs(self, data: dict) -> str:
-        lines = [title("GDACS - disaster alerts")]
+    @staticmethod
+    def summarize_gdacs(data: dict) -> dict:
         if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            lines.append(divider())
-            return "\n".join(lines)
-        lines.append(kv("Period", f"{data.get('date_from')} .. {data.get('date_to')}"))
-        lines.append(kv("Events", data.get("count", 0)))
-        for e in (data.get("events") or [])[:40]:
-            etype = GDACS_EVENTS.get(e["event_type"], e["event_type"])
-            lines.append(
-                bullet(
-                    f"[{e['alert_level']}] {etype}: {e['name']} "
-                    f"({e['country']}, {e['from_date']})"
-                )
-            )
-        lines.append(divider())
-        return "\n".join(lines)
+            return {"error": data["error"]}
+        return {
+            "Period": f"{data.get('date_from')} .. {data.get('date_to')}",
+            "Events": data.get("count", 0),
+            "Alerts": [
+                f"[{e['alert_level']}] "
+                f"{GDACS_EVENTS.get(e['event_type'], e['event_type'])}: "
+                f"{e['name']} ({e['country']}, {e['from_date']})"
+                for e in (data.get("events") or [])[:40]
+            ],
+        }
 
-    # ── Combined text entry point ─────────────────────────────────
+    # ── Combined entry point ──────────────────────────────────────
 
     async def report(
         self,
@@ -348,19 +330,21 @@ class GeoAnalysis:
         when: datetime | None = None,
         firms_key: str = "",
         firms_delta: float = 2.0,
-    ) -> str:
+    ) -> dict:
         when = when or datetime.now(UTC)
-        lines = [self.render_sun_shadow(self.sun_shadow(lat, lon, when))]
-        lines.append(section("Nearby active fires (FIRMS)"))
         bbox = (
             lon - firms_delta,
             lat - firms_delta,
             lon + firms_delta,
             lat + firms_delta,
         )
-        lines.append(self.render_firms(await self.firms(firms_key, bbox=bbox)))
-        lines.append(end_of("geo analysis"))
-        return "\n".join(lines)
+        sun = self.sun_shadow(lat, lon, when)
+        return {
+            "Sun / shadow": self.summarize_sun_shadow(sun),
+            "Nearby active fires (NASA FIRMS)": self.summarize_firms(
+                await self.firms(firms_key, bbox=bbox)
+            ),
+        }
 
     @staticmethod
     def parse_coords(raw: str) -> tuple[float, float] | None:

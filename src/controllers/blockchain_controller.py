@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.ui.output_formatter import error
+from src.ui.output_formatter import error, render
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -155,7 +155,7 @@ class BlockchainController:
         self.ui.bcProgressBar.setRange(0, 0)
 
         try:
-            await self.blockchain_search.search(
+            result = await self.blockchain_search.search(
                 network=network,
                 coin=coin,
                 time_from=time_from,
@@ -164,7 +164,9 @@ class BlockchainController:
                 amount_to=amount_to,
                 amount_tolerance=tolerance,
                 memo=memo,
-                on_result=self._append,
+            )
+            self._append(
+                render(result, title=f"Blockchain: {network.upper()} / {coin}")
             )
         except Exception as e:
             self._append(error(f"Error: {e}"))

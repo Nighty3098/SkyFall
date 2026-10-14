@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import render
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -21,9 +23,8 @@ class SocialController:
         instance = instance or getattr(self.ui, "socialInstanceEdit", None)
         instance_text = instance.text() if instance is not None else None
         widget.setPlainText("Searching social networks...")
-        widget.setPlainText(
-            await self.social_search.search(username, instance_text or None)
-        )
+        data = await self.social_search.search(username, instance_text or None)
+        widget.setPlainText(render(data, f"Social search: {username}"))
 
     async def search_bluesky(self, username):
         widget = getattr(self.ui, "socialDebug", None)
@@ -35,17 +36,14 @@ class SocialController:
         widget.setPlainText("Searching Bluesky...")
         profile = await self.social_search.bluesky_profile(username)
         matches = await self.social_search.bluesky_search(username)
-        lines = [f"[+] Bluesky: {username}"]
-        if profile:
-            lines.append(f"  handle: {profile.get('handle', '?')}")
-            lines.append(f"  display: {profile.get('displayName', '')}")
-            lines.append(f"  followers: {profile.get('followersCount', '?')}")
-            lines.append(f"  posts: {profile.get('postsCount', '?')}")
-        else:
-            lines.append("  [i] no exact profile")
-        for a in matches[:10]:
-            lines.append(f"  - {a.get('handle', '?')} ({a.get('displayName', '')})")
-        widget.setPlainText("\n".join(lines))
+        data = {
+            "profile": profile or {"note": "no exact profile"},
+            "matches": [
+                f"{a.get('handle', '?')} ({a.get('displayName', '')})"
+                for a in matches[:10]
+            ],
+        }
+        widget.setPlainText(render(data, f"Bluesky: {username}"))
 
     async def search_mastodon(self, username):
         widget = getattr(self.ui, "socialDebug", None)
@@ -57,17 +55,14 @@ class SocialController:
         widget.setPlainText("Searching Mastodon...")
         account = await self.social_search.mastodon_lookup(username)
         matches = await self.social_search.mastodon_search(username)
-        lines = [f"[+] Mastodon: {username}"]
-        if account:
-            lines.append(f"  @{account.get('acct', '?')}")
-            lines.append(f"  display: {account.get('display_name', '')}")
-            lines.append(f"  followers: {account.get('followers_count', '?')}")
-            lines.append(f"  posts: {account.get('statuses_count', '?')}")
-        else:
-            lines.append("  [i] no account on instance")
-        for a in matches[:10]:
-            lines.append(f"  - @{a.get('acct', '?')} ({a.get('display_name', '')})")
-        widget.setPlainText("\n".join(lines))
+        data = {
+            "account": account or {"note": "no account on instance"},
+            "matches": [
+                f"@{a.get('acct', '?')} ({a.get('display_name', '')})"
+                for a in matches[:10]
+            ],
+        }
+        widget.setPlainText(render(data, f"Mastodon: {username}"))
 
     async def search_instagram(self, username):
         widget = getattr(self.ui, "socialDebug", None)
@@ -79,15 +74,8 @@ class SocialController:
         widget.setPlainText("Searching Instagram...")
         data = await self.social_search.instagram_profile(username)
         if data.get("error"):
-            widget.setPlainText(f"[i] Instagram: {data['error']}")
+            widget.setPlainText(render({"error": data["error"]}, "Instagram"))
             return
-        lines = [f"[+] Instagram: @{data.get('username', '?')}"]
-        lines.append(f"  name: {data.get('full_name', '')}")
-        lines.append(f"  followers: {data.get('followers', '?')}")
-        lines.append(f"  following: {data.get('followees', '?')}")
-        lines.append(f"  posts: {data.get('posts', '?')}")
-        lines.append(f"  private: {data.get('is_private', False)}")
-        lines.append(f"  verified: {data.get('is_verified', False)}")
-        if data.get("external_url"):
-            lines.append(f"  url: {data['external_url']}")
-        widget.setPlainText("\n".join(lines))
+        widget.setPlainText(
+            render(data, f"Instagram: @{data.get('username', username)}")
+        )

@@ -3,17 +3,6 @@ from collections.abc import Callable
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    kv,
-    line,
-    section,
-    title,
-)
-
 SECRET_PATTERNS = [
     "api_key",
     "api-key",
@@ -315,21 +304,14 @@ class GitHubSearch:
             logger.warning("All tokens exhausted")
             return False
 
-    def _handle_rate_limit(
-        self, results: list, on_result: Callable | None = None
-    ) -> bool:
+    def _handle_rate_limit(self, errors: list) -> bool:
         if self._switch_to_next_token():
-            msg = f"Rate limited. Switching to token {self._current_token_index + 1}"
-            results.append(f"\n{error(msg)}")
-            if on_result:
-                on_result(results[-1])
+            errors.append(
+                f"Rate limited. Switching to token {self._current_token_index + 1}"
+            )
             return True
-        else:
-            msg = "Rate limited. All tokens exhausted."
-            results.append(f"\n{error(msg)}")
-            if on_result:
-                on_result(results[-1])
-            return False
+        errors.append("Rate limited. All tokens exhausted.")
+        return False
 
     def _rate_limit_remaining(self, resp: httpx.Response) -> tuple[int, int]:
         remaining = int(resp.headers.get("X-RateLimit-Remaining", 0))
@@ -339,10 +321,10 @@ class GitHubSearch:
     async def search_emails(
         self,
         query: str,
-        on_result: Callable | None = None,
         on_progress: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         results = []
+        errors = []
         q = f"{query} email OR @ OR .com"
         page = 1
         per_page = 100
@@ -357,17 +339,16 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    if self._handle_rate_limit(results, on_result):
+                    if self._handle_rate_limit(errors):
                         continue
-                    else:
-                        break
-
-                if resp.status_code != 200:
-                    results.append(f"\n{error(f'API error {resp.status_code}')}")
                     break
 
-                data = resp.json()
-                items = data.get("items", [])
+                if resp.status_code != 200:
+                    errors.append(f"API error {resp.status_code}")
+                    break
+
+                payload = resp.json()
+                items = payload.get("items", [])
                 if not items:
                     break
 
@@ -376,39 +357,39 @@ class GitHubSearch:
                     on_progress(page, remaining, limit)
 
                 for item in items:
-                    repo = item["repository"]["full_name"]
-                    path = item["path"]
-                    url = item["html_url"]
-                    entry = f"{bullet(repo)}\n{line(path)}\n{line(url)}"
-                    results.append(entry)
-                    if on_result:
-                        on_result(entry)
+                    results.append(
+                        {
+                            "repo": item["repository"]["full_name"],
+                            "path": item["path"],
+                            "url": item["html_url"],
+                        }
+                    )
 
                 page += 1
-                if data.get("total_count", 0) < page * per_page:
+                if payload.get("total_count", 0) < page * per_page:
                     break
 
             except httpx.RequestError as e:
-                results.append(f"\n{error(f'Request failed: {e}')}")
+                errors.append(f"Request failed: {e}")
                 break
 
-        if not results:
-            return "No email results found."
-
-        output = [divider(), title(f"Email search results for {query!r}:")]
-        output.extend(results)
-        output.append(end_of("email search"))
-        output.append(divider())
-        return "\n".join(output)
+        data: dict = {"query": query}
+        if results:
+            data["results"] = results
+        if errors:
+            data["errors"] = errors
+        if not results and not errors:
+            data["message"] = "No email results found."
+        return data
 
     async def search_secrets(
         self,
         query: str,
         pattern_filter: list[str] | None = None,
-        on_result: Callable | None = None,
         on_progress: Callable | None = None,
-    ) -> str:
-        results = []
+    ) -> dict:
+        matches = []
+        errors = []
         patterns = pattern_filter or SECRET_PATTERNS
         total = len(patterns)
         done = 0
@@ -430,14 +411,9 @@ class GitHubSearch:
                         )
 
                     if resp.status_code == 401:
-                        results.append(
-                            "\n"
-                            + error(
-                                "Bad credentials. Check your GitHub token in settings."
-                            )
+                        errors.append(
+                            "Bad credentials. Check your GitHub token in settings."
                         )
-                        if on_result:
-                            on_result(results[-1])
                         break
 
                     if resp.status_code == 403:
@@ -447,55 +423,60 @@ class GitHubSearch:
                                 "next token"
                             )
                             continue
-                        else:
-                            results.append(
-                                f"\n{error('Rate limited. All tokens exhausted.')}"
-                            )
-                            if on_result:
-                                on_result(results[-1])
-                            break
+                        errors.append("Rate limited. All tokens exhausted.")
+                        break
 
                     if resp.status_code != 200:
                         break
 
-                    data = resp.json()
-                    items = data.get("items", [])
+                    payload = resp.json()
+                    items = payload.get("items", [])
                     if not items:
                         break
 
-                    results.append(f"\n{section(pattern)}")
-                    if on_result:
-                        on_result(f"\n{section(pattern)}")
-
-                    for item in items[:3]:
-                        repo = item["repository"]["full_name"]
-                        path = item["path"]
-                        url = item["html_url"]
-                        entry = f"{bullet(repo)}\n{line(path)}\n{line(url)}"
-                        results.append(entry)
-                        if on_result:
-                            on_result(entry)
+                    entries = [
+                        {
+                            "repo": item["repository"]["full_name"],
+                            "path": item["path"],
+                            "url": item["html_url"],
+                        }
+                        for item in items[:3]
+                    ]
+                    matches.append({"pattern": pattern, "items": entries})
                     break
 
                 except httpx.RequestError:
                     continue
 
-        if not results:
-            return "No secrets found."
+        data: dict = {"query": query}
+        if matches:
+            data["matches"] = matches
+        if errors:
+            data["errors"] = errors
+        if not matches and not errors:
+            data["message"] = "No secrets found."
+        return data
 
-        output = [divider(), title(f"Secret scan results for {query!r}:")]
-        output.extend(results)
-        output.append(end_of("secret scan"))
-        output.append(divider())
-        return "\n".join(output)
+    @staticmethod
+    def _commit_entry(item, repo_name=None):
+        author = item.get("commit", {}).get("author", {})
+        return {
+            "sha": item["sha"][:8],
+            "date": author.get("date", "").split("T")[0],
+            "author": author.get("name", "N/A"),
+            "email": author.get("email", "N/A"),
+            "message": item.get("commit", {}).get("message", "").split("\n")[0],
+            "repo": repo_name or item["repository"]["full_name"],
+            "url": item["html_url"],
+        }
 
     async def search_commits(
         self,
         query: str,
-        on_result: Callable | None = None,
         on_progress: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         results = []
+        errors = []
         q = query.strip()
         page = 1
         per_page = 50
@@ -513,13 +494,13 @@ class GitHubSearch:
                         )
 
                     if resp.status_code == 403:
-                        results.append(f"\n{error('Rate limited.')}")
+                        errors.append("Rate limited.")
                         break
                     if resp.status_code == 404:
-                        results.append(f"\n{error(f'Repo {q!r} not found.')}")
+                        errors.append(f"Repo {q!r} not found.")
                         break
                     if resp.status_code != 200:
-                        results.append(f"\n{error(f'API error {resp.status_code}')}")
+                        errors.append(f"API error {resp.status_code}")
                         break
 
                     items = resp.json()
@@ -530,24 +511,7 @@ class GitHubSearch:
                         on_progress(page, 0, 0)
 
                     for item in items:
-                        author = item.get("commit", {}).get("author", {})
-                        email = author.get("email", "N/A")
-                        name = author.get("name", "N/A")
-                        date = author.get("date", "").split("T")[0]
-                        msg = item.get("commit", {}).get("message", "").split("\n")[0]
-                        sha = item["sha"][:8]
-                        url = item["html_url"]
-                        entry = (
-                            f"{bullet(sha)}\n"
-                            f"{line(f'Date: {date}')}\n"
-                            f"{line(f'Author: {name} <{email}>')}\n"
-                            f"{line(f'Message: {msg}')}\n"
-                            f"{line(f'Repo: {q}')}\n"
-                            f"{line(url)}"
-                        )
-                        results.append(entry)
-                        if on_result:
-                            on_result(entry)
+                        results.append(self._commit_entry(item, repo_name=q))
 
                     page += 1
                     params["page"] = page
@@ -557,7 +521,7 @@ class GitHubSearch:
                         break
 
                 except httpx.RequestError as e:
-                    results.append(f"\n{error(f'Request failed: {e}')}")
+                    errors.append(f"Request failed: {e}")
                     break
         else:
             if "repo:" not in q and "org:" not in q and "user:" not in q:
@@ -580,14 +544,14 @@ class GitHubSearch:
                         )
 
                     if resp.status_code == 403:
-                        results.append(f"\n{error('Rate limited.')}")
+                        errors.append("Rate limited.")
                         break
                     if resp.status_code != 200:
-                        results.append(f"\n{error(f'API error {resp.status_code}')}")
+                        errors.append(f"API error {resp.status_code}")
                         break
 
-                    data = resp.json()
-                    items = data.get("items", [])
+                    payload = resp.json()
+                    items = payload.get("items", [])
                     if not items:
                         break
 
@@ -596,50 +560,43 @@ class GitHubSearch:
                         on_progress(page, remaining, limit)
 
                     for item in items:
-                        author = item.get("commit", {}).get("author", {})
-                        email = author.get("email", "N/A")
-                        name = author.get("name", "N/A")
-                        date = author.get("date", "").split("T")[0]
-                        msg = item.get("commit", {}).get("message", "").split("\n")[0]
-                        repo = item["repository"]["full_name"]
-                        sha = item["sha"][:8]
-                        url = item["html_url"]
-                        entry = (
-                            f"{bullet(sha)}\n"
-                            f"{line(f'Date: {date}')}\n"
-                            f"{line(f'Author: {name} <{email}>')}\n"
-                            f"{line(f'Message: {msg}')}\n"
-                            f"{line(f'Repo: {repo}')}\n"
-                            f"{line(url)}"
-                        )
-                        results.append(entry)
-                        if on_result:
-                            on_result(entry)
+                        results.append(self._commit_entry(item))
 
                     page += 1
-                    if data.get("total_count", 0) < page * per_page:
+                    if payload.get("total_count", 0) < page * per_page:
                         break
 
                 except httpx.RequestError as e:
-                    results.append(f"\n{error(f'Request failed: {e}')}")
+                    errors.append(f"Request failed: {e}")
                     break
 
-        if not results:
-            return "No commits found."
+        data: dict = {"query": query}
+        if results:
+            data["commits"] = results
+        if errors:
+            data["errors"] = errors
+        if not results and not errors:
+            data["message"] = "No commits found."
+        return data
 
-        output = [divider(), title(f"Commit search results for {query!r}:")]
-        output.extend(results)
-        output.append(end_of("commit search"))
-        output.append(divider())
-        return "\n".join(output)
+    @staticmethod
+    def _repo_entry(item):
+        return {
+            "full_name": item["full_name"],
+            "description": item.get("description") or "No description",
+            "stars": item["stargazers_count"],
+            "forks": item["forks_count"],
+            "language": item.get("language") or "N/A",
+            "url": item["html_url"],
+        }
 
     async def search_repos(
         self,
         query: str,
-        on_result: Callable | None = None,
         on_progress: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         results = []
+        errors = []
         page = 1
         per_page = 50
 
@@ -653,14 +610,14 @@ class GitHubSearch:
                     )
 
                 if resp.status_code == 403:
-                    results.append(f"\n{error('Rate limited.')}")
+                    errors.append("Rate limited.")
                     break
                 if resp.status_code != 200:
-                    results.append(f"\n{error(f'API error {resp.status_code}')}")
+                    errors.append(f"API error {resp.status_code}")
                     break
 
-                data = resp.json()
-                items = data.get("items", [])
+                payload = resp.json()
+                items = payload.get("items", [])
                 if not items:
                     break
 
@@ -669,52 +626,26 @@ class GitHubSearch:
                     on_progress(page, remaining, limit)
 
                 for item in items:
-                    full_name = item["full_name"]
-                    desc = item.get("description") or "No description"
-                    stars = item["stargazers_count"]
-                    forks = item["forks_count"]
-                    lang = item.get("language") or "N/A"
-                    url = item["html_url"]
-                    entry = (
-                        f"{bullet(full_name)} {lang} | {stars}★ {forks}⑃\n"
-                        f"{line(desc)}\n"
-                        f"{line(url)}"
-                    )
-                    results.append(entry)
-                    if on_result:
-                        on_result(entry)
+                    results.append(self._repo_entry(item))
 
                 page += 1
-                if data.get("total_count", 0) < page * per_page:
+                if payload.get("total_count", 0) < page * per_page:
                     break
 
             except httpx.RequestError as e:
-                results.append(f"\n{error(f'Request failed: {e}')}")
+                errors.append(f"Request failed: {e}")
                 break
 
-        if not results:
-            return "No repositories found."
+        data: dict = {"query": query}
+        if results:
+            data["repositories"] = results
+        if errors:
+            data["errors"] = errors
+        if not results and not errors:
+            data["message"] = "No repositories found."
+        return data
 
-        output = [divider(), title(f"Repository search results for {query!r}:")]
-        output.extend(results)
-        output.append(end_of("repo search"))
-        output.append(divider())
-        return "\n".join(output)
-
-    async def search_user(
-        self,
-        username: str,
-        on_result: Callable | None = None,
-    ) -> str:
-        lines = []
-
-        lines.append(divider())
-        if on_result:
-            on_result(divider())
-        lines.append(title(f"GitHub User: {username}"))
-        if on_result:
-            on_result(title(f"GitHub User: {username}"))
-
+    async def search_user(self, username: str) -> dict:
         try:
             async with httpx.AsyncClient(timeout=30) as client:
                 resp = await client.get(
@@ -723,36 +654,42 @@ class GitHubSearch:
                 )
 
                 if resp.status_code == 403:
-                    return error("Rate limited.")
+                    return {"username": username, "error": "Rate limited."}
                 if resp.status_code == 404:
-                    return error(f"User '{username}' not found.")
+                    return {
+                        "username": username,
+                        "error": f"User '{username}' not found.",
+                    }
                 if resp.status_code != 200:
-                    return error(f"API error {resp.status_code}")
+                    return {
+                        "username": username,
+                        "error": f"API error {resp.status_code}",
+                    }
 
-                data = resp.json()
+                payload = resp.json()
+                profile = {}
                 fields = [
-                    ("Login", "login"),
-                    ("Name", "name"),
-                    ("Company", "company"),
-                    ("Blog", "blog"),
-                    ("Email", "email"),
-                    ("Bio", "bio"),
-                    ("Twitter", "twitter_username"),
-                    ("Location", "location"),
-                    ("Public repos", "public_repos"),
-                    ("Followers", "followers"),
-                    ("Following", "following"),
-                    ("Created", "created_at"),
-                    ("Type", "type"),
-                    ("Hireable", "hireable"),
+                    ("login", "login"),
+                    ("name", "name"),
+                    ("company", "company"),
+                    ("blog", "blog"),
+                    ("email", "email"),
+                    ("bio", "bio"),
+                    ("twitter", "twitter_username"),
+                    ("location", "location"),
+                    ("public_repos", "public_repos"),
+                    ("followers", "followers"),
+                    ("following", "following"),
+                    ("created", "created_at"),
+                    ("type", "type"),
+                    ("hireable", "hireable"),
                 ]
                 for label, key in fields:
-                    val = data.get(key)
+                    val = payload.get(key)
                     if val is not None and val != "":
-                        entry = kv(label, val)
-                        lines.append(entry)
-                        if on_result:
-                            on_result(entry)
+                        profile[label] = val
+
+                data: dict = {"username": username, "profile": profile}
 
                 resp2 = await client.get(
                     f"{self._base}/users/{username}/repos",
@@ -762,38 +699,68 @@ class GitHubSearch:
                 if resp2.status_code == 200:
                     repos = resp2.json()
                     if repos:
-                        lines.append(
-                            f"\n{section(f'Recent repos ({len(repos)} shown)')}"
-                        )
-                        if on_result:
-                            on_result(
-                                f"\n{section(f'Recent repos ({len(repos)} shown)')}"
-                            )
-                        for r in repos[:15]:
-                            entry = f"  {r['full_name']} ({r.get('language') or 'N/A'})"
-                            lines.append(entry)
-                            if on_result:
-                                on_result(entry)
+                        data["repos"] = [
+                            {
+                                "full_name": r["full_name"],
+                                "language": r.get("language") or "N/A",
+                            }
+                            for r in repos[:15]
+                        ]
+
+                return data
 
         except httpx.RequestError as e:
-            return error(f"Request failed: {e}")
+            return {"username": username, "error": f"Request failed: {e}"}
 
-        lines.append(end_of("user search"))
-        if on_result:
-            on_result(end_of("user search"))
-        lines.append(divider())
-        if on_result:
-            on_result(divider())
-        return "\n".join(lines)
+    @staticmethod
+    def _dork_entry(item, dork_type):
+        if dork_type == "code":
+            return {
+                "repo": item["repository"]["full_name"],
+                "path": item["path"],
+                "url": item["html_url"],
+            }
+        if dork_type == "commits":
+            author = item.get("commit", {}).get("author", {})
+            return {
+                "sha": item["sha"][:8],
+                "author": author.get("name", "N/A"),
+                "email": author.get("email", "N/A"),
+                "message": item.get("commit", {}).get("message", "").split("\n")[0],
+                "repo": item["repository"]["full_name"],
+                "url": item["html_url"],
+            }
+        if dork_type == "issues":
+            return {
+                "repo": item["repository"]["full_name"],
+                "state": item["state"],
+                "title": item["title"],
+                "url": item["html_url"],
+            }
+        if dork_type == "repositories":
+            return {
+                "full_name": item["full_name"],
+                "language": item.get("language") or "N/A",
+                "stars": item["stargazers_count"],
+                "description": item.get("description") or "No description",
+                "url": item["html_url"],
+            }
+        if dork_type == "users":
+            return {
+                "login": item["login"],
+                "id": item["id"],
+                "url": item["html_url"],
+            }
+        return {"raw": str(item)}
 
     async def search_dork(
         self,
         query: str,
         dork_type: str = "code",
-        on_result: Callable | None = None,
         on_progress: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         results = []
+        errors = []
         page = 1
         per_page = 50
 
@@ -821,26 +788,17 @@ class GitHubSearch:
 
                 if resp.status_code == 403:
                     if self._switch_to_next_token():
-                        results.append(
-                            f"\n{error('Rate limited. Switching to new token')}"
-                        )
-                        if on_result:
-                            on_result(results[-1])
+                        errors.append("Rate limited. Switching to new token")
                         continue
-                    else:
-                        results.append(
-                            f"\n{error('Rate limited. All tokens exhausted.')}"
-                        )
-                        if on_result:
-                            on_result(results[-1])
-                        break
-
-                if resp.status_code != 200:
-                    results.append(f"\n{error(f'API error {resp.status_code}')}")
+                    errors.append("Rate limited. All tokens exhausted.")
                     break
 
-                data = resp.json()
-                items = data.get("items", [])
+                if resp.status_code != 200:
+                    errors.append(f"API error {resp.status_code}")
+                    break
+
+                payload = resp.json()
+                items = payload.get("items", [])
                 if not items:
                     break
 
@@ -849,73 +807,22 @@ class GitHubSearch:
                     on_progress(page, remaining, limit)
 
                 for item in items:
-                    if dork_type == "code":
-                        repo = item["repository"]["full_name"]
-                        path = item["path"]
-                        url = item["html_url"]
-                        entry = f"{bullet(repo)}\n{line(path)}\n{line(url)}"
-                    elif dork_type == "commits":
-                        author = item.get("commit", {}).get("author", {})
-                        email = author.get("email", "N/A")
-                        name = author.get("name", "N/A")
-                        msg = item.get("commit", {}).get("message", "").split("\n")[0]
-                        repo = item["repository"]["full_name"]
-                        sha = item["sha"][:8]
-                        url = item["html_url"]
-                        entry = (
-                            f"{bullet(sha)}\n"
-                            f"{line(f'Author: {name} <{email}>')}\n"
-                            f"{line(f'Message: {msg}')}\n"
-                            f"{line(f'Repo: {repo}')}\n"
-                            f"{line(url)}"
-                        )
-                    elif dork_type == "issues":
-                        repo = item["repository"]["full_name"]
-                        issue_title = item["title"]
-                        state = item["state"]
-                        url = item["html_url"]
-                        entry = (
-                            f"{bullet(repo)}\n"
-                            f"{line(f'[{state}] {issue_title}')}\n"
-                            f"{line(url)}"
-                        )
-                    elif dork_type == "repositories":
-                        full_name = item["full_name"]
-                        desc = item.get("description") or "No description"
-                        stars = item["stargazers_count"]
-                        lang = item.get("language") or "N/A"
-                        url = item["html_url"]
-                        entry = (
-                            f"{bullet(full_name)} {lang} | {stars}★\n"
-                            f"{line(desc)}\n"
-                            f"{line(url)}"
-                        )
-                    elif dork_type == "users":
-                        login = item["login"]
-                        uid = item["id"]
-                        url = item["html_url"]
-                        entry = f"{bullet(login)}\n{line(f'(id: {uid})')}\n{line(url)}"
-                    else:
-                        entry = str(item)
-
-                    results.append(entry)
-                    if on_result:
-                        on_result(entry)
+                    results.append(self._dork_entry(item, dork_type))
 
                 page += 1
-                total = data.get("total_count", 0)
+                total = payload.get("total_count", 0)
                 if total < page * per_page:
                     break
 
             except httpx.RequestError as e:
-                results.append(f"\n{error(f'Request failed: {e}')}")
+                errors.append(f"Request failed: {e}")
                 break
 
-        if not results:
-            return "No results found."
-
-        output = [divider(), title(f"Dork results for {query!r} ({dork_type}):")]
-        output.extend(results)
-        output.append(end_of("dork search"))
-        output.append(divider())
-        return "\n".join(output)
+        data: dict = {"query": query, "dork_type": dork_type}
+        if results:
+            data["results"] = results
+        if errors:
+            data["errors"] = errors
+        if not results and not errors:
+            data["message"] = "No results found."
+        return data

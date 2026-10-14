@@ -1,21 +1,9 @@
 import asyncio
 import datetime
 import sys
-from collections.abc import Callable
 from pathlib import Path
 
 from loguru import logger
-
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    info,
-    kv,
-    line,
-    title,
-)
 
 _txfetch_path = str(Path(__file__).parent.parent.parent / "thirdparty" / "txfetch")
 if _txfetch_path not in sys.path:
@@ -91,8 +79,7 @@ class BlockchainSearch:
         amount_to: float | None = None,
         amount_tolerance: float = 0.01,
         memo: str | None = None,
-        on_result: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         from modules.models import TXQuery
 
         network = network.lower()
@@ -100,10 +87,11 @@ class BlockchainSearch:
 
         adapter_cls = self._adapters.get(network)
         if not adapter_cls:
-            msg = error(f"Unsupported network: {network}")
-            if on_result:
-                on_result(msg)
-            return msg
+            return {
+                "network": network,
+                "coin": coin,
+                "error": f"Unsupported network: {network}",
+            }
 
         query = TXQuery(
             time_from=time_from,
@@ -115,42 +103,26 @@ class BlockchainSearch:
             memo=memo,
         )
 
-        lines = [title(f"Blockchain: {network.upper()} / {coin}")]
-        if on_result:
-            on_result(lines[-1])
-
         try:
             adapter = adapter_cls()
             candidates = await asyncio.to_thread(adapter.fetch_candidates, query)
         except Exception as e:
-            msg = error(f"Search failed: {e}")
             logger.error(f"Blockchain search error: {e}")
-            if on_result:
-                on_result(msg)
-            return msg
+            return {"network": network, "coin": coin, "error": f"Search failed: {e}"}
 
+        data: dict = {"network": network, "coin": coin}
         if not candidates:
-            msg = info("No transactions found matching criteria.")
-            if on_result:
-                on_result(msg)
-            lines.append(msg)
-            lines.append(end_of("blockchain search"))
-            if on_result:
-                on_result(lines[-1])
-            return "\n".join(lines)
+            data["message"] = "No transactions found matching criteria."
+            return data
 
-        lines.append(kv("Results", len(candidates)))
-        if on_result:
-            on_result(lines[-1])
-
-        for i, c in enumerate(candidates, 1):
-            lines.append(bullet(f"[{c.confidence:.0%}] {c.tx_id}"))
-            lines.append(line(f"Time:   {c.timestamp.strftime('%H:%M:%S')}"))
-            lines.append(line(f"Amount: {c.amount:.6f} {c.coin}"))
-            if on_result:
-                for ln in lines[-3:]:
-                    on_result(ln)
-
+        transactions = []
+        for c in candidates:
+            tx: dict = {
+                "confidence": f"{c.confidence:.0%}",
+                "tx_id": c.tx_id,
+                "time": c.timestamp.strftime("%H:%M:%S"),
+                "amount": f"{c.amount:.6f} {c.coin}",
+            }
             detail = c.score_detail
             if detail:
                 parts = []
@@ -163,28 +135,14 @@ class BlockchainSearch:
                 if "memo_score" in detail:
                     parts.append(f"M={detail['memo_score']}")
                 if parts:
-                    detail_text = kv("Scores", " | ".join(parts))
-                    lines.append(detail_text)
-                    if on_result:
-                        on_result(detail_text)
-
+                    tx["scores"] = " | ".join(parts)
             if c.from_address or c.to_address:
-                lines.append(line(f"From:   {c.from_address or '-'}"))
-                lines.append(line(f"To:     {c.to_address or '-'}"))
-                if on_result:
-                    for ln in lines[-2:]:
-                        on_result(ln)
-
+                tx["from"] = c.from_address or "-"
+                tx["to"] = c.to_address or "-"
             if c.memo:
-                memo_text = kv("Memo", c.memo)
-                lines.append(memo_text)
-                if on_result:
-                    on_result(memo_text)
+                tx["memo"] = c.memo
+            transactions.append(tx)
 
-        lines.append(divider())
-        if on_result:
-            on_result(lines[-1])
-        lines.append(end_of("blockchain search"))
-        if on_result:
-            on_result(lines[-1])
-        return "\n".join(lines)
+        data["count"] = len(transactions)
+        data["transactions"] = transactions
+        return data

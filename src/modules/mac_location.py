@@ -2,7 +2,6 @@ import asyncio
 import gzip
 import struct
 import xml.etree.ElementTree as ET
-from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 
@@ -349,7 +348,6 @@ class MacLocation:
         mac: str,
         providers: list[str] | None = None,
         timeout: int = 10,
-        on_result: Callable | None = None,
     ):
         all_providers = {
             "Yandex": self._yandex,
@@ -376,17 +374,11 @@ class MacLocation:
                     if res:
                         lat, lon = res
                         result["location"][name] = {"latitude": lat, "longitude": lon}
-                        if on_result:
-                            on_result(f"{name}: {lat:.7f}, {lon:.7f}")
                     else:
                         result["location"][name] = None
-                        if on_result:
-                            on_result(f"{name}: no data")
-                except Exception as e:
+                except Exception:
                     logger.exception("{} provider threw exception", name)
                     result["location"][name] = None
-                    if on_result:
-                        on_result(f"{name}: {e}")
 
         return result
 
@@ -414,9 +406,8 @@ class MacLocation:
         macs: list[str],
         providers: list[str] | None = None,
         timeout: int = 10,
-        on_result: Callable | None = None,
     ):
-        return [self.locate(mac, providers, timeout, on_result) for mac in macs]
+        return [self.locate(mac, providers, timeout) for mac in macs]
 
     async def locate_multi_async(
         self,

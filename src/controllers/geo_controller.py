@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import render
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -42,7 +44,8 @@ class GeoController:
             return
         widget.setPlainText("Computing sun / shadow geometry...")
         data = self.geo.sun_shadow(coords[0], coords[1], self._when())
-        widget.setPlainText(self.geo.render_sun_shadow(data))
+        summary = self.geo.summarize_sun_shadow(data)
+        widget.setPlainText(render(summary, "Sun / shadow geometry"))
 
     async def shadow_search(self):
         widget = self._debug()
@@ -67,7 +70,8 @@ class GeoController:
             "bearing": bearing,
             "time": self._when().isoformat(),
         }
-        widget.setPlainText(self.geo.render_shadow_search(results, params))
+        summary = self.geo.summarize_shadow_search(results, params)
+        widget.setPlainText(render(summary, "Shadow geolocation candidates"))
 
     async def firms(self):
         widget = self._debug()
@@ -80,7 +84,8 @@ class GeoController:
             lat, lon = coords
             bbox = (lon - 2.0, lat - 2.0, lon + 2.0, lat + 2.0)
         data = await self.geo.firms(self.firms_key, bbox=bbox)
-        widget.setPlainText(self.geo.render_firms(data))
+        summary = self.geo.summarize_firms(data)
+        widget.setPlainText(render(summary, "NASA FIRMS - active fires"))
 
     async def gdacs(self):
         widget = self._debug()
@@ -88,7 +93,8 @@ class GeoController:
             return
         widget.setPlainText("Querying GDACS...")
         data = await self.geo.gdacs()
-        widget.setPlainText(self.geo.render_gdacs(data))
+        summary = self.geo.summarize_gdacs(data)
+        widget.setPlainText(render(summary, "GDACS - disaster alerts"))
 
     async def full_report(self):
         widget = self._debug()
@@ -99,6 +105,5 @@ class GeoController:
             widget.setPlainText("Enter coordinates as 'lat, lon'")
             return
         widget.setPlainText("Running geo analysis...")
-        widget.setPlainText(
-            await self.geo.report(coords[0], coords[1], self._when(), self.firms_key)
-        )
+        data = await self.geo.report(coords[0], coords[1], self._when(), self.firms_key)
+        widget.setPlainText(render(data, f"Geo analysis: {coords[0]}, {coords[1]}"))

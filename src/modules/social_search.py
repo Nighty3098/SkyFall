@@ -15,17 +15,6 @@ import asyncio
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    info,
-    kv,
-    section,
-    title,
-)
-
 TIMEOUT = 15.0
 DEFAULT_INSTANCE = "mastodon.social"
 BLUESKY_API = "https://public.api.bsky.app/xrpc"
@@ -182,69 +171,72 @@ class SocialSearch:
             "mastodon_instance": instance or self.mastodon_instance,
         }
 
-    async def search(self, username: str, instance: str | None = None) -> str:
+    async def search(self, username: str, instance: str | None = None) -> dict:
         username = (username or "").strip()
         if not username:
-            return error("Empty username")
+            return {"error": "Empty username"}
 
         data = await self.search_structured(username, instance)
         bsky = data["bluesky"]
         mstd = data["mastodon"]
         inst = data["mastodon_instance"]
 
-        lines = [title(f"Social search: {username}")]
-        lines.append(section("Bluesky"))
+        result: dict = {"username": username}
+
         if bsky:
-            lines.append(bullet(bsky.get("handle", "?")))
+            profile = {
+                "handle": bsky.get("handle", "?"),
+                "did": bsky.get("did", "?"),
+                "followers": bsky.get("followersCount", "?"),
+                "following": bsky.get("followsCount", "?"),
+                "posts": bsky.get("postsCount", "?"),
+                "created": bsky.get("createdAt", "?"),
+            }
             if bsky.get("displayName"):
-                lines.append(kv("Display name", bsky["displayName"]))
-            lines.append(kv("DID", bsky.get("did", "?")))
-            lines.append(kv("Followers", bsky.get("followersCount", "?")))
-            lines.append(kv("Following", bsky.get("followsCount", "?")))
-            lines.append(kv("Posts", bsky.get("postsCount", "?")))
-            lines.append(kv("Created", bsky.get("createdAt", "?")))
+                profile["display_name"] = bsky["displayName"]
             if bsky.get("description"):
-                lines.append(kv("Bio", bsky["description"].replace("\n", " ")[:160]))
+                profile["bio"] = bsky["description"].replace("\n", " ")[:160]
+            result["bluesky"] = profile
         else:
-            lines.append(info("No exact Bluesky profile"))
+            result["bluesky"] = {"note": "No exact Bluesky profile"}
         other = [
             a
             for a in data["bluesky_matches"]
             if a.get("handle") != (bsky or {}).get("handle")
         ]
         if other:
-            lines.append(info(f"Bluesky handle matches: {len(other)}"))
-            for a in other[:5]:
-                lines.append(
-                    bullet(f"{a.get('handle', '?')} ({a.get('displayName', '')})")
-                )
+            result["bluesky_matches"] = [
+                f"{a.get('handle', '?')} ({a.get('displayName', '')})"
+                for a in other[:5]
+            ]
 
-        lines.append(section(f"Mastodon @ {inst}"))
+        result["mastodon_instance"] = inst
         if mstd:
-            lines.append(bullet(f"@{mstd.get('acct', '?')}"))
+            profile = {
+                "acct": f"@{mstd.get('acct', '?')}",
+                "followers": mstd.get("followers_count", "?"),
+                "following": mstd.get("following_count", "?"),
+                "posts": mstd.get("statuses_count", "?"),
+                "created": mstd.get("created_at", "?"),
+                "bot": mstd.get("bot", False),
+                "locked": mstd.get("locked", False),
+            }
             if mstd.get("display_name"):
-                lines.append(kv("Display name", mstd["display_name"]))
-            lines.append(kv("Followers", mstd.get("followers_count", "?")))
-            lines.append(kv("Following", mstd.get("following_count", "?")))
-            lines.append(kv("Posts", mstd.get("statuses_count", "?")))
-            lines.append(kv("Created", mstd.get("created_at", "?")))
-            lines.append(kv("Bot", mstd.get("bot", False)))
-            lines.append(kv("Locked", mstd.get("locked", False)))
+                profile["display_name"] = mstd["display_name"]
             if mstd.get("note"):
-                lines.append(kv("Bio", mstd["note"].replace("\n", " ")[:160]))
+                profile["bio"] = mstd["note"].replace("\n", " ")[:160]
+            result["mastodon"] = profile
         else:
-            lines.append(info(f"No Mastodon account on {inst}"))
+            result["mastodon"] = {"note": f"No Mastodon account on {inst}"}
         other_m = [
             a
             for a in data["mastodon_matches"]
             if a.get("acct") != (mstd or {}).get("acct")
         ]
         if other_m:
-            lines.append(info(f"Mastodon matches: {len(other_m)}"))
-            for a in other_m[:5]:
-                label = f"@{a.get('acct', '?')} ({a.get('display_name', '')})"
-                lines.append(bullet(label))
+            result["mastodon_matches"] = [
+                f"@{a.get('acct', '?')} ({a.get('display_name', '')})"
+                for a in other_m[:5]
+            ]
 
-        lines.append(end_of("social search"))
-        lines.append(divider())
-        return "\n".join(lines)
+        return result

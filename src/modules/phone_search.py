@@ -1,23 +1,10 @@
 import asyncio
 import json
-from collections.abc import Callable
 
 import httpx
 import phonenumbers
 from loguru import logger
 from phonenumbers import carrier, geocoder, timezone
-
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    info,
-    kv,
-    line,
-    section,
-    title,
-)
 
 
 class PhoneSearch:
@@ -28,190 +15,123 @@ class PhoneSearch:
         self,
         phone: str,
         default_region: str = None,
-        on_result: Callable | None = None,
-    ) -> str:
-        lines = [divider(), title(f"Phone: {phone}"), section("Parse & Validate")]
-        if on_result:
-            on_result(lines[-1])
-
+    ) -> dict:
+        data: dict = {"phone": phone}
         try:
             num = phonenumbers.parse(phone, default_region)
         except phonenumbers.NumberParseException as e:
-            return error(f"Parse error: {e}")
+            return {"phone": phone, "error": f"Parse error: {e}"}
 
         valid = phonenumbers.is_valid_number(num)
         possible = phonenumbers.is_possible_number(num)
-
-        lines.append(kv("Valid", "Yes" if valid else "No"))
-        if on_result:
-            on_result(lines[-1])
-        lines.append(kv("Possible", "Yes" if possible else "No"))
-        if on_result:
-            on_result(lines[-1])
+        data["valid"] = valid
+        data["possible"] = possible
 
         if valid or possible:
-            intl = phonenumbers.format_number(
+            data["international"] = phonenumbers.format_number(
                 num, phonenumbers.PhoneNumberFormat.INTERNATIONAL
             )
-            national = phonenumbers.format_number(
+            data["national"] = phonenumbers.format_number(
                 num, phonenumbers.PhoneNumberFormat.NATIONAL
             )
-            e164 = phonenumbers.format_number(num, phonenumbers.PhoneNumberFormat.E164)
-            lines.append(kv("International", intl))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(kv("National", national))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(kv("E.164", e164))
-            if on_result:
-                on_result(lines[-1])
-
-            lines.append(kv("Country Code", f"+{num.country_code}"))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(kv("National Num", num.national_number))
-            if on_result:
-                on_result(lines[-1])
-
-            region_code = phonenumbers.region_code_for_number(num)
-            lines.append(kv("Region", region_code))
-            if on_result:
-                on_result(lines[-1])
-
-            type_name = self._number_type_name(num)
-            lines.append(kv("Line Type", type_name))
-            if on_result:
-                on_result(lines[-1])
+            data["e164"] = phonenumbers.format_number(
+                num, phonenumbers.PhoneNumberFormat.E164
+            )
+            data["country_code"] = f"+{num.country_code}"
+            data["national_number"] = num.national_number
+            data["region"] = phonenumbers.region_code_for_number(num)
+            data["line_type"] = self._number_type_name(num)
 
             try:
                 carrier_name = carrier.name_for_number(num, "en")
                 if carrier_name:
-                    lines.append(kv("Carrier", carrier_name))
-                    if on_result:
-                        on_result(lines[-1])
+                    data["carrier"] = carrier_name
             except Exception:
                 pass
 
             try:
                 location = geocoder.description_for_number(num, "en")
                 if location:
-                    lines.append(kv("Location", location))
-                    if on_result:
-                        on_result(lines[-1])
+                    data["location"] = location
             except Exception:
                 pass
 
             try:
                 tzs = timezone.time_zones_for_number(num)
                 if tzs:
-                    lines.append(kv("Timezones", ", ".join(tzs)))
-                    if on_result:
-                        on_result(lines[-1])
+                    data["timezones"] = list(tzs)
             except Exception:
                 pass
 
-        if len(lines) <= 3:
-            return info("No information available for this number.")
-
-        lines.append(end_of("parse & validate"))
-        lines.append(divider())
-        return "\n".join(lines)
+        return data
 
     async def reverse_lookup(
         self,
         phone: str,
         numverify_key: str = "",
         abstractapi_key: str = "",
-        on_result: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         if not numverify_key and not abstractapi_key:
-            msg = info(
-                "No API keys configured. Add NumVerify or AbstractAPI key in settings."
-            )
-            if on_result:
-                on_result(msg)
-            return msg
+            return {
+                "phone": phone,
+                "message": (
+                    "No API keys configured. Add NumVerify or AbstractAPI key"
+                    " in settings."
+                ),
+            }
 
-        lines = [divider(), title(f"Phone: {phone}")]
+        data: dict = {"phone": phone}
 
         if numverify_key:
-            lines.append(section("NumVerify"))
-            if on_result:
-                on_result(lines[-1])
-            try:
-                async with httpx.AsyncClient(timeout=15) as client:
-                    resp = await client.get(
-                        "https://api.numverify.com/validate",
-                        params={
-                            "access_key": numverify_key,
-                            "number": phone,
-                        },
-                    )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    for key, val in data.items():
-                        line = kv(key, val)
-                        lines.append(line)
-                        if on_result:
-                            on_result(line)
-                elif resp.status_code == 404:
-                    lines.append(info("Invalid access key or subscription required"))
-                else:
-                    lines.append(info(f"API error {resp.status_code}"))
-            except httpx.RequestError as e:
-                lines.append(info(f"Request failed: {e}"))
+            data["numverify"] = await self._query_numverify(phone, numverify_key)
 
         if abstractapi_key:
-            lines.append(section("AbstractAPI"))
-            if on_result:
-                on_result(lines[-1])
-            try:
-                async with httpx.AsyncClient(timeout=15) as client:
-                    resp = await client.get(
-                        "https://phonevalidation.abstractapi.com/v1/",
-                        params={
-                            "api_key": abstractapi_key,
-                            "phone": phone,
-                        },
-                    )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    for key, val in data.items():
-                        line = kv(key, val)
-                        lines.append(line)
-                        if on_result:
-                            on_result(line)
-                elif resp.status_code == 422:
-                    lines.append(info("Invalid phone number or missing API key"))
-                else:
-                    lines.append(info(f"API error {resp.status_code}"))
-            except httpx.RequestError as e:
-                lines.append(info(f"Request failed: {e}"))
+            data["abstractapi"] = await self._query_abstractapi(phone, abstractapi_key)
 
-        if len(lines) <= 2:
-            return info("No data returned.")
+        return data
 
-        lines.append(end_of("reverse lookup"))
-        lines.append(divider())
-        return "\n".join(lines)
+    async def _query_numverify(self, phone: str, key: str) -> dict:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(
+                    "https://api.numverify.com/validate",
+                    params={"access_key": key, "number": phone},
+                )
+            if resp.status_code == 200:
+                return resp.json()
+            if resp.status_code == 404:
+                return {"error": "Invalid access key or subscription required"}
+            return {"error": f"API error {resp.status_code}"}
+        except httpx.RequestError as e:
+            return {"error": f"Request failed: {e}"}
+
+    async def _query_abstractapi(self, phone: str, key: str) -> dict:
+        try:
+            async with httpx.AsyncClient(timeout=15) as client:
+                resp = await client.get(
+                    "https://phonevalidation.abstractapi.com/v1/",
+                    params={"api_key": key, "phone": phone},
+                )
+            if resp.status_code == 200:
+                return resp.json()
+            if resp.status_code == 422:
+                return {"error": "Invalid phone number or missing API key"}
+            return {"error": f"API error {resp.status_code}"}
+        except httpx.RequestError as e:
+            return {"error": f"Request failed: {e}"}
 
     async def check_leaks(
         self,
         phone: str,
         intelx_key: str = "",
-        on_result: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         if not intelx_key:
-            msg = info("IntelX API key not configured. Add it in settings.")
-            if on_result:
-                on_result(msg)
-            return msg
+            return {
+                "phone": phone,
+                "message": "IntelX API key not configured. Add it in settings.",
+            }
 
-        lines = [divider(), title(f"Phone: {phone}"), section("IntelX Search")]
-        if on_result:
-            on_result(lines[-1])
-
+        data: dict = {"phone": phone}
         headers = {
             "x-key": intelx_key,
             "User-Agent": "SkyFall-OSINT/1.0",
@@ -238,13 +158,11 @@ class PhoneSearch:
                 )
 
             if init_resp.status_code != 200:
-                lines.append(info(f"API error {init_resp.status_code}"))
-                return "\n".join(lines)
+                data["error"] = f"API error {init_resp.status_code}"
+                return data
 
             search_id = init_resp.json().get("id")
-            lines.append(kv("Search ID", search_id))
-            if on_result:
-                on_result(lines[-1])
+            data["search_id"] = search_id
 
             await asyncio.sleep(3)
 
@@ -256,70 +174,39 @@ class PhoneSearch:
                 )
 
             if res_resp.status_code == 200:
-                data = res_resp.json()
-                records = data.get("records") or []
-                lines.append(kv("Records", len(records)))
-                if on_result:
-                    on_result(lines[-1])
+                payload = res_resp.json()
+                records = payload.get("records") or []
+                data["records"] = len(records)
 
+                findings = []
                 for item in records[:20]:
-                    name = item.get("name") or item.get("description") or "N/A"
-                    date = item.get("date", "")
-                    bucket_id = (
-                        item.get("bucketid")
+                    finding = {
+                        "name": item.get("name") or item.get("description") or "N/A",
+                        "date": item.get("date", ""),
+                        "bucket": item.get("bucketid")
                         or item.get("bucket")
-                        or item.get("bucketId")
-                    )
-                    lines.append(bullet(name))
-                    if on_result:
-                        on_result(lines[-1])
-                    if date:
-                        lines.append(line(f"Date:   {date}"))
-                    if bucket_id:
-                        lines.append(line(f"Bucket: {bucket_id}"))
-                    if bucket_id:
-                        try:
-                            async with httpx.AsyncClient(timeout=15) as client:
-                                bucket_resp = await client.get(
-                                    "https://public.intelx.io/intelligent/bucket",
-                                    params={"id": bucket_id},
-                                    headers=headers,
-                                )
-                            if bucket_resp.status_code == 200:
-                                content = bucket_resp.json()
-                                dumped = json.dumps(
-                                    content, indent=6, ensure_ascii=False
-                                )
-                                cline = kv("Content", dumped[:500])
-                                lines.append(cline)
-                                if on_result:
-                                    on_result(cline)
-                        except httpx.RequestError:
-                            pass
+                        or item.get("bucketId"),
+                    }
+                    findings.append(finding)
+                data["findings"] = findings
             else:
-                lines.append(info(f"API error {res_resp.status_code}"))
+                data["error"] = f"API error {res_resp.status_code}"
 
         except httpx.RequestError as e:
-            lines.append(info(f"Request failed: {e}"))
+            data["error"] = f"Request failed: {e}"
         except Exception as e:
-            lines.append(info(f"Error: {e}"))
+            data["error"] = f"Error: {e}"
 
-        if len(lines) <= 3:
-            return info("No leak data found.")
-
-        lines.append(end_of("leak check"))
-        lines.append(divider())
-        return "\n".join(lines)
+        return data
 
     async def search_7tel(
         self,
         phone: str,
-        on_result: Callable | None = None,
-    ) -> str:
+    ) -> dict:
         """Search phone number on 7tel.ru (caller ID reviews)."""
-        lines = [divider(), title(f"Phone: {phone}"), section("7tel.ru")]
-
         import re
+
+        data: dict = {"phone": phone}
 
         digits = re.sub(r"\D", "", phone)
         if digits.startswith("7") and len(digits) == 11:
@@ -329,16 +216,11 @@ class PhoneSearch:
         elif len(digits) == 10:
             slug = digits
         else:
-            lines.append(error("Invalid phone number format"))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(divider())
-            return "\n".join(lines)
+            data["error"] = "Invalid phone number format"
+            return data
 
         url = f"https://xn--7-jtbs0a.xn--p1ai/{slug}"
-        lines.append(kv("URL", url))
-        if on_result:
-            on_result(lines[-1])
+        data["url"] = url
 
         try:
             async with httpx.AsyncClient(timeout=15, follow_redirects=True) as client:
@@ -353,25 +235,16 @@ class PhoneSearch:
                     },
                 )
         except httpx.RequestError as e:
-            lines.append(error(f"Request failed: {e}"))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(divider())
-            return "\n".join(lines)
+            data["error"] = f"Request failed: {e}"
+            return data
 
         if resp.status_code == 404:
-            lines.append(info("Phone number not found on 7tel.ru"))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(divider())
-            return "\n".join(lines)
+            data["message"] = "Phone number not found on 7tel.ru"
+            return data
 
         if resp.status_code != 200:
-            lines.append(error(f"HTTP {resp.status_code}"))
-            if on_result:
-                on_result(lines[-1])
-            lines.append(divider())
-            return "\n".join(lines)
+            data["error"] = f"HTTP {resp.status_code}"
+            return data
 
         html = resp.text
 
@@ -379,9 +252,7 @@ class PhoneSearch:
         score_m = re.search(r'<span class="score\s+(negative|neutral|positive)"', html)
         if score_m:
             score = score_m.group(1)
-        lines.append(kv("Score", score))
-        if on_result:
-            on_result(lines[-1])
+        data["score"] = score
 
         main_info = re.findall(
             r"<span>([^<]+)</span>",
@@ -389,16 +260,12 @@ class PhoneSearch:
             if '<div class="MainPhone">' in html
             else "",
         )
-        for item in main_info[1:]:
-            lines.append(kv("Info", item.strip()))
-            if on_result:
-                on_result(lines[-1])
+        if main_info[1:]:
+            data["info"] = [item.strip() for item in main_info[1:]]
 
         review_count_m = re.search(r"negative.*?(\d+)", html)
         if review_count_m:
-            lines.append(line(f"Negative reviews: {review_count_m.group(1)}"))
-            if on_result:
-                on_result(lines[-1])
+            data["negative_reviews"] = review_count_m.group(1)
 
         review_pattern = re.compile(
             r'<div class="review">.*?'
@@ -416,20 +283,8 @@ class PhoneSearch:
                     "comment": re.sub(r"<[^>]+>", "", m.group(3)).strip(),
                 }
             )
-
         if reviews:
-            lines.append(section(f"Reviews ({len(reviews)})"))
-            if on_result:
-                on_result(lines[-1])
-            for rv in reviews:
-                comment = rv["comment"]
-                lines.append(bullet(f"{rv['date']} by {rv['author']}"))
-                if on_result:
-                    on_result(lines[-1])
-                if comment and "hidden" not in comment:
-                    lines.append(line(comment[:200]))
-                    if on_result:
-                        on_result(lines[-1])
+            data["reviews"] = reviews
 
         similar_m = re.findall(
             r'<a href="/(\d+)">\+?(\d+)</a>',
@@ -438,17 +293,9 @@ class PhoneSearch:
             else "",
         )
         if similar_m:
-            lines.append(section("Similar numbers"))
-            if on_result:
-                on_result(lines[-1])
-            for href, num in similar_m[:10]:
-                lines.append(bullet(f"+{num}"))
-                if on_result:
-                    on_result(lines[-1])
+            data["similar"] = [f"+{num}" for _, num in similar_m[:10]]
 
-        lines.append(end_of("7tel.ru"))
-        lines.append(divider())
-        return "\n".join(lines)
+        return data
 
     def _number_type_name(self, num) -> str:
         ntype = phonenumbers.number_type(num)

@@ -2,9 +2,9 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.modules.username_merge import merge_sources, render_report
+from src.modules.username_merge import merge_sources, report
 from src.modules.username_search import UsernameSearch
-from src.ui.output_formatter import error
+from src.ui.output_formatter import error, render
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -68,7 +68,10 @@ class UsernameController:
                 sherlock_found, maigret_matches
             )
             self._set_status(
-                render_report(username, confirmed, sherlock_only, maigret_only)
+                render(
+                    report(username, confirmed, sherlock_only, maigret_only),
+                    title=f"Username OSINT: {username}",
+                )
             )
         except Exception as e:
             logger.exception("Username search failed")

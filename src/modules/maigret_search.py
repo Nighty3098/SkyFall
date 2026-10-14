@@ -5,16 +5,6 @@ from maigret import search as maigret_search
 from maigret.db_updater import BUNDLED_DB_PATH
 from maigret.sites import MaigretDatabase
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    info,
-    kv,
-    section,
-    title,
-)
-
 _maigret_logger = logging.getLogger("maigret")
 _maigret_logger.setLevel(logging.WARNING)
 
@@ -28,28 +18,26 @@ class MaigretSearch:
         username: str,
         on_progress=None,
         top_sites=510,
-    ) -> str:
+    ) -> dict:
         try:
             all_results = await self._search_all(username, on_progress, top_sites)
             return self.report(username, all_results)
         except Exception as e:
-            error_msg = f"Error during search: {e}"
-            logger.error(error_msg)
-            return error_msg
+            logger.error(f"Error during search: {e}")
+            return {"error": f"Error during search: {e}"}
 
     async def search_and_report_structured(
         self,
         username: str,
         on_progress=None,
         top_sites=510,
-    ) -> tuple[str, list[dict]]:
+    ) -> tuple[dict, list[dict]]:
         try:
             all_results = await self._search_all(username, on_progress, top_sites)
             return self.report_structured(username, all_results)
         except Exception as e:
-            error_msg = f"Error during search: {e}"
-            logger.error(error_msg)
-            return error_msg, []
+            logger.error(f"Error during search: {e}")
+            return {"error": f"Error during search: {e}"}, []
 
     async def _search_all(self, username, on_progress=None, top_sites=510):
         sites = self.db.ranked_sites_dict(top=top_sites, disabled=False)
@@ -79,7 +67,7 @@ class MaigretSearch:
 
         return all_results
 
-    def report_structured(self, username: str, data: dict) -> tuple[str, list[dict]]:
+    def report_structured(self, username: str, data: dict) -> tuple[dict, list[dict]]:
         matches, _, _, _ = self._collect_matches(data)
         return self.report(username, data), matches
 
@@ -119,52 +107,39 @@ class MaigretSearch:
 
         return matches, not_found, unknown, disabled
 
-    def report(self, username: str, data: dict) -> str:
+    def report(self, username: str, data: dict) -> dict:
         matches, not_found, unknown, disabled = self._collect_matches(data)
 
-        output_lines = []
-        output_lines.append(divider())
-        output_lines.append(title(f"Searching: {username}") + "\n")
-
+        result: dict = {"username": username}
         if matches:
-            output_lines.append(info(f"Found accounts: {len(matches)}"))
-            for match in matches:
-                output_lines.append(
-                    bullet(
-                        f"{match['site']}: {match['url_user']} (Status: {match['status']})"
-                    )
-                )
-                if match["ids"]:
-                    for k, v in match["ids"].items():
-                        output_lines.append(kv(k, v))
-            output_lines.append("")
+            result["Found accounts"] = [
+                {
+                    "site": match["site"],
+                    "url": match["url_user"],
+                    "status": match["status"],
+                    "ids": match.get("ids") or {},
+                }
+                for match in matches
+            ]
         else:
-            output_lines.append(info("No accounts found.") + "\n")
+            result["Found accounts"] = ["No accounts found."]
 
         if not_found:
             display = not_found[:50]
-            output_lines.append(section("Not found"))
-            for item in display:
-                output_lines.append(bullet(item))
             if len(not_found) > 50:
-                output_lines.append(bullet(f"... and {len(not_found) - 50} more"))
+                display = list(display) + [f"... and {len(not_found) - 50} more"]
+            result["Not found"] = display
 
         if disabled:
             display = disabled[:30]
-            output_lines.append(section("Disabled"))
-            for item in display:
-                output_lines.append(bullet(item))
             if len(disabled) > 30:
-                output_lines.append(bullet(f"... and {len(disabled) - 30} more"))
+                display = list(display) + [f"... and {len(disabled) - 30} more"]
+            result["Disabled"] = display
 
         if unknown:
             display = [str(s) for s in unknown[:20]]
-            output_lines.append(section("Unknown/Error"))
-            for item in display:
-                output_lines.append(bullet(item))
             if len(unknown) > 20:
-                output_lines.append(bullet(f"... and {len(unknown) - 20} more"))
+                display = display + [f"... and {len(unknown) - 20} more"]
+            result["Unknown/Error"] = display
 
-        output_lines.append(end_of("maigret search"))
-        output_lines.append(divider())
-        return "\n".join(output_lines)
+        return result

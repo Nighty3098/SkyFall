@@ -416,7 +416,7 @@ async def skyfall_domain_subdomains(domain: str, use_brute: bool = True) -> str:
     """
     da = await _make_da()
     result = await da.find_subdomains(domain, use_brute=use_brute)
-    return result if isinstance(result, str) else str(result)
+    return result if isinstance(result, str) else _extract_json(result)
 
 
 @mcp.tool()
@@ -440,28 +440,32 @@ async def skyfall_domain_js_secrets(domain: str, max_files: int = 15) -> str:
         max_files: Max JS files to download and scan (default: 15)
     """
     da = await _make_da()
-    return await da.scan_js_secrets(domain, max_files=max_files)
+    result = await da.scan_js_secrets(domain, max_files=max_files)
+    return result if isinstance(result, str) else _extract_json(result)
 
 
 @mcp.tool()
 async def skyfall_domain_robots(domain: str) -> str:
     """Get robots.txt content for a domain."""
     da = await _make_da()
-    return await da.get_robots_txt(domain)
+    result = await da.get_robots_txt(domain)
+    return result if isinstance(result, str) else _extract_json(result)
 
 
 @mcp.tool()
 async def skyfall_domain_security_txt(domain: str) -> str:
     """Get security.txt content for a domain."""
     da = await _make_da()
-    return await da.get_security_txt(domain)
+    result = await da.get_security_txt(domain)
+    return result if isinstance(result, str) else _extract_json(result)
 
 
 @mcp.tool()
 async def skyfall_domain_social_tags(domain: str) -> str:
     """Get Open Graph and Twitter social tags from a domain."""
     da = await _make_da()
-    return await da.get_social_tags(domain)
+    result = await da.get_social_tags(domain)
+    return result if isinstance(result, str) else _extract_json(result)
 
 
 # ── Username Search ───────────────────────────────────────────────────
@@ -500,7 +504,7 @@ async def skyfall_maigret_search(username: str) -> str:
 
     ms = MaigretSearch()
     result = await ms.search_and_report(username)
-    return result
+    return _extract_json(result)
 
 
 @mcp.tool()
@@ -844,7 +848,7 @@ async def skyfall_email_intelx(email: str) -> str:
         intelx_api_key=s.get("intelligent_x_api_key", ""),
         hibp_api_key=s.get("hibp_api_key", ""),
     )
-    return await engine.search_intelx(email)
+    return _extract_json(await engine.get_data(email))
 
 
 @mcp.tool()
@@ -857,7 +861,7 @@ async def skyfall_email_hibp(email: str) -> str:
         intelx_api_key=s.get("intelligent_x_api_key", ""),
         hibp_api_key=s.get("hibp_api_key", ""),
     )
-    return await engine.check_hibp(email)
+    return _extract_json(await engine.check_hibp(email))
 
 
 @mcp.tool()
@@ -870,7 +874,7 @@ async def skyfall_email_search(email: str) -> str:
         intelx_api_key=s.get("intelligent_x_api_key", ""),
         hibp_api_key=s.get("hibp_api_key", ""),
     )
-    intelx_result = await engine.search_intelx(email)
+    intelx_result = await engine.get_data(email)
     hibp_result = await engine.check_hibp(email)
     return _extract_json(
         {
@@ -961,7 +965,7 @@ def skyfall_phone_parse(phone: str, default_region: str = "RU") -> str:
 
     ps = PhoneSearch()
     parse_result = ps.parse_and_validate(phone, default_region=default_region)
-    return parse_result
+    return _extract_json(parse_result)
 
 
 @mcp.tool()
@@ -976,7 +980,7 @@ async def skyfall_phone_reverse_lookup(phone: str) -> str:
         numverify_key=s.get("numverify_api_key", ""),
         abstractapi_key=s.get("abstractapi_api_key", ""),
     )
-    return result
+    return _extract_json(result)
 
 
 @mcp.tool()
@@ -990,7 +994,7 @@ async def skyfall_phone_leak_check(phone: str) -> str:
         phone,
         intelx_key=s.get("intelligent_x_api_key", ""),
     )
-    return result
+    return _extract_json(result)
 
 
 @mcp.tool()
@@ -1030,7 +1034,7 @@ async def skyfall_phone_7tel(phone: str) -> str:
     from src.modules.phone_search import PhoneSearch
 
     ps = PhoneSearch()
-    return await ps.search_7tel(phone)
+    return _extract_json(await ps.search_7tel(phone))
 
 
 # ── GitHub OSINT ──────────────────────────────────────────────────────
@@ -1043,7 +1047,7 @@ async def skyfall_github_user(username: str) -> str:
 
     s = _settings
     gh = GitHubSearch(token=s.get("github_token", ""))
-    return await gh.search_user(username)
+    return _extract_json(await gh.search_user(username))
 
 
 @mcp.tool()
@@ -1057,7 +1061,7 @@ async def skyfall_github_repo_search(query: str) -> str:
 
     s = _settings
     gh = GitHubSearch(token=s.get("github_token", ""))
-    return await gh.search_repos(query)
+    return _extract_json(await gh.search_repos(query))
 
 
 @mcp.tool()
@@ -1071,7 +1075,7 @@ async def skyfall_github_commit_search(query: str) -> str:
 
     s = _settings
     gh = GitHubSearch(token=s.get("github_token", ""))
-    return await gh.search_commits(query)
+    return _extract_json(await gh.search_commits(query))
 
 
 @mcp.tool()
@@ -1081,7 +1085,7 @@ async def skyfall_github_email_search(query: str) -> str:
 
     s = _settings
     gh = GitHubSearch(token=s.get("github_token", ""))
-    return await gh.search_emails(query)
+    return _extract_json(await gh.search_emails(query))
 
 
 @mcp.tool()
@@ -1095,7 +1099,7 @@ async def skyfall_github_secret_search(query: str) -> str:
 
     s = _settings
     gh = GitHubSearch(token=s.get("github_token", ""))
-    return await gh.search_secrets(query)
+    return _extract_json(await gh.search_secrets(query))
 
 
 @mcp.tool()
@@ -1105,7 +1109,7 @@ async def skyfall_github_dork(query: str) -> str:
 
     s = _settings
     gh = GitHubSearch(token=s.get("github_token", ""))
-    return await gh.search_dork(query)
+    return _extract_json(await gh.search_dork(query))
 
 
 # ── Blockchain Search ─────────────────────────────────────────────────

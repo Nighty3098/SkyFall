@@ -18,17 +18,6 @@ import re
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    info,
-    kv,
-    section,
-    title,
-)
-
 TIMEOUT = 25.0
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"
 
@@ -50,6 +39,10 @@ def classify_target(target: str) -> str:
     if _DOMAIN_RE.fullmatch(target):
         return "domain"
     return "username"
+
+
+def _account_label(rec: dict) -> str:
+    return rec.get("name") or rec.get("username") or rec.get("email", "?")
 
 
 class LeakSearch:
@@ -191,93 +184,97 @@ class LeakSearch:
             )
         return result
 
-    # ── Text rendering ────────────────────────────────────────────
+    # ── Summaries (structured, display-ready) ─────────────────────
 
     @staticmethod
-    def _render_infostealer(data: dict) -> list[str]:
-        lines = [section("Infostealer logs (Hudson Rock)")]
+    def summarize_infostealer(data: dict) -> dict:
         if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            return lines
+            return {"error": data["error"]}
         if data.get("kind") == "domain":
-            lines.append(kv("Total records", data.get("total", 0)))
-            lines.append(kv("Infected users", data.get("users", 0)))
-            lines.append(kv("Infected employees", data.get("employees", 0)))
-            for rec in (data.get("data") or [])[:10]:
-                label = rec.get("name") or rec.get("username") or rec.get("email", "?")
-                count = rec.get("stealerFamilies") or rec.get("total", "")
-                lines.append(bullet(f"{label}: {count}"))
-            return lines
+            return {
+                "Total records": data.get("total", 0),
+                "Infected users": data.get("users", 0),
+                "Infected employees": data.get("employees", 0),
+                "Top accounts": [
+                    f"{_account_label(rec)}: "
+                    f"{rec.get('stealerFamilies') or rec.get('total', '')}"
+                    for rec in (data.get("data") or [])[:10]
+                ],
+            }
         stealers = data.get("stealers") or []
         if not stealers:
-            lines.append(info("No infostealer logs found"))
-            return lines
-        lines.append(kv("Infected machines", len(stealers)))
-        lines.append(kv("Corporate services", data.get("total_corporate_services", 0)))
-        lines.append(kv("User services", data.get("total_user_services", 0)))
-        for s in stealers[:10]:
-            comp = s.get("computer_name") or "?"
-            date = (s.get("date_compromised") or "?")[:10]
-            lines.append(bullet(f"{date} - {comp} ({s.get('operating_system', '?')})"))
-        return lines
+            return {"result": "No infostealer logs found"}
+        return {
+            "Infected machines": len(stealers),
+            "Corporate services": data.get("total_corporate_services", 0),
+            "User services": data.get("total_user_services", 0),
+            "Machines": [
+                f"{(s.get('date_compromised') or '?')[:10]} - "
+                f"{s.get('computer_name') or '?'} ({s.get('operating_system', '?')})"
+                for s in stealers[:10]
+            ],
+        }
 
     @staticmethod
-    def _render_leakcheck(data: dict) -> list[str]:
-        lines = [section("LeakCheck")]
+    def summarize_leakcheck(data: dict) -> dict:
         if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            return lines
-        lines.append(kv("Engine", data.get("engine", "public")))
-        lines.append(kv("Records found", data.get("found", 0)))
+            return {"error": data["error"]}
+        out: dict = {
+            "Engine": data.get("engine", "public"),
+            "Records found": data.get("found", 0),
+        }
         sources = data.get("sources") or []
         if sources:
-            names = ", ".join(str(s.get("name", "?")) for s in sources[:8])
-            lines.append(kv("Sources", names))
+            out["Sources"] = [str(s.get("name", "?")) for s in sources[:8]]
         fields = data.get("fields")
         if fields:
             if isinstance(fields, dict):
                 fields = list(fields.keys())
-            lines.append(kv("Exposed fields", ", ".join(map(str, fields[:15]))))
-        return lines
+            out["Exposed fields"] = [str(f) for f in fields[:15]]
+        return out
 
     @staticmethod
-    def _render_hibp(data: dict) -> list[str]:
-        lines = [section("Have I Been Pwned")]
+    def summarize_hibp(data: dict) -> dict:
         if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            return lines
+            return {"error": data["error"]}
         breaches = data.get("breaches") or []
-        lines.append(kv("Breaches", len(breaches)))
-        for b in breaches[:10]:
-            lines.append(bullet(f"{b.get('Name', '?')} ({b.get('BreachDate', '?')})"))
-        return lines
+        return {
+            "Breaches": len(breaches),
+            "Found": [
+                f"{b.get('Name', '?')} ({b.get('BreachDate', '?')})"
+                for b in breaches[:10]
+            ],
+        }
 
     @staticmethod
-    def _render_dehashed(data: dict) -> list[str]:
-        lines = [section("Dehashed")]
+    def summarize_dehashed(data: dict) -> dict:
         if data.get("error"):
-            lines.append(info(f"Unavailable: {data['error']}"))
-            return lines
-        lines.append(kv("Total entries", data.get("total", 0)))
-        for e in (data.get("entries") or [])[:8]:
-            ident = e.get("email") or e.get("username") or e.get("name", "?")
-            lines.append(bullet(f"{ident} @ {e.get('database_name', '?')}"))
-        return lines
+            return {"error": data["error"]}
+        return {
+            "Total entries": data.get("total", 0),
+            "Entries": [
+                f"{e.get('email') or e.get('username') or e.get('name', '?')} "
+                f"@ {e.get('database_name', '?')}"
+                for e in (data.get("entries") or [])[:8]
+            ],
+        }
 
-    async def check(self, target: str, keys: dict | None = None) -> str:
+    async def check(self, target: str, keys: dict | None = None) -> dict:
         target = (target or "").strip()
         if not target:
-            return error("Empty target")
+            return {"error": "Empty target"}
 
         data = await self.search_all(target, keys)
-        lines = [title(f"Leak / infostealer search: {target}")]
-        lines.append(info(f"Target type: {data['kind']}"))
-        lines += self._render_infostealer(data.get("infostealer", {}))
-        lines += self._render_leakcheck(data.get("leakcheck", {}))
+        result: dict = {
+            "target": target,
+            "type": data["kind"],
+            "Infostealer logs (Hudson Rock)": self.summarize_infostealer(
+                data.get("infostealer", {})
+            ),
+            "LeakCheck": self.summarize_leakcheck(data.get("leakcheck", {})),
+        }
         if "hibp" in data:
-            lines += self._render_hibp(data["hibp"])
+            result["Have I Been Pwned"] = self.summarize_hibp(data["hibp"])
         if "dehashed" in data:
-            lines += self._render_dehashed(data["dehashed"])
-        lines.append(end_of("leak search"))
-        lines.append(divider())
-        return "\n".join(lines)
+            result["Dehashed"] = self.summarize_dehashed(data["dehashed"])
+        return result

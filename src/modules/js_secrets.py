@@ -8,7 +8,6 @@ from fake_useragent import UserAgent
 from loguru import logger
 
 from src.modules.github_search import SECRET_PATTERNS
-from src.ui.output_formatter import bullet, divider, end_of, info, kv, line, title
 
 JS_SECRET_REGEXES = [
     ("AWS Access Key", r"\bAKIA[0-9A-Z]{16}\b", "HIGH"),
@@ -149,38 +148,6 @@ def scan_text(text, source=""):
     }
 
 
-def format_result(domain, js_results, scanned_files):
-    lines = [divider(), title(f"JS Secrets: {domain}")]
-    if not scanned_files:
-        lines.append(info("No JS files discovered"))
-        lines.extend([end_of("js secrets"), divider()])
-        return "\n".join(lines)
-    lines.append(kv("JS files scanned", len(scanned_files)))
-    for f in scanned_files[:MAX_JS_FILES]:
-        lines.append(bullet(f))
-    total_findings = sum(len(r["findings"]) for r in js_results)
-    lines.append(kv("Secret findings", total_findings))
-    for res in js_results:
-        if not res["findings"] and not res["keyword_hits"]:
-            continue
-        lines.append("")
-        lines.append(f"── {res['source']} ──")
-        for f in res["findings"][:30]:
-            lines.append(line(f"[{f['severity']}] {f['type']}: {f['match']}"))
-        if len(res["findings"]) > 30:
-            lines.append(line(f"… +{len(res['findings']) - 30} more"))
-        if res["keyword_hits"]:
-            lines.append(line("keywords: " + ", ".join(res["keyword_hits"][:20])))
-        if res["endpoints"]:
-            lines.append(line(f"endpoints ({len(res['endpoints'])}):"))
-            for ep in res["endpoints"][:15]:
-                lines.append(bullet(ep[:120]))
-    if total_findings == 0:
-        lines.append(info("No high-confidence secrets found (see keywords/endpoints)"))
-    lines.extend([end_of("js secrets"), divider()])
-    return "\n".join(lines)
-
-
 async def scan_domain_js(domain, max_files=MAX_JS_FILES, timeout=REQUEST_TIMEOUT):
     logger.debug("Trying to scan JS secrets")
     ua = UserAgent()
@@ -203,18 +170,7 @@ async def scan_domain_js(domain, max_files=MAX_JS_FILES, timeout=REQUEST_TIMEOUT
         base_url = f"http://{domain}"
         homepage = await asyncio.to_thread(_fetch, base_url)
     if not homepage:
-        return (
-            "\n".join(
-                [
-                    divider(),
-                    title(f"JS Secrets: {domain}"),
-                    "Error: could not fetch homepage",
-                    end_of("js secrets"),
-                    divider(),
-                ]
-            ),
-            [],
-        )
+        return {"domain": domain, "error": "could not fetch homepage"}
     script_urls = extract_script_urls(homepage, base_url)[:max_files]
     scanned = []
     results = []
@@ -226,4 +182,9 @@ async def scan_domain_js(domain, max_files=MAX_JS_FILES, timeout=REQUEST_TIMEOUT
         if body:
             scanned.append(js_url)
             results.append(scan_text(body, source=js_url))
-    return format_result(domain, results, scanned), results
+    return {
+        "domain": domain,
+        "scanned_files": scanned,
+        "results": results,
+        "findings": [f for r in results for f in r["findings"]],
+    }

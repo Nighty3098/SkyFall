@@ -14,6 +14,7 @@ from src.ui.output_formatter import (
     divider,
     end_of,
     kv,
+    render,
     section,
     title,
 )
@@ -59,7 +60,6 @@ class ChildNodeDef:
 class TransformResult:
     children: list[ChildNodeDef] = field(default_factory=list)
     content: str = ""
-    evidence: list[str] = field(default_factory=list)
 
 
 class GraphTransformController:
@@ -714,25 +714,13 @@ def _parse_domain_whois(data, domain):
     )
 
 
-def _parse_domain_subdomains(raw, domain):
-    if not isinstance(raw, str) or not raw or "Error" in raw:
-        return TransformResult(content=str(raw))
-    result_lines = raw.split("\n")
-    # ``find_subdomains`` lists every host per source and again under
-    # "Combined", so collapse the repeated entries while keeping the order.
-    seen = set()
-    subs = []
-    for ln in result_lines:
-        if not ln.startswith("  - "):
-            continue
-        host = ln.strip().removeprefix("- ").strip().lower()
-        if not host or host in seen:
-            continue
-        seen.add(host)
-        subs.append(host)
-    children = []
-    for sub in subs[:CHILD_THRESHOLD]:
-        children.append(ChildNodeDef(title=sub, entity_type="Domain"))
+def _parse_domain_subdomains(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Subdomains: {domain}"))
+    subs = data.get("subdomains", [])
+    children = [
+        ChildNodeDef(title=sub, entity_type="Domain") for sub in subs[:CHILD_THRESHOLD]
+    ]
     if len(subs) > CHILD_THRESHOLD:
         children.append(
             ChildNodeDef(
@@ -743,138 +731,139 @@ def _parse_domain_subdomains(raw, domain):
         )
     return TransformResult(
         children=children,
-        content=raw,
+        content=render(data, f"Subdomains: {domain}"),
     )
 
 
-def _parse_domain_ct(raw, domain):
-    if not isinstance(raw, str) or not raw or "Error" in raw:
-        return TransformResult(content=str(raw))
-    result_lines = raw.split("\n")
-    domains = [
-        ln.strip()[2:].strip() for ln in result_lines if ln.strip().startswith("- ")
-    ][:CHILD_THRESHOLD]
+def _parse_domain_ct(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(
+            content=render(data, f"Certificate Transparency: {domain}")
+        )
+    domains = data.get("domains", [])[:CHILD_THRESHOLD]
     children = [ChildNodeDef(title=d, entity_type="Domain") for d in domains]
     return TransformResult(
         children=children,
-        content=raw,
+        content=render(data, f"Certificate Transparency: {domain}"),
     )
 
 
-def _parse_domain_social(raw, domain):
-    if not raw or "Not found" in raw:
-        return TransformResult(content="No social tags found")
-    tags = [ln for ln in raw.split("\n") if ":" in ln]
+def _parse_domain_social(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Social tags: {domain}"))
+    tags = data.get("tags", {})
+    items = list(tags.items())
     children = []
-    seen = set()
-    for tag in tags[:CHILD_THRESHOLD]:
-        key = tag.split(":", 1)[0].strip()
-        val = tag.split(":", 1)[1].strip() if ":" in tag else ""
-        if key not in seen:
-            seen.add(key)
-            children.append(
-                ChildNodeDef(
-                    title=key if len(key) < 40 else key[:37] + "...",
-                    entity_type="Custom",
-                    content=val,
-                )
-            )
-    if len(tags) > CHILD_THRESHOLD:
+    for key, val in items[:CHILD_THRESHOLD]:
         children.append(
             ChildNodeDef(
-                title=f"+{len(tags) - CHILD_THRESHOLD} more tags",
+                title=key if len(key) < 40 else key[:37] + "...",
                 entity_type="Custom",
-                content="\n".join(tags[CHILD_THRESHOLD:]),
+                content=str(val),
             )
         )
-    return TransformResult(children=children, content=raw)
+    if len(items) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(items) - CHILD_THRESHOLD} more tags",
+                entity_type="Custom",
+                content="\n".join(f"{k}: {v}" for k, v in items[CHILD_THRESHOLD:]),
+            )
+        )
+    return TransformResult(
+        children=children,
+        content=render(data, f"Social tags: {domain}"),
+    )
 
 
 def _parse_domain_malware(data, domain):
-    if not isinstance(data, dict) or "error" in data:
-        return TransformResult(content=str(data))
-    status = data.get("status", "?")
-    source = data.get("source", "?")
-    malicious = data.get("malicious_votes", 0)
-    return TransformResult(
-        children=[
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Malware: {domain}"))
+    children = []
+    for src in data.get("sources", []):
+        label = src.get("source", "?")
+        status = src.get("status", "?")
+        detail = ", ".join(
+            f"{k}={v}"
+            for k, v in src.items()
+            if k not in ("source", "status") and v not in ("", None, [], {})
+        )
+        children.append(
             ChildNodeDef(
-                title=f"Reputation: {status}",
+                title=f"{label}: {status}",
                 entity_type="Custom",
-                content=(f"{kv('Source', source)}\n{kv('Malicious votes', malicious)}"),
+                content="\n".join(
+                    [kv("Source", label), kv("Status", status), detail[:400]]
+                ),
             )
-        ],
-        content="\n".join(
-            [
-                divider(),
-                title(f"Malware: {domain}"),
-                kv("Status", status),
-                kv("Source", source),
-                kv("Malicious votes", malicious),
-                end_of("malware check"),
-                divider(),
-            ]
-        ),
+        )
+    return TransformResult(
+        children=children[: CHILD_THRESHOLD + 1],
+        content=render(data, f"Malware: {domain}"),
     )
 
 
-def _parse_domain_securitytxt(raw, domain):
-    if not raw or "Not Found" in raw:
-        return TransformResult(content="No security.txt found")
+def _parse_domain_securitytxt(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"security.txt: {domain}"))
+    if not data.get("found"):
+        return TransformResult(content=render(data, f"security.txt: {domain}"))
     return TransformResult(
         children=[
             ChildNodeDef(
                 title="security.txt",
                 entity_type="Custom",
-                content=raw[:500],
+                content=str(data.get("content", ""))[:500],
             )
         ],
-        content=raw,
+        content=render(data, f"security.txt: {domain}"),
     )
 
 
-def _parse_domain_cookies(raw, domain):
-    if not raw or "No cookies" in raw:
-        return TransformResult(content="No cookies found")
-    lines = [ln for ln in raw.split("\n") if ln.strip()]
+def _parse_domain_cookies(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Cookies: {domain}"))
+    cookies = data.get("cookies", [])
     children = []
-    for i, line in enumerate(lines[: CHILD_THRESHOLD * 2]):
-        if ":" in line and line.startswith("  ") and not line.startswith("    "):
-            name = line.split(":", 1)[0].strip()
-            val = line.split(":", 1)[1].strip()
-            children.append(
-                ChildNodeDef(
-                    title=f"Cookie: {name}" if len(name) < 50 else name[:47] + "...",
-                    entity_type="Custom",
-                    content=val,
-                )
-            )
-    if len(lines) > CHILD_THRESHOLD * 2:
+    for cookie in cookies[: CHILD_THRESHOLD * 2]:
+        name = cookie.get("name", "?")
         children.append(
             ChildNodeDef(
-                title=f"+{len(lines) - CHILD_THRESHOLD * 2} more cookies",
+                title=f"Cookie: {name}" if len(name) < 50 else name[:47] + "...",
                 entity_type="Custom",
-                content="\n".join(lines[CHILD_THRESHOLD * 2 :]),
+                content=str(cookie.get("value", "")),
+            )
+        )
+    if len(cookies) > CHILD_THRESHOLD * 2:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(cookies) - CHILD_THRESHOLD * 2} more cookies",
+                entity_type="Custom",
+                content="\n".join(
+                    c.get("name", "") for c in cookies[CHILD_THRESHOLD * 2 :]
+                ),
             )
         )
     return TransformResult(
         children=children[: CHILD_THRESHOLD + 1],
-        content=raw,
+        content=render(data, f"Cookies: {domain}"),
     )
 
 
-def _parse_domain_robots(raw, domain):
-    if not raw or "Error" in raw:
-        return TransformResult(content=str(raw))
+def _parse_domain_robots(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Robots.txt: {domain}"))
+    if not data.get("found"):
+        return TransformResult(content=render(data, f"Robots.txt: {domain}"))
     return TransformResult(
         children=[
             ChildNodeDef(
                 title="robots.txt",
                 entity_type="Custom",
-                content=raw[:500],
+                content=str(data.get("content", ""))[:500],
             )
         ],
-        content=raw,
+        content=render(data, f"Robots.txt: {domain}"),
     )
 
 
@@ -963,12 +952,20 @@ def _parse_ip_domains(data, ip_addr):
         all_domains.append(host)
 
     children = []
-    for domain in all_domains:
+    for domain in all_domains[:CHILD_THRESHOLD]:
         children.append(
             ChildNodeDef(
                 title=domain,
                 entity_type="Domain",
                 content=domain,
+            )
+        )
+    if len(all_domains) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(all_domains) - CHILD_THRESHOLD} more domains",
+                entity_type="Domain",
+                content="\n".join(all_domains[CHILD_THRESHOLD:]),
             )
         )
 
@@ -996,54 +993,48 @@ def _parse_ip_domains(data, ip_addr):
 
 
 def _parse_email_intelx(raw, email):
-    if not raw or "Not found" in raw:
+    if not isinstance(raw, dict):
         return TransformResult(content=str(raw))
-    lines = raw.split("\n")
-    db_lines = [ln.lstrip()[2:] for ln in lines if ln.startswith("  -")]
+    content = render(raw, title=f"IntelX: {email}")
+    if raw.get("error") or raw.get("message"):
+        return TransformResult(content=content)
+    databases = [str(db).strip() for db in raw.get("databases") or []]
     children = []
     seen = set()
-    for db in db_lines[:CHILD_THRESHOLD]:
-        clean = db.strip()
-        if clean and clean not in seen:
-            seen.add(clean)
+    for db in databases[:CHILD_THRESHOLD]:
+        if db and db not in seen:
+            seen.add(db)
             children.append(
                 ChildNodeDef(
-                    title=clean[:50],
+                    title=db[:50],
                     entity_type="Custom",
-                    content=f"Database: {clean}\nEmail: {email}",
+                    content=f"Database: {db}\nEmail: {email}",
                 )
             )
-    if len(db_lines) > CHILD_THRESHOLD:
+    if len(databases) > CHILD_THRESHOLD:
         children.append(
             ChildNodeDef(
-                title=f"+{len(db_lines) - CHILD_THRESHOLD} more databases",
+                title=f"+{len(databases) - CHILD_THRESHOLD} more databases",
                 entity_type="Custom",
-                content="\n".join(db_lines[CHILD_THRESHOLD:]),
+                content="\n".join(databases[CHILD_THRESHOLD:]),
             )
         )
-    return TransformResult(children=children, content=raw)
+    return TransformResult(children=children, content=content)
 
 
 def _parse_phone_parse(raw, phone):
-    if not raw or "Parse error" in raw:
+    if not isinstance(raw, dict):
         return TransformResult(content=str(raw))
-    data = {}
-    for line in raw.split("\n"):
-        if ":" in line and not line.startswith("["):
-            key = line.split(":", 1)[0].strip()
-            val = line.split(":", 1)[1].strip()
-            if key and val:
-                data[key] = val
-    e164 = data.get("E.164", phone)
-    children = []
-    children.append(
-        ChildNodeDef(
-            title=e164,
-            entity_type="Phone",
-            content=raw,
-        )
-    )
-    location = data.get("Location")
+    content = render(raw, title=f"Phone: {phone}")
+    if raw.get("error"):
+        return TransformResult(content=content)
+
+    e164 = raw.get("e164") or phone
+    children = [
+        ChildNodeDef(title=e164, entity_type="Phone", content=content),
+    ]
+
+    location = raw.get("location")
     if location:
         children.append(
             ChildNodeDef(
@@ -1052,7 +1043,7 @@ def _parse_phone_parse(raw, phone):
                 content=f"{kv('Phone', e164)}\n{kv('Location', location)}",
             )
         )
-    carrier_name = data.get("Carrier")
+    carrier_name = raw.get("carrier")
     if carrier_name:
         children.append(
             ChildNodeDef(
@@ -1061,7 +1052,7 @@ def _parse_phone_parse(raw, phone):
                 content=f"{kv('Phone', e164)}\n{kv('Carrier', carrier_name)}",
             )
         )
-    line_type = data.get("Line Type")
+    line_type = raw.get("line_type")
     if line_type:
         children.append(
             ChildNodeDef(
@@ -1070,7 +1061,7 @@ def _parse_phone_parse(raw, phone):
                 content=f"{kv('Phone', e164)}\n{kv('Line Type', line_type)}",
             )
         )
-    region = data.get("Region")
+    region = raw.get("region")
     if region:
         children.append(
             ChildNodeDef(
@@ -1079,51 +1070,76 @@ def _parse_phone_parse(raw, phone):
                 content=f"{kv('Phone', e164)}\n{kv('Region', region)}",
             )
         )
-    timezones_str = data.get("Timezones")
-    if timezones_str:
-        for tz in [t.strip() for t in timezones_str.split(",")]:
-            city = tz.split("/")[-1] if "/" in tz else tz
-            children.append(
-                ChildNodeDef(
-                    title=city,
-                    entity_type="Geolocation",
-                    content=f"{kv('Phone', e164)}\n{kv('Timezone', tz)}",
-                )
+    for tz in raw.get("timezones") or []:
+        city = tz.split("/")[-1] if "/" in tz else tz
+        children.append(
+            ChildNodeDef(
+                title=city,
+                entity_type="Geolocation",
+                content=f"{kv('Phone', e164)}\n{kv('Timezone', tz)}",
             )
-    return TransformResult(children=children, content=raw)
+        )
+    return TransformResult(children=children, content=content)
 
 
 def _parse_phone_lookup(raw, phone):
-    if not raw or "No API keys" in raw:
+    if not isinstance(raw, dict):
         return TransformResult(content=str(raw))
-    lines = [ln for ln in raw.split("\n") if ln.strip() and ":" in ln]
+    content = render(raw, title=f"Phone: {phone}")
+    if raw.get("message") or raw.get("error"):
+        return TransformResult(content=content)
+
     children = []
-    for line in lines[:CHILD_THRESHOLD]:
-        key = line.split(":", 1)[0].strip()
-        val = line.split(":", 1)[1].strip() if ":" in line else ""
-        children.append(
-            ChildNodeDef(
-                title=key[:50],
-                entity_type="Custom",
-                content=val,
+    for provider in ("numverify", "abstractapi"):
+        block = raw.get(provider)
+        if not isinstance(block, dict):
+            continue
+        for key, val in list(block.items())[:CHILD_THRESHOLD]:
+            if key == "error" or val in (None, "", [], {}):
+                continue
+            children.append(
+                ChildNodeDef(
+                    title=f"{key}"[:50],
+                    entity_type="Custom",
+                    content=f"{kv(provider, key)}\n{kv('Value', val)}",
+                )
             )
-        )
-    return TransformResult(children=children, content=raw)
+    return TransformResult(children=children, content=content)
 
 
 def _parse_phone_leaks(raw, phone):
-    if not raw or "No API keys" in raw or "Not found" in raw:
+    if not isinstance(raw, dict):
         return TransformResult(content=str(raw))
-    return TransformResult(
-        children=[
+    content = render(raw, title=f"Phone: {phone}")
+    findings = raw.get("findings") or []
+    if not findings:
+        return TransformResult(content=content)
+
+    children = []
+    for item in findings[:CHILD_THRESHOLD]:
+        details = [f"{kv('Name', item.get('name'))}"]
+        if item.get("date"):
+            details.append(kv("Date", item["date"]))
+        if item.get("bucket"):
+            details.append(kv("Bucket", item["bucket"]))
+        children.append(
             ChildNodeDef(
-                title="Leak Check Results",
+                title=str(item.get("name", "N/A"))[:50],
                 entity_type="Custom",
-                content=raw[:500],
+                content="\n".join(details),
             )
-        ],
-        content=raw,
-    )
+        )
+    if len(findings) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(findings) - CHILD_THRESHOLD} more records",
+                entity_type="Custom",
+                content="\n".join(
+                    str(f.get("name", "N/A")) for f in findings[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+    return TransformResult(children=children, content=content)
 
 
 def _parse_mac_geo(data, mac):
@@ -1172,7 +1188,7 @@ async def _transform_maigret_search(username, modules):
     engine = modules.get("maigret_search")
     if not engine:
         return TransformResult(content="Maigret module not available")
-    report_text, matches = await engine.search_and_report_structured(username)
+    report_data, matches = await engine.search_and_report_structured(username)
     children = []
     for m in matches:
         lines = [
@@ -1188,7 +1204,10 @@ async def _transform_maigret_search(username, modules):
                 evidence=[m["url_user"]] if m.get("url_user") else [],
             )
         )
-    return TransformResult(children=children, content=report_text)
+    return TransformResult(
+        children=children,
+        content=render(report_data, f"Maigret: {username}"),
+    )
 
 
 async def _transform_username_merged(username, modules):
@@ -1620,30 +1639,40 @@ def _parse_threat_intel(data, target):
     return TransformResult(children=children, content=_pack_content(lines))
 
 
-def _parse_js_secrets(raw, domain):
-    if not raw:
-        return TransformResult(content="JS scan returned nothing")
-    secrets = [
-        ln.strip()
-        for ln in raw.split("\n")
-        if ln.strip().startswith("[HIGH]") or ln.strip().startswith("[MEDIUM]")
-    ]
+def _parse_js_secrets(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"JS secrets: {domain}"))
+    findings = data.get("findings", [])
     children = []
-    for s in secrets[:CHILD_THRESHOLD]:
-        children.append(ChildNodeDef(title=s[:60], entity_type="Custom", content=s))
-    if len(secrets) > CHILD_THRESHOLD:
+    for finding in findings[:CHILD_THRESHOLD]:
+        label = (
+            f"[{finding.get('severity', '?')}] "
+            f"{finding.get('type', '?')}: {finding.get('match', '')}"
+        )
+        children.append(
+            ChildNodeDef(title=label[:60], entity_type="Custom", content=label)
+        )
+    if len(findings) > CHILD_THRESHOLD:
         children.append(
             ChildNodeDef(
-                title=f"+{len(secrets) - CHILD_THRESHOLD} more findings",
+                title=f"+{len(findings) - CHILD_THRESHOLD} more findings",
                 entity_type="Custom",
-                content="\n".join(secrets[CHILD_THRESHOLD:]),
+                content="\n".join(
+                    f"[{f.get('severity')}] {f.get('type')}: {f.get('match')}"
+                    for f in findings[CHILD_THRESHOLD:]
+                ),
             )
         )
     if not children:
         children.append(
-            ChildNodeDef(title="JS scan done", entity_type="Custom", content=raw[:500])
+            ChildNodeDef(
+                title="JS scan done", entity_type="Custom", content=render(data)
+            )
         )
-    return TransformResult(children=children, content=raw)
+    return TransformResult(
+        children=children,
+        content=render(data, f"JS secrets: {domain}"),
+    )
 
 
 async def _transform_domain_js_secrets(domain, modules):

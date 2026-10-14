@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import render
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -33,7 +35,8 @@ class LeakController:
             return
         target = target or self._target()
         widget.setPlainText("Searching leaks and infostealer logs...")
-        widget.setPlainText(await self.leak_search.check(target, self.keys))
+        data = await self.leak_search.check(target, self.keys)
+        widget.setPlainText(render(data, f"Leak search: {target}"))
 
     async def infostealer(self, target=None):
         widget = self._debug()
@@ -42,9 +45,8 @@ class LeakController:
         target = target or self._target()
         widget.setPlainText("Searching infostealer logs (Hudson Rock)...")
         data = await self.leak_search.infostealer(target)
-        lines = [f"[+] Infostealer logs: {target}"]
-        lines += self.leak_search._render_infostealer(data)
-        widget.setPlainText("\n".join(lines))
+        summary = self.leak_search.summarize_infostealer(data)
+        widget.setPlainText(render(summary, f"Infostealer logs: {target}"))
 
     async def leakcheck(self, target=None):
         widget = self._debug()
@@ -55,9 +57,8 @@ class LeakController:
         data = await self.leak_search.leakcheck(
             target, self.keys.get("leakcheck_api_key", "")
         )
-        lines = [f"[+] LeakCheck: {target}"]
-        lines += self.leak_search._render_leakcheck(data)
-        widget.setPlainText("\n".join(lines))
+        summary = self.leak_search.summarize_leakcheck(data)
+        widget.setPlainText(render(summary, f"LeakCheck: {target}"))
 
     async def hibp(self, target=None):
         widget = self._debug()
@@ -66,9 +67,8 @@ class LeakController:
         target = target or self._target()
         widget.setPlainText("Checking Have I Been Pwned...")
         data = await self.leak_search.hibp(target, self.keys.get("hibp_api_key", ""))
-        lines = [f"[+] HIBP: {target}"]
-        lines += self.leak_search._render_hibp(data)
-        widget.setPlainText("\n".join(lines))
+        summary = self.leak_search.summarize_hibp(data)
+        widget.setPlainText(render(summary, f"HIBP: {target}"))
 
     async def dehashed(self, target=None):
         widget = self._debug()
@@ -81,6 +81,5 @@ class LeakController:
             self.keys.get("dehashed_email", ""),
             self.keys.get("dehashed_api_key", ""),
         )
-        lines = [f"[+] Dehashed: {target}"]
-        lines += self.leak_search._render_dehashed(data)
-        widget.setPlainText("\n".join(lines))
+        summary = self.leak_search.summarize_dehashed(data)
+        widget.setPlainText(render(summary, f"Dehashed: {target}"))

@@ -19,16 +19,6 @@ from dataclasses import asdict, dataclass
 import httpx
 from loguru import logger
 
-from src.ui.output_formatter import (
-    bullet,
-    divider,
-    end_of,
-    error,
-    info,
-    section,
-    title,
-)
-
 TIMEOUT = 15.0
 _EMAIL_RE = re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+")
 _USER_AGENT = "Mozilla/5.0 (X11; Linux x86_64; rv:151.0) Gecko/20100101 Firefox/151.0"
@@ -238,42 +228,32 @@ class EmailAccounts:
         results.sort(key=lambda r: (r.registered is not True, r.site.lower()))
         return [asdict(r) for r in results]
 
-    async def check(self, email: str) -> str:
+    async def check(self, email: str) -> dict:
         email = (email or "").strip()
         if not _EMAIL_RE.fullmatch(email):
-            return error(f"Invalid email address: {email or '(empty)'}")
+            return {
+                "email": email,
+                "error": f"Invalid email address: {email or '(empty)'}",
+            }
 
         results = await self.accounts(email)
         if not results:
-            return error("No checks were performed.")
+            return {"email": email, "error": "No checks were performed."}
 
         registered = [r for r in results if r["registered"] is True]
         absent = [r for r in results if r["registered"] is False]
         unknown = [r for r in results if r["registered"] is None]
 
         engine = "built-in + holehe" if self.holehe_available else "built-in"
-        lines = [
-            title(f"Registered accounts: {email}"),
-            info(f"{len(registered)} found / {len(results)} checked ({engine})"),
-        ]
-
-        if registered:
-            lines.append(section("Registered"))
-            for r in registered:
-                label = r["site"] + (f" - {r['detail']}" if r["detail"] else "")
-                lines.append(bullet(label))
-        else:
-            lines.append(info("No registered accounts found"))
-
-        if absent:
-            lines.append(section("Not found"))
-            lines.append(bullet(", ".join(r["site"] for r in absent)))
-
-        if unknown:
-            lines.append(section("Unknown / errors"))
-            for r in unknown:
-                lines.append(bullet(f"{r['site']}: {r['detail'] or 'unknown'}"))
-
-        lines.append(end_of("account check"))
-        lines.append(divider())
-        return "\n".join(lines)
+        return {
+            "email": email,
+            "engine": engine,
+            "summary": f"{len(registered)} found / {len(results)} checked",
+            "registered": [
+                {"site": r["site"], "detail": r["detail"]} for r in registered
+            ],
+            "not_found": [r["site"] for r in absent],
+            "unknown": [
+                {"site": r["site"], "detail": r["detail"] or "unknown"} for r in unknown
+            ],
+        }

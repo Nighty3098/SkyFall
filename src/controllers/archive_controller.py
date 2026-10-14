@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import render
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -27,7 +29,8 @@ class ArchiveController:
             return
         url = url or self._url()
         widget.setPlainText("Checking archives...")
-        widget.setPlainText(await self.archive.check(url))
+        data = await self.archive.check(url)
+        widget.setPlainText(render(data, f"Archive: {url}"))
 
     async def availability(self, url=None):
         widget = self._debug()
@@ -36,7 +39,7 @@ class ArchiveController:
         url = url or self._url()
         widget.setPlainText("Checking the Wayback Machine...")
         data = await self.archive.availability(url)
-        widget.setPlainText(self.archive.render_availability(data))
+        widget.setPlainText(render(data, "Wayback Machine"))
 
     async def snapshots(self, url=None):
         widget = self._debug()
@@ -45,7 +48,7 @@ class ArchiveController:
         url = url or self._url()
         widget.setPlainText("Listing Wayback snapshots...")
         data = await self.archive.snapshots(url)
-        widget.setPlainText(self.archive.render_snapshots(data))
+        widget.setPlainText(render(data, "Wayback snapshots"))
 
     async def save(self, url=None):
         widget = self._debug()
@@ -54,7 +57,7 @@ class ArchiveController:
         url = url or self._url()
         widget.setPlainText("Saving to the Wayback Machine (this may take a while)...")
         data = await self.archive.save(url)
-        widget.setPlainText(self.archive.render_save(data))
+        widget.setPlainText(render(data, "Wayback save"))
 
     async def archive_today(self, url=None):
         widget = self._debug()
@@ -63,4 +66,4 @@ class ArchiveController:
         url = url or self._url()
         widget.setPlainText("Checking archive.today...")
         data = await self.archive.archive_today(url)
-        widget.setPlainText(self.archive.render_archive_today(data))
+        widget.setPlainText(render(data, "archive.today"))

@@ -3,6 +3,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import render
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -56,19 +58,21 @@ class MacLocationController:
         result = await asyncio.to_thread(
             self.mac_location.locate, self.ui.macAddrEdit.text()
         )
-        lines = [f"MAC: {result['mac']}"]
+        providers = {}
         markers = []
         first = None
         for provider, loc in result["location"].items():
             if loc is None:
-                lines.append(f"  {provider}: no data")
+                providers[provider] = "no data"
             else:
                 lat, lng = loc["latitude"], loc["longitude"]
-                lines.append(f"  {provider}: {lat}, {lng}")
+                providers[provider] = f"{lat}, {lng}"
                 markers.append(MARKER_JS.format(provider=provider, lat=lat, lng=lng))
                 if first is None:
                     first = (lat, lng)
-        self.ui.macAddrLocationDebug.setPlainText("\n".join(lines))
+        self.ui.macAddrLocationDebug.setPlainText(
+            render({"mac": result["mac"], "providers": providers}, title="MAC location")
+        )
 
         if first:
             from src.ui.theme import dialog_palette

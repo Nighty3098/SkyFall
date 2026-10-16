@@ -50,6 +50,7 @@ class GraphLayoutController:
             if isinstance(item, NodeItem):
                 node_map[item.id] = item
 
+        gw.push_undo_state()
         for node_id, (x, y) in result.positions.items():
             node = node_map.get(node_id)
             if node:

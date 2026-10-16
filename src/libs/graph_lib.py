@@ -1,3 +1,4 @@
+import copy
 import json
 import math
 import os
@@ -1883,6 +1884,14 @@ class GraphWidget(QGraphicsView):
         self._filter_type = ""
         self._path_source = None
 
+        # Snapshot based undo/redo.  A full ``to_dict`` copy is cheap for the
+        # graph sizes this canvas handles and keeps the commands trivial.
+        self._undo_stack = []
+        self._redo_stack = []
+        self._undo_limit = 50
+        self._undo_suspend = 0
+        self._move_before_positions = None
+
         self.setContextMenuPolicy(Qt.ContextMenuPolicy.CustomContextMenu)
         self.customContextMenuRequested.connect(self._show_context_menu)
 
@@ -2023,10 +2032,11 @@ class GraphWidget(QGraphicsView):
         name = Path(path).name
         try:
             data = load_graph_file(path)
-            self.from_dict(data)
         except Exception as e:  # noqa: BLE001 - surface any loader error to the user
             self.status_message(f"Failed to load {name}: {e}")
             return False
+        self.push_undo_state()
+        self.from_dict(data)
         self.fit_to_view()
         nodes = sum(1 for i in self._scene.items() if isinstance(i, NodeItem))
         edges = sum(1 for i in self._scene.items() if isinstance(i, EdgeItem))
@@ -2110,6 +2120,18 @@ class GraphWidget(QGraphicsView):
         scene_pos = self.mapToScene(pos)
         item = self._scene.itemAt(scene_pos, self.transform())
         menu = QMenu(self)
+
+        undo_action = QAction("Undo", self)
+        undo_action.setShortcut("Ctrl+Z")
+        undo_action.setEnabled(bool(self._undo_stack))
+        undo_action.triggered.connect(self.undo)
+        menu.addAction(undo_action)
+        redo_action = QAction("Redo", self)
+        redo_action.setShortcut("Ctrl+Shift+Z")
+        redo_action.setEnabled(bool(self._redo_stack))
+        redo_action.triggered.connect(self.redo)
+        menu.addAction(redo_action)
+        menu.addSeparator()
 
         if isinstance(item, EdgeItem):
             label_action = QAction("Edit Edge\u2026", self)
@@ -2377,6 +2399,10 @@ class GraphWidget(QGraphicsView):
             edge.update()
 
     def add_node(self, scene_pos, entity_type="Custom"):
+        self.push_undo_state()
+        return self._add_node_now(scene_pos, entity_type)
+
+    def _add_node_now(self, scene_pos, entity_type="Custom"):
         node = NodeItem(title="New node", entity_type=entity_type)
         node.setPos(scene_pos)
         self._scene.addItem(node)
@@ -2385,6 +2411,12 @@ class GraphWidget(QGraphicsView):
         return node
 
     def add_edge(
+        self, source_node, target_node, source_port="right", target_port="left"
+    ):
+        self.push_undo_state()
+        return self._add_edge_now(source_node, target_node, source_port, target_port)
+
+    def _add_edge_now(
         self, source_node, target_node, source_port="right", target_port="left"
     ):
         edge = EdgeItem(source_node, target_node, source_port, target_port)
@@ -2396,12 +2428,20 @@ class GraphWidget(QGraphicsView):
         return edge
 
     def remove_node(self, node: NodeItem):
-        for edge in node._connected_edges():
-            self.remove_edge(edge)
+        self.push_undo_state()
+        self._remove_node_now(node)
+
+    def _remove_node_now(self, node: NodeItem):
+        for edge in list(node._connected_edges()):
+            self._remove_edge_now(edge)
         self._scene.removeItem(node)
         self._update_summary()
 
     def remove_edge(self, edge: EdgeItem):
+        self.push_undo_state()
+        self._remove_edge_now(edge)
+
+    def _remove_edge_now(self, edge: EdgeItem):
         edge.source.remove_edge_ref(edge)
         edge.target.remove_edge_ref(edge)
         self._scene.removeItem(edge)
@@ -2409,11 +2449,65 @@ class GraphWidget(QGraphicsView):
 
     def clear_graph(self):
         """Remove every item and reset filters/selection state."""
+        self.push_undo_state()
+        self._clear_graph_now()
+
+    def _clear_graph_now(self):
         self._path_source = None
         self._filter_text = ""
         self._filter_type = ""
         self._scene.clear()
         self._update_summary()
+
+    # ------------------------------------------------------------- undo/redo
+
+    def _snapshot(self):
+        """A graph state safe to keep on the undo stack (deep copied)."""
+        return copy.deepcopy(self.to_dict())
+
+    def push_undo_state(self):
+        """Snapshot the graph so the next change can be undone.
+
+        No-op inside a ``begin_bulk_edit`` group, where a single snapshot was
+        already taken for the whole batch of changes.
+        """
+        if self._undo_suspend > 0:
+            return
+        self._push_snapshot(self._snapshot())
+
+    def begin_bulk_edit(self):
+        """Group subsequent changes into one undo step."""
+        if self._undo_suspend == 0:
+            self.push_undo_state()
+        self._undo_suspend += 1
+
+    def end_bulk_edit(self):
+        if self._undo_suspend > 0:
+            self._undo_suspend -= 1
+
+    def _push_snapshot(self, snapshot):
+        self._undo_stack.append(snapshot)
+        if len(self._undo_stack) > self._undo_limit:
+            self._undo_stack.pop(0)
+        self._redo_stack.clear()
+
+    def undo(self) -> bool:
+        if not self._undo_stack:
+            self.status_message("Nothing to undo")
+            return False
+        self._redo_stack.append(self._snapshot())
+        self.from_dict(self._undo_stack.pop())
+        self.status_message("Undo")
+        return True
+
+    def redo(self) -> bool:
+        if not self._redo_stack:
+            self.status_message("Nothing to redo")
+            return False
+        self._undo_stack.append(self._snapshot())
+        self.from_dict(self._redo_stack.pop())
+        self.status_message("Redo")
+        return True
 
     def _to_networkx(self):
         g = nx.Graph()
@@ -2557,7 +2651,47 @@ class GraphWidget(QGraphicsView):
                 self._finish_shortest_path(item)
                 event.accept()
                 return
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._begin_move_tracking(event)
         super().mousePressEvent(event)
+
+    def _begin_move_tracking(self, event):
+        """Remember node positions before a drag so it can be undone."""
+        item = self._scene.itemAt(self.mapToScene(event.pos()), self.transform())
+        if not isinstance(item, NodeItem):
+            self._move_before_positions = None
+            return
+        targets = [i for i in self._scene.selectedItems() if isinstance(i, NodeItem)]
+        if item not in targets:
+            targets.append(item)
+        self._move_before_positions = {n: n.pos() for n in targets}
+
+    def _finish_move_tracking(self):
+        positions = self._move_before_positions
+        self._move_before_positions = None
+        if not positions:
+            return
+        moved = any(
+            node.scene() is self._scene and node.pos() != pos
+            for node, pos in positions.items()
+        )
+        if not moved:
+            return
+        # Snapshot the new state, then rewrite the dragged nodes back to their
+        # pre-drag positions so undo restores where they were.
+        before = {
+            node.id: pos
+            for node, pos in positions.items()
+            if node.scene() is self._scene
+        }
+        snapshot = self._snapshot()
+        for entry in snapshot["nodes"]:
+            pos = before.get(entry["id"])
+            if pos is not None:
+                entry["x"] = pos.x()
+                entry["y"] = pos.y()
+        self._push_snapshot(snapshot)
+        self.status_message("Moved node")
 
     def mouseMoveEvent(self, event):
         if self._panning and event.buttons() & Qt.MouseButton.MiddleButton:
@@ -2580,18 +2714,31 @@ class GraphWidget(QGraphicsView):
             event.accept()
             return
         super().mouseReleaseEvent(event)
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._finish_move_tracking()
 
     def keyPressEvent(self, event):
         key = event.key()
         modifiers = event.modifiers()
         ctrl = bool(modifiers & Qt.KeyboardModifier.ControlModifier)
+        shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
 
         if key == Qt.Key.Key_Delete:
-            for item in self._scene.selectedItems():
-                if isinstance(item, NodeItem):
-                    self.remove_node(item)
-                elif isinstance(item, EdgeItem):
-                    self.remove_edge(item)
+            nodes = [i for i in self._scene.selectedItems() if isinstance(i, NodeItem)]
+            edges = [i for i in self._scene.selectedItems() if isinstance(i, EdgeItem)]
+            if not nodes and not edges:
+                return
+            self.push_undo_state()
+            for edge in edges:
+                self._remove_edge_now(edge)
+            for node in nodes:
+                self._remove_node_now(node)
+            return
+        if ctrl and key in (Qt.Key.Key_Z, Qt.Key.Key_Y):
+            if key == Qt.Key.Key_Y or shift:
+                self.redo()
+            else:
+                self.undo()
             return
         if key == Qt.Key.Key_Escape:
             if self._path_source:

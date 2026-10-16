@@ -467,9 +467,12 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
         if not path:
             return
         try:
-            ui.graphWidget.from_dict(load_graph_file(path))
+            data = load_graph_file(path)
         except Exception as e:
             QMessageBox.critical(ui, "Import Graph", f"Failed to import graph:\n{e}")
+            return
+        ui.graphWidget.push_undo_state()
+        ui.graphWidget.from_dict(data)
 
     def export_graph_image():
         from src.modules.graph_io import export_scene_image
@@ -571,6 +574,7 @@ _GRAPH_TOOLTIPS = {
     "graphWidget": (
         "Drag to select \u00b7 middle-drag to pan \u00b7 scroll to zoom\n"
         "F fits the view \u00b7 Ctrl+F searches \u00b7 Delete removes the selection\n"
+        "Ctrl+Z undoes \u00b7 Ctrl+Shift+Z redoes\n"
         "Drop a .json / .graphml / .gexf / .csv file to open it"
     ),
 }

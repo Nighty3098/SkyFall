@@ -351,6 +351,7 @@ class GraphBridgeServer:
 
         result = compute_layout(nodes, edges, algorithm=algorithm)
 
+        gw.push_undo_state()
         positions = {}
         for node_id, (x, y) in result.positions.items():
             node = node_map.get(node_id)
@@ -371,6 +372,17 @@ class GraphBridgeServer:
         }
 
     def _build(self, msg: dict) -> dict:
+        """Create a batch of nodes and edges as a single undo step."""
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+        gw.begin_bulk_edit()
+        try:
+            return self._build_impl(msg)
+        finally:
+            gw.end_bulk_edit()
+
+    def _build_impl(self, msg: dict) -> dict:
         """Create a batch of nodes and edges in one call.
 
         Each node spec may carry a ``ref`` (temporary id) and an ``anchor``
@@ -584,7 +596,7 @@ class GraphBridgeServer:
         count = len(
             [1 for item in gw._scene.items() if isinstance(item, self._node_item_cls)]
         )
-        gw._scene.clear()
+        gw.clear_graph()
         gw.viewport().update()
         return {"cleared": count}
 
@@ -593,6 +605,7 @@ class GraphBridgeServer:
         if gw is None:
             return {"error": "Graph widget not available"}
         data = msg.get("data", {})
+        gw.push_undo_state()
         gw.from_dict(data)
         gw.viewport().update()
         return {

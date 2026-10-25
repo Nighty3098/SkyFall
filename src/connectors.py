@@ -13,6 +13,7 @@ from src.utils import filter_list, find_text
 
 if TYPE_CHECKING:
     from src.controllers.blockchain_controller import BlockchainController
+    from src.controllers.camera_inventory_controller import CameraInventoryController
     from src.controllers.domain_controller import DomainController
     from src.controllers.dorking_controller import DorkingController
     from src.controllers.download_controller import DownloadController
@@ -422,6 +423,13 @@ def setup_wifi_map_connectors(controller: "WifiMapController"):
     controller.ui.wifiCityEdit.returnPressed.connect(
         lambda: asyncio.ensure_future(controller.search())
     )
+
+
+def setup_camera_inventory_connectors(controller: "CameraInventoryController"):
+    controller.ui.cameraLoadButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.load_from_url())
+    )
+    controller.ui.cameraFilterEdit.textChanged.connect(controller.filter_changed)
 
 
 def setup_blockchain_connectors(controller: "BlockchainController"):

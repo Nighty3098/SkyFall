@@ -23,6 +23,7 @@ NAV_GROUPS = [
             "PHONE",
             "MAC ADDR",
             "WIFI",
+            "OPEN CAMERAS",
             "BLOCKCHAIN",
             "STEGANOGRAPHY",
             "SEARCH4FACES",

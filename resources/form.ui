@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1471</width>
-    <height>819</height>
+    <width>1537</width>
+    <height>947</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>11</number>
+         <number>17</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -3068,6 +3068,104 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="openCamerasTab">
+         <attribute name="title">
+          <string>OPEN CAMERAS</string>
+         </attribute>
+         <layout class="QGridLayout" name="cameraInventoryGridLayout">
+          <property name="leftMargin">
+           <number>12</number>
+          </property>
+          <property name="topMargin">
+           <number>12</number>
+          </property>
+          <property name="rightMargin">
+           <number>12</number>
+          </property>
+          <property name="bottomMargin">
+           <number>12</number>
+          </property>
+          <property name="spacing">
+           <number>8</number>
+          </property>
+          <item row="0" column="2">
+           <widget class="QPushButton" name="cameraLoadButton">
+            <property name="minimumSize">
+             <size>
+              <width>170</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Refresh cameras</string>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0" colspan="3">
+           <widget class="QSplitter" name="cameraInventorySplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QPlainTextEdit" name="cameraInfoText">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Minimum">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>260</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="placeholderText">
+              <string>CAMERA DETAILS</string>
+             </property>
+            </widget>
+            <widget class="QWebEngineView" name="cameraMapView">
+             <property name="minimumSize">
+              <size>
+               <width>300</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="styleSheet">
+              <string notr="true">border-radius: 15px;</string>
+             </property>
+             <property name="url">
+              <url>
+               <string>about:blank</string>
+              </url>
+             </property>
+            </widget>
+           </widget>
+          </item>
+          <item row="3" column="0" colspan="3">
+           <widget class="QLabel" name="cameraStatusLabel">
+            <property name="maximumSize">
+             <size>
+              <width>16777215</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Camera metadata is loaded from http://localhost/cams/.</string>
+            </property>
+            <property name="wordWrap">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0" colspan="2">
+           <widget class="QLineEdit" name="cameraFilterEdit">
+            <property name="placeholderText">
+             <string>Filter by city or country</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
         <widget class="QWidget" name="blockchainTab">
          <attribute name="title">
           <string>BLOCKCHAIN</string>
@@ -3558,8 +3656,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>921</width>
-               <height>705</height>
+               <width>987</width>
+               <height>827</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -4155,8 +4253,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1217</width>
-               <height>1031</height>
+               <width>1283</width>
+               <height>1091</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="settingsTabScrollContainerLayout">
@@ -4575,8 +4673,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1471</width>
-     <height>22</height>
+     <width>1537</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

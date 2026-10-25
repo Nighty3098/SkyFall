@@ -18,6 +18,7 @@ from src.case_manager import CaseManager
 from src.connectors import (
     setup_archive_connectors,
     setup_blockchain_connectors,
+    setup_camera_inventory_connectors,
     setup_domain_connectors,
     setup_dorking_connectors,
     setup_download_connectors,
@@ -46,6 +47,7 @@ from src.connectors import (
 )
 from src.controllers.archive_controller import ArchiveController
 from src.controllers.blockchain_controller import BlockchainController
+from src.controllers.camera_inventory_controller import CameraInventoryController
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.download_controller import DownloadController
@@ -224,6 +226,7 @@ class MainWindow(QMainWindow):
         self.usernameSearch = UsernameSearch()
         self.macLocation = MacLocation()
         self.wifiMap = WifiMap()
+        self.cameraInventoryController = CameraInventoryController(self.ui)
         self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
             self.settings.virustotal_api_key,
@@ -458,6 +461,8 @@ class MainWindow(QMainWindow):
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
         setup_wifi_map_connectors(self.wifiMapController)
+        setup_camera_inventory_connectors(self.cameraInventoryController)
+        asyncio.ensure_future(self.cameraInventoryController.load_from_url())
         setup_blockchain_connectors(self.blockchainController)
         setup_s4f_connectors(self.s4fController)
 

@@ -47,8 +47,10 @@ class UsernameController:
         self.ui.usernameSearchProgress.setValue(0)
 
         try:
-            _, maigret_matches = await self.maigret_search.search_and_report_structured(
-                username, on_progress=self._on_progress
+            maigret_report, maigret_matches = (
+                await self.maigret_search.search_and_report_structured(
+                    username, on_progress=self._on_progress
+                )
             )
 
             self._set_status(
@@ -67,9 +69,12 @@ class UsernameController:
             confirmed, sherlock_only, maigret_only = merge_sources(
                 sherlock_found, maigret_matches
             )
+            report_data = report(username, confirmed, sherlock_only, maigret_only)
+            if maigret_report.get("error"):
+                report_data["Maigret error"] = maigret_report["error"]
             self._set_status(
                 render(
-                    report(username, confirmed, sherlock_only, maigret_only),
+                    report_data,
                     title=f"Username OSINT: {username}",
                 )
             )

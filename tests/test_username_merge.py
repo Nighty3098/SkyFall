@@ -11,6 +11,7 @@ from src.modules.username_merge import (
     report,
     render_report,
 )
+from src.controllers.username_search_controller import UsernameController
 from src.ui.output_formatter import render
 
 
@@ -145,6 +146,41 @@ class RenderTest(unittest.TestCase):
         self.assertIn("https://github.com/alice", text)
         self.assertIn("Claimed", text)
         self.assertIn("42", text)
+
+
+class UsernameControllerTest(unittest.IsolatedAsyncioTestCase):
+    async def test_maigret_error_is_included_in_final_debug_output(self):
+        class Widget:
+            def __init__(self):
+                self.text = ""
+
+            def setPlainText(self, text):
+                self.text = text
+
+            def setValue(self, _value):
+                pass
+
+            def setRange(self, _minimum, _maximum):
+                pass
+
+        class Ui:
+            usernameResultsDebug = Widget()
+            usernameSearchProgress = Widget()
+
+        class Maigret:
+            async def search_and_report_structured(self, _username, on_progress=None):
+                return {"error": "Maigret unavailable"}, []
+
+        class Sherlock:
+            async def acheck(self, _username, proxy=None, on_progress=None):
+                return []
+
+        ui = Ui()
+        controller = UsernameController(ui, Sherlock(), Maigret())
+        await controller.start_searching("alice")
+
+        self.assertIn("Maigret error", ui.usernameResultsDebug.text)
+        self.assertIn("Maigret unavailable", ui.usernameResultsDebug.text)
 
 
 if __name__ == "__main__":

@@ -21,7 +21,7 @@ BASE_TOKENS = {
     "font_size": "10pt",
     "font_size_small": "9pt",
     "font_size_drop": "50px",
-    "font_size_win_title": "200px",
+    "font_size_win_title": "120px",
     "radius": "10px",
     "radius_sm": "5px",
 }
@@ -124,13 +124,34 @@ def dialog_palette(theme: str | None = None) -> dict[str, str]:
     }
 
 
-def build_stylesheet(theme: str = "dark") -> str:
+def build_stylesheet(theme: str = "dark", font_size: int = 10) -> str:
     """Render the QSS template for the requested theme."""
     template = Template(STYLE_TEMPLATE.read_text(encoding="utf-8"))
-    return template.safe_substitute(get_palette(theme))
+    size = f"{max(8, min(24, int(font_size)))}pt"
+    palette = {
+        **get_palette(theme),
+        "font_size": size,
+        "font_size_small": size,
+        "font_size_drop": size,
+        "font_size_win_title": "120px",
+    }
+    return template.safe_substitute(palette)
 
 
-def apply_theme(theme: str = "dark", app=None) -> None:
+def current_font_size(app=None) -> int:
+    if app is None:
+        from PySide6.QtWidgets import QApplication
+
+        app = QApplication.instance()
+    if app is None:
+        return 10
+    try:
+        return max(8, min(24, int(app.property("fontSizePt") or 10)))
+    except (TypeError, ValueError):
+        return 10
+
+
+def apply_theme(theme: str = "dark", app=None, font_size: int = 10) -> None:
     """Apply ``theme`` to the running :class:`QApplication`."""
     if app is None:
         from PySide6.QtWidgets import QApplication
@@ -140,6 +161,8 @@ def apply_theme(theme: str = "dark", app=None) -> None:
         logger.warning("Cannot apply theme: no QApplication instance")
         return
     try:
-        app.setStyleSheet(build_stylesheet(theme))
+        size = max(8, min(24, int(font_size)))
+        app.setProperty("fontSizePt", size)
+        app.setStyleSheet(build_stylesheet(theme, size))
     except FileNotFoundError:
         logger.warning(f"{STYLE_TEMPLATE} not found, using default theme")

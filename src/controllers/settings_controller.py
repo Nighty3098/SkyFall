@@ -46,6 +46,7 @@ DEFAULT_SETTINGS = {
     "reddit_client_id": "",
     "reddit_client_secret": "",
     "light_theme": False,
+    "font_size_pt": 10,
     "frameless_window": True,
     "mcp_require_auth": False,
 }
@@ -110,6 +111,7 @@ class Settings:
         self.reddit_client_id = ""
         self.reddit_client_secret = ""
         self.light_theme = False
+        self.font_size_pt = 10
         self.frameless_window = True
         self.mcp_require_auth = False
 
@@ -133,6 +135,7 @@ class Settings:
             data = decrypt_settings(data)
             for key in DEFAULT_SETTINGS:
                 setattr(self, key, data.get(key, DEFAULT_SETTINGS[key]))
+            self.font_size_pt = self._normalize_font_size(self.font_size_pt)
             self._apply_to_ui()
             restrict_file(CONFIG_FILE)
         except (json.JSONDecodeError, OSError) as e:
@@ -157,8 +160,24 @@ class Settings:
         if mcp_auth:
             mcp_auth.setChecked(self.mcp_require_auth)
 
+        font_size = getattr(self.ui, "fontSizeSpinBox", None)
+        if font_size:
+            font_size.setValue(self.font_size_pt)
+
     def _apply_theme(self):
-        apply_theme("light" if self.light_theme else "dark")
+        apply_theme(
+            "light" if self.light_theme else "dark",
+            font_size=self.font_size_pt,
+        )
+
+    @staticmethod
+    def _normalize_font_size(value):
+        if isinstance(value, bool):
+            return DEFAULT_SETTINGS["font_size_pt"]
+        try:
+            return max(8, min(24, int(value)))
+        except (TypeError, ValueError):
+            return DEFAULT_SETTINGS["font_size_pt"]
 
     def save(self):
         logger.debug("Saving settings")
@@ -178,6 +197,10 @@ class Settings:
         mcp_auth = getattr(self.ui, "mcpAuthCheck", None)
         if mcp_auth:
             self.mcp_require_auth = mcp_auth.isChecked()
+
+        font_size = getattr(self.ui, "fontSizeSpinBox", None)
+        if font_size:
+            self.font_size_pt = self._normalize_font_size(font_size.value())
 
         ensure_config_dir()
         data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}

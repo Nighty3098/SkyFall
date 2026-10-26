@@ -23,7 +23,7 @@ from datetime import date, datetime
 from html import escape
 from typing import Any
 
-from src.ui.theme import current_theme, get_palette
+from src.ui.theme import current_font_size, current_theme, get_palette
 
 INDENT = "  "
 BULLET = "\u2022"  # •
@@ -137,9 +137,11 @@ def render(data: Any, title: str | None = None) -> str:
 def render_html(text: str, theme: str | None = None) -> str:
     """Render formatted output as a compact, readable result card."""
     palette = get_palette(theme or current_theme())
+    font_size = f"{current_font_size()}pt"
     if any(line.count("\u2500") >= 8 for line in text.splitlines()):
         return (
-            "<html><body style='margin:4px;font-family:monospace;font-size:10pt;"
+            "<html><body style='margin:4px;font-family:monospace;"
+            f"font-size:{font_size};"
             f"color:{palette['text']};'><pre style='white-space:pre-wrap'>"
             f"{escape(text)}</pre></body></html>"
         )
@@ -158,7 +160,7 @@ def render_html(text: str, theme: str | None = None) -> str:
 
         if indent == 0:
             rows.append(
-                f'<div style="font-size:10pt;font-weight:700;margin:0 0 8px;'
+                f'<div style="font-size:{font_size};font-weight:700;margin:0 0 8px;'
                 f'color:{palette["text"]}">{safe_content}</div>'
             )
         elif content.startswith(WARN):
@@ -198,7 +200,8 @@ def render_html(text: str, theme: str | None = None) -> str:
 
     body = "".join(rows)
     return (
-        "<html><body style='margin:4px;font-family:monospace;font-size:10pt;"
+        "<html><body style='margin:4px;font-family:monospace;"
+        f"font-size:{font_size};"
         f"color:{palette['text']};'>{body}</body></html>"
     )
 

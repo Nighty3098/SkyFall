@@ -4726,6 +4726,29 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QLabel" name="fontSizeLabel">
+                    <property name="text">
+                     <string>Font size</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QSpinBox" name="fontSizeSpinBox">
+                    <property name="minimum">
+                     <number>8</number>
+                    </property>
+                    <property name="maximum">
+                     <number>24</number>
+                    </property>
+                    <property name="value">
+                     <number>10</number>
+                    </property>
+                    <property name="suffix">
+                     <string> pt</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QCheckBox" name="framelessCheck">
                     <property name="text">
                      <string>Frameless Window</string>

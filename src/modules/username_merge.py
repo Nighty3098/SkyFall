@@ -158,6 +158,8 @@ def report(
     if not unconfirmed:
         unconfirmed = {"Note": "Nothing unconfirmed"}
 
+    return {"Confirmed": confirmed_rows, "Unconfirmed": unconfirmed}
+
 
 def render_report(
     username: str,

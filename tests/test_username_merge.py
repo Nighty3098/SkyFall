@@ -8,8 +8,10 @@ from src.modules.username_merge import (
     canonical_site,
     canonical_url,
     merge_sources,
+    report,
     render_report,
 )
+from src.ui.output_formatter import render
 
 
 def sherlock(site, url, status="Claimed"):
@@ -126,6 +128,23 @@ class RenderTest(unittest.TestCase):
             [],
         )
         self.assertIn("No account was confirmed", text)
+
+    def test_structured_report_renders_found_accounts(self):
+        confirmed, sherlock_only, maigret_only = merge_sources(
+            [sherlock("GitHub", "https://github.com/alice")],
+            [maigret("github", "https://github.com/alice", ids={"uid": "42"})],
+        )
+
+        text = render(
+            report("alice", confirmed, sherlock_only, maigret_only),
+            title="Username OSINT: alice",
+        )
+
+        self.assertIn("Username OSINT: alice", text)
+        self.assertIn("GitHub", text)
+        self.assertIn("https://github.com/alice", text)
+        self.assertIn("Claimed", text)
+        self.assertIn("42", text)
 
 
 if __name__ == "__main__":

@@ -101,11 +101,16 @@ from src.modules.wifi_map import WifiMap
 from src.report_controller import ReportController
 from src.shortcuts import ShortcutManager
 from src.ui.drop_widget import DropWidget
+from src.ui.rich_output_browser import RichOutputBrowser, is_rich_output_widget
 from src.ui.setup_ui import setup_ui
 
 
 class Loader(QUiLoader):
     def createWidget(self, class_name, parent=None, name=""):
+        if is_rich_output_widget(class_name, name):
+            widget = RichOutputBrowser(parent)
+            widget.setObjectName(name)
+            return widget
         if class_name == "DropWidget":
             widget = DropWidget(parent)
             widget.setObjectName(name)

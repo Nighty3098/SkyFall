@@ -133,6 +133,11 @@ def _read_cache(cache_path: Path) -> list[Camera] | None:
             or age >= CACHE_TTL_SECONDS
         ):
             return None
+        if not isinstance(payload, list) or any(
+            not isinstance(camera, dict) or "stream" not in camera
+            for camera in payload
+        ):
+            return None
         return parse_cameras(payload)
     except FileNotFoundError:
         return None
@@ -153,6 +158,7 @@ def _write_cache(cache_path: Path, cameras: list[Camera]) -> None:
         "cached_at": time.time(),
         "cameras": [
             {
+                "stream": camera.stream,
                 "country": camera.country,
                 "country_code": camera.country_code,
                 "region": camera.region,
@@ -195,7 +201,7 @@ def _write_cache(cache_path: Path, cameras: list[Camera]) -> None:
 
 
 def parse_cameras(payload) -> list[Camera]:
-    """Validate camera records, retaining metadata but not stream URLs."""
+    """Validate camera records, including their stream URLs."""
     if not isinstance(payload, list):
         raise CameraDataError("Camera JSON must contain an array.")
 

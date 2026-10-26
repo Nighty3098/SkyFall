@@ -152,7 +152,7 @@ class CameraInventoryController:
         for index, camera in enumerate(cameras, start=1):
             place = ", ".join(value for value in (camera.city, camera.country) if value)
             lines.append(f"{index}. {place or 'Unnamed camera'}")
-            lines.append(f"   Stream: {camera.stream}")
+            lines.append(f"   Stream: {camera.stream or 'Not available'}")
             if camera.region:
                 lines.append(f"   Region: {camera.region}")
             if camera.latitude is not None and camera.longitude is not None:

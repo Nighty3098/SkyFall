@@ -140,7 +140,7 @@ QListWidget#menuListWidget::item:disabled {
 
 /* ----------------------------------------------------------------- inputs */
 
-QLineEdit, QTextEdit, QPlainTextEdit {
+QLineEdit, QTextEdit, QPlainTextEdit, QTextBrowser {
     border-radius: $radius;
     border: 1px solid $border;
     background-color: $surface;
@@ -154,7 +154,7 @@ QLineEdit {
     height: 20px;
 }
 
-QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus {
+QLineEdit:focus, QTextEdit:focus, QPlainTextEdit:focus, QTextBrowser:focus {
     border: 1px solid $border_focus;
 }
 
@@ -163,7 +163,7 @@ QLineEdit:read-only {
     background-color: $bg;
 }
 
-QLineEdit:disabled, QTextEdit:disabled, QPlainTextEdit:disabled {
+QLineEdit:disabled, QTextEdit:disabled, QPlainTextEdit:disabled, QTextBrowser:disabled {
     color: $text_disabled;
     border-color: $border;
 }

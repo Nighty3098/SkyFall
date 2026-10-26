@@ -6,6 +6,7 @@ from unittest import mock
 
 import requests
 
+from src.controllers.camera_inventory_controller import CameraInventoryController
 from src.modules.camera_inventory import (
     CACHE_TTL_SECONDS,
     CAMERA_API_URL,
@@ -35,7 +36,7 @@ class CameraInventoryTest(unittest.TestCase):
             path.write_text(json.dumps(payload), encoding="utf-8")
             return load_cameras(path)
 
-    def test_loads_metadata_without_stream_urls(self):
+    def test_loads_camera_metadata_and_stream_url(self):
         cameras = self._load(
             [
                 {
@@ -52,7 +53,7 @@ class CameraInventoryTest(unittest.TestCase):
 
         self.assertEqual(cameras[0].city, "Berlin")
         self.assertEqual(cameras[0].latitude, 52.52)
-        self.assertFalse(hasattr(cameras[0], "stream"))
+        self.assertEqual(cameras[0].stream, "http://camera.invalid/live")
         self.assertFalse(hasattr(cameras[0], "preview_url"))
 
     def test_accepts_template_records_without_coordinates(self):
@@ -88,6 +89,23 @@ class CameraInventoryTest(unittest.TestCase):
         )
         self.assertEqual(len(filter_cameras(cameras, "")), 2)
 
+    def test_camera_report_includes_stream_url(self):
+        camera = self._load(
+            [
+                {
+                    "stream": "https://camera.invalid/live",
+                    "city": "Kemerovo",
+                    "region": "Kemerovskaya Oblast'",
+                    "latitude": 55.33333,
+                    "longitude": 86.08333,
+                }
+            ]
+        )[0]
+
+        report = CameraInventoryController._report([camera], [camera])
+
+        self.assertIn("Stream: https://camera.invalid/live", report)
+
     def test_fetches_metadata_from_local_api(self):
         with tempfile.TemporaryDirectory() as directory:
             with mock.patch(
@@ -113,7 +131,7 @@ class CameraInventoryTest(unittest.TestCase):
             timeout=10,
         )
         self.assertEqual(cameras[0].city, "Berlin")
-        self.assertFalse(hasattr(cameras[0], "stream"))
+        self.assertEqual(cameras[0].stream, "http://camera.invalid/live")
 
     def test_fetch_reports_request_errors(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -124,7 +142,7 @@ class CameraInventoryTest(unittest.TestCase):
                 with self.assertRaisesRegex(CameraDataError, "camlist.net"):
                     fetch_cameras(cache_path=Path(directory) / "cache.json")
 
-    def test_persists_metadata_cache_across_fetches_without_stream_urls(self):
+    def test_persists_metadata_cache_with_stream_urls(self):
         with tempfile.TemporaryDirectory() as directory:
             cache_path = Path(directory) / "camera-cache.json"
             response = FakeResponse(
@@ -147,11 +165,46 @@ class CameraInventoryTest(unittest.TestCase):
                 second = fetch_cameras(cache_path=cache_path)
 
             self.assertEqual(first, second)
+            self.assertEqual(first[0].stream, "http://camera.invalid/live")
             get.assert_called_once()
             cached_data = json.loads(cache_path.read_text(encoding="utf-8"))
             self.assertEqual(len(cached_data["cameras"]), 1)
-            self.assertNotIn("stream", cache_path.read_text(encoding="utf-8"))
+            self.assertEqual(
+                cached_data["cameras"][0]["stream"], "http://camera.invalid/live"
+            )
             self.assertNotIn("preview_url", cache_path.read_text(encoding="utf-8"))
+
+    def test_refetches_legacy_cache_without_stream_urls(self):
+        with tempfile.TemporaryDirectory() as directory:
+            cache_path = Path(directory) / "camera-cache.json"
+            cache_path.write_text(
+                json.dumps(
+                    {
+                        "cached_at": 1000,
+                        "cameras": [{"city": "Berlin", "country": "Germany"}],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            with (
+                mock.patch("src.modules.camera_inventory.time.time", return_value=1001),
+                mock.patch(
+                    "src.modules.camera_inventory.requests.get",
+                    return_value=FakeResponse(
+                        [
+                            {
+                                "city": "Berlin",
+                                "country": "Germany",
+                                "stream": "https://camera.invalid/live",
+                            }
+                        ]
+                    ),
+                ) as get,
+            ):
+                cameras = fetch_cameras(cache_path=cache_path)
+
+            get.assert_called_once()
+            self.assertEqual(cameras[0].stream, "https://camera.invalid/live")
 
     def test_expired_cache_is_refetched(self):
         with tempfile.TemporaryDirectory() as directory:

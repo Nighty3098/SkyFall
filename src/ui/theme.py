@@ -21,7 +21,7 @@ BASE_TOKENS = {
     "font_size": "10pt",
     "font_size_small": "9pt",
     "font_size_drop": "50px",
-    "font_size_win_title": "120px",
+    "font_size_win_title": "200px",
     "radius": "10px",
     "radius_sm": "5px",
 }
@@ -133,7 +133,7 @@ def build_stylesheet(theme: str = "dark", font_size: int = 10) -> str:
         "font_size": size,
         "font_size_small": size,
         "font_size_drop": size,
-        "font_size_win_title": "120px",
+        "font_size_win_title": "200px",
     }
     return template.safe_substitute(palette)
 

@@ -71,8 +71,7 @@ class FontSizeSettingsTest(unittest.TestCase):
         self.assertNotIn("font-size: 9pt", stylesheet)
         self.assertNotIn("font-size: 50px", stylesheet)
         self.assertIn("QLabel#winTitle", stylesheet)
-        self.assertIn("font-size: 120px", stylesheet)
-        self.assertNotIn("font-size: 200px", stylesheet)
+        self.assertIn("font-size: 200px", stylesheet)
 
     def test_invalid_saved_font_size_uses_default(self):
         self.config_file.write_text('{"font_size_pt": "invalid"}', encoding="utf-8")

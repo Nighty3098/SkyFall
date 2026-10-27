@@ -132,7 +132,9 @@ class Loader(QUiLoader):
 
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
-        print("""
+        self.__version__ = "1.0.2"
+
+        print(f"""
 ┌─────────────────────────────────────────────────────────────────┐
 │                                                                 │
 │            _______ __          _______       __ __              │
@@ -143,7 +145,7 @@ class MainWindow(QMainWindow):
 │           |::.. . |           |::.|                             │
 │           `-------'           `---'                             │
 │                                                                 │
-│                       SkyFall Ver 1.0.1                         │
+│                       SkyFall Ver {self.__version__}                         │
 │                      Coded by Nighty3098                        │
 │                 https://nighty3098.vercel.app                   │
 └─────────────────────────────────────────────────────────────────┘
@@ -354,9 +356,10 @@ class MainWindow(QMainWindow):
         layout.addSpacerItem(QSpacerItem(0, 50))
 
         text = QLabel(
-            "<h1>SkyFall 1.0.1</h1>"
+            f"""<h1>SkyFall {self.__version__}</h1>"""
             "<p>OSINT investigation toolkit</p>"
-            "<p>Coded by <a href='https://nighty3098.vercel.app'>Nighty3098</a></p>"
+            "<p>Coded by <a href='https://nighty3098.vercel.app' "
+            "style='color: #00BCD4; text-decoration: none;'>Nighty3098</a></p>"
         )
         text.setAlignment(Qt.AlignCenter)
         text.setOpenExternalLinks(True)

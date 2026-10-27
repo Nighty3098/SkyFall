@@ -49,18 +49,6 @@ PRIMARY_BUTTONS = (
     "saveProxiesButton",
 )
 
-# Widgets that live on a single, very wide toolbar row.  Their text-based
-# minimum width used to decide the minimum size of the *whole* window
-# (~1460px), which does not fit common laptop screens.  Letting them shrink
-# means the row only elides once the window is genuinely too narrow.
-SHRINKABLE_BUTTONS = (
-    "exportGraphButton",
-    "importGraphButton",
-    "graphClearButton",
-    "graphAutoLayoutButton",
-    "exportGraphImageButton",
-)
-
 # Fixed minimum widths that are larger than they need to be.
 COMPACT_MIN_WIDTHS = {
     "graphLayoutCombo": 110,
@@ -126,11 +114,7 @@ def _invalidate_widget(widget, seen=None):
 
 
 def _tune_responsive_widgets(ui):
-    """Shrink the few fixed-size widgets that dictate the window minimum."""
-    for name in SHRINKABLE_BUTTONS:
-        widget = getattr(ui, name, None)
-        if widget is not None:
-            widget.setMinimumWidth(1)
+    """Set compact minimum widths and refresh the graph layout."""
     for name, width in COMPACT_MIN_WIDTHS.items():
         widget = getattr(ui, name, None)
         if widget is not None:

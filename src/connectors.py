@@ -523,13 +523,11 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
         ui.graphFilterCombo.setCurrentIndex(0)
         ui.graphWidget.clear_filters()
 
-    ui.exportGraphButton.clicked.connect(export_graph)
-    ui.importGraphButton.clicked.connect(import_graph)
-    if hasattr(ui, "exportGraphImageButton"):
-        ui.exportGraphImageButton.clicked.connect(export_graph_image)
-    ui.graphClearButton.clicked.connect(clear_graph)
-    if hasattr(ui, "graphFitButton"):
-        ui.graphFitButton.clicked.connect(lambda: ui.graphWidget.fit_to_view())
+    ui.actionExportGraph.triggered.connect(export_graph)
+    ui.actionImportGraph.triggered.connect(import_graph)
+    ui.actionExportGraphImage.triggered.connect(export_graph_image)
+    ui.actionClearGraph.triggered.connect(clear_graph)
+    ui.actionFitGraph.triggered.connect(lambda: ui.graphWidget.fit_to_view())
     ui.graphSearchEdit.textChanged.connect(on_search_text_changed)
     ui.graphClearFilterButton.clicked.connect(on_clear_filter)
     ui.graphFilterCombo.currentTextChanged.connect(on_filter_combo_changed)
@@ -566,15 +564,14 @@ def setup_graph_connectors(ui, node_controller, case_manager=None):
     ui.graphWidget.selectionChanged.connect(node_controller.show_node)
 
 
-# Short but useful hints for the graph toolbar; kept out of form.ui so all the
-# copy lives next to the connectors that make the buttons work.
+# Short hints for graph actions; kept next to the connectors that make them work.
 _GRAPH_TOOLTIPS = {
-    "exportGraphButton": "Save the graph as a JSON file",
-    "importGraphButton": "Load a graph (JSON, GraphML, GEXF or CSV)",
-    "exportGraphImageButton": "Export the canvas as PNG or SVG",
-    "graphClearButton": "Remove every node and edge",
-    "graphFitButton": "Zoom to fit all nodes (F)",
-    "graphAutoLayoutButton": "Re-arrange the graph with the selected algorithm",
+    "actionExportGraph": "Save the graph as a JSON file",
+    "actionImportGraph": "Load a graph (JSON, GraphML, GEXF or CSV)",
+    "actionExportGraphImage": "Export the canvas as PNG or SVG",
+    "actionClearGraph": "Remove every node and edge",
+    "actionFitGraph": "Zoom to fit all nodes (F)",
+    "actionAutoLayoutGraph": "Re-arrange the graph with the selected algorithm",
     "graphLayoutCombo": "Choose the automatic layout algorithm",
     "graphSearchEdit": "Filter nodes by title, type or content (Ctrl+F)",
     "graphClearFilterButton": "Reset the search and type filters",
@@ -603,7 +600,7 @@ def setup_graph_layout_connectors(controller):
     from src.modules.graph_layout import LAYOUT_ALGORITHMS
 
     controller.ui.graphLayoutCombo.addItems(LAYOUT_ALGORITHMS.values())
-    controller.ui.graphAutoLayoutButton.clicked.connect(
+    controller.ui.actionAutoLayoutGraph.triggered.connect(
         lambda: controller.apply_layout(
             _reverse_layout_map(controller.ui.graphLayoutCombo.currentText())
         )

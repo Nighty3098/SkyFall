@@ -4066,54 +4066,12 @@
                  <number>0</number>
                 </property>
                 <item>
-                 <widget class="QPushButton" name="exportGraphButton">
-                  <property name="text">
-                   <string>Export To JSON</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="importGraphButton">
-                  <property name="text">
-                   <string>Import File</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="graphClearButton">
-                  <property name="text">
-                   <string>Clear All</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="graphFitButton">
-                  <property name="text">
-                   <string>Fit View</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
                  <widget class="QComboBox" name="graphLayoutCombo">
                   <property name="minimumSize">
                    <size>
                     <width>160</width>
                     <height>0</height>
                    </size>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="graphAutoLayoutButton">
-                  <property name="text">
-                   <string>Auto Layout</string>
-                  </property>
-                 </widget>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="exportGraphImageButton">
-                  <property name="text">
-                   <string>Export PNG/SVG</string>
                   </property>
                  </widget>
                 </item>
@@ -4880,6 +4838,19 @@
     <addaction name="separator"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuGraph">
+    <property name="title">
+     <string>Graph</string>
+    </property>
+    <addaction name="actionExportGraph"/>
+    <addaction name="actionImportGraph"/>
+    <addaction name="separator"/>
+    <addaction name="actionClearGraph"/>
+    <addaction name="actionFitGraph"/>
+    <addaction name="actionAutoLayoutGraph"/>
+    <addaction name="separator"/>
+    <addaction name="actionExportGraphImage"/>
+   </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
      <string>View</string>
@@ -4903,6 +4874,7 @@
    </widget>
    <addaction name="menu_SkyFall"/>
    <addaction name="menuFile"/>
+   <addaction name="menuGraph"/>
    <addaction name="menuView"/>
    <addaction name="menuHelp"/>
   </widget>
@@ -4934,6 +4906,36 @@
   <action name="actionToggleNavigation">
    <property name="text">
     <string>Toggle Navigation</string>
+   </property>
+  </action>
+  <action name="actionExportGraph">
+   <property name="text">
+    <string>Save Graph as JSON...</string>
+   </property>
+  </action>
+  <action name="actionImportGraph">
+   <property name="text">
+    <string>Import Graph...</string>
+   </property>
+  </action>
+  <action name="actionClearGraph">
+   <property name="text">
+    <string>Clear Graph</string>
+   </property>
+  </action>
+  <action name="actionFitGraph">
+   <property name="text">
+    <string>Fit View</string>
+   </property>
+  </action>
+  <action name="actionAutoLayoutGraph">
+   <property name="text">
+    <string>Auto Layout</string>
+   </property>
+  </action>
+  <action name="actionExportGraphImage">
+   <property name="text">
+    <string>Export Graph Image...</string>
    </property>
   </action>
  </widget>

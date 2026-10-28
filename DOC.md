@@ -1,6 +1,6 @@
 # SkyFall — Feature Documentation
 
-**SkyFall 1.0.1** — a desktop OSINT toolkit for digital investigations.
+**SkyFall 1.0.2** — a desktop OSINT toolkit for digital investigations.
 Built with **Python 3** + **PySide6 (Qt 6)**; the interface is loaded from `resources/form.ui`.
 Author: Nighty3098.
 
@@ -117,10 +117,11 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `reddit_client_id` | `redditClientIdEdit` | Reddit OAuth Client ID (optional; live profile) |
 | `reddit_client_secret` | `redditClientSecretEdit` | Reddit OAuth Client Secret (optional; live profile) |
 | `light_theme` | `lightThemeCheck` | Light theme (palette in `src/ui/theme.py`) |
+| `font_size_pt` | `fontSizeSpinBox` | Interface font size (8–24 pt) |
 | `frameless_window` | `framelessCheck` | Frameless window |
 | `mcp_require_auth` | `mcpAuthCheck` | Require a bearer token for the MCP server |
 
-> **Security.** All key values from the table (`*_api_key`, `*_token`, `telegram_api_hash`, `telegram_phone`) are **encrypted** (Fernet, `enc:v1:`) before being written to `settings.json`. The key is stored in `~/.skyfall/secret.key` with `0600` permissions; `settings.json` itself and the `~/.skyfall` directory — `0600`/`0700`. Legacy plaintext files are read as-is and re-encrypted on the next **Save** (`src/security.py`).
+> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings, including LeakCheck, Dehashed, and NASA FIRMS credentials, are not currently in the encrypted settings set. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
 
 Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `mcpToggleButton`) to start/stop the built-in MCP server.
 
@@ -140,6 +141,8 @@ Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `m
 ## Program Tabs
 
 All 24 tabs are opened via the side menu (navigation), grouped into sections: **Home**, **Telegram**, **Identity & OSINT**, **Web & Infrastructure**, **Workspace**, **System**. The menu is toggled via **View → Toggle Navigation** (or `Ctrl+Shift+B`). The UI theme (dark/light) is generated from a single template `resources/style.template.qss` + the palette in `src/ui/theme.py` — both themes use the same set of rules and do not "drift apart".
+
+File drop zones in **File Analyze**, **Steganography**, and **Search4Faces** show only a centered 120 px file-drop icon; drag a file onto the icon to load it. The icon color follows the active theme's text color.
 
 Additionally (`src/ui/layout_polish.py`):
 - **Scrolling in settings.** The long column of fields on the **Settings** tab is wrapped in a `QScrollArea`, so the minimum window size is no longer dictated by its height.

@@ -20,6 +20,15 @@ except ImportError:
     PYVIS_AVAILABLE = False
 
 
+def _graph_edge_types(attrs):
+    edge_types = attrs.get("edge_types")
+    if isinstance(edge_types, str):
+        edge_types = edge_types.split("|")
+    if not edge_types:
+        edge_types = [attrs.get("edge_type", "unknown")]
+    return set(edge_types)
+
+
 class TgAnalyzer:
     def __init__(self):
         logger.debug("Init: TgAnalyzer")
@@ -329,6 +338,44 @@ class TgAnalyzer:
             graph.add_node(node_id, **self._get_user_attrs(info))
         return node_id
 
+    @staticmethod
+    def _add_graph_relationship(graph, source, target, edge_type, **attrs):
+        edge = graph.get_edge_data(source, target)
+        if edge is None:
+            graph.add_edge(source, target, edge_type=edge_type, edge_types=edge_type)
+            edge = graph.get_edge_data(source, target)
+        else:
+            edge_types = edge.get("edge_types", edge.get("edge_type", ""))
+            edge_types = edge_types.split("|") if edge_types else []
+            if edge_type not in edge_types:
+                edge_types.append(edge_type)
+            edge["edge_types"] = "|".join(edge_types)
+
+        weight_fields = {
+            "member": "member_count",
+            "posted": "post_count",
+            "replier": "reply_weight",
+            "forwarded": "forward_weight",
+            "discussion_reply": "discussion_reply_weight",
+            "mentions": "link_count",
+            "shared_members": "shared_member_count",
+        }
+        weight_field = weight_fields.get(edge_type)
+        for key, value in attrs.items():
+            if key == "weight":
+                if weight_field:
+                    edge[weight_field] = edge.get(weight_field, 0) + value
+                edge.setdefault("weight", value)
+            elif key == "weight_forward":
+                edge["forward_weight"] = edge.get("forward_weight", 0) + value
+                edge.setdefault("weight_forward", value)
+            elif key in ("is_channel_reply", "is_channel_forward"):
+                edge[key] = edge.get(key, False) or value
+            elif key == "post_count":
+                edge[key] = edge.get(key, 0) + value
+            else:
+                edge.setdefault(key, value)
+
     def build_graph(
         self,
         db_path,
@@ -379,11 +426,6 @@ class TgAnalyzer:
         log_callback(f"Channels to process: {channels}")
 
         all_users = self.get_all_users(db_path)
-
-        user_nodes_batch = []
-        for user_id, info in all_users.items():
-            user_nodes_batch.append((f"user:{user_id}", self._get_user_attrs(info)))
-        graph.add_nodes_from(user_nodes_batch)
 
         channel_id_map = {}
         try:
@@ -440,17 +482,19 @@ class TgAnalyzer:
                     (
                         user_node,
                         target_node,
+                        "member",
                         {
-                            "edge_type": "member",
                             "member_type": minfo.get("member_type", "member"),
                             "joined_at": minfo.get("member_joined_at"),
                             "member_date": minfo.get("member_date"),
                         },
                     )
                 )
-            graph.add_edges_from(member_edges_batch)
+            for source, target, edge_type, attrs in member_edges_batch:
+                self._add_graph_relationship(graph, source, target, edge_type, **attrs)
 
             post_author = {}
+            post_count_by_author = defaultdict(int)
             reply_counter = defaultdict(lambda: defaultdict(int))
             forward_counter = defaultdict(lambda: defaultdict(int))
             forward_users_to_add = set()
@@ -460,6 +504,8 @@ class TgAnalyzer:
             for p in posts:
                 post_id = p.get("post_id")
                 user_id = p.get("user_id")
+                if user_id and str(user_id) != str(numeric_id):
+                    post_count_by_author[user_id] += 1
                 if post_id:
                     if user_id:
                         post_author[post_id] = user_id
@@ -477,6 +523,16 @@ class TgAnalyzer:
                         forward_counter[src][dst] += 1
                         forward_users_to_add.add(src)
                         forward_users_to_add.add(dst)
+
+            for user_id, post_count in post_count_by_author.items():
+                user_node = self._ensure_user_node(graph, user_id, all_users)
+                self._add_graph_relationship(
+                    graph,
+                    user_node,
+                    channel_node,
+                    "posted",
+                    post_count=post_count,
+                )
 
             for d in discussions:
                 d_user_id = d.get("user_id")
@@ -560,46 +616,14 @@ class TgAnalyzer:
                     if cnt >= min_replies:
                         if str(u1) == str(numeric_id):
                             edge_nodes = (channel_node, f"user:{u2}")
-                            if graph.has_edge(*edge_nodes):
-                                old = graph.get_edge_data(*edge_nodes)
-                                old["reply_weight"] = old.get("reply_weight", 0) + cnt
-                                old["is_channel_reply"] = True
-                            else:
-                                edge_batch.append(
-                                    (
-                                        *edge_nodes,
-                                        {
-                                            "edge_type": "replier",
-                                            "weight": cnt,
-                                            "is_channel_reply": True,
-                                        },
-                                    )
-                                )
+                            edge_attrs = {"weight": cnt, "is_channel_reply": True}
                         elif str(u2) == str(numeric_id):
                             edge_nodes = (channel_node, f"user:{u1}")
-                            if graph.has_edge(*edge_nodes):
-                                old = graph.get_edge_data(*edge_nodes)
-                                old["reply_weight"] = old.get("reply_weight", 0) + cnt
-                                old["is_channel_reply"] = True
-                            else:
-                                edge_batch.append(
-                                    (
-                                        *edge_nodes,
-                                        {
-                                            "edge_type": "replier",
-                                            "weight": cnt,
-                                            "is_channel_reply": True,
-                                        },
-                                    )
-                                )
+                            edge_attrs = {"weight": cnt, "is_channel_reply": True}
                         else:
-                            edge_batch.append(
-                                (
-                                    f"user:{u1}",
-                                    f"user:{u2}",
-                                    {"edge_type": "replier", "weight": cnt},
-                                )
-                            )
+                            edge_nodes = (f"user:{u1}", f"user:{u2}")
+                            edge_attrs = {"weight": cnt}
+                        edge_batch.append((*edge_nodes, "replier", edge_attrs))
 
             if include_forwarded:
                 for src, tgts in forward_counter.items():
@@ -609,11 +633,8 @@ class TgAnalyzer:
                                 (
                                     channel_node,
                                     f"user:{dst}",
-                                    {
-                                        "edge_type": "forwarded",
-                                        "weight": cnt,
-                                        "is_channel_forward": True,
-                                    },
+                                    "forwarded",
+                                    {"weight": cnt, "is_channel_forward": True},
                                 )
                             )
                         elif str(dst) == str(numeric_id):
@@ -621,11 +642,8 @@ class TgAnalyzer:
                                 (
                                     channel_node,
                                     f"user:{src}",
-                                    {
-                                        "edge_type": "forwarded",
-                                        "weight": cnt,
-                                        "is_channel_forward": True,
-                                    },
+                                    "forwarded",
+                                    {"weight": cnt, "is_channel_forward": True},
                                 )
                             )
                         else:
@@ -633,7 +651,8 @@ class TgAnalyzer:
                                 (
                                     f"user:{src}",
                                     f"user:{dst}",
-                                    {"edge_type": "forwarded", "weight_forward": cnt},
+                                    "forwarded",
+                                    {"weight_forward": cnt},
                                 )
                             )
 
@@ -643,11 +662,13 @@ class TgAnalyzer:
                         (
                             f"user:{u1}",
                             f"user:{u2}",
-                            {"edge_type": "discussion_reply", "weight": cnt},
+                            "discussion_reply",
+                            {"weight": cnt},
                         )
                     )
 
-            graph.add_edges_from(edge_batch)
+            for source, target, edge_type, attrs in edge_batch:
+                self._add_graph_relationship(graph, source, target, edge_type, **attrs)
 
             if include_links:
                 links = self.get_links(db_path, channel, start_date, end_date)
@@ -683,9 +704,12 @@ class TgAnalyzer:
                                 domain_node, node_type="domain", label=domain
                             )
                         link_edges_batch.append(
-                            (user_node, domain_node, {"edge_type": "mentions"})
+                            (user_node, domain_node, "mentions", {})
                         )
-                graph.add_edges_from(link_edges_batch)
+                for source, target, edge_type, attrs in link_edges_batch:
+                    self._add_graph_relationship(
+                        graph, source, target, edge_type, **attrs
+                    )
 
         if len(channels) > 1 and include_cross_channel:
             cross_channel_edges = self.get_cross_channel_members(db_path, channels)
@@ -694,22 +718,28 @@ class TgAnalyzer:
                     ch1_node = f"channel:{ch1}"
                     ch2_node = f"channel:{ch2}"
                     if graph.has_node(ch1_node) and graph.has_node(ch2_node):
-                        graph.add_edge(
+                        self._add_graph_relationship(
+                            graph,
                             ch1_node,
                             ch2_node,
-                            edge_type="shared_members",
+                            "shared_members",
                             weight=len(shared_users),
-                            shared_users=list(shared_users)[:10],
+                            shared_users=",".join(
+                                str(user_id) for user_id in list(shared_users)[:10]
+                            ),
                         )
 
         # debug: count edge types
         edge_types = defaultdict(int)
         for _, _, d in graph.edges(data=True):
-            edge_types[d.get("edge_type", "unknown")] += 1
+            for edge_type in _graph_edge_types(d):
+                edge_types[edge_type] += 1
         user2user = 0
         channel2user = 0
         for u, v, d in graph.edges(data=True):
-            if d.get("edge_type") in ("replier", "forwarded", "discussion_reply"):
+            if _graph_edge_types(d).intersection(
+                ("replier", "forwarded", "discussion_reply")
+            ):
                 if u.startswith("user:") and v.startswith("user:"):
                     user2user += 1
                 else:
@@ -742,7 +772,8 @@ class TgAnalyzer:
 
         edge_types = defaultdict(int)
         for u, v, d in graph.edges(data=True):
-            edge_types[d.get("edge_type", "unknown")] += 1
+            for edge_type in _graph_edge_types(d):
+                edge_types[edge_type] += 1
         log_callback(section("Edge types"))
         for t, cnt in edge_types.items():
             log_callback(line(f"{t}: {cnt}"))
@@ -1346,24 +1377,30 @@ class TgAnalyzer:
 
         message_counts = []
         for src, dst, attrs in graph.edges(data=True):
-            edge_type = attrs.get("edge_type", "")
-            if edge_type in ("replier", "forwarded", "discussion_reply"):
-                src_is_user = src.startswith("user:")
-                dst_is_user = dst.startswith("user:")
-                if src_is_user and dst_is_user:
-                    weight = attrs.get("weight_forward", attrs.get("weight", 0))
-                    message_counts.append(weight)
-            elif edge_type == "member" and attrs.get("is_channel_reply"):
+            edge_types = _graph_edge_types(attrs)
+            if (
+                edge_types.intersection(("replier", "forwarded", "discussion_reply"))
+                and src.startswith("user:")
+                and dst.startswith("user:")
+            ):
+                weight = max(
+                    attrs.get("reply_weight", 0),
+                    attrs.get("forward_weight", 0),
+                    attrs.get("discussion_reply_weight", 0),
+                )
+                message_counts.append(weight)
+            if "member" in edge_types and attrs.get("is_channel_reply"):
                 message_counts.append(attrs.get("reply_weight", 0))
         max_message_count = max(message_counts) if message_counts else 0
 
         for src, dst, attrs in graph.edges(data=True):
             edge_type = attrs.get("edge_type", "unknown")
+            edge_types = _graph_edge_types(attrs)
             is_channel_edge = attrs.get("is_channel_reply") or attrs.get(
                 "is_channel_forward"
             )
             dashes = False
-            if edge_type == "member":
+            if "member" in edge_types:
                 if attrs.get("is_channel_reply"):
                     rw = attrs.get("reply_weight", 0)
                     pct = rw / max_message_count if max_message_count > 0 else 0
@@ -1377,11 +1414,12 @@ class TgAnalyzer:
                     width = 1
                 else:
                     color, width = "#6c7a89", 1
-            elif edge_type in ("replier", "forwarded", "discussion_reply"):
-                if edge_type == "forwarded":
-                    weight = attrs.get("weight_forward", attrs.get("weight", 0))
-                else:
-                    weight = attrs.get("weight", 0)
+            elif edge_types.intersection(("replier", "forwarded", "discussion_reply")):
+                weight = max(
+                    attrs.get("reply_weight", 0),
+                    attrs.get("forward_weight", 0),
+                    attrs.get("discussion_reply_weight", 0),
+                )
                 src_is_user = src.startswith("user:")
                 dst_is_user = dst.startswith("user:")
                 if src_is_user and dst_is_user:
@@ -1402,6 +1440,8 @@ class TgAnalyzer:
                     else:
                         color = "#f0b27a"
                 width = 1
+            elif "posted" in edge_types:
+                color, width = "#3498db", 1
             else:
                 color, width = "#6c7a89", 1
 
@@ -1630,32 +1670,37 @@ class TgAnalyzer:
         member_edges = [
             (u, v)
             for u, v, d in graph.edges(data=True)
-            if d.get("edge_type") == "member"
+            if "member" in _graph_edge_types(d)
+        ]
+        authorship_edges = [
+            (u, v)
+            for u, v, d in graph.edges(data=True)
+            if "posted" in _graph_edge_types(d)
         ]
         replier_edges = [
             (u, v)
             for u, v, d in graph.edges(data=True)
-            if d.get("edge_type") == "replier"
+            if "replier" in _graph_edge_types(d)
         ]
         forwarded_edges = [
             (u, v)
             for u, v, d in graph.edges(data=True)
-            if d.get("edge_type") == "forwarded"
+            if "forwarded" in _graph_edge_types(d)
         ]
         mention_edges = [
             (u, v)
             for u, v, d in graph.edges(data=True)
-            if d.get("edge_type") == "mentions"
+            if "mentions" in _graph_edge_types(d)
         ]
         discussion_edges = [
             (u, v)
             for u, v, d in graph.edges(data=True)
-            if d.get("edge_type") == "discussion_reply"
+            if "discussion_reply" in _graph_edge_types(d)
         ]
         linked_edges = [
             (u, v)
             for u, v, d in graph.edges(data=True)
-            if d.get("edge_type") == "linked_chat"
+            if "linked_chat" in _graph_edge_types(d)
         ]
 
         if member_edges:
@@ -1666,6 +1711,16 @@ class TgAnalyzer:
                 edge_color="#4a4a4a",
                 width=1,
                 alpha=0.6,
+            )
+        if authorship_edges:
+            nx.draw_networkx_edges(
+                graph,
+                pos,
+                edgelist=authorship_edges,
+                edge_color="#3498db",
+                width=1,
+                alpha=0.7,
+                label="Post authorship",
             )
         if replier_edges:
             nx.draw_networkx_edges(

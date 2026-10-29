@@ -51,7 +51,6 @@ PRIMARY_BUTTONS = (
 
 # Fixed minimum widths that are larger than they need to be.
 COMPACT_MIN_WIDTHS = {
-    "graphLayoutCombo": 110,
     "graphFilterCombo": 110,
     "graphClearFilterButton": 90,
     "entityPalette": 160,

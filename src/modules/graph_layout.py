@@ -10,6 +10,7 @@ LAYOUT_ALGORITHMS = {
     "spectral": "Spectral",
     "circular": "Circular",
     "hierarchical": "Hierarchical (Top-Down)",
+    "telegram": "Telegram Hub-and-Cluster",
 }
 
 # Default node footprint used when placing nodes automatically.
@@ -207,6 +208,116 @@ def _spectral_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
         return _spring_layout(g)
 
 
+def _telegram_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
+    """Place channels as hubs with users clustered around their strongest hub."""
+    channels = sorted(
+        (node for node, data in g.nodes(data=True) if data.get("tg_kind") == "channel"),
+        key=str,
+    )
+    users = sorted(
+        (node for node, data in g.nodes(data=True) if data.get("tg_kind") == "user"),
+        key=str,
+    )
+    domains = sorted(
+        (node for node, data in g.nodes(data=True) if data.get("tg_kind") == "domain"),
+        key=str,
+    )
+
+    clusters = {channel: [] for channel in channels}
+    assigned = {}
+    for user in users:
+        weights = {}
+        for channel in channels:
+            if g.has_edge(user, channel):
+                weights[channel] = 1
+        if weights:
+            assigned[user] = min(
+                weights, key=lambda channel: (-weights[channel], str(channel))
+            )
+
+    while True:
+        pending = {}
+        for user in users:
+            if user in assigned:
+                continue
+            weights = {}
+            for neighbor in g.neighbors(user):
+                if neighbor in assigned:
+                    weights[assigned[neighbor]] = weights.get(assigned[neighbor], 0) + 1
+            if weights:
+                pending[user] = min(
+                    weights, key=lambda channel: (-weights[channel], str(channel))
+                )
+        if not pending:
+            break
+        assigned.update(pending)
+
+    for user, channel in assigned.items():
+        clusters[channel].append(user)
+
+    radii = {
+        channel: 260.0 + 130.0 * math.sqrt(max(1, len(cluster)))
+        for channel, cluster in clusters.items()
+    }
+    centers = {}
+    if len(channels) == 1:
+        centers[channels[0]] = (0.0, 0.0)
+    elif channels:
+        ring_radius = max(800.0, max(radii.values()) * len(channels) / math.pi)
+        centers = {
+            channel: (
+                ring_radius
+                * math.cos(2.0 * math.pi * index / len(channels) - math.pi / 2),
+                ring_radius
+                * math.sin(2.0 * math.pi * index / len(channels) - math.pi / 2),
+            )
+            for index, channel in enumerate(channels)
+        }
+
+    positions = dict(centers)
+    golden_angle = math.pi * (3.0 - math.sqrt(5.0))
+    for channel, members in clusters.items():
+        center_x, center_y = centers[channel]
+        members.sort(key=lambda user: (-g.degree(user), str(user)))
+        for index, user in enumerate(members):
+            radius = 150.0 * math.sqrt(index + 1)
+            angle = index * golden_angle
+            positions[user] = (
+                center_x + radius * math.cos(angle),
+                center_y + radius * math.sin(angle),
+            )
+
+    unassigned = [user for user in users if user not in positions]
+    outer_radius = (
+        max(
+            (math.hypot(*centers[channel]) + radii[channel] for channel in channels),
+            default=0.0,
+        )
+        + 650.0
+    )
+    for index, user in enumerate(unassigned):
+        angle = index * golden_angle
+        radius = outer_radius + 140.0 * math.sqrt(index + 1)
+        positions[user] = (radius * math.cos(angle), radius * math.sin(angle))
+
+    for index, domain in enumerate(domains):
+        neighbors = [node for node in g.neighbors(domain) if node in positions]
+        if neighbors:
+            x = sum(positions[node][0] for node in neighbors) / len(neighbors)
+            y = sum(positions[node][1] for node in neighbors) / len(neighbors)
+            angle = index * golden_angle
+            positions[domain] = (
+                x + 420.0 * math.cos(angle),
+                y + 420.0 * math.sin(angle),
+            )
+
+    remaining = sorted((node for node in g if node not in positions), key=str)
+    for index, node in enumerate(remaining):
+        angle = index * golden_angle
+        positions[node] = (420.0 * math.cos(angle), 420.0 * math.sin(angle))
+    return positions
+
+
 def _raw_layout(g: nx.Graph, algorithm: str) -> dict[str, tuple[float, float]]:
     """Compute an algorithm's native coordinates for a connected graph."""
     if len(g.nodes) <= 1:
@@ -273,16 +384,39 @@ def compute_layout(
     g = nx.Graph()
 
     for node in nodes:
-        g.add_node(node["id"])
+        content = str(node.get("content", ""))
+        declared_type = next(
+            (
+                line.partition(":")[2].strip().lower()
+                for line in content.splitlines()
+                if line.lower().startswith("type:")
+            ),
+            "",
+        )
+        entity_type = node.get("entity_type", "")
+        tg_kind = {
+            "Organization": "channel",
+            "Person": "user",
+            "Domain": "domain",
+        }.get(entity_type, declared_type)
+        g.add_node(node["id"], tg_kind=tg_kind)
 
     for edge in edges:
-        g.add_edge(edge["source"], edge["target"])
+        g.add_edge(edge["source"], edge["target"], label=edge.get("label", ""))
 
     if len(g.nodes) == 0:
         return LayoutResult(positions={})
 
     if algorithm == TREE_ALGORITHM:
         return compute_hierarchical_layout(nodes, edges, direction="down", scale=scale)
+    if algorithm == "telegram":
+        positions = _telegram_layout(g)
+        factor = max(scale, 0.01)
+        return LayoutResult(
+            positions={
+                node: (x * factor, y * factor) for node, (x, y) in positions.items()
+            }
+        )
 
     factor = max(scale, 0.01)
     components = [

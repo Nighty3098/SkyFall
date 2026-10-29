@@ -483,6 +483,13 @@
                <number>12</number>
               </property>
               <item>
+               <widget class="QPushButton" name="telegramAnalyzerLoadDBButton">
+                <property name="text">
+                 <string>Load DB</string>
+                </property>
+               </widget>
+              </item>
+              <item>
                <widget class="QPushButton" name="telegramAnalyzerLoadChannelsButton">
                 <property name="text">
                  <string>Load Channels</string>
@@ -4049,35 +4056,6 @@
                <number>0</number>
               </property>
               <item>
-               <layout class="QHBoxLayout" name="graphButtonLayout">
-                <property name="spacing">
-                 <number>8</number>
-                </property>
-                <property name="leftMargin">
-                 <number>0</number>
-                </property>
-                <property name="topMargin">
-                 <number>0</number>
-                </property>
-                <property name="rightMargin">
-                 <number>0</number>
-                </property>
-                <property name="bottomMargin">
-                 <number>0</number>
-                </property>
-                <item>
-                 <widget class="QComboBox" name="graphLayoutCombo">
-                  <property name="minimumSize">
-                   <size>
-                    <width>160</width>
-                    <height>0</height>
-                   </size>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-              <item>
                <layout class="QHBoxLayout" name="graphSearchLayout">
                 <property name="spacing">
                  <number>8</number>
@@ -4382,8 +4360,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1352</width>
-               <height>1074</height>
+               <width>1338</width>
+               <height>1090</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="settingsTabScrollContainerLayout">
@@ -4692,6 +4670,9 @@
                   </item>
                   <item>
                    <widget class="QSpinBox" name="fontSizeSpinBox">
+                    <property name="suffix">
+                     <string> pt</string>
+                    </property>
                     <property name="minimum">
                      <number>8</number>
                     </property>
@@ -4700,9 +4681,6 @@
                     </property>
                     <property name="value">
                      <number>10</number>
-                    </property>
-                    <property name="suffix">
-                     <string> pt</string>
                     </property>
                    </widget>
                   </item>
@@ -4842,12 +4820,24 @@
     <property name="title">
      <string>Graph</string>
     </property>
+    <widget class="QMenu" name="menuGraphLayout">
+     <property name="title">
+      <string>Layout</string>
+     </property>
+     <addaction name="actionLayoutSpring"/>
+     <addaction name="actionLayoutKamadaKawai"/>
+     <addaction name="actionLayoutShell"/>
+     <addaction name="actionLayoutSpectral"/>
+     <addaction name="actionLayoutCircular"/>
+     <addaction name="actionLayoutHierarchical"/>
+     <addaction name="actionLayoutTelegram"/>
+    </widget>
     <addaction name="actionExportGraph"/>
     <addaction name="actionImportGraph"/>
     <addaction name="separator"/>
     <addaction name="actionClearGraph"/>
     <addaction name="actionFitGraph"/>
-    <addaction name="actionAutoLayoutGraph"/>
+    <addaction name="menuGraphLayout"/>
     <addaction name="separator"/>
     <addaction name="actionExportGraphImage"/>
    </widget>
@@ -4928,14 +4918,68 @@
     <string>Fit View</string>
    </property>
   </action>
-  <action name="actionAutoLayoutGraph">
-   <property name="text">
-    <string>Auto Layout</string>
-   </property>
-  </action>
   <action name="actionExportGraphImage">
    <property name="text">
     <string>Export Graph Image...</string>
+   </property>
+  </action>
+  <action name="actionLayoutSpring">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="checked">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Force-directed (Spring)</string>
+   </property>
+  </action>
+  <action name="actionLayoutKamadaKawai">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Kamada-Kawai</string>
+   </property>
+  </action>
+  <action name="actionLayoutShell">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Shell (Circular)</string>
+   </property>
+  </action>
+  <action name="actionLayoutSpectral">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Spectral</string>
+   </property>
+  </action>
+  <action name="actionLayoutCircular">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Circular</string>
+   </property>
+  </action>
+  <action name="actionLayoutHierarchical">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Hierarchical (Top-Down)</string>
+   </property>
+  </action>
+  <action name="actionLayoutTelegram">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Telegram Hub-and-Cluster</string>
    </property>
   </action>
  </widget>

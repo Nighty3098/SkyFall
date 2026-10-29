@@ -180,8 +180,12 @@ Collecting data from a Telegram channel/group via MTProto (the Telethon library)
 ### Telegram Analyzer
 
 Analyzing the downloaded `SkyFall_TG.db` database and building a relationship graph.
+The graph includes users connected to selected channels, channel post authorship,
+membership, replies, and forwards; overlapping relationships are retained on the
+same graph edge instead of replacing one another.
 
 **Fields and elements:**
+- `telegramAnalyzerLoadDBButton` — choose a Telegram SQLite database and load its channels; placed above `telegramAnalyzerLoadChannelsButton`.
 - `telegramAnalyzerLoadChannelsButton` — load the channel list (path from `pathToStorageEdit` or `~/.skyfall/data`).
 - `telegramChannelsList` — channel selection (or "All Channels").
 - `includeLinksCheck` — include link-based connections (nodes `domain:*`).
@@ -199,7 +203,7 @@ Analyzing the downloaded `SkyFall_TG.db` database and building a relationship gr
 
 **Export formats:** GraphML, GEXF, JSON (node-link), CSV (nodes/edges), PNG (matplotlib), HTML (pyvis with a node-info panel), Obsidian Markdown (channel/member files with wiki-links and embedded avatars).
 
-The **To Main Graph** button (`tgToGraphButton`) rebuilds the TG graph from the database with the current filters and loads it into the main graph (`src/modules/graph_io.py`: user→Person, channel→Organization, domain→Domain; member→member_of, replier/discussion_reply→communicates_with, forwarded/mentions/linked_chat→linked_to, shared_members→associated_with; spring layout). It also supports importing TG export files and exporting the canvas to PNG/SVG.
+The **To Main Graph** button (`tgToGraphButton`) rebuilds the TG graph from the database with the current filters and loads it into the main graph (`src/modules/graph_io.py`: user→Person, channel→Organization, domain→Domain; member→member_of, post authorship/replies→communicates_with, forwarded/mentions/linked_chat→linked_to, shared_members→associated_with). Its Telegram-specific deterministic layout places channel hubs with local user clusters and associated domains nearby. It also supports importing TG export files and exporting the canvas to PNG/SVG.
 
 ### Username
 
@@ -407,7 +411,7 @@ A visual relationship graph with an entity palette (`entityPalette`, drag onto t
 - `exportGraphButton` / `importGraphButton` — save/load a JSON graph; import also understands TG Analyzer exports (GraphML/GEXF/node-link JSON/CSV pair) with entity mapping and auto-layout.
 - `exportGraphImageButton` — export the canvas to PNG (x2) / SVG.
 - `graphClearButton` — clear the graph.
-- `graphLayoutCombo` + `graphAutoLayoutButton` — automatic layout (spring / kamada_kawai / shell / spectral / circular).
+- `Graph → Layout` — choose an automatic layout (spring / kamada_kawai / shell / spectral / circular / hierarchical / Telegram Hub-and-Cluster); choosing applies it immediately to selected nodes, or to the whole graph when nothing is selected.
 - `graphSearchEdit` + `graphClearFilterButton` + `graphFilterCombo` — filtering by text and entity type.
 - Node panel: `nodeTitleEdit`, `nodeTypeCombo`, `nodeContentEdit`, `nodeEvidenceList`, `nodeEvidenceAddFileBtn`, `nodeEvidenceAddUrlBtn`, `nodeEvidenceRemoveBtn`.
 

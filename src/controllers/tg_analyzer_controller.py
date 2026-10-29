@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 from PySide6.QtCore import QObject, Signal
+from PySide6.QtWidgets import QFileDialog
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -28,6 +29,7 @@ class TgAnalyzerController:
         self.tg_analyzer = tg_analyzer
         self.graph_widget = graph_widget
         self._task = None
+        self.db_path = str(Path.home() / ".skyfall" / "data")
         self._bridge = _AnalyzerBridge()
         self._bridge.log_signal.connect(self.ui.telegramAnalyzerDebug.appendPlainText)
         self._bridge.progress_signal.connect(self.ui.telegramAnalyzerProgress.setValue)
@@ -64,17 +66,30 @@ class TgAnalyzerController:
             self.ui.telegramChannelsList.clear()
             self.ui.telegramChannelsList.addItems(channels)
             self.ui.telegramChannelsList.addItem("All Channels")
+            self.db_path = db_path
             logger.debug("load_channels: added {} items to list", len(channels) + 1)
             return True, None
         except Exception as e:
             logger.error("load_channels: exception: {}", e)
             return False, str(e)
 
+    def choose_database(self):
+        db_path, _ = QFileDialog.getOpenFileName(
+            self.ui,
+            "Load Telegram database",
+            self.db_path,
+            "SQLite databases (*.db *.sqlite *.sqlite3);;All files (*)",
+        )
+        if not db_path:
+            return
+
+        loaded, error = self.load_channels(db_path)
+        if loaded:
+            self._bridge.log_signal.emit(f"Loaded Telegram database: {db_path}")
+        else:
+            self._bridge.log_signal.emit(f"Could not load Telegram database: {error}")
+
     def build_analysis_params(self) -> dict:
-        from pathlib import Path
-
-        db_path = str(Path.home() / ".skyfall" / "data")
-
         selected_channels = [
             item.text() for item in self.ui.telegramChannelsList.selectedItems()
         ]
@@ -96,7 +111,7 @@ class TgAnalyzerController:
             end_date = end_date_str
 
         params = {
-            "db_path": db_path,
+            "db_path": self.db_path,
             "channels": (
                 loaded_channels
                 if "All Channels" in selected_channels

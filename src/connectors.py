@@ -354,6 +354,10 @@ def setup_tg_analyzer_connectors(controller: "TgAnalyzerController"):
 
     from PySide6.QtCore import QDateTime
 
+    controller.ui.telegramAnalyzerLoadDBButton.clicked.connect(
+        controller.choose_database
+    )
+
     controller.ui.telegramAnalyzerStartDate.setDateTime(
         QDateTime(datetime.now() - timedelta(days=365))
     )
@@ -571,8 +575,6 @@ _GRAPH_TOOLTIPS = {
     "actionExportGraphImage": "Export the canvas as PNG or SVG",
     "actionClearGraph": "Remove every node and edge",
     "actionFitGraph": "Zoom to fit all nodes (F)",
-    "actionAutoLayoutGraph": "Re-arrange the graph with the selected algorithm",
-    "graphLayoutCombo": "Choose the automatic layout algorithm",
     "graphSearchEdit": "Filter nodes by title, type or content (Ctrl+F)",
     "graphClearFilterButton": "Reset the search and type filters",
     "graphFilterCombo": "Show only one entity type",
@@ -597,23 +599,30 @@ def setup_graph_transform_connectors(ui, controller):
 
 
 def setup_graph_layout_connectors(controller):
+    from PySide6.QtGui import QActionGroup
+
     from src.modules.graph_layout import LAYOUT_ALGORITHMS
 
-    controller.ui.graphLayoutCombo.addItems(LAYOUT_ALGORITHMS.values())
-    controller.ui.actionAutoLayoutGraph.triggered.connect(
-        lambda: controller.apply_layout(
-            _reverse_layout_map(controller.ui.graphLayoutCombo.currentText())
+    actions = {
+        "spring": controller.ui.actionLayoutSpring,
+        "kamada_kawai": controller.ui.actionLayoutKamadaKawai,
+        "shell": controller.ui.actionLayoutShell,
+        "spectral": controller.ui.actionLayoutSpectral,
+        "circular": controller.ui.actionLayoutCircular,
+        "hierarchical": controller.ui.actionLayoutHierarchical,
+        "telegram": controller.ui.actionLayoutTelegram,
+    }
+    group = QActionGroup(controller.ui.menuGraphLayout)
+    group.setExclusive(True)
+    controller._layout_action_group = group
+
+    for algorithm, label in LAYOUT_ALGORITHMS.items():
+        action = actions[algorithm]
+        action.setText(label)
+        group.addAction(action)
+        action.triggered.connect(
+            lambda checked=False, selected=algorithm: controller.apply_layout(selected)
         )
-    )
-
-
-def _reverse_layout_map(label: str) -> str:
-    from src.modules.graph_layout import LAYOUT_ALGORITHMS
-
-    for key, val in LAYOUT_ALGORITHMS.items():
-        if val == label:
-            return key
-    return "spring"
 
 
 def setup_mcp_connectors(controller):

@@ -1,4 +1,5 @@
 import math
+import re
 from dataclasses import dataclass
 
 import networkx as nx
@@ -26,6 +27,16 @@ TREE_ALGORITHM = "hierarchical"
 # Above this node count the cubic Kamada-Kawai solver is swapped for a
 # force-directed pass so large graphs stay responsive.
 KAMADA_KAWAI_LIMIT = 400
+_TG_EDGE_TYPES = {
+    "member",
+    "posted",
+    "replier",
+    "forwarded",
+    "discussion_reply",
+    "mentions",
+    "shared_members",
+    "linked_chat",
+}
 
 
 @dataclass
@@ -208,62 +219,105 @@ def _spectral_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
         return _spring_layout(g)
 
 
-def _telegram_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
+def telegram_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
     """Place channels as hubs with users clustered around their strongest hub."""
     channels = sorted(
-        (node for node, data in g.nodes(data=True) if data.get("tg_kind") == "channel"),
+        (
+            node
+            for node, data in g.nodes(data=True)
+            if data.get("tg_kind", data.get("node_type")) == "channel"
+        ),
         key=str,
     )
     users = sorted(
-        (node for node, data in g.nodes(data=True) if data.get("tg_kind") == "user"),
+        (
+            node
+            for node, data in g.nodes(data=True)
+            if data.get("tg_kind", data.get("node_type")) == "user"
+        ),
         key=str,
     )
     domains = sorted(
-        (node for node, data in g.nodes(data=True) if data.get("tg_kind") == "domain"),
+        (
+            node
+            for node, data in g.nodes(data=True)
+            if data.get("tg_kind", data.get("node_type")) == "domain"
+        ),
         key=str,
     )
 
+    channel_set = set(channels)
+    user_set = set(users)
     clusters = {channel: [] for channel in channels}
     assigned = {}
     for user in users:
         weights = {}
-        for channel in channels:
-            if g.has_edge(user, channel):
-                weights[channel] = 1
+        for channel in g.neighbors(user):
+            if channel not in channel_set:
+                continue
+            edge = g.get_edge_data(user, channel) or {}
+            edge_types = _telegram_edge_types(edge)
+            weight = sum(
+                edge.get(field, 0)
+                for field in (
+                    "member_count",
+                    "post_count",
+                    "reply_weight",
+                    "forward_weight",
+                )
+            )
+            if "posted" in edge_types:
+                weight += _telegram_label_weight(edge.get("label", ""), "posted")
+            weights[channel] = max(weight, 1)
         if weights:
             assigned[user] = min(
                 weights, key=lambda channel: (-weights[channel], str(channel))
             )
 
-    while True:
-        pending = {}
-        for user in users:
-            if user in assigned:
-                continue
-            weights = {}
-            for neighbor in g.neighbors(user):
-                if neighbor in assigned:
-                    weights[assigned[neighbor]] = weights.get(assigned[neighbor], 0) + 1
-            if weights:
-                pending[user] = min(
-                    weights, key=lambda channel: (-weights[channel], str(channel))
+    # Expand only from newly assigned users; each user adjacency list is visited
+    # once, rather than rescanning every unassigned user for every graph layer.
+    frontier = sorted(assigned, key=str)
+    while frontier:
+        votes = {}
+        for source in frontier:
+            channel = assigned[source]
+            for user in g.neighbors(source):
+                if user not in user_set or user in assigned:
+                    continue
+                edge = g.get_edge_data(source, user) or {}
+                weight = sum(
+                    edge.get(field, 0)
+                    for field in (
+                        "reply_weight",
+                        "forward_weight",
+                        "discussion_reply_weight",
+                    )
                 )
-        if not pending:
-            break
-        assigned.update(pending)
+                votes.setdefault(user, {}).setdefault(channel, 0)
+                votes[user][channel] += max(weight, 1)
+
+        frontier = sorted(votes, key=str)
+        for user in frontier:
+            assigned[user] = min(
+                votes[user], key=lambda channel: (-votes[user][channel], str(channel))
+            )
 
     for user, channel in assigned.items():
         clusters[channel].append(user)
 
-    radii = {
-        channel: 260.0 + 130.0 * math.sqrt(max(1, len(cluster)))
+    cluster_radii = {
+        channel: 220.0 + 140.0 * math.sqrt(max(1, len(cluster)))
         for channel, cluster in clusters.items()
     }
     centers = {}
     if len(channels) == 1:
         centers[channels[0]] = (0.0, 0.0)
     elif channels:
-        ring_radius = max(800.0, max(radii.values()) * len(channels) / math.pi)
+        ring_radius = max(
+            700.0,
+            (2.0 * max(cluster_radii.values()) + 420.0)
+            / (2.0 * math.sin(math.pi / len(channels))),
+        )
         centers = {
             channel: (
                 ring_radius
@@ -280,7 +334,7 @@ def _telegram_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
         center_x, center_y = centers[channel]
         members.sort(key=lambda user: (-g.degree(user), str(user)))
         for index, user in enumerate(members):
-            radius = 150.0 * math.sqrt(index + 1)
+            radius = 140.0 * math.sqrt(index + 1)
             angle = index * golden_angle
             positions[user] = (
                 center_x + radius * math.cos(angle),
@@ -290,10 +344,13 @@ def _telegram_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
     unassigned = [user for user in users if user not in positions]
     outer_radius = (
         max(
-            (math.hypot(*centers[channel]) + radii[channel] for channel in channels),
+            (
+                math.hypot(*centers[channel]) + cluster_radii[channel]
+                for channel in channels
+            ),
             default=0.0,
         )
-        + 650.0
+        + 700.0
     )
     for index, user in enumerate(unassigned):
         angle = index * golden_angle
@@ -316,6 +373,29 @@ def _telegram_layout(g: nx.Graph) -> dict[str, tuple[float, float]]:
         angle = index * golden_angle
         positions[node] = (420.0 * math.cos(angle), 420.0 * math.sin(angle))
     return positions
+
+
+def _telegram_edge_types(attrs: dict) -> set[str]:
+    edge_types = attrs.get("edge_types", attrs.get("edge_type"))
+    if isinstance(edge_types, str):
+        types = set(edge_types.split("|"))
+    elif edge_types:
+        types = set(edge_types)
+    else:
+        types = set()
+    for label in str(attrs.get("label", "")).split("·"):
+        candidate = label.strip().split(" x", 1)[0]
+        if candidate in _TG_EDGE_TYPES:
+            types.add(candidate)
+    return types
+
+
+def _telegram_label_weight(label: str, edge_type: str) -> int:
+    for part in label.split("·"):
+        match = re.fullmatch(rf"\s*{re.escape(edge_type)}\s+x(\d+)\s*", part)
+        if match:
+            return int(match.group(1))
+    return 0
 
 
 def _raw_layout(g: nx.Graph, algorithm: str) -> dict[str, tuple[float, float]]:
@@ -410,7 +490,7 @@ def compute_layout(
     if algorithm == TREE_ALGORITHM:
         return compute_hierarchical_layout(nodes, edges, direction="down", scale=scale)
     if algorithm == "telegram":
-        positions = _telegram_layout(g)
+        positions = telegram_layout(g)
         factor = max(scale, 0.01)
         return LayoutResult(
             positions={

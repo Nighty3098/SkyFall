@@ -9,7 +9,6 @@ Covers two gaps:
 
 import csv
 import json
-import math
 import uuid
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -17,6 +16,8 @@ from pathlib import Path
 import networkx as nx
 from loguru import logger
 from networkx.readwrite import json_graph
+
+from src.modules.graph_layout import telegram_layout
 
 # File extensions ``load_graph_file`` can read (used by the import dialog and
 # by drag & drop onto the graph canvas).
@@ -119,163 +120,6 @@ def _tg_edge_label(attrs: dict) -> str:
     return " · ".join(labels)
 
 
-def _telegram_layout(graph: nx.Graph) -> dict:
-    """Arrange channels as hubs, users in channel clusters, and domains outside."""
-    channels = sorted(
-        (
-            node
-            for node, attrs in graph.nodes(data=True)
-            if attrs.get("node_type") == "channel"
-        ),
-        key=str,
-    )
-    users = sorted(
-        (
-            node
-            for node, attrs in graph.nodes(data=True)
-            if attrs.get("node_type") == "user"
-        ),
-        key=str,
-    )
-    domains = sorted(
-        (
-            node
-            for node, attrs in graph.nodes(data=True)
-            if attrs.get("node_type") == "domain"
-        ),
-        key=str,
-    )
-
-    channel_of = {}
-    for user in users:
-        affinity = {}
-        for neighbor in graph.neighbors(user):
-            if neighbor not in channels:
-                continue
-            attrs = graph.get_edge_data(user, neighbor) or {}
-            score = (
-                attrs.get("member_count", 1)
-                + attrs.get("post_count", 0)
-                + attrs.get("reply_weight", 0)
-                + attrs.get("forward_weight", 0)
-            )
-            affinity[neighbor] = affinity.get(neighbor, 0) + max(score, 1)
-        if affinity:
-            channel_of[user] = min(
-                affinity, key=lambda channel: (-affinity[channel], str(channel))
-            )
-
-    # Give interaction-only users the same cluster as their closest assigned peer.
-    while True:
-        newly_assigned = {}
-        for user in users:
-            if user in channel_of:
-                continue
-            affinity = {}
-            for neighbor in graph.neighbors(user):
-                if neighbor not in channel_of:
-                    continue
-                channel = channel_of[neighbor]
-                attrs = graph.get_edge_data(user, neighbor) or {}
-                affinity[channel] = affinity.get(channel, 0) + max(
-                    attrs.get("reply_weight", 0) + attrs.get("forward_weight", 0), 1
-                )
-            if affinity:
-                newly_assigned[user] = min(
-                    affinity, key=lambda channel: (-affinity[channel], str(channel))
-                )
-        if not newly_assigned:
-            break
-        channel_of.update(newly_assigned)
-
-    clusters = {channel: [] for channel in channels}
-    for user, channel in channel_of.items():
-        clusters[channel].append(user)
-
-    cluster_radii = {
-        channel: 220.0 + 140.0 * math.sqrt(max(1, len(cluster)))
-        for channel, cluster in clusters.items()
-    }
-    positions = {}
-    if len(channels) == 1:
-        channel_centers = {channels[0]: (0.0, 0.0)}
-    elif channels:
-        largest_cluster = max(cluster_radii.values())
-        ring_radius = max(
-            700.0,
-            (2.0 * largest_cluster + 420.0) / (2.0 * math.sin(math.pi / len(channels))),
-        )
-        channel_centers = {
-            channel: (
-                ring_radius
-                * math.cos(2.0 * math.pi * index / len(channels) - math.pi / 2),
-                ring_radius
-                * math.sin(2.0 * math.pi * index / len(channels) - math.pi / 2),
-            )
-            for index, channel in enumerate(channels)
-        }
-    else:
-        channel_centers = {}
-
-    for channel, (x, y) in channel_centers.items():
-        positions[channel] = (x, y)
-
-    golden_angle = math.pi * (3.0 - math.sqrt(5.0))
-    for channel, cluster in clusters.items():
-        center_x, center_y = channel_centers[channel]
-        cluster.sort(key=lambda user: (-graph.degree(user), str(user)))
-        for index, user in enumerate(cluster):
-            radius = 140.0 * math.sqrt(index + 1)
-            angle = index * golden_angle
-            positions[user] = (
-                center_x + radius * math.cos(angle),
-                center_y + radius * math.sin(angle),
-            )
-
-    unassigned = [user for user in users if user not in positions]
-    if unassigned:
-        outer_radius = (
-            max(
-                (
-                    math.hypot(*center) + cluster_radii[channel]
-                    for channel, center in channel_centers.items()
-                ),
-                default=0.0,
-            )
-            + 700.0
-        )
-        for index, user in enumerate(unassigned):
-            angle = index * golden_angle
-            radius = outer_radius + 140.0 * math.sqrt(index + 1)
-            positions[user] = (
-                radius * math.cos(angle),
-                radius * math.sin(angle),
-            )
-
-    domain_anchors = {}
-    for domain in domains:
-        linked_users = [user for user in graph.neighbors(domain) if user in positions]
-        if linked_users:
-            domain_anchors[domain] = (
-                sum(positions[user][0] for user in linked_users) / len(linked_users),
-                sum(positions[user][1] for user in linked_users) / len(linked_users),
-            )
-    for index, domain in enumerate(domains):
-        if domain in domain_anchors:
-            center_x, center_y = domain_anchors[domain]
-            angle = index * golden_angle
-            positions[domain] = (
-                center_x + 420.0 * math.cos(angle),
-                center_y + 420.0 * math.sin(angle),
-            )
-
-    remaining = [node for node in graph if node not in positions]
-    for index, node in enumerate(sorted(remaining, key=str)):
-        angle = index * golden_angle
-        positions[node] = (420.0 * math.cos(angle), 420.0 * math.sin(angle))
-    return positions
-
-
 def tg_networkx_to_skyfall(graph: nx.Graph, max_nodes: int = 3000) -> dict:
     """Convert a TG Analyzer networkx graph to ``GraphWidget.from_dict`` format.
 
@@ -303,7 +147,7 @@ def tg_networkx_to_skyfall(graph: nx.Graph, max_nodes: int = 3000) -> dict:
     sub = nx.Graph()
     sub.add_nodes_from(nodes)
     sub.add_edges_from((u, v, attrs) for u, v, attrs in edges)
-    pos = _telegram_layout(sub)
+    pos = telegram_layout(sub)
 
     sky_nodes = []
     id_map = {}

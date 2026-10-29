@@ -2,7 +2,8 @@ import sqlite3
 
 import networkx as nx
 
-from src.modules.graph_io import _telegram_layout, tg_networkx_to_skyfall
+from src.modules.graph_io import tg_networkx_to_skyfall
+from src.modules.graph_layout import telegram_layout
 from src.modules.tg_analyzer import TgAnalyzer
 
 
@@ -19,9 +20,9 @@ def test_telegram_layout_groups_users_around_their_channel_hubs():
     graph.add_edge("user:alice", "user:carol", edge_type="replier")
     graph.add_edge("user:alice", "domain:example.org", edge_type="mentions")
 
-    positions = _telegram_layout(graph)
+    positions = telegram_layout(graph)
 
-    assert positions == _telegram_layout(graph)
+    assert positions == telegram_layout(graph)
     assert positions["channel:news"] != positions["channel:chat"]
     assert positions["user:alice"] != positions["user:bob"]
     assert positions["user:carol"] != positions["user:alice"]
@@ -87,3 +88,12 @@ def test_tg_database_graph_keeps_relevant_users_and_relationships(tmp_path):
     labels = {edge["label"] for edge in skyfall_graph["edges"]}
     assert "member · posted x3" in labels
     assert "replier · forwarded" in labels
+    expected_positions = telegram_layout(graph)
+    converted_positions = {
+        node["content"].splitlines()[0].removeprefix("tg_id: "): (
+            node["x"] + node["width"] / 2,
+            node["y"] + node["height"] / 2,
+        )
+        for node in skyfall_graph["nodes"]
+    }
+    assert converted_positions == expected_positions

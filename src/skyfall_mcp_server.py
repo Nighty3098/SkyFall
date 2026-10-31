@@ -5,7 +5,7 @@ import os
 import stat
 import sys
 from datetime import datetime
-from pathlib import Path
+from pathlib import Path, PureWindowsPath
 
 import anyio.to_thread
 
@@ -1780,17 +1780,27 @@ async def skyfall_graph_export_image(filepath: str) -> str:
 @mcp.tool()
 def skyfall_cases_list() -> str:
     """List all investigation cases in ~/.skyfall/data/."""
-    cases_dir = Path.home() / ".skyfall" / "data"
+    cases_dir = (Path.home() / ".skyfall" / "data").resolve()
     if not cases_dir.exists():
         return _extract_json([])
     cases = []
     for entry in cases_dir.iterdir():
-        if entry.is_dir():
+        if (
+            entry.is_dir()
+            and not entry.is_symlink()
+            and entry.resolve().is_relative_to(cases_dir)
+        ):
             cases.append(
                 {
                     "name": entry.name,
                     "path": str(entry),
-                    "categories": [cat.name for cat in entry.iterdir() if cat.is_dir()],
+                    "categories": [
+                        cat.name
+                        for cat in entry.iterdir()
+                        if cat.is_dir()
+                        and not cat.is_symlink()
+                        and cat.resolve().is_relative_to(entry)
+                    ],
                 }
             )
     return _extract_json(cases)
@@ -1803,22 +1813,48 @@ def skyfall_case_get(name: str) -> str:
     Args:
         name: Case folder name
     """
-    case_dir = Path.home() / ".skyfall" / "data" / name
-    if not case_dir.exists():
+    cases_dir = (Path.home() / ".skyfall" / "data").resolve()
+    if (
+        not name
+        or name in {".", ".."}
+        or "/" in name
+        or "\\" in name
+        or PureWindowsPath(name).drive
+    ):
+        return _extract_json({"error": "Invalid case name"})
+    try:
+        case_dir = (cases_dir / name).resolve(strict=True)
+    except OSError:
         return _extract_json({"error": f"Case '{name}' not found"})
+    if not case_dir.is_relative_to(cases_dir) or not case_dir.is_dir():
+        return _extract_json({"error": "Invalid case name"})
     data = {"name": name, "path": str(case_dir), "categories": {}}
     for cat_dir in case_dir.iterdir():
-        if cat_dir.is_dir():
+        resolved_category = cat_dir.resolve()
+        if (
+            cat_dir.is_dir()
+            and not cat_dir.is_symlink()
+            and resolved_category.is_relative_to(case_dir)
+        ):
             files = []
             for f in sorted(
-                cat_dir.iterdir(), key=lambda x: x.stat().st_mtime, reverse=True
+                (
+                    item
+                    for item in cat_dir.iterdir()
+                    if not item.is_symlink()
+                    and item.is_file()
+                    and item.resolve().is_relative_to(case_dir)
+                ),
+                key=lambda x: x.stat().st_mtime,
+                reverse=True,
             ):
+                file_stat = f.stat()
                 files.append(
                     {
                         "name": f.name,
-                        "size": f.stat().st_size,
+                        "size": file_stat.st_size,
                         "modified": datetime.fromtimestamp(
-                            f.stat().st_mtime
+                            file_stat.st_mtime
                         ).isoformat(),
                     }
                 )

@@ -1,13 +1,16 @@
 import asyncio
+import ipaddress
 import os
 import re
 import shutil
 import tarfile
+import tempfile
 from collections.abc import Callable
-from pathlib import Path
-from urllib.parse import unquote, urlsplit
+from pathlib import Path, PurePosixPath, PureWindowsPath
+from urllib.parse import unquote, urljoin, urlsplit
 
 import aiohttp
+from aiohttp.resolver import DefaultResolver
 from aiohttp_socks import ProxyConnector
 from loguru import logger
 
@@ -23,6 +26,120 @@ YOUTUBE_HOSTS = {
     "youtube-nocookie.com",
     "www.youtube-nocookie.com",
 }
+MAX_TAR_MEMBERS = 100_000
+MAX_TAR_EXPANDED_SIZE = 1_073_741_824
+MAX_REDIRECTS = 10
+
+
+def _validate_http_url(url: str) -> str:
+    try:
+        parsed = urlsplit(url)
+        hostname = parsed.hostname
+        parsed.port
+    except ValueError as exc:
+        raise ValueError("Invalid download URL.") from exc
+    if (
+        parsed.scheme.lower() not in {"http", "https"}
+        or not hostname
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise ValueError(
+            "Only public HTTP(S) URLs without embedded credentials are allowed."
+        )
+
+    host = hostname.rstrip(".").lower()
+    if host == "localhost" or host.endswith(".localhost"):
+        raise ValueError("Downloads to local hosts are not allowed.")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        return url
+    if not address.is_global:
+        raise ValueError("Downloads to non-public IP addresses are not allowed.")
+    return url
+
+
+class _PublicResolver(aiohttp.abc.AbstractResolver):
+    def __init__(self):
+        self._resolver = DefaultResolver()
+
+    async def resolve(self, host, port=0, family=0):
+        try:
+            literal = ipaddress.ip_address(host.rstrip("."))
+        except ValueError:
+            literal = None
+        if literal is not None and not literal.is_global:
+            raise OSError("Downloads to non-public IP addresses are not allowed.")
+
+        addresses = await self._resolver.resolve(host, port, family)
+        if not addresses:
+            raise OSError("The download host did not resolve to an address.")
+        for result in addresses:
+            resolved_ip = ipaddress.ip_address(result["host"])
+            if not resolved_ip.is_global:
+                raise OSError("Downloads to non-public IP addresses are not allowed.")
+        return addresses
+
+    async def close(self):
+        await self._resolver.close()
+
+
+def _safe_tar_members(tar):
+    members = tar.getmembers()
+    if len(members) > MAX_TAR_MEMBERS:
+        raise ValueError("Archive contains too many entries.")
+
+    total_size = 0
+    validated = []
+    roots = set()
+    for member in members:
+        name = member.name
+        path = PurePosixPath(name)
+        windows_path = PureWindowsPath(name)
+        if (
+            not name
+            or "\x00" in name
+            or ":" in name
+            or "\\" in name
+            or path.is_absolute()
+            or windows_path.is_absolute()
+            or windows_path.drive
+            or any(part in {"", ".", ".."} for part in name.rstrip("/").split("/"))
+        ):
+            raise ValueError(f"Unsafe archive member path: {name!r}")
+        if not (member.isdir() or member.isfile()):
+            raise ValueError(f"Unsupported archive member type: {name!r}")
+        parts = path.parts
+        roots.add(parts[0])
+        if member.isfile():
+            total_size += member.size
+            if total_size > MAX_TAR_EXPANDED_SIZE:
+                raise ValueError("Archive exceeds the maximum expanded size.")
+        validated.append((member, parts))
+
+    if len(roots) != 1:
+        raise ValueError("Repository archive must contain one top-level directory.")
+    root_name = next(iter(roots))
+    root_member = next(
+        (member for member, parts in validated if len(parts) == 1 and member.isdir()),
+        None,
+    )
+    if root_member is None:
+        raise ValueError("Repository archive is missing its top-level directory.")
+    return root_name, validated
+
+
+def _is_github_git_url(url: str) -> bool:
+    if re.fullmatch(r"git@github\.com:[^/]+/[^/]+(?:\.git)?", url):
+        return True
+    try:
+        parsed = urlsplit(url)
+    except ValueError:
+        return False
+    return parsed.scheme.lower() in {"https", "ssh"} and (
+        parsed.hostname or ""
+    ).lower() in {"github.com", "www.github.com"}
 
 
 def normalize_proxy(proxy: str) -> str:
@@ -120,17 +237,16 @@ class DownloadManager:
     @staticmethod
     def _detect(url: str) -> str:
         host = (urlsplit(url).hostname or "").lower()
-        if host in YOUTUBE_HOSTS:
+        if host in YOUTUBE_HOSTS and urlsplit(url).scheme.lower() in {
+            "http",
+            "https",
+        }:
             return "youtube"
-        if (
-            url.startswith("git@")
-            or url.startswith("git://")
-            or url.startswith("ssh://")
-        ):
-            return "git"
-        if "github.com" in url:
+        if host in {"github.com", "www.github.com"} and urlsplit(
+            url
+        ).scheme.lower() in {"http", "https"}:
             return "github"
-        if url.rstrip("/").endswith(".git"):
+        if _is_github_git_url(url):
             return "git"
         return "file"
 
@@ -142,34 +258,94 @@ class DownloadManager:
         log: log_cb_t,
         progress: progress_cb_t,
         name: str | None = None,
+        allow_proxy: bool = False,
     ) -> str:
+        url = _validate_http_url(url)
         log(f"Downloading: {url}")
 
-        connector = ProxyConnector.from_url(proxy_url) if proxy_url else None
-        timeout = aiohttp.ClientTimeout(connect=30, total=None)
+        if proxy_url:
+            hostname = (urlsplit(url).hostname or "").lower()
+            if not allow_proxy or hostname not in {
+                "github.com",
+                "codeload.github.com",
+            }:
+                raise ValueError(
+                    "Proxies are not supported for arbitrary URLs because their "
+                    "destination cannot be safely verified."
+                )
+            connector = ProxyConnector.from_url(proxy_url, rdns=False)
+        else:
+            connector = aiohttp.TCPConnector(
+                resolver=_PublicResolver(),
+                use_dns_cache=False,
+            )
+        timeout = aiohttp.ClientTimeout(connect=30, total=300)
+        temporary_path = None
         try:
             async with aiohttp.ClientSession(
                 connector=connector, timeout=timeout
             ) as session:
-                async with session.get(url, allow_redirects=True) as response:
-                    response.raise_for_status()
-                    filename = name or _sanitize_filename(
-                        _filename_from_response(url, response)
-                    )
-                    filepath = dest_dir / filename
-                    total = int(response.headers.get("Content-Length", 0)) or None
-                    downloaded = 0
-                    with open(filepath, "wb") as file:
-                        async for chunk in response.content.iter_chunked(128 * 1024):
-                            file.write(chunk)
-                            downloaded += len(chunk)
-                            percent = int(downloaded * 100 / total) if total else None
-                            progress(percent, downloaded, total)
+                current_url = url
+                for redirect_count in range(MAX_REDIRECTS + 1):
+                    _validate_http_url(current_url)
+                    if proxy_url:
+                        current_host = (urlsplit(current_url).hostname or "").lower()
+                        if current_host not in {"github.com", "codeload.github.com"}:
+                            raise ValueError(
+                                "Proxy redirects outside github.com are not allowed."
+                            )
+                    async with session.get(
+                        current_url, allow_redirects=False
+                    ) as response:
+                        if response.status in {301, 302, 303, 307, 308}:
+                            location = response.headers.get("Location")
+                            if not location or redirect_count == MAX_REDIRECTS:
+                                raise ValueError("Invalid or excessive redirect chain.")
+                            current_url = _validate_http_url(
+                                urljoin(current_url, location)
+                            )
+                            continue
+                        response.raise_for_status()
+                        filename = _sanitize_filename(
+                            name or _filename_from_response(current_url, response)
+                        )
+                        filepath = dest_dir / filename
+                        total = int(response.headers.get("Content-Length", 0)) or None
+                        downloaded = 0
+                        with tempfile.NamedTemporaryFile(
+                            mode="wb",
+                            prefix=f".{filename}.",
+                            suffix=".part",
+                            dir=dest_dir,
+                            delete=False,
+                        ) as file:
+                            temporary_path = Path(file.name)
+                            async for chunk in response.content.iter_chunked(
+                                128 * 1024
+                            ):
+                                file.write(chunk)
+                                downloaded += len(chunk)
+                                percent = (
+                                    int(downloaded * 100 / total) if total else None
+                                )
+                                progress(percent, downloaded, total)
+                            file.flush()
+                            os.fsync(file.fileno())
+                        break
+                else:
+                    raise ValueError("Too many redirects.")
+
+                os.link(temporary_path, filepath)
+                temporary_path.unlink()
+                temporary_path = None
             log(f"Saved: {filepath} ({downloaded} bytes)")
             return str(filepath)
         except Exception as e:
             logger.error("download_file: {}", e)
             raise RuntimeError(f"Download failed: {e}") from e
+        finally:
+            if temporary_path is not None:
+                temporary_path.unlink(missing_ok=True)
 
     async def _download_youtube(
         self,
@@ -179,6 +355,9 @@ class DownloadManager:
         log: log_cb_t,
         progress: progress_cb_t,
     ) -> str:
+        _validate_http_url(url)
+        if (urlsplit(url).hostname or "").lower() not in YOUTUBE_HOSTS:
+            raise ValueError("Only supported YouTube hosts can use this downloader.")
         try:
             import yt_dlp
         except ImportError as e:
@@ -241,8 +420,7 @@ class DownloadManager:
             url,
         )
         if not match:
-            log("Not a direct GitHub repo URL, trying git clone")
-            return await self._git_clone(url, dest_dir, proxy_url, log, progress)
+            raise ValueError("Expected a direct GitHub repository URL.")
 
         owner, repo = match.groups()
         archive_url = f"https://github.com/{owner}/{repo}/archive/HEAD.tar.gz"
@@ -250,7 +428,13 @@ class DownloadManager:
 
         archive = dest_dir / f"{repo}.tar.gz"
         await self._download_file(
-            archive_url, dest_dir, proxy_url, log, progress, name=archive.name
+            archive_url,
+            dest_dir,
+            proxy_url,
+            log,
+            progress,
+            name=archive.name,
+            allow_proxy=True,
         )
 
         repo_dir = dest_dir / repo
@@ -263,14 +447,62 @@ class DownloadManager:
     def _extract_archive(archive: Path, repo_dir: Path):
         try:
             with tarfile.open(archive, "r:gz") as tar:
-                top_dir = tar.getnames()[0].split("/", 1)[0]
-                tar.extractall(archive.parent)
-            source = archive.parent / top_dir
-            if repo_dir.exists():
-                shutil.copytree(source, repo_dir, dirs_exist_ok=True)
-                shutil.rmtree(source)
-            else:
-                shutil.move(str(source), str(repo_dir))
+                top_dir, members = _safe_tar_members(tar)
+                with tempfile.TemporaryDirectory(
+                    prefix=".skyfall_github_", dir=archive.parent
+                ) as temp_dir:
+                    extraction_root = Path(temp_dir).resolve()
+                    for member, parts in members:
+                        target = extraction_root.joinpath(*parts)
+                        if not target.resolve().is_relative_to(extraction_root):
+                            raise ValueError(
+                                f"Archive member escapes extraction directory: "
+                                f"{member.name!r}"
+                            )
+                        if member.isdir():
+                            target.mkdir(parents=True, exist_ok=True)
+                            continue
+                        target.parent.mkdir(parents=True, exist_ok=True)
+                        source = tar.extractfile(member)
+                        if source is None:
+                            raise ValueError(
+                                f"Could not read archive member: {member.name!r}"
+                            )
+                        written = 0
+                        with source, target.open("xb") as output:
+                            while chunk := source.read(1024 * 1024):
+                                written += len(chunk)
+                                if written > member.size:
+                                    raise ValueError(
+                                        f"Archive member exceeds its declared size: "
+                                        f"{member.name!r}"
+                                    )
+                                output.write(chunk)
+                        if written != member.size:
+                            raise ValueError(
+                                f"Archive member has an unexpected size: "
+                                f"{member.name!r}"
+                            )
+                        safe_mode = 0o644 | (member.mode & 0o111)
+                        os.chmod(target, safe_mode)
+
+                    source_dir = extraction_root / top_dir
+                    if not source_dir.is_dir():
+                        raise ValueError("Repository archive root is not a directory.")
+                    if repo_dir.is_symlink():
+                        raise ValueError(
+                            "Repository destination must not be a symlink."
+                        )
+                    if repo_dir.exists():
+                        if not repo_dir.is_dir() or any(
+                            path.is_symlink() for path in repo_dir.rglob("*")
+                        ):
+                            raise ValueError(
+                                "Repository destination contains unsupported entries."
+                            )
+                        shutil.copytree(source_dir, repo_dir, dirs_exist_ok=True)
+                    else:
+                        os.replace(source_dir, repo_dir)
         finally:
             if archive.exists():
                 archive.unlink()
@@ -283,6 +515,8 @@ class DownloadManager:
         log: log_cb_t,
         progress: progress_cb_t,
     ) -> str:
+        if not _is_github_git_url(url):
+            raise ValueError("Git clone is restricted to GitHub repository URLs.")
         log(f"Cloning repository: {url}")
         progress(None, 0, None)
 

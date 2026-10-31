@@ -1,5 +1,9 @@
 import os
+import shutil
+import stat
+import tempfile
 import zipfile
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
 import piexif
 from docx import Document
@@ -26,35 +30,161 @@ except ImportError:
     CAN_HANDLE_ODF = False
 
 
+MAX_ARCHIVE_MEMBERS = 10_000
+MAX_ARCHIVE_SIZE = 1_073_741_824
+METADATA_SUPPORTED_EXTENSIONS = {
+    ".jpg",
+    ".jpeg",
+    ".png",
+    ".gif",
+    ".bmp",
+    ".tiff",
+    ".pdf",
+    ".docx",
+    ".mp3",
+    ".flac",
+    ".xlsx",
+    ".zip",
+    ".pptx",
+    ".ppt",
+    ".odt",
+    ".ods",
+    ".epub",
+    ".rtf",
+}
+
+
+def _validated_zip_members(zip_ref):
+    members = zip_ref.infolist()
+    if len(members) > MAX_ARCHIVE_MEMBERS:
+        raise ValueError("Archive contains too many entries.")
+
+    total_size = 0
+    seen = set()
+    validated = []
+    for member in members:
+        name = member.filename
+        path = PurePosixPath(name)
+        windows_path = PureWindowsPath(name)
+        parts = path.parts
+        if (
+            not name
+            or "\x00" in name
+            or ":" in name
+            or "\\" in name
+            or path.is_absolute()
+            or windows_path.is_absolute()
+            or windows_path.drive
+            or any(part in {"", ".", ".."} for part in name.rstrip("/").split("/"))
+        ):
+            raise ValueError(f"Unsafe archive member path: {name!r}")
+
+        normalized = "/".join(parts)
+        if normalized in seen:
+            raise ValueError(f"Duplicate archive member path: {name!r}")
+        seen.add(normalized)
+
+        mode = member.external_attr >> 16
+        file_type = stat.S_IFMT(mode)
+        is_directory = member.is_dir()
+        if file_type not in (0, stat.S_IFREG, stat.S_IFDIR):
+            raise ValueError(f"Unsupported archive member type: {name!r}")
+        if is_directory != (file_type == stat.S_IFDIR) and file_type:
+            raise ValueError(f"Invalid archive directory entry: {name!r}")
+        if not is_directory:
+            total_size += member.file_size
+            if total_size > MAX_ARCHIVE_SIZE:
+                raise ValueError("Archive exceeds the maximum expanded size.")
+        validated.append((member, parts))
+    return validated
+
+
+def _extract_validated_zip(zip_ref, destination, members):
+    destination = Path(destination).resolve()
+    written_size = 0
+    for member, parts in members:
+        target = destination.joinpath(*parts)
+        if not target.resolve().is_relative_to(destination):
+            raise ValueError(
+                f"Archive member escapes extraction directory: {member.filename!r}"
+            )
+        if member.is_dir():
+            target.mkdir(parents=True, exist_ok=True)
+            continue
+        target.parent.mkdir(parents=True, exist_ok=True)
+        with zip_ref.open(member) as source, target.open("xb") as output:
+            while chunk := source.read(1024 * 1024):
+                written_size += len(chunk)
+                if written_size > MAX_ARCHIVE_SIZE:
+                    raise ValueError("Archive exceeds the maximum expanded size.")
+                output.write(chunk)
+
+
+def _replace_archive_atomically(source_path, build_archive):
+    source_path = Path(source_path)
+    original_mode = stat.S_IMODE(source_path.stat().st_mode)
+    fd, temporary_path = tempfile.mkstemp(
+        prefix=f".{source_path.name}.", suffix=".tmp", dir=source_path.parent
+    )
+    os.close(fd)
+    try:
+        build_archive(temporary_path)
+        os.chmod(temporary_path, original_mode)
+        with open(temporary_path, "rb") as temporary_file:
+            os.fsync(temporary_file.fileno())
+        os.replace(temporary_path, source_path)
+    finally:
+        if os.path.exists(temporary_path):
+            os.unlink(temporary_path)
+
+
+def _rewrite_archive_from_directory(source_path, members, extracted_root):
+    def build_archive(temporary_path):
+        with zipfile.ZipFile(temporary_path, "w") as output_zip:
+            for member, parts in members:
+                output_info = zipfile.ZipInfo(
+                    member.filename, date_time=member.date_time
+                )
+                output_info.compress_type = member.compress_type
+                output_info.create_system = member.create_system
+                output_info.external_attr = member.external_attr
+                if member.is_dir():
+                    output_zip.writestr(output_info, b"")
+                    continue
+                cleaned_path = Path(extracted_root).joinpath(*parts)
+                with (
+                    cleaned_path.open("rb") as source,
+                    output_zip.open(output_info, "w") as output,
+                ):
+                    shutil.copyfileobj(source, output, length=1024 * 1024)
+
+    _replace_archive_atomically(source_path, build_archive)
+
+
 def remove_metadata_from_zip(zip_path):
     """
     Unzip -> Remove metadata from each entry -> Re-zip.
     """
-    temp_dir = "temp_zip_extract"
     try:
         logger.info(f"Processing ZIP: {zip_path}")
-        os.makedirs(temp_dir, exist_ok=True)
-        with zipfile.ZipFile(zip_path, "r") as zip_ref:
-            zip_ref.extractall(temp_dir)
+        zip_path = Path(zip_path)
+        with tempfile.TemporaryDirectory(prefix="skyfall_zip_") as temp_dir:
+            with zipfile.ZipFile(zip_path, "r") as zip_ref:
+                members = _validated_zip_members(zip_ref)
+                _extract_validated_zip(zip_ref, temp_dir, members)
 
-        for root, dirs, files in os.walk(temp_dir):
-            for file in files:
-                file_path = os.path.join(root, file)
-                remove_metadata(file_path)
+            for member, parts in members:
+                if member.is_dir():
+                    continue
+                file_path = Path(temp_dir).joinpath(*parts)
+                if file_path.suffix.lower() not in METADATA_SUPPORTED_EXTENSIONS:
+                    remove_metadata(file_path)
+                elif not remove_metadata(file_path):
+                    raise RuntimeError(
+                        f"Could not clean archive entry: {member.filename}"
+                    )
 
-        with zipfile.ZipFile(zip_path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
-            for root, dirs, files in os.walk(temp_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arc_name = os.path.relpath(file_path, temp_dir)
-                    zip_ref.write(file_path, arcname=arc_name)
-
-        for root, dirs, files in os.walk(temp_dir, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        os.rmdir(temp_dir)
+            _rewrite_archive_from_directory(zip_path, members, temp_dir)
 
         return True
     except Exception as e:
@@ -293,23 +423,23 @@ def remove_metadata_from_epub(epub_path):
     """
     EPUB: Search for .opf files, remove <metadata> content.
     """
-    temp_dir = "temp_epub_extract"
     try:
         logger.info(f"Processing EPUB: {epub_path}")
-        os.makedirs(temp_dir, exist_ok=True)
-        with zipfile.ZipFile(epub_path, "r") as zip_ref:
-            zip_ref.extractall(temp_dir)
+        epub_path = Path(epub_path)
+        with tempfile.TemporaryDirectory(prefix="skyfall_epub_") as temp_dir:
+            with zipfile.ZipFile(epub_path, "r") as zip_ref:
+                members = _validated_zip_members(zip_ref)
+                _extract_validated_zip(zip_ref, temp_dir, members)
 
-        opf_files = []
-        for root, dirs, files in os.walk(temp_dir):
-            for file in files:
-                if file.lower().endswith(".opf"):
-                    opf_files.append(os.path.join(root, file))
+            opf_files = [
+                Path(temp_dir).joinpath(*parts)
+                for member, parts in members
+                if not member.is_dir() and member.filename.lower().endswith(".opf")
+            ]
 
-        import re
+            import re
 
-        for opf_file in opf_files:
-            try:
+            for opf_file in opf_files:
                 with open(opf_file, encoding="utf-8", errors="ignore") as f:
                     content = f.read()
                 content = re.sub(
@@ -321,23 +451,8 @@ def remove_metadata_from_epub(epub_path):
                 with open(opf_file, "w", encoding="utf-8") as f:
                     f.write(content)
                 logger.info(f"Metadata stripped from OPF file: {opf_file}")
-            except Exception as ex:
-                logger.error(f"Could not strip metadata from {opf_file}: {ex}")
-
-        with zipfile.ZipFile(epub_path, "w", zipfile.ZIP_DEFLATED) as zip_ref:
-            for root, dirs, files in os.walk(temp_dir):
-                for file in files:
-                    file_path = os.path.join(root, file)
-                    arcname = os.path.relpath(file_path, temp_dir)
-                    zip_ref.write(file_path, arcname)
+            _rewrite_archive_from_directory(epub_path, members, temp_dir)
         logger.info(f"Re-zipped EPUB after metadata removal: {epub_path}")
-
-        for root, dirs, files in os.walk(temp_dir, topdown=False):
-            for name in files:
-                os.remove(os.path.join(root, name))
-            for name in dirs:
-                os.rmdir(os.path.join(root, name))
-        os.rmdir(temp_dir)
 
         return True
     except Exception as e:

@@ -2,6 +2,8 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
+from src.ui.output_formatter import error
+
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
@@ -34,17 +36,19 @@ class DorkingController:
         for dork in dorks:
             self.ui.dorksList.addItem(dork)
 
-    async def search_dork(self, item):
+    async def search_dork(self, item=None):
         use_custom_dork = self.ui.useCustomDorkCheck.isChecked()
         use_searxng = self.ui.useSearxngCheck.isChecked()
 
-        if not use_custom_dork:
-            dork = item.text()
-            self.ui.dorksResult.setPlainText(
-                await self.dorks_search_engine.search_dork(dork, use_searxng)
-            )
-        else:
+        if use_custom_dork:
             dork = self.ui.customDorkEdit.text()
-            self.ui.dorksResult.setPlainText(
-                await self.dorks_search_engine.search_dork(dork, use_searxng)
-            )
+        else:
+            item = item or self.ui.dorksList.currentItem()
+            if item is None:
+                self.ui.dorksResult.setPlainText(error("Select a dork to search"))
+                return
+            dork = item.text()
+
+        self.ui.dorksResult.setPlainText(
+            await self.dorks_search_engine.search_dork(dork, use_searxng)
+        )

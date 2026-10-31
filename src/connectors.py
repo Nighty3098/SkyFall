@@ -58,7 +58,7 @@ def setup_dorking_connectors(controller: "DorkingController"):
     )
 
     controller.ui.dorkItButton.clicked.connect(
-        lambda: asyncio.ensure_future(controller.search_dork(0))
+        lambda: asyncio.ensure_future(controller.search_dork())
     )
 
 

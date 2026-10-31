@@ -3,8 +3,10 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from PySide6.QtWidgets import QMessageBox
 
 from src.security import (
+    SettingsEncryptionError,
     decrypt_settings,
     encrypt_settings,
     ensure_config_dir,
@@ -112,6 +114,7 @@ class Settings:
         self.light_theme = False
         self.font_size_pt = 10
         self.frameless_window = True
+        self._settings_load_failed = False
         self._post_save_callbacks = []
 
         self._load()
@@ -137,6 +140,16 @@ class Settings:
             restrict_file(CONFIG_FILE)
         except (json.JSONDecodeError, OSError) as e:
             logger.error(f"Failed to load settings: {e}")
+            self._apply_to_ui()
+        except SettingsEncryptionError as exc:
+            self._settings_load_failed = True
+            logger.error(f"Failed to decrypt settings: {exc}")
+            QMessageBox.critical(
+                self.ui,
+                "Settings Could Not Be Loaded",
+                "A saved secret could not be decrypted. Settings will not be "
+                "saved until the encryption key is restored.",
+            )
             self._apply_to_ui()
 
     def _apply_to_ui(self):
@@ -178,6 +191,17 @@ class Settings:
             return DEFAULT_SETTINGS["font_size_pt"]
 
     def save(self):
+        if self._settings_load_failed:
+            logger.error(
+                "Settings were not saved because stored secrets failed to load"
+            )
+            QMessageBox.critical(
+                self.ui,
+                "Settings Not Saved",
+                "Restore the settings encryption key before saving settings.",
+            )
+            return False
+
         logger.debug("Saving settings")
         for key, widget_name in FIELD_MAP.items():
             widget = getattr(self.ui, widget_name, None)
@@ -198,7 +222,17 @@ class Settings:
 
         ensure_config_dir()
         data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}
-        data = encrypt_settings(data)
+        try:
+            data = encrypt_settings(data)
+        except SettingsEncryptionError as exc:
+            logger.error(f"Failed to save settings securely: {exc}")
+            QMessageBox.critical(
+                self.ui,
+                "Settings Not Saved",
+                "Sensitive settings could not be encrypted. The existing settings "
+                "file was left unchanged.",
+            )
+            return False
         CONFIG_FILE.write_text(
             json.dumps(data, indent=2, ensure_ascii=False),
             encoding="utf-8",

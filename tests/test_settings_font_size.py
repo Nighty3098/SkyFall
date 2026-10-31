@@ -10,6 +10,7 @@ os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 from PySide6.QtWidgets import QApplication, QSpinBox, QWidget
 
 from src.controllers import settings_controller
+from src.security import SettingsEncryptionError
 from src.ui.output_formatter import render_html
 from src.ui.theme import apply_theme, build_stylesheet, current_font_size
 
@@ -81,6 +82,27 @@ class FontSizeSettingsTest(unittest.TestCase):
 
         self.assertEqual(settings.font_size_pt, 10)
         self.assertEqual(ui.fontSizeSpinBox.value(), 10)
+
+    def test_encryption_failure_keeps_existing_settings_file(self):
+        original = '{"github_token": "previous-ciphertext"}'
+        self.config_file.write_text(original, encoding="utf-8")
+        settings = settings_controller.Settings(self._ui())
+
+        with (
+            mock.patch.object(
+                settings_controller,
+                "encrypt_settings",
+                side_effect=SettingsEncryptionError("encryption unavailable"),
+            ),
+            mock.patch(
+                "src.controllers.settings_controller.QMessageBox.critical"
+            ) as show_error,
+        ):
+            result = settings.save()
+
+        self.assertFalse(result)
+        self.assertEqual(self.config_file.read_text(encoding="utf-8"), original)
+        show_error.assert_called_once()
 
 
 if __name__ == "__main__":

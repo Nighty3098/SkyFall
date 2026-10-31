@@ -29,6 +29,11 @@ KEY_FILE = CONFIG_DIR / "secret.key"
 
 ENC_PREFIX = "enc:v1:"
 
+
+class SettingsEncryptionError(RuntimeError):
+    """Raised when sensitive settings cannot be encrypted safely."""
+
+
 #: Environment variable carrying the shared MCP / graph-bridge token.
 TOKEN_ENV = "SKYFALL_MCP_TOKEN"
 #: Settings keys that must never touch disk in plaintext.
@@ -52,6 +57,10 @@ SENSITIVE_KEYS = frozenset(
         "helius_api_key",
         "abuseipdb_api_key",
         "greynoise_api_key",
+        "leakcheck_api_key",
+        "dehashed_email",
+        "dehashed_api_key",
+        "firms_map_key",
         "reddit_client_id",
         "reddit_client_secret",
     }
@@ -82,14 +91,19 @@ def ensure_config_dir() -> Path:
 def _get_fernet():
     global _fernet, _fernet_ready
     if _fernet_ready:
+        if _fernet is None:
+            raise SettingsEncryptionError(
+                "Secret storage is unavailable; sensitive settings were not saved."
+            )
         return _fernet
     _fernet_ready = True
 
     try:
         from cryptography.fernet import Fernet
-    except ImportError:  # pragma: no cover - cryptography is a hard dependency
-        logger.warning("cryptography is not installed; secrets remain unencrypted")
-        return None
+    except ImportError as exc:  # pragma: no cover - cryptography is a hard dependency
+        raise SettingsEncryptionError(
+            "cryptography is unavailable; sensitive settings were not saved."
+        ) from exc
 
     try:
         ensure_config_dir()
@@ -102,8 +116,9 @@ def _get_fernet():
             logger.info(f"Generated secret storage key at {KEY_FILE}")
         _fernet = Fernet(key)
     except Exception as exc:
-        logger.error(f"Secret storage unavailable, falling back to plaintext: {exc}")
-        _fernet = None
+        raise SettingsEncryptionError(
+            "Secret storage is unavailable; sensitive settings were not saved."
+        ) from exc
     return _fernet
 
 
@@ -112,17 +127,18 @@ def is_encrypted(value: object) -> bool:
 
 
 def encrypt(value: str) -> str:
-    """Encrypt a single value. Empty values and failures pass through unchanged."""
+    """Encrypt a sensitive value, raising if encryption is unavailable."""
     if not isinstance(value, str) or not value or is_encrypted(value):
         return value
-    fernet = _get_fernet()
-    if fernet is None:
-        return value
     try:
+        fernet = _get_fernet()
         return ENC_PREFIX + fernet.encrypt(value.encode()).decode()
     except Exception as exc:  # pragma: no cover
-        logger.error(f"Failed to encrypt value: {exc}")
-        return value
+        if isinstance(exc, SettingsEncryptionError):
+            raise
+        raise SettingsEncryptionError(
+            "Sensitive settings could not be encrypted; they were not saved."
+        ) from exc
 
 
 def decrypt(value: str) -> str:
@@ -130,17 +146,12 @@ def decrypt(value: str) -> str:
     if not is_encrypted(value):
         return value
     fernet = _get_fernet()
-    if fernet is None:
-        logger.warning("Encrypted setting found but secret storage is unavailable")
-        return ""
     try:
         return fernet.decrypt(value[len(ENC_PREFIX) :].encode()).decode()
-    except Exception:
-        logger.warning(
-            "Could not decrypt a stored secret (key rotated or file changed); "
-            "the value was reset"
-        )
-        return ""
+    except Exception as exc:
+        raise SettingsEncryptionError(
+            "A stored secret could not be decrypted; settings were not saved."
+        ) from exc
 
 
 def encrypt_settings(data: dict) -> dict:

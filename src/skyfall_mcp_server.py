@@ -2,6 +2,7 @@ import argparse
 import hmac
 import json
 import os
+import stat
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -38,17 +39,7 @@ def _load_settings() -> dict:
 _settings = _load_settings()
 
 
-def _auth_enabled() -> bool:
-    env = os.environ.get(AUTH_ENV)
-    if env is not None:
-        return env.strip().lower() in ("1", "true", "yes", "on")
-    return bool(_settings.get("mcp_require_auth", False))
-
-
-_AUTH_ENABLED = _auth_enabled()
-_MCP_TOKEN = os.environ.get(TOKEN_ENV) or (
-    get_or_create_token() if _AUTH_ENABLED else ""
-)
+_MCP_TOKEN = os.environ.get(TOKEN_ENV) or get_or_create_token()
 
 
 class _StaticTokenVerifier:
@@ -126,8 +117,8 @@ mcp = FastMCP(
     "SkyFall MCP Server",
     host="127.0.0.1",
     port=9877,
-    auth=_auth_settings() if _AUTH_ENABLED else None,
-    token_verifier=_StaticTokenVerifier(_MCP_TOKEN) if _AUTH_ENABLED else None,
+    auth=_auth_settings(),
+    token_verifier=_StaticTokenVerifier(_MCP_TOKEN),
     instructions="""
 MCP server for the SkyFall OSINT toolkit. Provides tools to:
 - Analyze domains (DNS, WHOIS, SSL, NMAP, WAF, malware, subdomains+brute,
@@ -186,6 +177,34 @@ def _extract_json(obj: str | dict | list, error_msg: str = "No data") -> str:
         return json.dumps(parsed, ensure_ascii=False, default=str, indent=2)
     except (json.JSONDecodeError, TypeError):
         return json.dumps({"raw": str(obj)}, ensure_ascii=False)
+
+
+def _resolve_investigation_file(filepath: str) -> Path:
+    """Resolve a regular file beneath the configured MCP investigation root."""
+    configured_root = os.environ.get("SKYFALL_MCP_INVESTIGATION_ROOT") or _settings.get(
+        "mcp_investigation_root"
+    )
+    if not configured_root:
+        raise RuntimeError(
+            "File analysis is disabled: configure "
+            "SKYFALL_MCP_INVESTIGATION_ROOT or mcp_investigation_root."
+        )
+
+    root = Path(configured_root).expanduser().resolve(strict=True)
+    if not root.is_dir():
+        raise NotADirectoryError(
+            "The configured investigation root is not a directory."
+        )
+
+    requested_path = Path(filepath).expanduser()
+    if not requested_path.is_absolute():
+        requested_path = root / requested_path
+    resolved_path = requested_path.resolve(strict=True)
+    if not resolved_path.is_relative_to(root):
+        raise PermissionError("The requested file is outside the investigation root.")
+    if not stat.S_ISREG(resolved_path.stat().st_mode):
+        raise ValueError("The requested path is not a regular file.")
+    return resolved_path
 
 
 def _try_get_qt_app() -> tuple:
@@ -1308,6 +1327,7 @@ def skyfall_file_info(filepath: str) -> str:
     """Get basic file info: size, MIME type, dimensions, GPS coords."""
     from src.modules.file_analyzer import FileAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     fa = FileAnalyzer(virustotal_api_key="")
     result = fa.extract_file_info_sync(filepath)
     return _extract_json(result)
@@ -1318,18 +1338,22 @@ async def skyfall_file_metadata(filepath: str) -> str:
     """Extract metadata from a file (EXIF, Hachoir)."""
     from src.modules.file_analyzer import FileAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     fa = FileAnalyzer(virustotal_api_key="")
     return await fa.get_metadata(filepath)
 
 
 @mcp.tool()
-async def skyfall_file_virustotal(filepath: str) -> str:
-    """Check file against VirusTotal by hash and optionally upload."""
+async def skyfall_file_virustotal(
+    filepath: str, upload_if_unknown: bool = False
+) -> str:
+    """Check a file hash against VirusTotal; upload only when explicitly requested."""
     from src.modules.file_analyzer import FileAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     s = _settings
     fa = FileAnalyzer(virustotal_api_key=s.get("virustotal_api_key", ""))
-    result = await fa.virustotal_analyze(filepath)
+    result = await fa.virustotal_analyze(filepath, upload_if_unknown=upload_if_unknown)
     return (
         result
         if result
@@ -1344,6 +1368,7 @@ async def skyfall_file_tail_data(filepath: str) -> str:
     """Check for hidden data after EOF markers in files."""
     from src.modules.file_analyzer import FileAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     fa = FileAnalyzer(virustotal_api_key="")
     return await fa.check_tail_data(filepath)
 
@@ -1358,6 +1383,7 @@ async def skyfall_file_strings(filepath: str, min_length: int = 6) -> str:
     """
     from src.modules.file_analyzer import FileAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     fa = FileAnalyzer(virustotal_api_key="")
     strings = await fa.get_strings(filepath, min_len=min_length)
     return _extract_json({"strings_found": len(strings), "strings": strings[:200]})
@@ -1371,6 +1397,7 @@ async def skyfall_steganography_lsb(filepath: str) -> str:
     """Analyze LSB (Least Significant Bit) steganography in an image."""
     from src.modules.steganography import SteganographyAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     sa = SteganographyAnalyzer()
     return await sa.analyze_lsb(filepath)
 
@@ -1380,6 +1407,7 @@ async def skyfall_steganography_spectral(filepath: str) -> str:
     """Perform spectral analysis of an image for anomalies."""
     from src.modules.steganography import SteganographyAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     sa = SteganographyAnalyzer()
     return await sa.analyze_spectral(filepath)
 
@@ -1389,6 +1417,7 @@ async def skyfall_steganography_eoi(filepath: str) -> str:
     """Detect hidden data after EOI (End of Image) markers."""
     from src.modules.steganography import SteganographyAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     sa = SteganographyAnalyzer()
     return await sa.analyze_eoi(filepath)
 
@@ -1398,6 +1427,7 @@ async def skyfall_steganography_tail(filepath: str) -> str:
     """Detect hidden tail data after known image format boundaries."""
     from src.modules.steganography import SteganographyAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     sa = SteganographyAnalyzer()
     return await sa.detect_tail_data(filepath)
 
@@ -1407,6 +1437,7 @@ async def skyfall_steganography_full(filepath: str) -> str:
     """Run full steganography analysis (LSB, spectral, EOI, tail, ELA)."""
     from src.modules.steganography import SteganographyAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     sa = SteganographyAnalyzer()
     result = await sa.run_full_analysis(filepath)
     return _extract_json(result)
@@ -1414,7 +1445,7 @@ async def skyfall_steganography_full(filepath: str) -> str:
 
 @mcp.tool()
 async def skyfall_steganography_ela(filepath: str, quality: int = 90) -> str:
-    """Run Error Level Analysis on an image, save ELA heatmap next to the file.
+    """Run Error Level Analysis on an image inside the investigation root.
 
     Args:
         filepath: Path to the image
@@ -1422,6 +1453,7 @@ async def skyfall_steganography_ela(filepath: str, quality: int = 90) -> str:
     """
     from src.modules.steganography import SteganographyAnalyzer
 
+    filepath = str(_resolve_investigation_file(filepath))
     sa = SteganographyAnalyzer()
     return await sa.analyze_ela(filepath, quality=quality)
 
@@ -1904,19 +1936,14 @@ def main():
 
     mcp.settings.host = args.host
     mcp.settings.port = args.port
-    if _AUTH_ENABLED:
-        mcp.settings.auth = _auth_settings(args.host, args.port)
+    mcp.settings.auth = _auth_settings(args.host, args.port)
 
     _ollama.set_base_url(args.ollama_url)
 
     logger.info(f"Starting SkyFall MCP Server ({args.transport})")
     logger.info(f"Ollama URL: {args.ollama_url}")
     logger.info(f"Settings loaded from: {CONFIG_FILE}")
-    logger.info(
-        "MCP auth: enabled (bearer token required)"
-        if _AUTH_ENABLED
-        else "MCP auth: disabled"
-    )
+    logger.info("MCP auth: enabled (bearer token required)")
 
     mcp.run(transport=args.transport)
 

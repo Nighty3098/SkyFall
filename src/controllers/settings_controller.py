@@ -48,7 +48,6 @@ DEFAULT_SETTINGS = {
     "light_theme": False,
     "font_size_pt": 10,
     "frameless_window": True,
-    "mcp_require_auth": False,
 }
 
 FIELD_MAP = {
@@ -113,8 +112,6 @@ class Settings:
         self.light_theme = False
         self.font_size_pt = 10
         self.frameless_window = True
-        self.mcp_require_auth = False
-
         self._post_save_callbacks = []
 
         self._load()
@@ -158,7 +155,8 @@ class Settings:
 
         mcp_auth = getattr(self.ui, "mcpAuthCheck", None)
         if mcp_auth:
-            mcp_auth.setChecked(self.mcp_require_auth)
+            mcp_auth.setChecked(True)
+            mcp_auth.setEnabled(False)
 
         font_size = getattr(self.ui, "fontSizeSpinBox", None)
         if font_size:
@@ -193,10 +191,6 @@ class Settings:
         frameless = getattr(self.ui, "framelessCheck", None)
         if frameless:
             self.frameless_window = frameless.isChecked()
-
-        mcp_auth = getattr(self.ui, "mcpAuthCheck", None)
-        if mcp_auth:
-            self.mcp_require_auth = mcp_auth.isChecked()
 
         font_size = getattr(self.ui, "fontSizeSpinBox", None)
         if font_size:

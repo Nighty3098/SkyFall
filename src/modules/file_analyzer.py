@@ -167,7 +167,7 @@ class FileAnalyzer:
                 info["detected"] = ["Not found"]
         return info
 
-    async def virustotal_analyze(self, path):
+    async def virustotal_analyze(self, path, upload_if_unknown=True):
         if not os.path.exists(path):
             logger.debug(f"Error: File {path} not found.")
             return {"error": f"File not found: {path}"}
@@ -187,6 +187,8 @@ class FileAnalyzer:
         logger.debug("File not found in VirusTotal DB.")
         if not self.API_KEYS.get("VIRUSTOTAL"):
             return {"error": "VirusTotal API key not configured"}
+        if not upload_if_unknown:
+            return {"error": "File not found in VirusTotal; upload was not requested"}
         analysis_id = await self.upload_and_scan_file(path)
         if not analysis_id:
             return {"error": "Failed to upload file to VirusTotal"}

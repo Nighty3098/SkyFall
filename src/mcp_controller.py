@@ -7,7 +7,7 @@ import httpx
 from loguru import logger
 from PySide6.QtCore import QTimer
 
-from src.security import AUTH_ENV, TOKEN_ENV, get_or_create_token
+from src.security import TOKEN_ENV, get_or_create_token
 
 
 class McpController:
@@ -43,9 +43,6 @@ class McpController:
             return
 
         token = get_or_create_token()
-        require_auth = bool(
-            getattr(self.ui, "mcpAuthCheck", None) and self.ui.mcpAuthCheck.isChecked()
-        )
 
         if self._graph_bridge and self._graph_widget:
             self._graph_bridge.start(self._graph_widget, self._node_item_cls, token)
@@ -65,7 +62,6 @@ class McpController:
 
         env = os.environ.copy()
         env[TOKEN_ENV] = token
-        env[AUTH_ENV] = "1" if require_auth else "0"
 
         logger.info(f"Starting SkyFall MCP Server on {self.url}")
         try:

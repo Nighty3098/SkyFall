@@ -4639,11 +4639,17 @@
                   </item>
                   <item>
                    <widget class="QCheckBox" name="mcpAuthCheck">
+                    <property name="enabled">
+                     <bool>false</bool>
+                    </property>
                     <property name="toolTip">
-                     <string>Require a bearer token for the MCP server (token stored at ~/.skyfall/mcp_token)</string>
+                     <string>MCP authentication is always required (token stored at ~/.skyfall/mcp_token)</string>
                     </property>
                     <property name="text">
-                     <string>Require MCP Auth</string>
+                     <string>MCP Auth (required)</string>
+                    </property>
+                    <property name="checked">
+                     <bool>true</bool>
                     </property>
                    </widget>
                   </item>

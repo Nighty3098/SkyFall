@@ -31,9 +31,6 @@ ENC_PREFIX = "enc:v1:"
 
 #: Environment variable carrying the shared MCP / graph-bridge token.
 TOKEN_ENV = "SKYFALL_MCP_TOKEN"
-#: Environment variable toggling MCP bearer-token authentication.
-AUTH_ENV = "SKYFALL_MCP_REQUIRE_AUTH"
-
 #: Settings keys that must never touch disk in plaintext.
 SENSITIVE_KEYS = frozenset(
     {

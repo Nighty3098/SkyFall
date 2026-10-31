@@ -6,7 +6,10 @@ network free.
 
 import asyncio
 import json
+import os
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import patch
 
 import src.skyfall_mcp_server as mcp_mod
@@ -54,10 +57,58 @@ class McpToolRegistryTest(unittest.TestCase):
         tools = asyncio.run(mcp_mod.mcp.list_tools())
         self.assertEqual(len(tools), EXPECTED_TOOL_COUNT)
 
+    def test_authentication_is_always_configured(self):
+        self.assertIsNotNone(mcp_mod.mcp.settings.auth)
+        verifier = mcp_mod.mcp._token_verifier
+        self.assertIsInstance(verifier, mcp_mod._StaticTokenVerifier)
+        self.assertIsNotNone(asyncio.run(verifier.verify_token(mcp_mod._MCP_TOKEN)))
+        self.assertIsNone(asyncio.run(verifier.verify_token("invalid-token")))
+
     def test_new_tools_registered(self):
         names = {t.name for t in asyncio.run(mcp_mod.mcp.list_tools())}
         for name in NEW_TOOLS:
             self.assertIn(name, names)
+
+
+class InvestigationPathTest(unittest.TestCase):
+    def setUp(self):
+        self.temp_dir = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp_dir.cleanup)
+        base = Path(self.temp_dir.name)
+        self.case_root = base / "case"
+        self.case_root.mkdir()
+        (self.case_root / "evidence.txt").write_text("evidence", encoding="utf-8")
+        self.outside_file = base / "outside.txt"
+        self.outside_file.write_text("outside", encoding="utf-8")
+
+        env_patch = patch.dict(
+            os.environ,
+            {"SKYFALL_MCP_INVESTIGATION_ROOT": str(self.case_root)},
+        )
+        env_patch.start()
+        self.addCleanup(env_patch.stop)
+
+    def test_accepts_regular_file_inside_root(self):
+        resolved = mcp_mod._resolve_investigation_file("evidence.txt")
+        self.assertEqual(resolved, (self.case_root / "evidence.txt").resolve())
+
+    def test_rejects_relative_traversal(self):
+        with self.assertRaises(PermissionError):
+            mcp_mod._resolve_investigation_file("../outside.txt")
+
+    def test_rejects_absolute_path_outside_root(self):
+        with self.assertRaises(PermissionError):
+            mcp_mod._resolve_investigation_file(str(self.outside_file))
+
+    def test_rejects_symlink_escape(self):
+        link = self.case_root / "escape.txt"
+        try:
+            link.symlink_to(self.outside_file)
+        except (NotImplementedError, OSError) as exc:
+            self.skipTest(f"Symlinks are unavailable: {exc}")
+
+        with self.assertRaises(PermissionError):
+            mcp_mod._resolve_investigation_file("escape.txt")
 
 
 class RedditToolTest(unittest.TestCase):

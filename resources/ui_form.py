@@ -2275,6 +2275,8 @@ class Ui_MainWindow(object):
 
         self.mcpAuthCheck = QCheckBox(self.settingsTabScrollContainer)
         self.mcpAuthCheck.setObjectName(u"mcpAuthCheck")
+        self.mcpAuthCheck.setEnabled(False)
+        self.mcpAuthCheck.setChecked(True)
 
         self.verticalLayout_4.addWidget(self.mcpAuthCheck)
 
@@ -2707,9 +2709,9 @@ class Ui_MainWindow(object):
         self.redditClientSecretEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Reddit Client Secret (optional, live profile)", None))
         self.mcpStatusLabel.setText(QCoreApplication.translate("MainWindow", u"Stopped", None))
 #if QT_CONFIG(tooltip)
-        self.mcpAuthCheck.setToolTip(QCoreApplication.translate("MainWindow", u"Require a bearer token for the MCP server (token stored at ~/.skyfall/mcp_token)", None))
+        self.mcpAuthCheck.setToolTip(QCoreApplication.translate("MainWindow", u"MCP authentication is always required (token stored at ~/.skyfall/mcp_token)", None))
 #endif // QT_CONFIG(tooltip)
-        self.mcpAuthCheck.setText(QCoreApplication.translate("MainWindow", u"Require MCP Auth", None))
+        self.mcpAuthCheck.setText(QCoreApplication.translate("MainWindow", u"MCP Auth (required)", None))
         self.mcpToggleButton.setText(QCoreApplication.translate("MainWindow", u"Start MCP Server", None))
         self.lightThemeCheck.setText(QCoreApplication.translate("MainWindow", u"Light Theme", None))
         self.framelessCheck.setText(QCoreApplication.translate("MainWindow", u"Frameless Window", None))
@@ -2723,4 +2725,3 @@ class Ui_MainWindow(object):
         self.menuHelp.setTitle(QCoreApplication.translate("MainWindow", u"Help", None))
         self.menu_SkyFall.setTitle(QCoreApplication.translate("MainWindow", u" SkyFall", None))
     # retranslateUi
-

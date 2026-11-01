@@ -16,7 +16,9 @@ import plistlib
 import shutil
 import subprocess
 import sys
+from contextlib import contextmanager
 from pathlib import Path
+from typing import Iterator
 
 APP_ID = "skyfall"  # должно совпадать с именем skyfall.desktop (Wayland app-id)
 APP_NAME = "SkyFall"
@@ -52,11 +54,40 @@ SYSTEM_PIXMAP = Path("/usr/share/pixmaps/skyfall.png")
 
 
 def log(msg: str) -> None:
-    print(f"[SkyFall setup] {msg}", flush=True)
+    pass
 
 
 def warn(msg: str) -> None:
-    print(f"[SkyFall setup] WARNING: {msg}", flush=True, file=sys.stderr)
+    pass
+
+
+def error(msg: str) -> None:
+    print(f"Error: {msg}", flush=True, file=sys.stderr)
+
+
+@contextmanager
+def stage(label: str, start: int, end: int) -> Iterator[None]:
+    progress(start, label)
+    try:
+        yield
+    except Exception:
+        print(file=sys.stdout, flush=True)
+        error(f"{label} failed.")
+        raise
+    else:
+        progress(end, label)
+
+
+def progress(percent: int, label: str) -> None:
+    width = 32
+    filled = width * percent // 100
+    bar = f"[{'#' * filled}{'-' * (width - filled)}] {percent:3d}%"
+    if sys.stdout.isatty():
+        print(f"\r{bar}  {label}", end="", flush=True)
+        if percent in (20, 80, 95, 100):
+            print(flush=True)
+    else:
+        print(f"{bar}  {label}", flush=True)
 
 
 def run(cmd: list[str], timeout: int = 120, **kwargs) -> tuple[int, str]:
@@ -284,48 +315,40 @@ def verify_deps(venv_python: Path) -> bool:
         timeout=180,
     )
     if rc != 0:
-        warn("dependencies verification failed:\n" + out.strip()[-2000:])
+        error("dependency verification failed:\n" + out.strip()[-2000:])
         return False
-    log("dependencies verified: qasync, PySide6 import OK")
     return True
 
 
 def pip_install(venv_python: Path, no_deps: bool = False) -> bool:
     req = REPO_ROOT / "requirements.txt"
-    log("upgrading pip...")
     run(
         [str(venv_python), "-m", "pip", "install", "--upgrade", "pip"],
         cwd=str(REPO_ROOT),
         timeout=600,
     )
     if no_deps:
-        log("--no-deps: skipping requirements.txt")
         return True
     if not req.is_file():
         warn("requirements.txt not found, skipping deps")
         return True
-    # ВАЖНО: полный requirements (~150 пакетов: PySide6, scipy, ...) ставится
-    # 5-15 минут. Вывод pip показываем вживую (без capture), таймаут — 1 час,
-    # иначе был баг: тихий обрыв по timeout=120с и пустой venv.
-    log("installing requirements.txt (takes 5-15 min, do not interrupt)...")
     try:
         p = subprocess.run(
             [str(venv_python), "-m", "pip", "install", "-r", str(req)],
             cwd=str(REPO_ROOT),
             timeout=3600,
+            capture_output=True,
+            text=True,
         )
     except subprocess.TimeoutExpired:
-        warn("pip install timed out after 60 minutes. Check your network and re-run.")
+        error("dependency installation timed out after 60 minutes.")
         return False
     except Exception as e:  # noqa: BLE001
-        warn(f"pip install crashed: {e}")
+        error(f"dependency installation failed: {e}")
         return False
     if p.returncode != 0:
-        warn(
-            "pip install FAILED (see output above). "
-            "Fix the error (usually missing system libs or network) "
-            "and re-run setup.py."
-        )
+        details = (p.stdout or "") + (p.stderr or "")
+        error("dependency installation failed:\n" + details.strip()[-4000:])
         return False
     return verify_deps(venv_python)
 
@@ -519,10 +542,10 @@ def validate_desktop(desktop_file: Path) -> None:
 def do_install(args) -> int:
     user_mode: bool = args.user
     if args.system and sys.platform != "linux":
-        warn("system-wide installation is supported only on Linux.")
+        error("system-wide installation is supported only on Linux.")
         return 1
     if touches_system_paths(args) and not is_root():
-        warn("system install needs root. Re-run with sudo, or use --user.")
+        error("system installation requires root. Re-run with sudo, or use --user.")
         return 1
 
     home = Path.home()
@@ -543,64 +566,50 @@ def do_install(args) -> int:
         desktop_file = share_dir / "applications" / f"{APP_ID}.desktop"
 
     updating = app_dir.is_dir() and any(app_dir.iterdir())
-    log(f"{'updating' if updating else 'installing'} {APP_NAME} -> {app_dir}")
+    action = "Updating" if updating else "Installing"
 
     if (REPO_ROOT / "main.py").is_file() is False:
-        warn(f"main.py not found in {REPO_ROOT}, aborting")
+        error(f"main.py not found in {REPO_ROOT}; installation aborted.")
         return 1
 
-    # 1. Копируем исходники (повторный запуск = обновление)
-    copy_tree(REPO_ROOT, app_dir)
-    log(f"sources synced: {REPO_ROOT} -> {app_dir}")
+    print(f"{action} {APP_NAME}", flush=True)
+    with stage("Copying application files", 0, 20):
+        copy_tree(REPO_ROOT, app_dir)
 
-    # 2. Python-окружение
     use_venv = not args.no_venv
     deps_ok = True
-    if use_venv:
-        venv_python = ensure_venv(app_dir)
-        deps_ok = pip_install(venv_python, no_deps=args.no_deps)
-        if not deps_ok:
-            warn("dependencies NOT installed — install is incomplete!")
-    else:
-        log("--no-venv: using system python3")
+    with stage("Preparing Python environment and dependencies", 20, 80):
+        if use_venv:
+            venv_python = ensure_venv(app_dir)
+            deps_ok = pip_install(venv_python, no_deps=args.no_deps)
 
-    # 3. Лаунчер, .desktop, иконки
-    write_launcher(bin_file, app_dir, use_venv)
-    if sys.platform == "win32":
-        write_windows_shortcut(bin_file, app_dir, home)
-    elif sys.platform == "darwin":
-        write_macos_app(bin_file)
-    else:
-        write_desktop(desktop_file, bin_file)
-        validate_desktop(desktop_file)
-        install_icons(share_dir)
-        refresh_caches(share_dir, user_mode)
+    with stage("Creating launchers and application shortcuts", 80, 95):
+        write_launcher(bin_file, app_dir, use_venv)
+        if sys.platform == "win32":
+            write_windows_shortcut(bin_file, app_dir, home)
+        elif sys.platform == "darwin":
+            write_macos_app(bin_file)
+        else:
+            write_desktop(desktop_file, bin_file)
+            validate_desktop(desktop_file)
+            install_icons(share_dir)
+            refresh_caches(share_dir, user_mode)
 
-    print()
     if not deps_ok:
-        warn(
-            f"{APP_NAME} installed BUT WITHOUT dependencies. "
-        "Fix pip errors above and re-run setup.py."
-        )
+        error(f"{APP_NAME} installation is incomplete because dependencies failed.")
         return 1
-    log(f"{APP_NAME} {'updated' if updating else 'installed'} successfully!")
-    log(f"run: {bin_file}  (or find '{APP_NAME}' in your app menu)")
-    if (
-        user_mode
-        and sys.platform == "linux"
-        and str(bin_file.parent) not in os.environ.get("PATH", "")
-    ):
-        warn(f"{bin_file.parent} is not in PATH — add it to ~/.profile")
+    progress(100, "Installation complete")
+    print(f"{APP_NAME} {'updated' if updating else 'installed'} successfully.", flush=True)
     return 0
 
 
 def do_uninstall(args) -> int:
     user_mode: bool = args.user
     if args.system and sys.platform != "linux":
-        warn("system-wide uninstallation is supported only on Linux.")
+        error("system-wide uninstallation is supported only on Linux.")
         return 1
     if touches_system_paths(args) and not is_root():
-        warn("system uninstall needs root. Re-run with sudo, or use --user.")
+        error("system uninstallation requires root. Re-run with sudo, or use --user.")
         return 1
 
     home = Path.home()
@@ -656,7 +665,7 @@ def do_uninstall(args) -> int:
             else:
                 log(f"not present, skip: {t}")
         except OSError as e:
-            warn(f"cannot remove {t}: {e}")
+            error(f"cannot remove {t}: {e}")
 
     if sys.platform != "linux":
         if args.purge:
@@ -670,7 +679,7 @@ def do_uninstall(args) -> int:
                         shutil.rmtree(d)
                         log(f"purged: {d}")
                 except OSError as e:
-                    warn(f"cannot purge {d}: {e}")
+                    error(f"cannot purge {d}: {e}")
         log("uninstall complete")
         return 0
 
@@ -717,7 +726,7 @@ def do_uninstall(args) -> int:
                     shutil.rmtree(d)
                     log(f"purged: {d}")
             except OSError as e:
-                warn(f"cannot purge {d}: {e}")
+                error(f"cannot purge {d}: {e}")
 
     log("uninstall complete")
     return 0

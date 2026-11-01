@@ -8,50 +8,35 @@ cleanup() {
     fi
 }
 
-run_stage() {
-    local label="$1"
-    local output="$INSTALL_DIR/stage.log"
-    local frames='|/-\'
-    local frame=0
-    local pid
-    shift
-
-    printf '%s\n' "$label"
-    "$@" >"$output" 2>&1 &
-    pid=$!
-
-    if [ -t 1 ]; then
-        while kill -0 "$pid" 2>/dev/null; do
-            printf '\r  %s' "${frames:frame++%${#frames}:1}"
-            sleep 0.1
-        done
-    fi
-
-    if wait "$pid"; then
-        if [ -t 1 ]; then
-            printf '\r  \033[0;32m✓\033[0m\n'
-        else
-            printf '  Готово\n'
-        fi
-    else
-        local status=$?
-        printf '\r  \033[0;31mОшибка (код %s)\033[0m\n' "$status" >&2
-        tail -n 30 "$output" >&2
-        return "$status"
-    fi
+banner() {
+    printf '\033[1;36m'
+    cat <<'EOF'
+  _____ __  _  __ __  _____   ____  _      _
+ / ___/|  l/ ]|  T  T|     | /    T| T    | T
+(   \_ |  ' / |  |  ||   __jY  o  || |    | |
+ \__  T|    \ |  ~  ||  l_  |     || l___ | l___
+ /  \ ||     Yl___, ||   _] |  _  ||     T|     T
+ \    ||  .  ||     !|  T   |  |  ||     ||     |
+  \___jl__j\_jl____/ l__j   l__j__jl_____jl_____j
+EOF
+    printf '\033[0m\n'
 }
 
 main() {
     INSTALL_DIR="$(mktemp -d "${TMPDIR:-/tmp}/skyfall-install.XXXXXX")"
     trap cleanup EXIT
 
-    run_stage "Загрузка SkyFall" \
-        git clone --recurse-submodules https://github.com/Nighty3098/SkyFall "$INSTALL_DIR/SkyFall"
+    banner
+    if ! git clone --quiet --recurse-submodules \
+        https://github.com/Nighty3098/SkyFall "$INSTALL_DIR/SkyFall" \
+        >"$INSTALL_DIR/clone.log" 2>&1; then
+        printf 'Error: could not download SkyFall.\n' >&2
+        tail -n 30 "$INSTALL_DIR/clone.log" >&2
+        return 1
+    fi
     cd "$INSTALL_DIR/SkyFall"
 
-    run_stage "Установка и настройка" python3 setup.py "$@"
-
-    printf '\033[0;32mУстановка завершена успешно\033[0m\n'
+    python3 setup.py "$@"
 }
 
 main "$@"

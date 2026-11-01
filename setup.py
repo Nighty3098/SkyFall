@@ -16,9 +16,9 @@ import plistlib
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Callable, Iterator
 
 APP_ID = "skyfall"  # должно совпадать с именем skyfall.desktop (Wayland app-id)
 APP_NAME = "SkyFall"
@@ -53,16 +53,106 @@ SYSTEM_SHARE = Path("/usr/share")
 SYSTEM_PIXMAP = Path("/usr/share/pixmaps/skyfall.png")
 
 
+def _color_enabled() -> bool:
+    if os.environ.get("NO_COLOR") or os.environ.get("TERM") == "dumb":
+        return False
+    if not sys.stdout.isatty():
+        return False
+    if sys.platform == "win32":
+        try:
+            import ctypes
+
+            kernel32 = ctypes.windll.kernel32
+            kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+        except Exception:  # noqa: BLE001
+            return False
+    return True
+
+
+def _can_encode(text: str) -> bool:
+    encoding = getattr(sys.stdout, "encoding", None) or "ascii"
+    try:
+        text.encode(encoding)
+    except (UnicodeEncodeError, LookupError):
+        return False
+    return True
+
+
+COLOR = _color_enabled()
+UNICODE = _can_encode("✔✖›·█░")
+OK_MARK = "✔" if UNICODE else "OK"
+FAIL_MARK = "✖" if UNICODE else "x"
+BULLET = "›" if UNICODE else ">"
+DOT = "·" if UNICODE else "-"
+
+
+def _style(text: str, code: str) -> str:
+    return f"\033[{code}m{text}\033[0m" if COLOR else text
+
+
+def bold(text: str) -> str:
+    return _style(text, "1")
+
+
+def dim(text: str) -> str:
+    return _style(text, "90")
+
+
+def green(text: str) -> str:
+    return _style(text, "32")
+
+
+def cyan(text: str) -> str:
+    return _style(text, "36")
+
+
+def yellow(text: str) -> str:
+    return _style(text, "33")
+
+
+def red(text: str) -> str:
+    return _style(text, "31")
+
+
+_LINE_ACTIVE = False
+_LAST_PROGRESS: str | None = None
+
+
+def _suspend_progress() -> None:
+    """Стереть строку прогресса, чтобы напечатать лог поверх неё."""
+    global _LINE_ACTIVE
+    if _LINE_ACTIVE:
+        sys.stdout.write("\r\033[K")
+        sys.stdout.flush()
+        _LINE_ACTIVE = False
+
+
+def _resume_progress() -> None:
+    """Вернуть строку прогресса под только что напечатанным логом."""
+    global _LINE_ACTIVE
+    if _LAST_PROGRESS and sys.stdout.isatty():
+        sys.stdout.write(f"\r{_LAST_PROGRESS}\033[K")
+        sys.stdout.flush()
+        _LINE_ACTIVE = True
+
+
 def log(msg: str) -> None:
-    pass
+    _suspend_progress()
+    print(f"  {dim(BULLET)} {msg}", flush=True)
+    _resume_progress()
 
 
 def warn(msg: str) -> None:
-    pass
+    _suspend_progress()
+    print(f"  {yellow('!')} {yellow(msg)}", flush=True, file=sys.stderr)
+    _resume_progress()
 
 
 def error(msg: str) -> None:
-    print(f"Error: {msg}", flush=True, file=sys.stderr)
+    _suspend_progress()
+    label = bold(red("Error:"))
+    print(f"  {red(FAIL_MARK)} {label} {msg}", flush=True, file=sys.stderr)
+    _resume_progress()
 
 
 @contextmanager
@@ -71,11 +161,19 @@ def stage(label: str, start: int, end: int) -> Iterator[None]:
     try:
         yield
     except Exception:
-        print(file=sys.stdout, flush=True)
         error(f"{label} failed.")
         raise
     else:
         progress(end, label, status="Complete")
+
+
+def _fit(text: str, limit: int) -> str:
+    """Обрезать текст по ширине терминала, добавив многоточие."""
+    if limit <= 1:
+        return ""
+    if len(text) <= limit:
+        return text
+    return text[: limit - 1] + ("…" if UNICODE else "~")
 
 
 def progress(
@@ -84,26 +182,94 @@ def progress(
     *,
     status: str | None = None,
 ) -> None:
-    width = 30
+    """Нарисовать полосу прогресса. В TTY строка перерисовывается на месте."""
+    global _LINE_ACTIVE, _LAST_PROGRESS
+
+    percent = max(0, min(100, percent))
+    width = 28
     filled = width * percent // 100
-    color = ""
-    reset = ""
+    done_char = "█" if UNICODE else "#"
+    todo_char = "░" if UNICODE else "-"
+
     if sys.stdout.isatty():
-        color = "\033[32m" if percent == 100 else "\033[36m"
-        reset = "\033[0m"
-    bar = f"{color}[{'#' * filled}{'-' * (width - filled)}]{reset} {percent:3d}%"
-    message = f"  {label}"
-    if status:
-        if sys.stdout.isatty():
-            message += f"  \033[1;33m{status}\033[0m"
+        columns = shutil.get_terminal_size((80, 24)).columns
+        budget = max(20, columns - 1 - (11 + width))
+        if status:
+            label = _fit(label, max(10, budget - 18))
+            status = _fit(status, budget - len(label) - 2)
         else:
-            message += f"  {status}"
-    if sys.stdout.isatty():
-        print(f"\r{bar}{message}", end="", flush=True)
-        if status == "Complete" or percent == 100:
-            print(flush=True)
+            label = _fit(label, budget)
+
+    done = done_char * filled
+    todo = todo_char * (width - filled)
+    done = green(done) if percent >= 100 else cyan(done)
+    bar = f"[{done}{dim(todo)}]"
+
+    line = f"  {bar} {bold(f'{percent:3d}%')}  {label}"
+    if status:
+        line += f"  {green(status) if status in ('Complete', 'Ready') else dim(status)}"
+
+    if not sys.stdout.isatty():
+        print(line, flush=True)
+        return
+
+    sys.stdout.write(f"\r{line}\033[K")
+    sys.stdout.flush()
+    if status in ("Complete", "Ready") or percent >= 100:
+        sys.stdout.write("\n")
+        sys.stdout.flush()
+        _LINE_ACTIVE = False
+        _LAST_PROGRESS = None
     else:
-        print(f"{bar}{message}", flush=True)
+        _LINE_ACTIVE = True
+        _LAST_PROGRESS = line
+
+
+def print_banner(action: str, scope: str, target: Path) -> None:
+    """Шапка установщика: что делаем и куда ставим."""
+    print(flush=True)
+    print(f"  {bold(APP_NAME)}  {dim(DOT)}  {APP_COMMENT}", flush=True)
+    print(f"  {dim(f'{action} {scope} {DOT} {target}')}", flush=True)
+    print(flush=True)
+
+
+def print_summary(
+    updating: bool,
+    app_dir: Path,
+    bin_file: Path,
+    desktop_file: Path | None,
+    user_mode: bool,
+) -> None:
+    """Итог установки: короткая сводка с путями."""
+    _suspend_progress()
+    title = f"{APP_NAME} {'updated' if updating else 'installed'}"
+    rows = [
+        ("launcher", str(bin_file)),
+        ("app files", str(app_dir)),
+    ]
+    if desktop_file is not None and desktop_file.is_file():
+        rows.append(("shortcut", str(desktop_file)))
+
+    print(flush=True)
+    print(f"  {green(OK_MARK)}  {bold(title)}", flush=True)
+    print(flush=True)
+    for name, value in rows:
+        print(f"  {dim(name.ljust(10))}{value}", flush=True)
+    print(flush=True)
+    if user_mode and sys.platform == "linux":
+        print(
+            f"  {dim('Tip:')} log out and back in, or run "
+            f"{bold('gtk-launch skyfall')}, to refresh the icon.",
+            flush=True,
+        )
+        print(flush=True)
+
+
+def print_uninstall_summary() -> None:
+    _suspend_progress()
+    print(flush=True)
+    print(f"  {green(OK_MARK)}  {bold(f'{APP_NAME} removed')}", flush=True)
+    print(flush=True)
 
 
 def run(cmd: list[str], timeout: int = 120, **kwargs) -> tuple[int, str]:
@@ -410,15 +576,8 @@ def write_launcher(bin_file: Path, app_dir: Path, use_venv: bool) -> None:
     """
     bin_file.parent.mkdir(parents=True, exist_ok=True)
     if sys.platform == "win32":
-        python = (
-            '"%~dp0venv\\Scripts\\python.exe"'
-            if use_venv
-            else "python"
-        )
-        content = (
-            "@echo off\r\n"
-            f'{python} "%~dp0main.py" %*\r\n'
-        )
+        python = '"%~dp0venv\\Scripts\\python.exe"' if use_venv else "python"
+        content = f'@echo off\r\n{python} "%~dp0main.py" %*\r\n'
     elif use_venv:
         py = app_dir / "venv" / "bin" / "python"
         alias = app_dir / "venv" / "bin" / APP_ID
@@ -530,7 +689,7 @@ def install_icons(share_dir: Path) -> int:
     return count
 
 
-def refresh_caches(share_dir: Path, user_mode: bool) -> None:
+def refresh_caches(share_dir: Path) -> None:
     """Обновить кэши иконок/десктопов чтобы иконка появилась сразу везде."""
     apps_dir = str(share_dir / "applications")
     icons_dir = str(share_dir / "icons" / "hicolor")
@@ -541,12 +700,13 @@ def refresh_caches(share_dir: Path, user_mode: bool) -> None:
         ["xdg-icon-resource", "forceupdate"],
         ["update-icon-caches", icons_dir],
     ]
+    refreshed = 0
     for cmd in steps:
         if shutil.which(cmd[0]) is None:
             continue
         rc, out = run(cmd)
         if rc == 0:
-            log(f"cache OK: {' '.join(cmd)}")
+            refreshed += 1
         else:
             warn(f"cache failed ({' '.join(cmd)}): {out.strip()[-300:]}")
 
@@ -555,7 +715,7 @@ def refresh_caches(share_dir: Path, user_mode: bool) -> None:
         if shutil.which(kbd):
             rc, _ = run([kbd, "--noincremental"])
             if rc == 0:
-                log(f"cache OK: {kbd}")
+                refreshed += 1
             break
 
     # GNOME Wayland подхватывает hicolor автоматически, но на всякий случай
@@ -567,8 +727,8 @@ def refresh_caches(share_dir: Path, user_mode: bool) -> None:
     except OSError:
         pass
 
-    if user_mode:
-        log("user mode: log out/in or run `gtk-launch skyfall` to test the icon")
+    if refreshed:
+        log("refreshed desktop and icon caches")
 
 
 def validate_desktop(desktop_file: Path) -> None:
@@ -610,12 +770,18 @@ def do_install(args) -> int:
 
     updating = app_dir.is_dir() and any(app_dir.iterdir())
     action = "Updating" if updating else "Installing"
+    if user_mode:
+        scope = "for the current user"
+    elif args.prefix or args.bindir or args.sharedir:
+        scope = "to a custom prefix"
+    else:
+        scope = "system-wide"
 
     if (REPO_ROOT / "main.py").is_file() is False:
         error(f"main.py not found in {REPO_ROOT}; installation aborted.")
         return 1
 
-    print(f"{action} {APP_NAME}", flush=True)
+    print_banner(action, scope, app_dir)
     with stage("Copying application files", 0, 25):
         total_items = copy_item_count(REPO_ROOT)
         copied_items = 0
@@ -640,7 +806,6 @@ def do_install(args) -> int:
             venv_python = ensure_venv(app_dir)
             deps_ok = pip_install(venv_python, no_deps=args.no_deps)
 
-    progress(85, "Application setup", status="Creating launcher and shortcuts")
     with stage("Creating launchers and application shortcuts", 85, 99):
         write_launcher(bin_file, app_dir, use_venv)
         if sys.platform == "win32":
@@ -651,13 +816,13 @@ def do_install(args) -> int:
             write_desktop(desktop_file, bin_file)
             validate_desktop(desktop_file)
             install_icons(share_dir)
-            refresh_caches(share_dir, user_mode)
+            refresh_caches(share_dir)
 
     if not deps_ok:
         error(f"{APP_NAME} installation is incomplete because dependencies failed.")
         return 1
     progress(100, "Installation complete", status="Ready")
-    print(f"{APP_NAME} {'updated' if updating else 'installed'} successfully.", flush=True)
+    print_summary(updating, app_dir, bin_file, desktop_file, user_mode)
     return 0
 
 
@@ -738,7 +903,7 @@ def do_uninstall(args) -> int:
                         log(f"purged: {d}")
                 except OSError as e:
                     error(f"cannot purge {d}: {e}")
-        log("uninstall complete")
+        print_uninstall_summary()
         return 0
 
     # иконки hicolor
@@ -771,7 +936,7 @@ def do_uninstall(args) -> int:
     if removed_icons:
         log(f"removed {removed_icons} icon files")
 
-    refresh_caches(share_dir, user_mode)
+    refresh_caches(share_dir)
 
     if args.purge:
         for d in (
@@ -786,7 +951,7 @@ def do_uninstall(args) -> int:
             except OSError as e:
                 error(f"cannot purge {d}: {e}")
 
-    log("uninstall complete")
+    print_uninstall_summary()
     return 0
 
 
@@ -803,9 +968,7 @@ def build_parser() -> argparse.ArgumentParser:
         default="install",
         help="action (default: install)",
     )
-    p.add_argument(
-        "--user", action="store_true", help="install for the current user"
-    )
+    p.add_argument("--user", action="store_true", help="install for the current user")
     p.add_argument(
         "--system",
         action="store_true",

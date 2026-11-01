@@ -1,40 +1,18 @@
 #!/usr/bin/env python3
-"""
-SkyFall — системный установщик для Linux (в стиле wifite2).
+"""SkyFall per-user installer for Linux, macOS, and Windows.
 
-Использование:
-    sudo python3 setup.py                  # установка / обновление в /opt/skyfall
-    sudo python3 setup.py install          # то же самое
-    sudo python3 setup.py uninstall        # удалить из системы
-    python3 setup.py --user                # установка без root в ~/.local
-    sudo python3 setup.py --uninstall --purge   # удалить + стереть кэш/конфиги
-
-Повторный запуск после `git pull`:
-    git pull
-    sudo python3 setup.py
-— исходники в /opt/skyfall будут перезаписаны, venv обновлён,
-  иконки и .desktop переустaновлены, кэши иконок обновлены.
-
-Как обеспечивается иконка везде (X11 + Wayland, GNOME/KDE/XFCE/...):
-  * .desktop называется `skyfall.desktop`, внутри `Icon=skyfall` (имя, НЕ путь)
-    и `StartupWMClass=skyfall` + `StartupNotify=true`.
-  * PNG 1024x1024 из resources/icon.png раскладывается по теме hicolor
-    во все стандартные размеры (16..512), плюс fallback-копия
-    в `pixmaps/skyfall.png` для старых WM.
-  * Лаунчер /usr/local/bin/skyfall запускает main.py через симлинк
-    /opt/skyfall/venv/bin/skyfall -> python, поэтому имя процесса —
-    "skyfall" (а venv при этом детектится корректно; `exec -a` использовать
-    нельзя — он ломает поиск pyvenv.cfg). Wayland app-id дополнительно
-    зафиксирован в коде через app.setDesktopFileName("skyfall").
-  * После установки вызываются: update-desktop-database,
-    gtk-update-icon-cache, xdg-icon-resource forceupdate, kbuildsycoca
-    (если есть). Это покрывает X11 и Wayland разом.
+Usage:
+    python3 setup.py                  # install/update for the current user
+    python3 setup.py uninstall        # uninstall for the current user
+    sudo python3 setup.py --system    # system-wide install (Linux only)
 """
 
 from __future__ import annotations
 
 import argparse
+import base64
 import os
+import plistlib
 import shutil
 import subprocess
 import sys
@@ -103,8 +81,85 @@ def is_root() -> bool:
         return False  # Windows — не наш случай
 
 
+def user_install_paths(home: Path) -> tuple[Path, Path, Path | None, Path | None]:
+    """Return user-level app, launcher, desktop-entry, and share paths."""
+    if sys.platform == "win32":
+        local_app_data = Path(
+            os.environ.get("LOCALAPPDATA", home / "AppData" / "Local")
+        )
+        app_dir = local_app_data / "Programs" / "SkyFall"
+        return app_dir, app_dir / "skyfall.cmd", None, None
+    if sys.platform == "darwin":
+        app_dir = home / "Library" / "Application Support" / APP_ID
+        launcher = home / "Applications" / "SkyFall.app" / "Contents" / "MacOS" / APP_ID
+        return app_dir, launcher, None, None
+
+    share_dir = home / ".local" / "share"
+    app_dir = share_dir / APP_ID
+    desktop_file = share_dir / "applications" / f"{APP_ID}.desktop"
+    return app_dir, home / ".local" / "bin" / APP_ID, desktop_file, share_dir
+
+
+def venv_python_path(venv_dir: Path) -> Path:
+    if sys.platform == "win32":
+        return venv_dir / "Scripts" / "python.exe"
+    return venv_dir / "bin" / "python"
+
+
+def windows_shortcut_path(home: Path) -> Path:
+    roaming = Path(os.environ.get("APPDATA", home / "AppData" / "Roaming"))
+    return roaming / "Microsoft" / "Windows" / "Start Menu" / "Programs" / "SkyFall.lnk"
+
+
+def is_user_install(args) -> bool:
+    has_custom_paths = any((args.prefix, args.bindir, args.sharedir))
+    return args.user or (not args.system and not has_custom_paths)
+
+
+def write_windows_shortcut(launcher: Path, app_dir: Path, home: Path) -> None:
+    shortcut = windows_shortcut_path(home)
+    shortcut.parent.mkdir(parents=True, exist_ok=True)
+
+    def quote_ps(value: Path) -> str:
+        return "'" + str(value).replace("'", "''") + "'"
+
+    script = (
+        "$shell = New-Object -ComObject WScript.Shell; "
+        f"$link = $shell.CreateShortcut({quote_ps(shortcut)}); "
+        f"$link.TargetPath = {quote_ps(launcher)}; "
+        f"$link.WorkingDirectory = {quote_ps(app_dir)}; "
+        "$link.Save()"
+    )
+    encoded = base64.b64encode(script.encode("utf-16le")).decode("ascii")
+    rc, out = run(
+        ["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", encoded]
+    )
+    if rc:
+        warn(f"could not create Start menu shortcut: {out.strip()[-500:]}")
+    else:
+        log(f"Start menu shortcut: {shortcut}")
+
+
+def write_macos_app(app_file: Path) -> None:
+    contents = app_file.parent.parent
+    contents.mkdir(parents=True, exist_ok=True)
+    info = {
+        "CFBundleExecutable": APP_ID,
+        "CFBundleIdentifier": "org.skyfall.app",
+        "CFBundleName": APP_NAME,
+        "CFBundlePackageType": "APPL",
+        "CFBundleVersion": "1.0",
+        "LSMinimumSystemVersion": "10.15",
+        "NSHighResolutionCapable": True,
+    }
+    with (contents / "Info.plist").open("wb") as stream:
+        plistlib.dump(info, stream)
+    os.chmod(app_file, 0o755)
+    log(f"application bundle: {app_file.parents[2]}")
+
+
 def touches_system_paths(args) -> bool:
-    """Нужен ли root: трогаем ли /opt, /usr без флага --user."""
+    """Return whether the selected install paths require root."""
     if args.user:
         return False
     # кейс `--prefix /tmp/root` без bindir/sharedir = полностью локальный корень
@@ -213,7 +268,7 @@ def ensure_venv(app_dir: Path) -> Path:
     import venv as venvlib
 
     venv_dir = app_dir / "venv"
-    venv_python = venv_dir / "bin" / "python"
+    venv_python = venv_python_path(venv_dir)
     if not venv_python.is_file():
         log(f"creating venv: {venv_dir}")
         venvlib.create(str(venv_dir), with_pip=True)
@@ -288,7 +343,17 @@ def write_launcher(bin_file: Path, app_dir: Path, use_venv: bool) -> None:
     app.setDesktopFileName("skyfall") в main.py).
     """
     bin_file.parent.mkdir(parents=True, exist_ok=True)
-    if use_venv:
+    if sys.platform == "win32":
+        python = (
+            '"%~dp0venv\\Scripts\\python.exe"'
+            if use_venv
+            else "python"
+        )
+        content = (
+            "@echo off\r\n"
+            f'{python} "%~dp0main.py" %*\r\n'
+        )
+    elif use_venv:
         py = app_dir / "venv" / "bin" / "python"
         alias = app_dir / "venv" / "bin" / APP_ID
         try:
@@ -311,7 +376,8 @@ def write_launcher(bin_file: Path, app_dir: Path, use_venv: bool) -> None:
             f'exec /usr/bin/env python3 "{app_dir}/main.py" "$@"\n'
         )
     bin_file.write_text(content, encoding="utf-8")
-    os.chmod(bin_file, 0o755)
+    if sys.platform != "win32":
+        os.chmod(bin_file, 0o755)
     log(f"launcher: {bin_file}")
 
 
@@ -341,11 +407,12 @@ Icon={icon_name}
 
 def write_desktop(desktop_file: Path, exec_path: Path) -> None:
     desktop_file.parent.mkdir(parents=True, exist_ok=True)
+    escaped_exec_path = str(exec_path).replace("\\", "\\\\").replace('"', '\\"')
     desktop_file.write_text(
         DESKTOP_TEMPLATE.format(
             app_name=APP_NAME,
             comment=APP_COMMENT,
-            exec_path=str(exec_path),
+            exec_path=f'"{escaped_exec_path}"',
             icon_name=APP_ID,  # ВАЖНО: имя, а не путь — резолвится через hicolor
             categories=APP_CATEGORIES,
             keywords=APP_KEYWORDS,
@@ -451,16 +518,16 @@ def validate_desktop(desktop_file: Path) -> None:
 
 def do_install(args) -> int:
     user_mode: bool = args.user
+    if args.system and sys.platform != "linux":
+        warn("system-wide installation is supported only on Linux.")
+        return 1
     if touches_system_paths(args) and not is_root():
         warn("system install needs root. Re-run with sudo, or use --user.")
         return 1
 
     home = Path.home()
     if user_mode:
-        app_dir = home / ".local" / "share" / APP_ID
-        bin_file = home / ".local" / "bin" / APP_ID
-        desktop_file = home / ".local" / "share" / "applications" / f"{APP_ID}.desktop"
-        share_dir = home / ".local" / "share"
+        app_dir, bin_file, desktop_file, share_dir = user_install_paths(home)
     else:
         app_dir = Path(args.prefix) if args.prefix else SYSTEM_APP_DIR
         bin_file = Path(args.bindir) / APP_ID if args.bindir else SYSTEM_BIN_FILE
@@ -499,39 +566,54 @@ def do_install(args) -> int:
 
     # 3. Лаунчер, .desktop, иконки
     write_launcher(bin_file, app_dir, use_venv)
-    write_desktop(desktop_file, bin_file)
-    validate_desktop(desktop_file)
-    install_icons(share_dir)
-    refresh_caches(share_dir, user_mode)
+    if sys.platform == "win32":
+        write_windows_shortcut(bin_file, app_dir, home)
+    elif sys.platform == "darwin":
+        write_macos_app(bin_file)
+    else:
+        write_desktop(desktop_file, bin_file)
+        validate_desktop(desktop_file)
+        install_icons(share_dir)
+        refresh_caches(share_dir, user_mode)
 
     print()
     if not deps_ok:
         warn(
             f"{APP_NAME} installed BUT WITHOUT dependencies. "
-            f"Fix pip errors above and re-run: sudo python3 setup.py"
+        "Fix pip errors above and re-run setup.py."
         )
         return 1
     log(f"{APP_NAME} {'updated' if updating else 'installed'} successfully!")
     log(f"run: {bin_file}  (or find '{APP_NAME}' in your app menu)")
-    if user_mode and str(bin_file.parent) not in os.environ.get("PATH", ""):
+    if (
+        user_mode
+        and sys.platform == "linux"
+        and str(bin_file.parent) not in os.environ.get("PATH", "")
+    ):
         warn(f"{bin_file.parent} is not in PATH — add it to ~/.profile")
     return 0
 
 
 def do_uninstall(args) -> int:
     user_mode: bool = args.user
+    if args.system and sys.platform != "linux":
+        warn("system-wide uninstallation is supported only on Linux.")
+        return 1
     if touches_system_paths(args) and not is_root():
         warn("system uninstall needs root. Re-run with sudo, or use --user.")
         return 1
 
     home = Path.home()
     if user_mode:
-        targets = [
-            home / ".local" / "share" / APP_ID,
-            home / ".local" / "bin" / APP_ID,
-            home / ".local" / "share" / "applications" / f"{APP_ID}.desktop",
-        ]
-        share_dir = home / ".local" / "share"
+        app_dir, bin_file, desktop_file, share_dir = user_install_paths(home)
+        targets = [app_dir, bin_file]
+        if desktop_file:
+            targets.append(desktop_file)
+        if sys.platform == "win32":
+            targets.append(windows_shortcut_path(home))
+        if sys.platform == "darwin":
+            targets.append(home / "Applications" / "SkyFall.app")
+        share_dir = share_dir or app_dir
     elif args.prefix or args.bindir or args.sharedir:
         # зеркалит логику do_install для кастомных корней
         if args.prefix and not args.bindir and not args.sharedir:
@@ -575,6 +657,22 @@ def do_uninstall(args) -> int:
                 log(f"not present, skip: {t}")
         except OSError as e:
             warn(f"cannot remove {t}: {e}")
+
+    if sys.platform != "linux":
+        if args.purge:
+            for d in (
+                home / ".skyfall",
+                home / ".config" / APP_ID,
+                home / ".cache" / APP_ID,
+            ):
+                try:
+                    if d.is_dir():
+                        shutil.rmtree(d)
+                        log(f"purged: {d}")
+                except OSError as e:
+                    warn(f"cannot purge {d}: {e}")
+        log("uninstall complete")
+        return 0
 
     # иконки hicolor
     removed_icons = 0
@@ -628,8 +726,8 @@ def do_uninstall(args) -> int:
 def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(
         prog="setup.py",
-        description="SkyFall system installer for Linux (X11 + Wayland icons, "
-        "re-runnable update like wifite2).",
+        description="Install or update SkyFall for the current user. "
+        "System-wide installation is available on Linux.",
     )
     p.add_argument(
         "command",
@@ -639,7 +737,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="action (default: install)",
     )
     p.add_argument(
-        "--user", action="store_true", help="install into ~/.local without root"
+        "--user", action="store_true", help="install for the current user"
+    )
+    p.add_argument(
+        "--system",
+        action="store_true",
+        help="install system-wide (Linux only; requires root)",
     )
     p.add_argument(
         "--prefix",
@@ -675,7 +778,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def main(argv: list[str] | None = None) -> int:
-    args = build_parser().parse_args(argv)
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    if args.user and args.system:
+        parser.error("--user and --system cannot be used together")
+    if sys.platform != "linux" and any((args.prefix, args.bindir, args.sharedir)):
+        parser.error("custom --prefix/--bindir/--sharedir paths are Linux-only")
+    if args.system and sys.platform != "linux":
+        parser.error("--system is supported only on Linux")
+    args.user = is_user_install(args)
     cmd = "uninstall" if args.uninstall else args.command
     if cmd == "uninstall":
         return do_uninstall(args)

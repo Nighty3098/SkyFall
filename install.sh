@@ -3,7 +3,9 @@
 set -euo pipefail
 
 cleanup() {
-    popd >/dev/null 2>&1 || true
+    if [ -n "${INSTALL_DIR:-}" ]; then
+        rm -rf "$INSTALL_DIR"
+    fi
 }
 
 banner() {
@@ -21,21 +23,19 @@ EOF
 }
 
 main() {
-    pushd /tmp >/dev/null
+    INSTALL_DIR="$(mktemp -d "${TMPDIR:-/tmp}/skyfall-install.XXXXXX")"
     trap cleanup EXIT
 
-    rm -rf /tmp/SkyFall
-    git clone --recurse-submodules https://github.com/Nighty3098/SkyFall
-    cd SkyFall
+    git clone --recurse-submodules https://github.com/Nighty3098/SkyFall "$INSTALL_DIR/SkyFall"
+    cd "$INSTALL_DIR/SkyFall"
 
     python3 setup.py "$@"
 
-    popd >/dev/null
-    trap - EXIT
-
-    clear
+    if [ -t 1 ] && command -v clear >/dev/null 2>&1; then
+        clear
+    fi
     banner
-    echo -e "\033[0;32mSuccessfully installed\033[0m"
+    printf '\033[0;32mSuccessfully installed\033[0m\n'
 }
 
 main "$@"

@@ -82,35 +82,37 @@ git clone https://github.com/Nighty3098/SkyFall --recurse-submodules
 
 ```
 
-## `INSTALL (Linux)`
+## `INSTALL`
 
-System-wide install like wifite2 — copies the app to `/opt/skyfall`,
-creates the `skyfall` launcher, the app-menu entry and icons
-(X11 + Wayland):
-
-```bash
-
-sudo python3 setup.py
-
-# run it
-skyfall
-
-# update after git pull (just re-run)
-git pull
-sudo python3 setup.py
-
-# uninstall
-sudo python3 setup.py uninstall
-
-```
-
-Without root (installs to `~/.local`):
+The installer defaults to the current user and creates a virtual environment.
+Clone the repository with its required `txfetch` submodule:
 
 ```bash
-
-python3 setup.py --user
-
+git clone --recurse-submodules https://github.com/Nighty3098/SkyFall
+cd SkyFall
+python3 setup.py
 ```
+
+On Linux, this installs under `~/.local/share/skyfall` and creates a launcher
+and application-menu entry for the current user. Add `~/.local/bin` to `PATH`
+to launch `skyfall` from a terminal. To install system-wide on Linux instead:
+
+```bash
+sudo python3 setup.py --system
+```
+
+On macOS, the installer creates `~/Applications/SkyFall.app`. On Windows, run
+`py -3 setup.py` from PowerShell after cloning; the installer creates a
+per-user installation and Start menu shortcut. To bootstrap Windows without
+manually cloning, download `install.ps1` and run it from PowerShell:
+
+```powershell
+.\install.ps1
+```
+
+The `install.sh` bootstrap works on Linux and macOS and installs for the
+current user by default. To uninstall, run `python3 setup.py uninstall` on
+Linux/macOS or `py -3 setup.py uninstall` on Windows from the cloned repository.
 
 ## `RUN (without install)`
 

@@ -1,5 +1,6 @@
 import asyncio
 import datetime
+import os
 import sys
 from pathlib import Path
 
@@ -30,7 +31,14 @@ class BlockchainSearch:
         }
         for env_key, val in key_map.items():
             if val:
-                txfetch_config.setenv(env_key, val)
+                setenv = getattr(txfetch_config, "setenv", None)
+                if setenv:
+                    setenv(env_key, val)
+                else:
+                    txfetch_config._env[env_key] = val
+                    os.environ[env_key] = val
+                    if hasattr(txfetch_config, env_key):
+                        setattr(txfetch_config, env_key, val)
 
         # Patch frozen class-level API_KEY on EVM adapter classes
         _patch_map = {

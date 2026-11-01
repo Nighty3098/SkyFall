@@ -1,4 +1,7 @@
 import json
+import os
+import stat
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING
 
@@ -220,9 +223,9 @@ class Settings:
         if font_size:
             self.font_size_pt = self._normalize_font_size(font_size.value())
 
-        ensure_config_dir()
-        data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}
         try:
+            ensure_config_dir()
+            data = {key: getattr(self, key) for key in DEFAULT_SETTINGS}
             data = encrypt_settings(data)
         except SettingsEncryptionError as exc:
             logger.error(f"Failed to save settings securely: {exc}")
@@ -233,11 +236,58 @@ class Settings:
                 "file was left unchanged.",
             )
             return False
-        CONFIG_FILE.write_text(
-            json.dumps(data, indent=2, ensure_ascii=False),
-            encoding="utf-8",
-        )
-        restrict_file(CONFIG_FILE)
+        except OSError as exc:
+            logger.error(f"Failed to prepare settings storage: {exc}")
+            QMessageBox.critical(
+                self.ui,
+                "Settings Not Saved",
+                "Settings storage is unavailable. The existing settings file was "
+                "left unchanged.",
+            )
+            return False
+
+        temporary_path = None
+        try:
+            payload = json.dumps(data, indent=2, ensure_ascii=False).encode("utf-8")
+            fd, temporary_path = tempfile.mkstemp(
+                dir=CONFIG_FILE.parent, prefix=f".{CONFIG_FILE.name}."
+            )
+            if hasattr(os, "fchmod"):
+                os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
+            else:  # pragma: no cover - Windows
+                os.chmod(temporary_path, stat.S_IRUSR | stat.S_IWUSR)
+            with os.fdopen(fd, "wb") as stream:
+                stream.write(payload)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.replace(temporary_path, CONFIG_FILE)
+            temporary_path = None
+            try:
+                directory_fd = os.open(
+                    CONFIG_FILE.parent, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0)
+                )
+                try:
+                    os.fsync(directory_fd)
+                finally:
+                    os.close(directory_fd)
+            except OSError:
+                logger.debug("Could not fsync the settings directory")
+        except OSError as exc:
+            logger.error(f"Failed to save settings atomically: {exc}")
+            QMessageBox.critical(
+                self.ui,
+                "Settings Not Saved",
+                "Settings could not be written. The existing settings file was "
+                "left unchanged.",
+            )
+            return False
+        finally:
+            if temporary_path is not None:
+                try:
+                    os.unlink(temporary_path)
+                except FileNotFoundError:
+                    pass
+
         self._apply_theme()
         for cb in self._post_save_callbacks:
             cb(self)

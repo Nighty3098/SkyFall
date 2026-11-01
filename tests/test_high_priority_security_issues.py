@@ -82,6 +82,61 @@ class ArchiveCleaningSecurityTest(unittest.TestCase):
             self.assertEqual(cleaned.namelist(), ["notes.txt"])
             self.assertEqual(cleaned.read("notes.txt"), b"safe content")
 
+    def test_nested_zip_is_processed_in_an_isolated_work_directory(self):
+        nested_bytes = io.BytesIO()
+        with zipfile.ZipFile(nested_bytes, "w") as nested:
+            nested.writestr("notes.txt", "safe content")
+        archive = self.root / "nested.zip"
+        self._zip(archive, [("inner.zip", nested_bytes.getvalue())])
+        temporary_directories = []
+        real_temporary_directory = tempfile.TemporaryDirectory
+
+        def tracked_temporary_directory(*args, **kwargs):
+            temporary_directory = real_temporary_directory(*args, **kwargs)
+            temporary_directories.append(Path(temporary_directory.name))
+            return temporary_directory
+
+        with patch.object(
+            metadata_cleaner.tempfile,
+            "TemporaryDirectory",
+            side_effect=tracked_temporary_directory,
+        ):
+            self.assertTrue(metadata_cleaner.remove_metadata_from_zip(archive))
+        with zipfile.ZipFile(archive) as outer:
+            with zipfile.ZipFile(io.BytesIO(outer.read("inner.zip"))) as nested:
+                self.assertEqual(nested.read("notes.txt"), b"safe content")
+        self.assertEqual(len(temporary_directories), 2)
+        self.assertTrue(all(not path.exists() for path in temporary_directories))
+
+    def test_nested_zip_depth_limit_preserves_original_archive(self):
+        nested_bytes = io.BytesIO()
+        with zipfile.ZipFile(nested_bytes, "w") as nested:
+            nested.writestr("notes.txt", "safe content")
+        archive = self.root / "nested.zip"
+        self._zip(archive, [("inner.zip", nested_bytes.getvalue())])
+        original = archive.read_bytes()
+
+        with patch.object(metadata_cleaner, "MAX_NESTED_ARCHIVE_DEPTH", 0):
+            self.assertFalse(metadata_cleaner.remove_metadata_from_zip(archive))
+
+        self.assertEqual(archive.read_bytes(), original)
+
+    def test_nested_zip_member_and_expansion_budgets_are_shared(self):
+        nested_bytes = io.BytesIO()
+        with zipfile.ZipFile(nested_bytes, "w") as nested:
+            nested.writestr("notes.txt", "x" * 100)
+        archive = self.root / "nested.zip"
+        self._zip(archive, [("inner.zip", nested_bytes.getvalue())])
+        original = archive.read_bytes()
+
+        with patch.object(metadata_cleaner, "MAX_ARCHIVE_MEMBERS", 1):
+            self.assertFalse(metadata_cleaner.remove_metadata_from_zip(archive))
+        self.assertEqual(archive.read_bytes(), original)
+
+        with patch.object(metadata_cleaner, "MAX_ARCHIVE_SIZE", 180):
+            self.assertFalse(metadata_cleaner.remove_metadata_from_zip(archive))
+        self.assertEqual(archive.read_bytes(), original)
+
     def test_epub_preserves_mimetype_first_and_uncompressed(self):
         archive = self.root / "valid.epub"
         with zipfile.ZipFile(archive, "w") as output:
@@ -338,6 +393,172 @@ class DownloadBoundarySecurityTest(unittest.TestCase):
                 self.assertEqual(target.read_bytes(), b"original")
                 self.assertEqual(list(destination.glob("*.part")), [])
                 self.assertEqual(list(destination.glob(".artifact.bin.*.part")), [])
+
+        asyncio.run(run())
+
+    def test_streaming_limit_ignores_content_length_and_cleans_partial_file(self):
+        async def run():
+            with tempfile.TemporaryDirectory() as temporary:
+                destination = Path(temporary)
+                target = destination / "artifact.bin"
+                target.write_bytes(b"original")
+
+                class Content:
+                    async def iter_chunked(self, _size):
+                        yield b"123456"
+
+                class Response:
+                    status = 200
+                    headers = {
+                        "Content-Disposition": 'attachment; filename="artifact.bin"',
+                        "Content-Length": "1",
+                    }
+                    content = Content()
+
+                    async def __aenter__(self):
+                        return self
+
+                    async def __aexit__(self, *_args):
+                        return False
+
+                    def raise_for_status(self):
+                        pass
+
+                class Session:
+                    def __init__(self, **_kwargs):
+                        pass
+
+                    async def __aenter__(self):
+                        return self
+
+                    async def __aexit__(self, *_args):
+                        return False
+
+                    def get(self, *_args, **_kwargs):
+                        return Response()
+
+                with (
+                    patch.object(downloader, "MAX_DOWNLOAD_SIZE", 5),
+                    patch.object(downloader.aiohttp, "TCPConnector"),
+                    patch.object(downloader.aiohttp, "ClientSession", Session),
+                ):
+                    with self.assertRaisesRegex(RuntimeError, "maximum size"):
+                        await downloader.DownloadManager()._download_file(
+                            "https://8.8.8.8/artifact.bin",
+                            destination,
+                            None,
+                            lambda _message: None,
+                            lambda *_args: None,
+                        )
+
+                self.assertEqual(target.read_bytes(), b"original")
+                self.assertEqual(list(destination.glob(".*.part")), [])
+
+        asyncio.run(run())
+
+    def test_download_timeout_includes_explicit_read_and_total_bounds(self):
+        async def run():
+            timeouts = []
+
+            class Content:
+                async def iter_chunked(self, _size):
+                    if False:
+                        yield b""
+
+            class Response:
+                status = 200
+                headers = {"Content-Disposition": 'filename="empty.bin"'}
+                content = Content()
+
+                async def __aenter__(self):
+                    return self
+
+                async def __aexit__(self, *_args):
+                    return False
+
+                def raise_for_status(self):
+                    pass
+
+            class Session:
+                def __init__(self, *, timeout, **_kwargs):
+                    timeouts.append(timeout)
+
+                async def __aenter__(self):
+                    return self
+
+                async def __aexit__(self, *_args):
+                    return False
+
+                def get(self, *_args, **_kwargs):
+                    return Response()
+
+            with tempfile.TemporaryDirectory() as temporary:
+                with (
+                    patch.object(downloader.aiohttp, "TCPConnector"),
+                    patch.object(downloader.aiohttp, "ClientSession", Session),
+                ):
+                    await downloader.DownloadManager()._download_file(
+                        "https://8.8.8.8/empty.bin",
+                        Path(temporary),
+                        None,
+                        lambda _message: None,
+                        lambda *_args: None,
+                    )
+
+            self.assertEqual(len(timeouts), 1)
+            self.assertEqual(timeouts[0].sock_read, downloader.DOWNLOAD_READ_TIMEOUT)
+            self.assertEqual(timeouts[0].total, downloader.DOWNLOAD_TOTAL_TIMEOUT)
+
+        asyncio.run(run())
+
+    def test_proxy_credentials_are_redacted_from_diagnostics(self):
+        proxy = "http://" + "demo" + ":" + "credential" + "@proxy.example:8080"
+        message = downloader.redact_proxy_credentials(f"proxy failed at {proxy}", proxy)
+
+        self.assertNotIn("demo", message)
+        self.assertNotIn("credential", message)
+        self.assertIn("***@", message)
+
+    def test_proxy_callback_never_receives_proxy_credentials(self):
+        async def run():
+            messages = []
+            proxy = "http://" + "demo" + ":" + "credential" + "@proxy.example:8080"
+            with tempfile.TemporaryDirectory() as temporary:
+                with self.assertRaises(RuntimeError):
+                    await downloader.DownloadManager().download(
+                        "https://8.8.8.8/file.bin",
+                        temporary,
+                        proxy=proxy,
+                        log_callback=messages.append,
+                    )
+
+            self.assertTrue(messages)
+            self.assertTrue(all("demo" not in message for message in messages))
+            self.assertTrue(all("credential" not in message for message in messages))
+
+        asyncio.run(run())
+
+    def test_github_archive_work_directory_is_cleaned_after_download_failure(self):
+        async def run():
+            with tempfile.TemporaryDirectory() as temporary:
+                destination = Path(temporary)
+                manager = downloader.DownloadManager()
+
+                async def fail_download(_url, work_dir, *_args, **_kwargs):
+                    work_dir.joinpath("repo.tar.gz").write_bytes(b"partial")
+                    raise RuntimeError("interrupted")
+
+                manager._download_file = fail_download
+                with self.assertRaises(RuntimeError):
+                    await manager._download_github(
+                        "https://github.com/owner/repo",
+                        destination,
+                        None,
+                        lambda _message: None,
+                        lambda *_args: None,
+                    )
+
+                self.assertEqual(list(destination.iterdir()), [])
 
         asyncio.run(run())
 

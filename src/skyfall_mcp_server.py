@@ -17,7 +17,6 @@ from mcp.server.auth.settings import AuthSettings
 from mcp.server.fastmcp import FastMCP
 
 from src.security import (
-    AUTH_ENV,
     TOKEN_ENV,
     decrypt_settings,
     get_or_create_token,

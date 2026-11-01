@@ -7,6 +7,7 @@ from loguru import logger
 from PySide6.QtCore import QObject, QUrl, Signal
 from PySide6.QtGui import QDesktopServices
 
+from src.modules.downloader import redact_proxy_credentials
 from src.ui.output_formatter import divider, end_of, error, info, title
 
 if TYPE_CHECKING:
@@ -84,8 +85,9 @@ class DownloadController:
             )
             self._bridge.finished_signal.emit(result_path)
         except Exception as e:
-            logger.error("start_download: exception: {}", e)
-            self._append_log(error(str(e)))
+            message = redact_proxy_credentials(e, proxy_url)
+            logger.error("start_download: exception: {}", message)
+            self._append_log(error(message))
             bar.setRange(0, 100)
             bar.setValue(0)
 

@@ -29,6 +29,9 @@ YOUTUBE_HOSTS = {
 MAX_TAR_MEMBERS = 100_000
 MAX_TAR_EXPANDED_SIZE = 1_073_741_824
 MAX_REDIRECTS = 10
+MAX_DOWNLOAD_SIZE = 1_073_741_824
+DOWNLOAD_TOTAL_TIMEOUT = 300
+DOWNLOAD_READ_TIMEOUT = 60
 
 
 def _validate_http_url(url: str) -> str:
@@ -149,6 +152,29 @@ def normalize_proxy(proxy: str) -> str:
     return proxy
 
 
+def redact_proxy_credentials(message: str, proxy: str | None = None) -> str:
+    """Remove proxy user-info from diagnostics before they reach a log sink."""
+    sanitized = str(message)
+    if proxy:
+        try:
+            parsed = urlsplit(proxy)
+            netloc = parsed.netloc
+            user_info, separator, _host = netloc.rpartition("@")
+            if separator:
+                redacted_proxy = proxy.replace(user_info + "@", "***@")
+                sanitized = sanitized.replace(proxy, redacted_proxy)
+                for secret in (user_info, unquote(user_info)):
+                    if secret:
+                        sanitized = sanitized.replace(secret, "***")
+        except ValueError:
+            sanitized = sanitized.replace(proxy, "[redacted proxy]")
+    return re.sub(
+        r"(?i)\b([a-z][a-z0-9+.-]*://)[^/\s@]+@",
+        r"\1***@",
+        sanitized,
+    )
+
+
 def _filename_from_response(url: str, response) -> str:
     disposition = response.headers.get("Content-Disposition", "")
     filename_match = re.search(r"filename\*=UTF-8\'\'([^;]+)", disposition)
@@ -216,6 +242,11 @@ class DownloadManager:
         progress = progress_callback or (lambda *args: None)
 
         proxy_url = normalize_proxy(proxy) if proxy else None
+        if proxy_url:
+            original_log = log
+
+            def log(message):
+                original_log(redact_proxy_credentials(message, proxy_url))
 
         logger.debug(
             "download: url={}, dest={}, proxy={}", url, dest_dir, bool(proxy_url)
@@ -263,25 +294,29 @@ class DownloadManager:
         url = _validate_http_url(url)
         log(f"Downloading: {url}")
 
-        if proxy_url:
-            hostname = (urlsplit(url).hostname or "").lower()
-            if not allow_proxy or hostname not in {
-                "github.com",
-                "codeload.github.com",
-            }:
-                raise ValueError(
-                    "Proxies are not supported for arbitrary URLs because their "
-                    "destination cannot be safely verified."
-                )
-            connector = ProxyConnector.from_url(proxy_url, rdns=False)
-        else:
-            connector = aiohttp.TCPConnector(
-                resolver=_PublicResolver(),
-                use_dns_cache=False,
-            )
-        timeout = aiohttp.ClientTimeout(connect=30, total=300)
+        timeout = aiohttp.ClientTimeout(
+            connect=30,
+            sock_read=DOWNLOAD_READ_TIMEOUT,
+            total=DOWNLOAD_TOTAL_TIMEOUT,
+        )
         temporary_path = None
         try:
+            if proxy_url:
+                hostname = (urlsplit(url).hostname or "").lower()
+                if not allow_proxy or hostname not in {
+                    "github.com",
+                    "codeload.github.com",
+                }:
+                    raise ValueError(
+                        "Proxies are not supported for arbitrary URLs because their "
+                        "destination cannot be safely verified."
+                    )
+                connector = ProxyConnector.from_url(proxy_url, rdns=False)
+            else:
+                connector = aiohttp.TCPConnector(
+                    resolver=_PublicResolver(),
+                    use_dns_cache=False,
+                )
             async with aiohttp.ClientSession(
                 connector=connector, timeout=timeout
             ) as session:
@@ -311,6 +346,8 @@ class DownloadManager:
                         )
                         filepath = dest_dir / filename
                         total = int(response.headers.get("Content-Length", 0)) or None
+                        if total is not None and total > MAX_DOWNLOAD_SIZE:
+                            raise ValueError("Download exceeds the maximum size.")
                         downloaded = 0
                         with tempfile.NamedTemporaryFile(
                             mode="wb",
@@ -323,6 +360,10 @@ class DownloadManager:
                             async for chunk in response.content.iter_chunked(
                                 128 * 1024
                             ):
+                                if downloaded + len(chunk) > MAX_DOWNLOAD_SIZE:
+                                    raise ValueError(
+                                        "Download exceeds the maximum size."
+                                    )
                                 file.write(chunk)
                                 downloaded += len(chunk)
                                 percent = (
@@ -341,8 +382,9 @@ class DownloadManager:
             log(f"Saved: {filepath} ({downloaded} bytes)")
             return str(filepath)
         except Exception as e:
-            logger.error("download_file: {}", e)
-            raise RuntimeError(f"Download failed: {e}") from e
+            message = redact_proxy_credentials(e, proxy_url)
+            logger.error("download_file: {}", message)
+            raise RuntimeError(f"Download failed: {message}") from e
         finally:
             if temporary_path is not None:
                 temporary_path.unlink(missing_ok=True)
@@ -398,8 +440,9 @@ class DownloadManager:
         try:
             await asyncio.to_thread(_run)
         except Exception as e:
-            logger.error("download_youtube: {}", e)
-            raise RuntimeError(f"YouTube download failed: {e}") from e
+            message = redact_proxy_credentials(e, proxy_url)
+            logger.error("download_youtube: {}", message)
+            raise RuntimeError(f"YouTube download failed: {message}") from e
 
         if not downloaded_files:
             raise RuntimeError("YouTube download failed: no files produced")
@@ -426,19 +469,21 @@ class DownloadManager:
         archive_url = f"https://github.com/{owner}/{repo}/archive/HEAD.tar.gz"
         log(f"Downloading GitHub repo archive: {owner}/{repo}")
 
-        archive = dest_dir / f"{repo}.tar.gz"
-        await self._download_file(
-            archive_url,
-            dest_dir,
-            proxy_url,
-            log,
-            progress,
-            name=archive.name,
-            allow_proxy=True,
-        )
-
         repo_dir = dest_dir / repo
-        await asyncio.to_thread(self._extract_archive, archive, repo_dir)
+        with tempfile.TemporaryDirectory(
+            prefix=".skyfall_github_", dir=dest_dir
+        ) as work_dir:
+            archive = Path(work_dir) / f"{repo}.tar.gz"
+            await self._download_file(
+                archive_url,
+                Path(work_dir),
+                proxy_url,
+                log,
+                progress,
+                name=archive.name,
+                allow_proxy=True,
+            )
+            await asyncio.to_thread(self._extract_archive, archive, repo_dir)
 
         log(f"Saved: {repo_dir}")
         return str(repo_dir)
@@ -540,16 +585,18 @@ class DownloadManager:
         )
         stdout, stderr = await process.communicate()
         if process.returncode != 0:
-            message = stderr.decode(errors="ignore").strip()
+            message = redact_proxy_credentials(
+                stderr.decode(errors="ignore").strip(), proxy_url
+            )
             logger.error("git_clone: {}", message)
             raise RuntimeError(f"git clone failed: {message}")
 
         for line in stdout.decode(errors="ignore").splitlines():
             if line.strip():
-                log(line.strip())
+                log(redact_proxy_credentials(line.strip(), proxy_url))
         for line in stderr.decode(errors="ignore").splitlines():
             if line.strip():
-                log(line.strip())
+                log(redact_proxy_credentials(line.strip(), proxy_url))
 
         log(f"Saved: {target}")
         return str(target)

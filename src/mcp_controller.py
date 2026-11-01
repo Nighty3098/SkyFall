@@ -17,6 +17,7 @@ class McpController:
         self._host = "127.0.0.1"
         self._port = 9877
         self._graph_bridge = None
+        self._token = ""
 
         self._update_ui_status()
 
@@ -43,9 +44,16 @@ class McpController:
             return
 
         token = get_or_create_token()
+        self._token = token
 
         if self._graph_bridge and self._graph_widget:
-            self._graph_bridge.start(self._graph_widget, self._node_item_cls, token)
+            try:
+                self._graph_bridge.start(self._graph_widget, self._node_item_cls, token)
+            except Exception as e:
+                logger.error(f"Failed to start graph bridge: {e}")
+                self._graph_bridge.stop()
+                self._update_ui_status()
+                return
 
         project_root = Path(__file__).parent.parent
         server_script = str(Path(__file__).parent / "skyfall_mcp_server.py")
@@ -67,13 +75,16 @@ class McpController:
         try:
             self._process = subprocess.Popen(
                 cmd,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.PIPE,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
                 cwd=str(project_root),
                 env=env,
             )
         except Exception as e:
             logger.error(f"Failed to start MCP server: {e}")
+            self._process = None
+            if self._graph_bridge:
+                self._graph_bridge.stop()
             self._update_ui_status()
             return
 
@@ -81,11 +92,8 @@ class McpController:
 
     def _check_started(self):
         if not self.is_running:
-            stderr = ""
-            if self._process and self._process.stderr:
-                stderr = self._process.stderr.read().decode(errors="replace")[:500]
-            logger.error(f"MCP server exited immediately. stderr: {stderr}")
-            self._update_ui_status()
+            logger.error("MCP server exited immediately")
+            self.stop()
             return
 
         try:
@@ -106,25 +114,22 @@ class McpController:
         self._update_ui_status()
 
     def stop(self):
-        if self._process is None:
-            self._update_ui_status()
-            return
-
-        logger.info("Stopping SkyFall MCP Server")
-        try:
-            self._process.terminate()
+        process, self._process = self._process, None
+        if process is not None:
+            logger.info("Stopping SkyFall MCP Server")
             try:
-                self._process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                self._process.kill()
-                self._process.wait(timeout=3)
-        except Exception as e:
-            logger.error(f"Error stopping MCP server: {e}")
-        finally:
-            self._process = None
-            if self._graph_bridge:
-                self._graph_bridge.stop()
-            self._update_ui_status()
+                if process.poll() is None:
+                    process.terminate()
+                    try:
+                        process.wait(timeout=5)
+                    except subprocess.TimeoutExpired:
+                        process.kill()
+                        process.wait(timeout=3)
+            except Exception as e:
+                logger.error(f"Error stopping MCP server: {e}")
+        if self._graph_bridge:
+            self._graph_bridge.stop()
+        self._update_ui_status()
 
     def toggle(self):
         if self.is_running:

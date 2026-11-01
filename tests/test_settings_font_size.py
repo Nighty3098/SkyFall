@@ -1,5 +1,6 @@
 import json
 import os
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -103,6 +104,34 @@ class FontSizeSettingsTest(unittest.TestCase):
         self.assertFalse(result)
         self.assertEqual(self.config_file.read_text(encoding="utf-8"), original)
         show_error.assert_called_once()
+
+    def test_write_failure_keeps_existing_settings_file(self):
+        original = '{"github_token": "previous-ciphertext"}'
+        self.config_file.write_text(original, encoding="utf-8")
+        settings = settings_controller.Settings(self._ui())
+
+        with (
+            mock.patch.object(
+                settings_controller.os,
+                "fsync",
+                side_effect=OSError("simulated disk failure"),
+            ),
+            mock.patch(
+                "src.controllers.settings_controller.QMessageBox.critical"
+            ) as show_error,
+        ):
+            result = settings.save()
+
+        self.assertFalse(result)
+        self.assertEqual(self.config_file.read_text(encoding="utf-8"), original)
+        self.assertEqual(list(self.config_file.parent.glob(".settings.json.*")), [])
+        show_error.assert_called_once()
+
+    def test_saved_settings_have_private_permissions(self):
+        settings = settings_controller.Settings(self._ui())
+
+        settings.save()
+        self.assertEqual(stat.S_IMODE(self.config_file.stat().st_mode), 0o600)
 
 
 if __name__ == "__main__":

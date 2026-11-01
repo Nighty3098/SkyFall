@@ -2,6 +2,7 @@ import json
 import socket
 import struct
 import threading
+import time
 
 from loguru import logger
 
@@ -9,6 +10,38 @@ from src.security import read_token, tokens_equal
 
 GRAPH_BRIDGE_HOST = "127.0.0.1"
 GRAPH_BRIDGE_PORT = 9878
+MAX_FRAME_SIZE = 1024 * 1024
+MAX_CLIENTS = 16
+CLIENT_READ_TIMEOUT = 10.0
+FRAME_READ_TIMEOUT = 10.0
+MAIN_THREAD_INVOKE_TIMEOUT = 15.0
+
+
+def _recv_exact(
+    sock: socket.socket, size: int, deadline: float | None = None
+) -> bytes | None:
+    chunks = []
+    remaining = size
+    original_timeout = sock.gettimeout()
+    try:
+        while remaining:
+            if deadline is not None:
+                time_left = deadline - time.monotonic()
+                if time_left <= 0:
+                    raise TimeoutError("graph bridge frame read timed out")
+                if original_timeout is None or original_timeout <= 0:
+                    sock.settimeout(time_left)
+                else:
+                    sock.settimeout(min(original_timeout, time_left))
+            chunk = sock.recv(remaining)
+            if not chunk:
+                return None
+            chunks.append(chunk)
+            remaining -= len(chunk)
+        return b"".join(chunks)
+    finally:
+        if deadline is not None:
+            sock.settimeout(original_timeout)
 
 
 def _send_msg(sock: socket.socket, data: dict):
@@ -17,17 +50,47 @@ def _send_msg(sock: socket.socket, data: dict):
 
 
 def _recv_msg(sock: socket.socket) -> dict | None:
-    header = sock.recv(4)
-    if len(header) < 4:
+    deadline = time.monotonic() + FRAME_READ_TIMEOUT
+    header = _recv_exact(sock, 4, deadline)
+    if header is None:
         return None
     length = struct.unpack("!I", header)[0]
-    raw = b""
-    while len(raw) < length:
-        chunk = sock.recv(length - len(raw))
-        if not chunk:
-            return None
-        raw += chunk
+    if length > MAX_FRAME_SIZE:
+        raise ValueError(f"Graph bridge frame exceeds {MAX_FRAME_SIZE} bytes")
+    raw = _recv_exact(sock, length, deadline)
+    if raw is None:
+        return None
     return json.loads(raw)
+
+
+class _Invocation:
+    def __init__(self, func, args):
+        self.func = func
+        self.args = args
+        self.result = None
+        self.error = None
+        self.event = threading.Event()
+        self._lock = threading.Lock()
+        self._cancelled = False
+        self._started = False
+
+    def execute(self):
+        with self._lock:
+            if self._cancelled:
+                self.event.set()
+                return
+            self._started = True
+        try:
+            self.result = self.func(*self.args)
+        except Exception as e:
+            self.error = str(e)
+        finally:
+            self.event.set()
+
+    def cancel_if_queued(self):
+        with self._lock:
+            if not self._started:
+                self._cancelled = True
 
 
 class GraphBridgeServer:
@@ -39,6 +102,9 @@ class GraphBridgeServer:
         self._running = False
         self._worker = None
         self._token = ""
+        self._stop_event = threading.Event()
+        self._client_lock = threading.Lock()
+        self._clients: dict[socket.socket, threading.Thread] = {}
 
     def start(self, graph_widget, node_item_cls, token: str = ""):
         from PySide6.QtCore import QObject, Signal, Slot
@@ -51,65 +117,106 @@ class GraphBridgeServer:
             execute = Signal(object)
 
             @Slot(object)
-            def on_execute(self, payload):
-                func, args, result_container, event = payload
-                try:
-                    result_container[0] = func(*args)
-                except Exception as e:
-                    result_container[1] = str(e)
-                finally:
-                    event.set()
+            def on_execute(self, invocation):
+                invocation.execute()
 
         self._worker = Worker()
         from PySide6.QtCore import Qt
 
         self._worker.execute.connect(
-            self._worker.on_execute, Qt.ConnectionType.BlockingQueuedConnection
+            self._worker.on_execute, Qt.ConnectionType.QueuedConnection
         )
 
         self._server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self._server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        self._server_sock.bind((GRAPH_BRIDGE_HOST, GRAPH_BRIDGE_PORT))
-        self._server_sock.listen(5)
-        self._server_sock.settimeout(1.0)
-        self._running = True
+        try:
+            self._server_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            self._server_sock.bind((GRAPH_BRIDGE_HOST, GRAPH_BRIDGE_PORT))
+            self._server_sock.listen(MAX_CLIENTS)
+            self._server_sock.settimeout(1.0)
+            self._stop_event.clear()
+            self._running = True
 
-        self._thread = threading.Thread(target=self._run, daemon=True)
-        self._thread.start()
+            self._thread = threading.Thread(target=self._run, daemon=True)
+            self._thread.start()
+        except Exception:
+            self._server_sock.close()
+            self._server_sock = None
+            raise
         logger.info(
             f"Graph bridge listening on {GRAPH_BRIDGE_HOST}:{GRAPH_BRIDGE_PORT}"
         )
 
     def stop(self):
         self._running = False
-        if self._server_sock:
+        self._stop_event.set()
+        server_sock, self._server_sock = self._server_sock, None
+        if server_sock:
             try:
-                self._server_sock.close()
+                server_sock.close()
             except Exception:
                 pass
-        if self._thread:
-            self._thread.join(timeout=3)
+        with self._client_lock:
+            clients = list(self._clients.items())
+        for sock, _ in clients:
+            try:
+                sock.shutdown(socket.SHUT_RDWR)
+            except OSError:
+                pass
+            try:
+                sock.close()
+            except OSError:
+                pass
+        thread = self._thread
+        if thread and thread is not threading.current_thread():
+            thread.join(timeout=3)
+        deadline = time.monotonic() + 3
+        for _, client_thread in clients:
+            if client_thread is not threading.current_thread():
+                client_thread.join(timeout=max(0, deadline - time.monotonic()))
+        self._thread = None
 
     def _invoke_on_main(self, func, *args) -> dict:
-        result = [None, None]
-        event = threading.Event()
-        self._worker.execute.emit((func, args, result, event))
-        event.wait(timeout=15)
-        if result[1]:
-            return {"error": result[1]}
-        return result[0]
+        invocation = _Invocation(func, args)
+        self._worker.execute.emit(invocation)
+        deadline = time.monotonic() + MAIN_THREAD_INVOKE_TIMEOUT
+        while not invocation.event.is_set():
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                invocation.cancel_if_queued()
+                return {"error": "Graph bridge main-thread invocation timed out"}
+            if self._stop_event.wait(min(remaining, 0.1)):
+                invocation.cancel_if_queued()
+                return {"error": "Graph bridge stopped during main-thread invocation"}
+        if invocation.error:
+            return {"error": invocation.error}
+        return invocation.result
 
     def _run(self):
+        server_sock = self._server_sock
+        if server_sock is None:
+            return
         while self._running:
             try:
-                client, addr = self._server_sock.accept()
+                client, _ = server_sock.accept()
             except TimeoutError:
                 continue
             except OSError:
                 break
-            threading.Thread(
-                target=self._handle_client, args=(client,), daemon=True
-            ).start()
+            with self._client_lock:
+                if not self._running or len(self._clients) >= MAX_CLIENTS:
+                    accepted = False
+                else:
+                    client.settimeout(CLIENT_READ_TIMEOUT)
+                    thread = threading.Thread(
+                        target=self._handle_client,
+                        args=(client,),
+                        daemon=True,
+                    )
+                    self._clients[client] = thread
+                    accepted = True
+                    thread.start()
+            if not accepted:
+                client.close()
 
     def _handle_client(self, sock: socket.socket):
         try:
@@ -123,6 +230,8 @@ class GraphBridgeServer:
             logger.debug(f"Graph bridge client error: {e}")
         finally:
             sock.close()
+            with self._client_lock:
+                self._clients.pop(sock, None)
 
     def _dispatch(self, msg: dict) -> dict:
         if not tokens_equal(self._token, msg.get("token")):

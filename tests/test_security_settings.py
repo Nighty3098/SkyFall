@@ -1,5 +1,10 @@
 import json
+import os
+import stat
+import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 from unittest.mock import patch
 
 from cryptography.fernet import Fernet
@@ -57,6 +62,59 @@ class SensitiveSettingsEncryptionTest(unittest.TestCase):
         ):
             with self.assertRaises(security.SettingsEncryptionError):
                 security.encrypt_settings({"github_token": "must-not-leak"})
+
+    def test_concurrent_token_creation_returns_one_private_token(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_dir = Path(temp_dir)
+            with patch.object(security, "CONFIG_DIR", config_dir):
+                with ThreadPoolExecutor(max_workers=12) as executor:
+                    tokens = list(
+                        executor.map(
+                            lambda _: security.get_or_create_token(), range(48)
+                        )
+                    )
+
+            self.assertEqual(len(set(tokens)), 1)
+            token_file = config_dir / "mcp_token"
+            self.assertEqual(token_file.read_text(encoding="utf-8"), tokens[0])
+            self.assertEqual(stat.S_IMODE(token_file.stat().st_mode), 0o600)
+
+    def test_concurrent_key_creation_returns_one_fernet_key(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_dir = Path(temp_dir)
+            key_file = config_dir / "secret.key"
+            original_fernet, original_ready = security._fernet, security._fernet_ready
+            security._fernet = None
+            security._fernet_ready = False
+            try:
+                with (
+                    patch.object(security, "CONFIG_DIR", config_dir),
+                    patch.object(security, "KEY_FILE", key_file),
+                ):
+                    with ThreadPoolExecutor(max_workers=12) as executor:
+                        futures = [
+                            executor.submit(security._get_fernet) for _ in range(48)
+                        ]
+                        fernets = [future.result() for future in futures]
+
+                self.assertEqual(len({id(fernet) for fernet in fernets}), 1)
+                self.assertEqual(stat.S_IMODE(key_file.stat().st_mode), 0o600)
+            finally:
+                security._fernet = original_fernet
+                security._fernet_ready = original_ready
+
+    def test_existing_token_permissions_are_repaired(self):
+        with tempfile.TemporaryDirectory() as temp_dir:
+            config_dir = Path(temp_dir)
+            token_file = config_dir / "mcp_token"
+            token_file.write_text("existing-token", encoding="utf-8")
+            os.chmod(token_file, 0o644)
+
+            with patch.object(security, "CONFIG_DIR", config_dir):
+                token = security.get_or_create_token()
+
+            self.assertEqual(token, "existing-token")
+            self.assertEqual(stat.S_IMODE(token_file.stat().st_mode), 0o600)
 
 
 if __name__ == "__main__":

@@ -191,11 +191,27 @@ class MainWindow(QMainWindow):
         return None
 
     def closeEvent(self, event):
-        if hasattr(self, "mcpController"):
-            self.mcpController.cleanup()
-        if hasattr(self, "fileAnalyzer"):
-            self._close_task = asyncio.ensure_future(self.fileAnalyzer.close())
+        if not getattr(self, "_shutdown_complete", False):
+            event.ignore()
+            if not getattr(self, "_shutdown_started", False):
+                self._shutdown_started = True
+                self._close_task = asyncio.ensure_future(self._shutdown())
+            return
         super().closeEvent(event)
+
+    async def _shutdown(self):
+        if hasattr(self, "mcpController"):
+            try:
+                self.mcpController.cleanup()
+            except Exception:
+                logger.exception("Failed to stop the MCP controller")
+        if hasattr(self, "fileAnalyzer"):
+            try:
+                await self.fileAnalyzer.close()
+            except Exception:
+                logger.exception("Failed to close the file analyzer")
+        self._shutdown_complete = True
+        self.close()
 
     def eventFilter(self, obj, event):
         if obj is getattr(self.ui, "sourceCodeLinkLabel", None) and event.type() in (

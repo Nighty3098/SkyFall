@@ -20,6 +20,8 @@ import hmac
 import os
 import secrets as _secrets
 import stat
+import tempfile
+import threading
 from pathlib import Path
 
 from loguru import logger
@@ -68,6 +70,7 @@ SENSITIVE_KEYS = frozenset(
 
 _fernet = None
 _fernet_ready = False
+_fernet_lock = threading.Lock()
 
 
 def restrict_file(path: Path) -> None:
@@ -88,38 +91,91 @@ def ensure_config_dir() -> Path:
     return CONFIG_DIR
 
 
+def _read_or_create_secret(path: Path, create_value) -> tuple[bytes, bool]:
+    """Atomically publish a mode-0600 secret and repair permissions when reading."""
+    ensure_config_dir()
+    created = False
+    try:
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+    except FileNotFoundError:
+        value = create_value()
+        fd, temporary_path = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+        try:
+            if hasattr(os, "fchmod"):
+                os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
+            else:  # pragma: no cover - Windows
+                os.chmod(temporary_path, stat.S_IRUSR | stat.S_IWUSR)
+            with os.fdopen(fd, "wb") as stream:
+                fd = -1
+                stream.write(value)
+                stream.flush()
+                os.fsync(stream.fileno())
+            try:
+                os.link(temporary_path, path)
+                created = True
+            except FileExistsError:
+                pass
+        finally:
+            if fd >= 0:
+                os.close(fd)
+            os.unlink(temporary_path)
+        fd = os.open(path, os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0))
+
+    try:
+        file_stat = os.fstat(fd)
+        current_uid = getattr(os, "getuid", lambda: file_stat.st_uid)()
+        if file_stat.st_uid != current_uid:
+            raise OSError(f"Secret file is not owned by the current user: {path}")
+        if hasattr(os, "fchmod"):
+            os.fchmod(fd, stat.S_IRUSR | stat.S_IWUSR)
+        else:  # pragma: no cover - Windows
+            os.chmod(path, stat.S_IRUSR | stat.S_IWUSR)
+        with os.fdopen(fd, "rb") as stream:
+            fd = -1
+            value = stream.read()
+        if not value:
+            raise OSError(f"Secret file is empty: {path}")
+        return value, created
+    finally:
+        if fd >= 0:
+            os.close(fd)
+
+
 def _get_fernet():
     global _fernet, _fernet_ready
-    if _fernet_ready:
-        if _fernet is None:
+    with _fernet_lock:
+        if _fernet_ready:
+            if _fernet is None:
+                raise SettingsEncryptionError(
+                    "Secret storage is unavailable; sensitive settings were not saved."
+                )
+            return _fernet
+
+        try:
+            from cryptography.fernet import Fernet
+        # pragma: no cover - cryptography is a hard dependency
+        except ImportError as exc:
+            _fernet_ready = True
+            raise SettingsEncryptionError(
+                "cryptography is unavailable; sensitive settings were not saved."
+            ) from exc
+
+        try:
+            ensure_config_dir()
+            key, created = _read_or_create_secret(KEY_FILE, Fernet.generate_key)
+            key = key.strip()
+            if not key:
+                raise OSError(f"Secret key file is empty: {KEY_FILE}")
+            if created:
+                logger.info(f"Generated secret storage key at {KEY_FILE}")
+            _fernet = Fernet(key)
+        except Exception as exc:
+            _fernet_ready = True
             raise SettingsEncryptionError(
                 "Secret storage is unavailable; sensitive settings were not saved."
-            )
+            ) from exc
+        _fernet_ready = True
         return _fernet
-    _fernet_ready = True
-
-    try:
-        from cryptography.fernet import Fernet
-    except ImportError as exc:  # pragma: no cover - cryptography is a hard dependency
-        raise SettingsEncryptionError(
-            "cryptography is unavailable; sensitive settings were not saved."
-        ) from exc
-
-    try:
-        ensure_config_dir()
-        if KEY_FILE.exists():
-            key = KEY_FILE.read_bytes().strip()
-        else:
-            key = Fernet.generate_key()
-            KEY_FILE.write_bytes(key)
-            restrict_file(KEY_FILE)
-            logger.info(f"Generated secret storage key at {KEY_FILE}")
-        _fernet = Fernet(key)
-    except Exception as exc:
-        raise SettingsEncryptionError(
-            "Secret storage is unavailable; sensitive settings were not saved."
-        ) from exc
-    return _fernet
 
 
 def is_encrypted(value: object) -> bool:
@@ -178,14 +234,14 @@ def get_or_create_token(name: str = "mcp_token") -> str:
     """Return the shared local access token, generating it on first use."""
     ensure_config_dir()
     path = CONFIG_DIR / name
-    if path.exists():
-        token = path.read_text(encoding="utf-8").strip()
-        if token:
-            return token
-    token = _secrets.token_urlsafe(32)
-    path.write_text(token, encoding="utf-8")
-    restrict_file(path)
-    logger.info(f"Generated local access token at {path}")
+    token_data, created = _read_or_create_secret(
+        path, lambda: _secrets.token_urlsafe(32).encode("utf-8")
+    )
+    token = token_data.decode("utf-8").strip()
+    if not token:
+        raise OSError(f"Secret token file is empty: {path}")
+    if created:
+        logger.info(f"Generated local access token at {path}")
     return token
 
 

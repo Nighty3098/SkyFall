@@ -32,6 +32,7 @@ except ImportError:
 
 MAX_ARCHIVE_MEMBERS = 10_000
 MAX_ARCHIVE_SIZE = 1_073_741_824
+MAX_NESTED_ARCHIVE_DEPTH = 5
 METADATA_SUPPORTED_EXTENSIONS = {
     ".jpg",
     ".jpeg",
@@ -54,10 +55,14 @@ METADATA_SUPPORTED_EXTENSIONS = {
 }
 
 
-def _validated_zip_members(zip_ref):
+def _validated_zip_members(zip_ref, budget=None):
     members = zip_ref.infolist()
     if len(members) > MAX_ARCHIVE_MEMBERS:
         raise ValueError("Archive contains too many entries.")
+    if budget is not None:
+        budget["members"] += len(members)
+        if budget["members"] > MAX_ARCHIVE_MEMBERS:
+            raise ValueError("Nested archives contain too many entries.")
 
     total_size = 0
     seen = set()
@@ -99,7 +104,7 @@ def _validated_zip_members(zip_ref):
     return validated
 
 
-def _extract_validated_zip(zip_ref, destination, members):
+def _extract_validated_zip(zip_ref, destination, members, budget=None):
     destination = Path(destination).resolve()
     written_size = 0
     for member, parts in members:
@@ -117,6 +122,12 @@ def _extract_validated_zip(zip_ref, destination, members):
                 written_size += len(chunk)
                 if written_size > MAX_ARCHIVE_SIZE:
                     raise ValueError("Archive exceeds the maximum expanded size.")
+                if budget is not None:
+                    budget["expanded"] += len(chunk)
+                    if budget["expanded"] > MAX_ARCHIVE_SIZE:
+                        raise ValueError(
+                            "Nested archives exceed the maximum expanded size."
+                        )
                 output.write(chunk)
 
 
@@ -165,19 +176,34 @@ def remove_metadata_from_zip(zip_path):
     """
     Unzip -> Remove metadata from each entry -> Re-zip.
     """
+    return _remove_metadata_from_zip(
+        zip_path,
+        depth=0,
+        budget={"members": 0, "expanded": 0},
+    )
+
+
+def _remove_metadata_from_zip(zip_path, depth, budget):
     try:
         logger.info(f"Processing ZIP: {zip_path}")
         zip_path = Path(zip_path)
+        if depth > MAX_NESTED_ARCHIVE_DEPTH:
+            raise ValueError("Nested archive depth exceeds the maximum.")
         with tempfile.TemporaryDirectory(prefix="skyfall_zip_") as temp_dir:
             with zipfile.ZipFile(zip_path, "r") as zip_ref:
-                members = _validated_zip_members(zip_ref)
-                _extract_validated_zip(zip_ref, temp_dir, members)
+                members = _validated_zip_members(zip_ref, budget)
+                _extract_validated_zip(zip_ref, temp_dir, members, budget)
 
             for member, parts in members:
                 if member.is_dir():
                     continue
                 file_path = Path(temp_dir).joinpath(*parts)
-                if file_path.suffix.lower() not in METADATA_SUPPORTED_EXTENSIONS:
+                if file_path.suffix.lower() == ".zip":
+                    if not _remove_metadata_from_zip(file_path, depth + 1, budget):
+                        raise RuntimeError(
+                            f"Could not clean archive entry: {member.filename}"
+                        )
+                elif file_path.suffix.lower() not in METADATA_SUPPORTED_EXTENSIONS:
                     remove_metadata(file_path)
                 elif not remove_metadata(file_path):
                     raise RuntimeError(

@@ -291,4 +291,5 @@ class Settings:
         self._apply_theme()
         for cb in self._post_save_callbacks:
             cb(self)
-        logger.success("Settings saved")
+        logger.success(f"Settings saved to {CONFIG_FILE}")
+        return True

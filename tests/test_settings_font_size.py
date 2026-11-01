@@ -53,7 +53,7 @@ class FontSizeSettingsTest(unittest.TestCase):
         settings = settings_controller.Settings(ui)
         ui.fontSizeSpinBox.setValue(16)
 
-        settings.save()
+        self.assertTrue(settings.save())
 
         saved = json.loads(self.config_file.read_text(encoding="utf-8"))
         self.assertEqual(saved["font_size_pt"], 16)

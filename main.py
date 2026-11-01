@@ -157,6 +157,7 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.ui)
 
         self.settings = Settings(self.ui)
+        setup_settings_connectors(self.settings)
         if self.settings.frameless_window:
             self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
@@ -469,7 +470,6 @@ class MainWindow(QMainWindow):
 
         setup_dorking_connectors(self.dorkingController)
         setup_domain_connectors(self.domainController)
-        setup_settings_connectors(self.settings)
         setup_metadata_connectors(self.fileAnalyzeController)
         setup_steganography_connectors(self.stegController)
         setup_mail_connectors(self.mailController)

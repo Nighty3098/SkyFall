@@ -173,12 +173,13 @@ class MainWindow(QMainWindow):
             self, self.ui.mainStackedWidget, self.ui.menuListWidget
         )
 
-        self.init_font("resources/Caveat-VariableFont_wght.ttf")
-        self.init_font("resources/IosevkaCharonMono-Regular.ttf")
-        self.init_font("resources/BebasNeue-Regular.ttf")
+        resources_dir = Path(__file__).resolve().parent / "resources"
+        self.init_font(resources_dir / "Caveat-VariableFont_wght.ttf")
+        self.init_font(resources_dir / "IosevkaCharonMono-Regular.ttf")
+        self.init_font(resources_dir / "BebasNeue-Regular.ttf")
 
-    def init_font(self, font_path):
-        font_id = QFontDatabase.addApplicationFont(font_path)
+    def init_font(self, font_path: Path):
+        font_id = QFontDatabase.addApplicationFont(str(font_path))
 
         if font_id == -1:
             logger.error(f"Error loading font: {font_path}")

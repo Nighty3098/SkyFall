@@ -18,7 +18,7 @@ import subprocess
 import sys
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Iterator
+from typing import Callable, Iterator
 
 APP_ID = "skyfall"  # должно совпадать с именем skyfall.desktop (Wayland app-id)
 APP_NAME = "SkyFall"
@@ -67,7 +67,7 @@ def error(msg: str) -> None:
 
 @contextmanager
 def stage(label: str, start: int, end: int) -> Iterator[None]:
-    progress(start, label)
+    progress(start, label, status="Starting")
     try:
         yield
     except Exception:
@@ -75,19 +75,35 @@ def stage(label: str, start: int, end: int) -> Iterator[None]:
         error(f"{label} failed.")
         raise
     else:
-        progress(end, label)
+        progress(end, label, status="Complete")
 
 
-def progress(percent: int, label: str) -> None:
-    width = 32
+def progress(
+    percent: int,
+    label: str,
+    *,
+    status: str | None = None,
+) -> None:
+    width = 30
     filled = width * percent // 100
-    bar = f"[{'#' * filled}{'-' * (width - filled)}] {percent:3d}%"
+    color = ""
+    reset = ""
     if sys.stdout.isatty():
-        print(f"\r{bar}  {label}", end="", flush=True)
-        if percent in (20, 80, 95, 100):
+        color = "\033[32m" if percent == 100 else "\033[36m"
+        reset = "\033[0m"
+    bar = f"{color}[{'#' * filled}{'-' * (width - filled)}]{reset} {percent:3d}%"
+    message = f"  {label}"
+    if status:
+        if sys.stdout.isatty():
+            message += f"  \033[1;33m{status}\033[0m"
+        else:
+            message += f"  {status}"
+    if sys.stdout.isatty():
+        print(f"\r{bar}{message}", end="", flush=True)
+        if status == "Complete" or percent == 100:
             print(flush=True)
     else:
-        print(f"{bar}  {label}", flush=True)
+        print(f"{bar}{message}", flush=True)
 
 
 def run(cmd: list[str], timeout: int = 120, **kwargs) -> tuple[int, str]:
@@ -265,7 +281,25 @@ def resize_icon(src: Path, dst: Path, size: int) -> bool:
         return False
 
 
-def copy_tree(src: Path, dst: Path) -> None:
+def copy_item_count(src: Path) -> int:
+    count = 0
+    for entry in src.iterdir():
+        if entry.name in COPY_IGNORE_DIRS or entry.name in COPY_IGNORE_FILES:
+            continue
+        if entry.name.endswith((".pyc", ".pyo")):
+            continue
+        if entry.is_symlink() or not entry.is_dir():
+            count += 1
+        elif entry.name != ".git":
+            count += copy_item_count(entry)
+    return count
+
+
+def copy_tree(
+    src: Path,
+    dst: Path,
+    on_item: Callable[[str], None] | None = None,
+) -> None:
     """Рекурсивно скопировать проект в dst (идемпотентно, для обновлений)."""
     dst.mkdir(parents=True, exist_ok=True)
     for entry in src.iterdir():
@@ -282,16 +316,20 @@ def copy_tree(src: Path, dst: Path) -> None:
             if target.exists() or target.is_symlink():
                 target.unlink()
             target.symlink_to(os.readlink(entry))
+            if on_item:
+                on_item(name)
         elif entry.is_dir():
             if name == ".git":
                 continue
-            copy_tree(entry, target)
+            copy_tree(entry, target, on_item=on_item)
             # чистим __pycache__ внутри скопированного
             for pyc in target.rglob("__pycache__"):
                 if pyc.is_dir():
                     shutil.rmtree(pyc, ignore_errors=True)
         else:
             shutil.copy2(entry, target)
+            if on_item:
+                on_item(name)
 
 
 def ensure_venv(app_dir: Path) -> Path:
@@ -301,10 +339,10 @@ def ensure_venv(app_dir: Path) -> Path:
     venv_dir = app_dir / "venv"
     venv_python = venv_python_path(venv_dir)
     if not venv_python.is_file():
-        log(f"creating venv: {venv_dir}")
+        progress(27, "Python environment", status="Creating virtual environment")
         venvlib.create(str(venv_dir), with_pip=True)
     else:
-        log(f"reusing venv: {venv_dir}")
+        progress(30, "Python environment", status="Reusing virtual environment")
     return venv_python
 
 
@@ -322,16 +360,19 @@ def verify_deps(venv_python: Path) -> bool:
 
 def pip_install(venv_python: Path, no_deps: bool = False) -> bool:
     req = REPO_ROOT / "requirements.txt"
+    progress(35, "Python packages", status="Upgrading pip")
     run(
         [str(venv_python), "-m", "pip", "install", "--upgrade", "pip"],
         cwd=str(REPO_ROOT),
         timeout=600,
     )
     if no_deps:
+        progress(80, "Python packages", status="Dependency installation skipped")
         return True
     if not req.is_file():
         warn("requirements.txt not found, skipping deps")
         return True
+    progress(40, "Python packages", status="Installing requirements")
     try:
         p = subprocess.run(
             [str(venv_python), "-m", "pip", "install", "-r", str(req)],
@@ -350,6 +391,8 @@ def pip_install(venv_python: Path, no_deps: bool = False) -> bool:
         details = (p.stdout or "") + (p.stderr or "")
         error("dependency installation failed:\n" + details.strip()[-4000:])
         return False
+    progress(78, "Python packages", status="Packages installed")
+    progress(80, "Python packages", status="Verifying dependencies")
     return verify_deps(venv_python)
 
 
@@ -573,17 +616,32 @@ def do_install(args) -> int:
         return 1
 
     print(f"{action} {APP_NAME}", flush=True)
-    with stage("Copying application files", 0, 20):
-        copy_tree(REPO_ROOT, app_dir)
+    with stage("Copying application files", 0, 25):
+        total_items = copy_item_count(REPO_ROOT)
+        copied_items = 0
+
+        def report_copy(name: str) -> None:
+            nonlocal copied_items
+            copied_items += 1
+            if sys.stdout.isatty() and total_items:
+                percent = copied_items * 25 // total_items
+                progress(
+                    percent,
+                    "Copying application files",
+                    status=f"{copied_items}/{total_items}: {name}",
+                )
+
+        copy_tree(REPO_ROOT, app_dir, on_item=report_copy)
 
     use_venv = not args.no_venv
     deps_ok = True
-    with stage("Preparing Python environment and dependencies", 20, 80):
+    with stage("Preparing Python environment and dependencies", 25, 80):
         if use_venv:
             venv_python = ensure_venv(app_dir)
             deps_ok = pip_install(venv_python, no_deps=args.no_deps)
 
-    with stage("Creating launchers and application shortcuts", 80, 95):
+    progress(85, "Application setup", status="Creating launcher and shortcuts")
+    with stage("Creating launchers and application shortcuts", 85, 99):
         write_launcher(bin_file, app_dir, use_venv)
         if sys.platform == "win32":
             write_windows_shortcut(bin_file, app_dir, home)
@@ -598,7 +656,7 @@ def do_install(args) -> int:
     if not deps_ok:
         error(f"{APP_NAME} installation is incomplete because dependencies failed.")
         return 1
-    progress(100, "Installation complete")
+    progress(100, "Installation complete", status="Ready")
     print(f"{APP_NAME} {'updated' if updating else 'installed'} successfully.", flush=True)
     return 0
 

@@ -22,18 +22,33 @@ EOF
     printf '\033[0m\n'
 }
 
+step() {
+    printf '\033[1;36m›\033[0m %s\n' "$*"
+}
+
 main() {
     INSTALL_DIR="$(mktemp -d "${TMPDIR:-/tmp}/skyfall-install.XXXXXX")"
     trap cleanup EXIT
 
     banner
-    if ! git clone --quiet --recurse-submodules \
+    printf '\n'
+
+    if ! command -v git >/dev/null 2>&1; then
+        printf 'Error: git is required. Install git and run this script again.\n' >&2
+        return 1
+    fi
+
+    step 'Downloading SkyFall...'
+    if ! git clone --quiet --depth 1 --recurse-submodules --shallow-submodules \
         https://github.com/Nighty3098/SkyFall "$INSTALL_DIR/SkyFall" \
         >"$INSTALL_DIR/clone.log" 2>&1; then
         printf 'Error: could not download SkyFall.\n' >&2
         tail -n 30 "$INSTALL_DIR/clone.log" >&2
         return 1
     fi
+
+    step 'Starting installer...'
+    printf '\n'
     cd "$INSTALL_DIR/SkyFall"
 
     python3 setup.py "$@"

@@ -15,13 +15,15 @@ try {
 
         New-Item -ItemType Directory -Path $tempDir | Out-Null
         $repoDir = Join-Path $tempDir "SkyFall"
-        & git clone --recurse-submodules https://github.com/Nighty3098/SkyFall $repoDir
+        Write-Host "  Downloading SkyFall..." -ForegroundColor Cyan
+        & git clone --depth 1 --recurse-submodules --shallow-submodules https://github.com/Nighty3098/SkyFall $repoDir
         if ($LASTEXITCODE -ne 0) {
             throw "Could not clone SkyFall (exit code $LASTEXITCODE)."
         }
         $clonedRepo = $true
     }
 
+    Write-Host "  Starting installer..." -ForegroundColor Cyan
     if (Get-Command py -ErrorAction SilentlyContinue) {
         & py -3 (Join-Path $repoDir "setup.py") @InstallerArgs
     } elseif (Get-Command python -ErrorAction SilentlyContinue) {

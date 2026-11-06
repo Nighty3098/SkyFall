@@ -17,7 +17,7 @@ from src.transforms import ChildNodeDef, TransformDef, TransformResult
 def my_handler(value, modules):
     # ``value`` is the node title/content selected in the graph.
     # ``modules`` gives access to SkyFall's modules, for example:
-    #     shodan = modules.get("shodan")
+    #     shodan = modules.get("shodan_search")
     return TransformResult(
         children=[
             ChildNodeDef(
@@ -48,7 +48,12 @@ The handler may be synchronous or asynchronous. It must return one of:
 - ``TransformResult``;
 - a ``ChildNodeDef`` or a list of them;
 - a string (shown as content);
-- a mapping with ``children`` / ``content`` / ``evidence`` keys.
+- a mapping with ``children`` / ``content`` / ``evidence`` keys;
+- ``None`` when there is no result.
+
+Set ``use_content=True`` on the ``TransformDef`` to pass the full node content
+instead of the title-derived value. A broken plugin is logged as a warning and
+skipped, so other plugins and built-in transforms keep working.
 
 Alternatively, define ``get_transforms()`` and return the list from it:
 

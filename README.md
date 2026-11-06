@@ -66,6 +66,47 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 
 > Detailed per-tab reference, settings and API keys: [`DOC.md`](./DOC.md).
 
+## `CUSTOM GRAPH TRANSFORMS`
+
+SkyFall automatically loads graph transform plugins from `~/.skyfall/transforms/*.py`. The directory and a `README.md` template are created on first launch; override the path with `SKYFALL_TRANSFORMS_DIR` if needed. Plugins appear in the same `Ctrl+T` transform picker as built-ins, and the directory is refreshed automatically when a file changes.
+
+```python
+from src.transforms import ChildNodeDef, TransformDef, TransformResult
+
+
+def lookup(value, modules):
+    # value: node title/content, modules: SkyFall module objects
+    del modules
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"Result for {value}",
+                entity_type="Custom",
+                content="Details produced by the plugin.",
+            )
+        ]
+    )
+
+
+TRANSFORMS = [
+    TransformDef(
+        name="My Custom Transform",
+        description="What this transform does",
+        input_types=["Domain", "IP", "Custom"],
+        handler=lookup,
+    )
+]
+```
+
+- A plugin must expose `TRANSFORMS` or a `get_transforms()` function returning `TransformDef` objects.
+- Handlers receive `(value, modules)` and may be synchronous or asynchronous.
+- Handlers may return `TransformResult`, `ChildNodeDef`(s), a string, a mapping with `children`/`content`/`evidence`, or `None`.
+- Supported input types: `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`, `Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation`, `Custom`.
+- Broken plugins are logged and skipped; built-in transforms are unaffected. If a plugin reuses a built-in `(entity type, name)` pair, the built-in wins.
+- Ready-to-copy example: [`examples/transforms/example_transform.py`](./examples/transforms/example_transform.py). Full API reference: [DOC.md](./DOC.md#custom-graph-transforms).
+
+> **Security.** Plugins are ordinary Python code with SkyFall's permissions. Only install code you trust.
+
 ## `REQUIREMENTS`
 
 - **Python 3.13+** (CI targets 3.14)
@@ -220,7 +261,7 @@ The same token also protects the graph bridge on `127.0.0.1:9878`, which the MCP
 
 ## `DATA & STORAGE`
 
-- **`~/.skyfall/`** — `settings.json` (encrypted secrets), `secret.key`, `mcp_token`, `proxies.txt`, `logs/`, `data/`.
+- **`~/.skyfall/`** — `settings.json` (encrypted secrets), `secret.key`, `mcp_token`, `proxies.txt`, `logs/`, `data/`, `transforms/` (custom graph transforms and their README template).
 - **Cases** — folder per investigation with `domains/`, `telegram/`, `username/`, `email/`, `social/`, `leaks/`, `geo/`, `archive/`, `github/`, `phone/`, `mac/`, `blockchain/`, `files/`, `steganography/`, `reports/`, `dorking/`, `downloads/`, `graph/`.
 - **Telegram DB** — SQLite `SkyFall_TG.db` (`channels`, `users`, `posts`, `discussions`, `members`, `links`) and `SkyFall_TG_media/`.
 
@@ -236,7 +277,7 @@ The same token also protects the graph bridge on `127.0.0.1:9878`, which the MCP
 
 ```
 
-The pipeline is `main.py → src/connectors.py (Qt signals) → src/controllers/ → src/modules/`.
+The pipeline is `main.py → src/connectors.py (Qt signals) → src/controllers/ → src/modules/`; graph transforms and plugin discovery live in `src/transforms/`.
 See [`DOC.md`](./DOC.md) for the full code map.
 
 ## `CONTACTS`

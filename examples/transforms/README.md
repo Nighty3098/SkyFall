@@ -56,7 +56,12 @@ TRANSFORMS = [
 
 The handler may be synchronous or asynchronous. It can return a
 `TransformResult`, a `ChildNodeDef`, a list of children, a string, or a mapping
-with `children` / `content` / `evidence` keys.
+with `children` / `content` / `evidence` keys. Set `use_content=True` on a
+`TransformDef` to pass the full node content instead of the title-derived
+value.
+
+Full field reference, module keys and troubleshooting:
+[`DOC.md`](../../DOC.md#custom-graph-transforms).
 
 Only install plugins you trust: plugin code runs with the same permissions as
 SkyFall.

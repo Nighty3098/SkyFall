@@ -37,6 +37,7 @@ Author: Nighty3098.
    - [Settings](#settings)
    - [Proxy](#proxy)
 6. [Graph](#graph-1)
+   - [Custom Graph Transforms](#custom-graph-transforms)
 7. [MCP Servers](#mcp-servers)
 8. [Code Structure](#code-structure)
 9. [Data and Storage](#data-and-storage)
@@ -399,7 +400,7 @@ Searching for transactions by indirect data (amount, time, network, memo) via th
 - `bcAmountEdit` — amount or range `min-max`.
 - `bcToleranceSpin` — amount tolerance (fractions).
 - `bcMemoEdit` — memo (for TON).
-- `bcSearchButton` + `bcProgressBar` — start; results in `bcDebug`: tx_id, confidence %, time, amount/coin, score breakdown Δt/ΔA/ΔT/M, from/to addresses, memo.
+- `bcSearchButton` + `bcProgressBar` — start; results in `bcDebug`: tx_id, confidence %, time, amount/coin, score breakdown (time delta, time score, amount score, memo score), from/to addresses, memo.
 
 **Keys:** TronGrid, Etherscan (ETH+Base), BscScan, TonAPI, Helius (Solana). BTC/LTC/DOGE/BCH — public nodes without keys.
 
@@ -479,7 +480,7 @@ See [Settings and API Keys](#settings-and-api-keys). Also the **MCP Server** blo
 
 `owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`, `communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`, `hosted_by`, `linked_to`.
 
-Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bézier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `wallet`→…) are normalised to the canonical vocabulary.
+Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bezier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `wallet`→…) are normalised to the canonical vocabulary.
 
 Nodes render as cards with an entity-coloured header band, symbol chip, and type caption; ports stay subtle until the node is hovered. The canvas paints a dotted grid, and an empty graph shows a short "how to start" hint.
 
@@ -507,8 +508,157 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS), NASA FIRMS wildfires, location report;
   - **Photo** → EXIF/metadata, GPS, steganography, Search4Faces, VirusTotal;
   - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
-- **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py` (override with `SKYFALL_TRANSFORMS_DIR`). Every plugin exposes a `TRANSFORMS` list or a `get_transforms()` function with `TransformDef` objects. Handlers may be synchronous or asynchronous and can return `TransformResult`, `ChildNodeDef`(s), a string, or a mapping with `children`/`content`/`evidence`. Plugins are shown in the same transform picker as built-ins; a broken plugin is logged and skipped without affecting the rest. The directory and a `README.md` template are created on first launch; a ready-to-copy example lives in `examples/transforms/`.
+- **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py`; see [Custom Graph Transforms](#custom-graph-transforms) below.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
+
+### Custom Graph Transforms
+
+SkyFall's transform system is modular: the graph controller only handles node
+creation, layout and undo grouping, while transform discovery lives in
+`src/transforms/`. Built-in transforms and user plugins share the same
+`TransformDef` API and appear in the same `Ctrl+T` picker.
+
+#### Plugin directory and lifecycle
+
+- Default directory: `~/.skyfall/transforms/`.
+- Override for development or portable setups:
+  ```bash
+  export SKYFALL_TRANSFORMS_DIR=/path/to/transforms
+  ```
+- On first launch SkyFall creates the directory and a `README.md` template.
+- Every top-level `*.py` file is loaded. Files whose names start with `_` are
+  ignored, as are subdirectories.
+- The directory is checked at most once every two seconds. Adding, editing or
+  removing a plugin updates the transform picker without restarting SkyFall.
+- A broken plugin is logged as a warning and skipped. Other plugins and all
+  built-in transforms continue to work.
+- A ready-to-copy example is shipped in `examples/transforms/example_transform.py`.
+
+#### Plugin contract
+
+A plugin must define one of the following:
+
+- a module-level `TRANSFORMS` list of `TransformDef` objects;
+- a `get_transforms()` function returning such a list.
+
+Minimal example:
+
+```python
+from src.transforms import ChildNodeDef, TransformDef, TransformResult
+
+
+def lookup(value, modules):
+    # ``value`` is selected from the graph node (title or content).
+    # ``modules`` provides SkyFall's module objects.
+    del modules
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"Result for {value}",
+                entity_type="Custom",
+                content="Details produced by the plugin.",
+                evidence=["https://example.com/source"],
+            )
+        ],
+        content=f"Lookup finished for {value}",
+    )
+
+
+TRANSFORMS = [
+    TransformDef(
+        name="My Custom Transform",
+        description="What this transform does",
+        input_types=["Domain", "IP", "Custom"],
+        output_type="Custom",
+        relationship="related_to",
+        handler=lookup,
+    )
+]
+```
+
+The same plugin can expose a factory instead of a constant list:
+
+```python
+def get_transforms():
+    return [TransformDef(...)]
+```
+
+#### `TransformDef` fields
+
+| Field | Required | Default | Meaning |
+|---|---|---|---|
+| `name` | yes | — | Unique label shown in the transform picker. |
+| `description` | no | `""` | Short explanation shown next to the name. |
+| `input_types` | yes | — | Entity types for which the transform is offered. |
+| `output_type` | no | `Custom` | Entity type used for generated child nodes when no explicit children are returned. |
+| `relationship` | no | `related_to` | Edge type applied to generated child nodes. |
+| `handler` | yes | — | Callable `(value, modules) -> result`; may be sync or async. |
+| `use_content` | no | `False` | Pass the full node content instead of the title-derived value. |
+
+Supported entity types are `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`,
+`Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation` and
+`Custom`. Relationship names use the same vocabulary as the rest of the graph:
+`owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`,
+`communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`,
+`hosted_by` and `linked_to`.
+
+#### Handler contract
+
+```python
+def handler(value: str, modules: dict):
+    ...
+```
+
+`value` is the normalized node input used by built-in transforms:
+
+- `Domain`, `IP`, `Email`, `Phone`, `MAC` and `Crypto` extract the matching
+  value from the node title/content;
+- `Photo` resolves a local file path from the title, content or evidence;
+- other entity types use the node title, falling back to content.
+
+`modules` exposes the same objects used by built-in transforms. Common keys
+include `domain_analyzer`, `username_search`, `maigret_search`,
+`reddit_osint`, `phone_search`, `mac_location`, `mail_search`,
+`email_accounts`, `social_search`, `leak_search`, `geo_analysis`,
+`archive_search`, `github_search`, `shodan_search`, `file_analyzer`,
+`steg_analyzer`, `search4faces`, `dorks_search_engine`,
+`blockchain_search`, `email_header_analyzer`, `tg_analyzer` and `settings`.
+Use `modules.get("name")` and handle a missing module gracefully.
+
+Handlers should not block the UI thread. For network work, either use an
+`async def` handler with `await` or delegate blocking calls to
+`asyncio.to_thread` / `run_in_executor`.
+
+The runner accepts these return values:
+
+- `TransformResult` — full control over children, content and evidence;
+- `ChildNodeDef` or a list of `ChildNodeDef` — generated children;
+- a string — displayed as transform content;
+- a mapping with `children`, `content` and/or `evidence` keys;
+- `None` — no output.
+
+Generated children are connected to the selected node, arranged in an arc and
+selected as one undo step. Multi-node execution only offers transforms common
+to every selected entity type; results from all nodes are grouped into a
+single undo step.
+
+#### Reloading, duplicates and troubleshooting
+
+- Plugin transforms are appended after built-ins for each entity type.
+- If a plugin uses the same `(entity type, name)` as a built-in transform, the
+  built-in wins and a warning is logged.
+- Use the SkyFall log (`~/.skyfall/logs/`) to diagnose load errors, import
+  failures and invalid return values.
+- A plugin may be reloaded explicitly from Python:
+  ```python
+  window.graphTransformController.reload_plugins()
+  ```
+- Test a plugin by dropping it into the plugin directory and opening
+  `⚡ Transforms → Search Transforms…` (`Ctrl+T`) on a node of a supported type.
+
+> **Security.** Transform plugins are ordinary Python code executed with
+> SkyFall's permissions. Only install plugins you trust. Review third-party
+> plugin code before adding it to `~/.skyfall/transforms/`.
 
 ---
 

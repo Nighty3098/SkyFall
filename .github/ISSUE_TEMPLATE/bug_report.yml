@@ -65,7 +65,7 @@ body:
     id: logs
     attributes:
       label: Logs
-      description: Full terminal output or log file. SkyFall uses Loguru — enable debug logging with `-v` flag if possible. Attach any crash tracebacks.
+      description: Full terminal output or log file. SkyFall uses Loguru — enable debug logging with `-d` flag if possible. Attach any crash tracebacks.
       placeholder: REQUIRED for crashes and unexpected behavior.
     validations:
       required: true

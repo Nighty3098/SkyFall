@@ -506,6 +506,15 @@ class MainWindow(QMainWindow):
                 "leak_search": self.leakSearch,
                 "geo_analysis": self.geoAnalysis,
                 "archive_search": self.archiveSearch,
+                "github_search": self.githubSearch,
+                "file_analyzer": self.fileAnalyzer,
+                "steg_analyzer": self.stegAnalyzer,
+                "search4faces": self.search4faces,
+                "dorks_search_engine": self.dorksSearchEngine,
+                "blockchain_search": self.blockchainSearch,
+                "email_header_analyzer": self.emailHeaderAnalyzer,
+                "tg_analyzer": self.tgAnalyzer,
+                "settings": self.settings,
             },
         )
         self.reportController = ReportController(self.ui, self.case_manager)

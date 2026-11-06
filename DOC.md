@@ -470,13 +470,17 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 - **Geolocation nodes** — a built-in map (OpenStreetMap tiles, zoom 5–18, marker, Ctrl+wheel to zoom).
 - Context menu: edit node/edge, edge style, attach evidence, color, delete; **Analysis** — shortest path (by click), degree centrality (node scaling + top-5), community detection (greedy modularity).
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
-  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Infostealer/Leaks;
-  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback Snapshots;
+  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
+  - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
+  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save;
   - **IP** → geolocation, ports, domains on IP, Threat Intel;
-  - **Email** → IntelX, Registered Accounts, Infostealer/Leaks;
-  - **Phone** → parsing, reverse lookup, leaks;
+  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search;
+  - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
+  - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
   - **MAC** → geolocation;
-  - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS).
+  - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS), NASA FIRMS wildfires, location report;
+  - **Photo** → EXIF/metadata, GPS, steganography, Search4Faces, VirusTotal;
+  - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing).
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
 
 ---

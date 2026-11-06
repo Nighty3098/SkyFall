@@ -1,9 +1,11 @@
 import asyncio
+import inspect
 import math
 import re
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from pathlib import Path
 
 from PySide6.QtCore import QPointF
 
@@ -46,6 +48,7 @@ class TransformDef:
     output_type: str
     relationship: str
     handler: Callable | None = None
+    use_content: bool = False
 
 
 @dataclass
@@ -60,6 +63,45 @@ class ChildNodeDef:
 class TransformResult:
     children: list[ChildNodeDef] = field(default_factory=list)
     content: str = ""
+    evidence: list[str] = field(default_factory=list)
+
+
+def _transform_input(node, etype, title, content, default_prefix):
+    """Pick the value a transform should send to its module."""
+    if etype == "Photo":
+        candidates = [title, content, *(getattr(node, "evidence", None) or [])]
+        for candidate in candidates:
+            path = _local_file_path(candidate)
+            if path:
+                return path
+        return ""
+
+    pattern = _PATTERNS.get(etype)
+    if pattern:
+        m = pattern.fullmatch(title) if title and title != default_prefix else None
+        if m:
+            return m.group()
+        m = pattern.search(content) if content else None
+        if m:
+            return m.group()
+        return ""
+
+    if title and title != default_prefix:
+        return title
+    return content
+
+
+def _local_file_path(value):
+    if not value:
+        return ""
+    text = str(value).strip().strip("\"'")
+    if not text or text.startswith(("http://", "https://")):
+        return ""
+    text = text.removeprefix("file://").strip()
+    path = Path(text).expanduser()
+    if path.exists():
+        return str(path)
+    return ""
 
 
 class GraphTransformController:
@@ -84,26 +126,16 @@ class GraphTransformController:
         etype = node.entity_type
         default_prefix = f"New {etype}"
 
-        pattern = _PATTERNS.get(etype)
-        if pattern:
-            m = pattern.fullmatch(title) if title and title != default_prefix else None
-            if m:
-                input_value = m.group()
-            else:
-                m = pattern.search(content) if content else None
-                if m:
-                    input_value = m.group()
-                else:
-                    return
-        else:
-            if title and title != default_prefix:
-                input_value = title
-            elif content:
-                input_value = content
-            else:
-                return
+        input_value = _transform_input(node, etype, title, content, default_prefix)
+        if transform_def.use_content and content:
+            input_value = content
+        if not input_value:
+            return
 
-        result = await transform_def.handler(input_value, self._modules)
+        try:
+            result = await transform_def.handler(input_value, self._modules)
+        except Exception as exc:  # noqa: BLE001 - report failures in the graph
+            result = TransformResult(content=f"{transform_def.name} failed: {exc}")
 
         children = list(result.children)
         if not children and result.content:
@@ -112,6 +144,7 @@ class GraphTransformController:
                     title=result.content.split("\n")[0][:60],
                     entity_type=transform_def.output_type or "Custom",
                     content=result.content,
+                    evidence=list(result.evidence),
                 )
             )
 
@@ -204,6 +237,72 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_reddit_osint,
                 ),
+                TransformDef(
+                    name="Instagram Profile",
+                    description="Fetch Instagram profile, bio, followers and links",
+                    input_types=["Username"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_instagram_profile,
+                ),
+                TransformDef(
+                    name="GitHub Profile",
+                    description="GitHub profile, repos, followers and contact links",
+                    input_types=["Username"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_github_user,
+                ),
+            ],
+            "Person": [
+                TransformDef(
+                    name="Search Social Networks",
+                    description="Check 400+ sites for this person's handle",
+                    input_types=["Person"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_username_search,
+                ),
+                TransformDef(
+                    name="GitHub Profile",
+                    description="GitHub profile, repos, followers and contact links",
+                    input_types=["Person"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_github_user,
+                ),
+                TransformDef(
+                    name="Instagram Profile",
+                    description="Fetch Instagram profile, bio, followers and links",
+                    input_types=["Person"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_instagram_profile,
+                ),
+                TransformDef(
+                    name="Bluesky / Mastodon",
+                    description="Find this person on Bluesky and Mastodon",
+                    input_types=["Person"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_social_search,
+                ),
+                TransformDef(
+                    name="Reddit OSINT",
+                    description="Archive activity, subreddits, identifiers & timezone",
+                    input_types=["Person"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_reddit_osint,
+                ),
+                TransformDef(
+                    name="Web Search (Dorks)",
+                    description="Web search for this name or handle",
+                    input_types=["Person"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_web_search,
+                ),
             ],
             "Domain": [
                 TransformDef(
@@ -245,6 +344,30 @@ class GraphTransformController:
                     output_type="Organization",
                     relationship="registered_at",
                     handler=_transform_domain_whois,
+                ),
+                TransformDef(
+                    name="HTTP Headers",
+                    description="Fetch response status, final URL and HTTP headers",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="hosted_by",
+                    handler=_transform_domain_headers,
+                ),
+                TransformDef(
+                    name="WAF Detection",
+                    description="Detect Cloudflare, Akamai, Sucuri and other WAFs",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="hosted_by",
+                    handler=_transform_domain_waf,
+                ),
+                TransformDef(
+                    name="Host Discovery",
+                    description="Probe common subdomains and keep resolvable hosts",
+                    input_types=["Domain"],
+                    output_type="Domain",
+                    relationship="hosted_by",
+                    handler=_transform_domain_hosts,
                 ),
                 TransformDef(
                     name="Subdomains",
@@ -304,7 +427,7 @@ class GraphTransformController:
                 ),
                 TransformDef(
                     name="Port Scan",
-                    description="Nmap port scan (1-65535)",
+                    description="Nmap top-1024 port scan with service detection",
                     input_types=["Domain"],
                     output_type="Custom",
                     relationship="hosted_by",
@@ -342,6 +465,30 @@ class GraphTransformController:
                     relationship="archived_at",
                     handler=_transform_archive_snapshots,
                 ),
+                TransformDef(
+                    name="Wayback Availability",
+                    description="Check for the closest Wayback snapshot",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="archived_at",
+                    handler=_transform_archive_availability,
+                ),
+                TransformDef(
+                    name="Archive Check",
+                    description="Check Wayback and archive.today availability",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="archived_at",
+                    handler=_transform_archive_check,
+                ),
+                TransformDef(
+                    name="Save to Wayback",
+                    description="Request a fresh Wayback Machine snapshot",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="archived_at",
+                    handler=_transform_archive_save,
+                ),
             ],
             "IP": [
                 TransformDef(
@@ -354,7 +501,7 @@ class GraphTransformController:
                 ),
                 TransformDef(
                     name="Port Scan",
-                    description="Nmap port scan (1-65535)",
+                    description="Nmap top-1024 port scan with service detection",
                     input_types=["IP"],
                     output_type="Custom",
                     relationship="hosted_by",
@@ -375,6 +522,40 @@ class GraphTransformController:
                     output_type="Custom",
                     relationship="associated_with",
                     handler=_transform_ip_threat_intel,
+                ),
+            ],
+            "Organization": [
+                TransformDef(
+                    name="GitHub Profile",
+                    description="GitHub organization profile and repositories",
+                    input_types=["Organization"],
+                    output_type="Organization",
+                    relationship="associated_with",
+                    handler=_transform_github_user,
+                ),
+                TransformDef(
+                    name="GitHub Repositories",
+                    description="Search GitHub repositories owned by this organization",
+                    input_types=["Organization"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_github_repos,
+                ),
+                TransformDef(
+                    name="Bluesky / Mastodon",
+                    description="Find this organization on Bluesky and Mastodon",
+                    input_types=["Organization"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_social_search,
+                ),
+                TransformDef(
+                    name="Web Search (Dorks)",
+                    description="Web search for this organization",
+                    input_types=["Organization"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_web_search,
                 ),
             ],
             "Email": [
@@ -402,6 +583,22 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_leak_search,
                 ),
+                TransformDef(
+                    name="HIBP Breaches",
+                    description="Have I Been Pwned breach history",
+                    input_types=["Email"],
+                    output_type="Organization",
+                    relationship="associated_with",
+                    handler=_transform_email_hibp,
+                ),
+                TransformDef(
+                    name="GitHub Code Search",
+                    description="Find repositories and files mentioning this email",
+                    input_types=["Email"],
+                    output_type="Organization",
+                    relationship="associated_with",
+                    handler=_transform_github_emails,
+                ),
             ],
             "Phone": [
                 TransformDef(
@@ -427,6 +624,14 @@ class GraphTransformController:
                     output_type="Custom",
                     relationship="associated_with",
                     handler=_transform_phone_leaks,
+                ),
+                TransformDef(
+                    name="7tel Caller ID",
+                    description="Caller ID score, reviews and similar numbers",
+                    input_types=["Phone"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_phone_7tel,
                 ),
             ],
             "MAC": [
@@ -456,6 +661,103 @@ class GraphTransformController:
                     relationship="associated_with",
                     handler=_transform_geo_gdacs,
                 ),
+                TransformDef(
+                    name="Nearby Wildfires",
+                    description="NASA FIRMS active fire detections around this point",
+                    input_types=["Geolocation"],
+                    output_type="Geolocation",
+                    relationship="located_at",
+                    handler=_transform_geo_firms,
+                ),
+                TransformDef(
+                    name="Location Report",
+                    description="Sun/shadow and nearby wildfire report",
+                    input_types=["Geolocation"],
+                    output_type="Custom",
+                    relationship="located_at",
+                    handler=_transform_geo_report,
+                ),
+            ],
+            "Photo": [
+                TransformDef(
+                    name="EXIF & Metadata",
+                    description="File metadata, hashes and embedded EXIF fields",
+                    input_types=["Photo"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_photo_metadata,
+                ),
+                TransformDef(
+                    name="GPS Coordinates",
+                    description="Extract GPS coordinates from image metadata",
+                    input_types=["Photo"],
+                    output_type="Geolocation",
+                    relationship="located_at",
+                    handler=_transform_photo_gps,
+                ),
+                TransformDef(
+                    name="Steganography Scan",
+                    description="LSB, spectral, EOI, tail-data and ELA analysis",
+                    input_types=["Photo"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_photo_stego,
+                ),
+                TransformDef(
+                    name="Face Search (S4F)",
+                    description="Search4Faces reverse image search",
+                    input_types=["Photo"],
+                    output_type="Person",
+                    relationship="associated_with",
+                    handler=_transform_photo_faces,
+                ),
+                TransformDef(
+                    name="VirusTotal Scan",
+                    description="Hash lookup or upload to VirusTotal",
+                    input_types=["Photo"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_photo_virustotal,
+                ),
+            ],
+            "Passport": [
+                TransformDef(
+                    name="Web Search (Dorks)",
+                    description="Web search for this document or identifier",
+                    input_types=["Passport"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_web_search,
+                ),
+            ],
+            "Crypto": [
+                TransformDef(
+                    name="Web Search (Dorks)",
+                    description="Web search for this wallet or address",
+                    input_types=["Crypto"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_web_search,
+                ),
+            ],
+            "Custom": [
+                TransformDef(
+                    name="Web Search (Dorks)",
+                    description="Web search for this node's text",
+                    input_types=["Custom"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_web_search,
+                ),
+                TransformDef(
+                    name="Shadow Search",
+                    description="Inverse shadow geometry from content ratio/bearing",
+                    input_types=["Custom"],
+                    output_type="Geolocation",
+                    relationship="located_at",
+                    handler=_transform_geo_shadow_search,
+                    use_content=True,
+                ),
             ],
         }
 
@@ -477,6 +779,7 @@ async def _run_transform(
     input_value: str,
     parser: Callable,
     label: str | None = None,
+    **kwargs,
 ) -> TransformResult:
     engine = modules.get(module_key)
     if not engine:
@@ -484,9 +787,16 @@ async def _run_transform(
         return TransformResult(content=f"{msg} module not available")
     fn = getattr(engine, method)
     result = (
-        await fn(input_value) if asyncio.iscoroutinefunction(fn) else fn(input_value)
+        await fn(input_value, **kwargs)
+        if inspect.iscoroutinefunction(fn)
+        else fn(input_value, **kwargs)
     )
     return parser(result, input_value)
+
+
+def _setting(modules: dict, name: str) -> str:
+    settings = modules.get("settings")
+    return str(getattr(settings, name, "") or "") if settings is not None else ""
 
 
 def _safe_float(value):
@@ -1595,13 +1905,24 @@ async def _transform_phone_parse(phone, modules):
 
 async def _transform_phone_lookup(phone, modules):
     return await _run_transform(
-        modules, "phone_search", "reverse_lookup", phone, _parse_phone_lookup
+        modules,
+        "phone_search",
+        "reverse_lookup",
+        phone,
+        _parse_phone_lookup,
+        numverify_key=_setting(modules, "numverify_api_key"),
+        abstractapi_key=_setting(modules, "abstractapi_api_key"),
     )
 
 
 async def _transform_phone_leaks(phone, modules):
     return await _run_transform(
-        modules, "phone_search", "check_leaks", phone, _parse_phone_leaks
+        modules,
+        "phone_search",
+        "check_leaks",
+        phone,
+        _parse_phone_leaks,
+        intelx_key=_setting(modules, "intelligent_x_api_key"),
     )
 
 
@@ -1947,3 +2268,1050 @@ async def _transform_geo_gdacs(target, modules):
     coords = engine.parse_coords(target)
     data["_coords"] = coords or (None, None)
     return _parse_geo_gdacs(data, target)
+
+
+# ── Additional transforms ─────────────────────────────────────────
+
+
+def _parse_instagram_profile(data, username):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"Instagram unavailable: {data['error']}")
+
+    handle = str(data.get("username") or username).lstrip("@")
+    url = f"https://www.instagram.com/{handle}/" if handle else ""
+    profile = _pack_content(
+        [
+            kv("Handle", f"@{handle}"),
+            kv("Full name", data.get("full_name", "")),
+            kv("Biography", data.get("biography", "")),
+            kv("Followers", data.get("followers", "?")),
+            kv("Following", data.get("followees", "?")),
+            kv("Posts", data.get("posts", "?")),
+            kv("Private", data.get("is_private", "?")),
+            kv("Verified", data.get("is_verified", "?")),
+            kv("External URL", data.get("external_url", "")),
+            kv("User ID", data.get("userid", "")),
+        ]
+    )
+    children = [
+        ChildNodeDef(
+            title=f"@{handle}" if handle else "Instagram profile",
+            entity_type="Custom",
+            content=profile,
+            evidence=[url] if url else [],
+        )
+    ]
+    lines = [divider(), title(f"Instagram: @{handle}")]
+    if data.get("full_name"):
+        lines.append(bullet(data["full_name"]))
+    if data.get("biography"):
+        lines.append(bullet(data["biography"]))
+    lines.append(kv("Followers", data.get("followers", "?")))
+    lines.append(kv("Posts", data.get("posts", "?")))
+    if data.get("external_url"):
+        lines.append(kv("External URL", data["external_url"]))
+    lines += [end_of("instagram"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[url] if url else [],
+    )
+
+
+async def _transform_instagram_profile(username, modules):
+    engine = modules.get("social_search")
+    if not engine:
+        return TransformResult(content="Social module not available")
+    data = await engine.instagram_profile(username)
+    return _parse_instagram_profile(data, username)
+
+
+def _parse_github_user(data, username):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"GitHub unavailable: {data['error']}")
+
+    profile = data.get("profile") or {}
+    login = str(profile.get("login") or username)
+    url = f"https://github.com/{login}"
+    profile_text = _pack_content(
+        [
+            kv("Login", login),
+            kv("Name", profile.get("name", "")),
+            kv("Company", profile.get("company", "")),
+            kv("Location", profile.get("location", "")),
+            kv("Blog", profile.get("blog", "")),
+            kv("Email", profile.get("email", "")),
+            kv("Twitter", profile.get("twitter", "")),
+            kv("Bio", profile.get("bio", "")),
+            kv("Public repos", profile.get("public_repos", "?")),
+            kv("Followers", profile.get("followers", "?")),
+            kv("Following", profile.get("following", "?")),
+            kv("Created", profile.get("created", "")),
+            kv("Type", profile.get("type", "")),
+        ]
+    )
+    children = [
+        ChildNodeDef(
+            title=f"GitHub: {login}",
+            entity_type="Custom",
+            content=profile_text,
+            evidence=[url],
+        )
+    ]
+    repos = data.get("repos") or []
+    for repo in repos[:CHILD_THRESHOLD]:
+        repo_name = repo.get("full_name", "?")
+        children.append(
+            ChildNodeDef(
+                title=repo_name,
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Repository", repo_name),
+                        kv("Language", repo.get("language", "N/A")),
+                    ]
+                ),
+                evidence=[f"https://github.com/{repo_name}"],
+            )
+        )
+    if len(repos) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(repos) - CHILD_THRESHOLD} more repos",
+                entity_type="Custom",
+                content="\n".join(
+                    str(repo.get("full_name", "?")) for repo in repos[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+
+    lines = [
+        divider(),
+        title(f"GitHub profile: {login}"),
+        kv("Name", profile.get("name", "")),
+        kv("Repos", profile.get("public_repos", "?")),
+        kv("Followers", profile.get("followers", "?")),
+        kv("Location", profile.get("location", "")),
+    ]
+    lines += [end_of("github profile"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[url],
+    )
+
+
+async def _transform_github_user(username, modules):
+    engine = modules.get("github_search")
+    if not engine:
+        return TransformResult(content="GitHub module not available")
+    data = await engine.search_user(username)
+    return _parse_github_user(data, username)
+
+
+def _parse_github_repos(data, query):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(
+            content=f"GitHub repositories unavailable: {data['error']}"
+        )
+    repos = data.get("repositories") or []
+    children = []
+    for repo in repos[:CHILD_THRESHOLD]:
+        name = repo.get("full_name", "?")
+        children.append(
+            ChildNodeDef(
+                title=name,
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Repository", name),
+                        kv("Description", repo.get("description", "")),
+                        kv("Language", repo.get("language", "N/A")),
+                        kv("Stars", repo.get("stars", "?")),
+                        kv("Forks", repo.get("forks", "?")),
+                    ]
+                ),
+                evidence=[repo.get("url", "")] if repo.get("url") else [],
+            )
+        )
+    if len(repos) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(repos) - CHILD_THRESHOLD} more repos",
+                entity_type="Custom",
+                content="\n".join(
+                    str(repo.get("full_name", "?")) for repo in repos[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+    lines = [
+        divider(),
+        title(f"GitHub repositories: {query}"),
+        kv("Found", len(repos)),
+    ]
+    for repo in repos[:20]:
+        lines.append(
+            bullet(f"{repo.get('full_name', '?')} ({repo.get('stars', 0)} stars)")
+        )
+    for err in data.get("errors") or []:
+        lines.append(fmt_info(err))
+    if not repos:
+        lines.append(fmt_info(data.get("message", "No repositories found")))
+    lines += [end_of("github repositories"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_github_repos(query, modules):
+    engine = modules.get("github_search")
+    if not engine:
+        return TransformResult(content="GitHub module not available")
+    data = await engine.search_repos(f"org:{query}")
+    return _parse_github_repos(data, query)
+
+
+def _parse_github_emails(data, email):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(
+            content=f"GitHub email search unavailable: {data['error']}"
+        )
+    results = data.get("results") or []
+    children = []
+    for item in results[:CHILD_THRESHOLD]:
+        repo = item.get("repo", "?")
+        children.append(
+            ChildNodeDef(
+                title=repo,
+                entity_type="Organization",
+                content=_pack_content(
+                    [
+                        kv("Repository", repo),
+                        kv("Path", item.get("path", "")),
+                        kv("Email", email),
+                    ]
+                ),
+                evidence=[item.get("url", "")] if item.get("url") else [],
+            )
+        )
+    if len(results) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(results) - CHILD_THRESHOLD} more files",
+                entity_type="Custom",
+                content="\n".join(
+                    str(item.get("url", "")) for item in results[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+    lines = [
+        divider(),
+        title(f"GitHub code search: {email}"),
+        kv("Matches", len(results)),
+    ]
+    for item in results[:20]:
+        lines.append(bullet(f"{item.get('repo', '?')}: {item.get('path', '')}"))
+    for err in data.get("errors") or []:
+        lines.append(fmt_info(err))
+    if not results:
+        lines.append(fmt_info(data.get("message", "No matches found")))
+    lines += [end_of("github email search"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_github_emails(email, modules):
+    engine = modules.get("github_search")
+    if not engine:
+        return TransformResult(content="GitHub module not available")
+    data = await engine.search_emails(email)
+    return _parse_github_emails(data, email)
+
+
+def _parse_email_hibp(data, email):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"HIBP unavailable: {data['error']}")
+    if data.get("message"):
+        return TransformResult(content=str(data["message"]))
+    breaches = data.get("breaches") or []
+    children = []
+    for breach in breaches[:CHILD_THRESHOLD]:
+        name = breach.get("name", "?")
+        children.append(
+            ChildNodeDef(
+                title=str(name)[:60],
+                entity_type="Organization",
+                content=_pack_content(
+                    [
+                        kv("Breach", name),
+                        kv("Domain", breach.get("domain", "?")),
+                        kv("Date", breach.get("date", "?")),
+                        kv("Records", breach.get("records", "?")),
+                        kv("Data classes", ", ".join(breach.get("data") or [])),
+                    ]
+                ),
+                evidence=[f"https://haveibeenpwned.com/PwnedWebsites#{name}"],
+            )
+        )
+    lines = [
+        divider(),
+        title(f"HIBP: {email}"),
+        kv("Breaches", len(breaches)),
+    ]
+    for breach in breaches[:20]:
+        lines.append(bullet(f"{breach.get('name', '?')} ({breach.get('date', '?')})"))
+    if not breaches:
+        lines.append(fmt_info("No HIBP breaches found"))
+    lines += [end_of("hibp"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_email_hibp(email, modules):
+    engine = modules.get("mail_search")
+    if not engine:
+        return TransformResult(content="Mail module not available")
+    data = await engine.check_hibp(email)
+    return _parse_email_hibp(data, email)
+
+
+def _parse_phone_7tel(data, phone):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"7tel unavailable: {data['error']}")
+    url = data.get("url", "")
+    lines = [divider(), title(f"7tel caller ID: {phone}")]
+    if data.get("message"):
+        lines.append(fmt_info(data["message"]))
+    score = data.get("score")
+    if score and score != "unknown":
+        lines.append(kv("Score", score))
+    info = data.get("info") or []
+    if info:
+        lines.append(bullet(", ".join(str(item) for item in info)))
+    children = []
+    if score and score != "unknown":
+        children.append(
+            ChildNodeDef(
+                title=f"Reputation: {score}",
+                entity_type="Custom",
+                content=kv("Phone", phone) + "\n" + kv("Score", score),
+                evidence=[url] if url else [],
+            )
+        )
+    if info:
+        children.append(
+            ChildNodeDef(
+                title="Caller ID details",
+                entity_type="Custom",
+                content="\n".join(str(item) for item in info),
+                evidence=[url] if url else [],
+            )
+        )
+    reviews = data.get("reviews") or []
+    for review in reviews[:CHILD_THRESHOLD]:
+        author = review.get("author", "?")
+        children.append(
+            ChildNodeDef(
+                title=f"Review: {author}"[:60],
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Author", author),
+                        kv("Date", review.get("date", "?")),
+                        kv("Comment", review.get("comment", "")),
+                    ]
+                ),
+                evidence=[url] if url else [],
+            )
+        )
+        lines.append(bullet(f"{author}: {review.get('comment', '')}"))
+    for similar in (data.get("similar") or [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=str(similar),
+                entity_type="Phone",
+                content=kv("Similar number", similar),
+            )
+        )
+    lines += [end_of("7tel"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[url] if url else [],
+    )
+
+
+async def _transform_phone_7tel(phone, modules):
+    engine = modules.get("phone_search")
+    if not engine:
+        return TransformResult(content="Phone module not available")
+    data = await engine.search_7tel(phone)
+    return _parse_phone_7tel(data, phone)
+
+
+def _parse_domain_headers(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"HTTP headers: {domain}"))
+    headers = {str(k).lower(): str(v) for k, v in (data.get("headers") or {}).items()}
+    status = data.get("status_code", "?")
+    final_url = str(data.get("final_url", ""))
+    header_text = "\n".join(f"{key}: {val}" for key, val in headers.items())
+    children = [
+        ChildNodeDef(
+            title=f"HTTP {status}",
+            entity_type="Custom",
+            content=header_text[:3000],
+            evidence=[final_url] if final_url else [],
+        )
+    ]
+    interesting = (
+        "server",
+        "x-powered-by",
+        "content-security-policy",
+        "strict-transport-security",
+        "x-frame-options",
+        "cf-ray",
+        "via",
+    )
+    for key in interesting:
+        if key in headers:
+            children.append(
+                ChildNodeDef(
+                    title=f"{key}: {headers[key]}",
+                    entity_type="Custom",
+                    content=kv(key, headers[key]),
+                )
+            )
+    lines = [
+        divider(),
+        title(f"HTTP headers: {domain}"),
+        kv("Status", status),
+        kv("Final URL", final_url),
+        *[bullet(f"{key}: {val}") for key, val in headers.items()],
+        end_of("http headers"),
+        divider(),
+    ]
+    return TransformResult(
+        children=children[: CHILD_THRESHOLD + 1], content=_pack_content(lines)
+    )
+
+
+async def _transform_domain_headers(domain, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "get_http_headers", domain, _parse_domain_headers
+    )
+
+
+def _parse_domain_waf(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"WAF: {domain}"))
+    providers = [str(p) for p in (data.get("waf_providers") or [])]
+    server = data.get("server", "Unknown")
+    children = []
+    if not providers or providers == ["NONE"]:
+        children.append(
+            ChildNodeDef(
+                title="No WAF detected",
+                entity_type="Custom",
+                content=kv("Server", server),
+            )
+        )
+    else:
+        for provider in providers[:CHILD_THRESHOLD]:
+            children.append(
+                ChildNodeDef(
+                    title=f"WAF: {provider}",
+                    entity_type="Custom",
+                    content=_pack_content(
+                        [kv("Provider", provider), kv("Server", server)]
+                    ),
+                )
+            )
+    lines = [
+        divider(),
+        title(f"WAF detection: {domain}"),
+        kv("Detected", data.get("waf_detected", False)),
+        kv("Providers", ", ".join(providers)),
+        kv("Server", server),
+        end_of("waf detection"),
+        divider(),
+    ]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_domain_waf(domain, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "detect_waf", domain, _parse_domain_waf
+    )
+
+
+def _parse_domain_hosts(data, domain):
+    if isinstance(data, dict) and data.get("error"):
+        return TransformResult(content=f"Host discovery failed: {data['error']}")
+    hosts = data if isinstance(data, list) else []
+    children = [
+        ChildNodeDef(title=str(host), entity_type="Domain", content=kv("Host", host))
+        for host in hosts[:CHILD_THRESHOLD]
+    ]
+    if len(hosts) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(hosts) - CHILD_THRESHOLD} more hosts",
+                entity_type="Domain",
+                content="\n".join(str(host) for host in hosts[CHILD_THRESHOLD:]),
+            )
+        )
+    lines = [divider(), title(f"Host discovery: {domain}"), kv("Found", len(hosts))]
+    lines.extend(bullet(host) for host in hosts)
+    if not hosts:
+        lines.append(fmt_info("No additional hosts resolved"))
+    lines += [end_of("host discovery"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_domain_hosts(domain, modules):
+    return await _run_transform(
+        modules, "domain_analyzer", "get_hosts", domain, _parse_domain_hosts
+    )
+
+
+def _parse_archive_availability(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Archive availability: {domain}"))
+    snapshot = data.get("snapshot") or {}
+    children = []
+    if snapshot:
+        url = snapshot.get("url", "")
+        children.append(
+            ChildNodeDef(
+                title=f"Wayback: {snapshot.get('timestamp', '?')}",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("URL", url),
+                        kv("Timestamp", snapshot.get("timestamp", "?")),
+                        kv("Status", snapshot.get("status", "")),
+                    ]
+                ),
+                evidence=[url] if url else [],
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Archive availability: {domain}"),
+        kv("Available", bool(snapshot)),
+    ]
+    if snapshot:
+        lines.append(bullet(f"Wayback: {snapshot.get('url', '')}"))
+    else:
+        lines.append(fmt_info("No Wayback snapshot found"))
+    lines += [end_of("archive availability"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_archive_availability(domain, modules):
+    engine = modules.get("archive_search")
+    if not engine:
+        return TransformResult(content="Archive module not available")
+    data = await engine.availability(domain)
+    return _parse_archive_availability(data, domain)
+
+
+def _parse_archive_check(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Archive check: {domain}"))
+    children = []
+    wayback = data.get("wayback") or {}
+    snapshot = wayback.get("snapshot") or {}
+    if snapshot:
+        url = snapshot.get("url", "")
+        children.append(
+            ChildNodeDef(
+                title=f"Wayback: {snapshot.get('timestamp', '?')}",
+                entity_type="Custom",
+                content=_pack_content(
+                    [kv("URL", url), kv("Timestamp", snapshot.get("timestamp", "?"))]
+                ),
+                evidence=[url] if url else [],
+            )
+        )
+    archive_today = data.get("archive_today") or {}
+    if archive_today.get("found"):
+        url = archive_today.get("snapshot", "")
+        children.append(
+            ChildNodeDef(
+                title="archive.today snapshot",
+                entity_type="Custom",
+                content=_pack_content(
+                    [kv("URL", url), kv("Status", archive_today.get("status", "?"))]
+                ),
+                evidence=[url] if url else [],
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Archive check: {domain}"),
+        kv("Wayback", bool(snapshot)),
+        kv("archive.today", bool(archive_today.get("found"))),
+    ]
+    if snapshot:
+        lines.append(bullet(f"Wayback: {snapshot.get('url', '')}"))
+    if archive_today.get("found"):
+        lines.append(bullet(f"archive.today: {archive_today.get('snapshot', '')}"))
+    lines += [end_of("archive check"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_archive_check(domain, modules):
+    engine = modules.get("archive_search")
+    if not engine:
+        return TransformResult(content="Archive module not available")
+    data = await engine.check(domain)
+    return _parse_archive_check(data, domain)
+
+
+def _parse_archive_save(data, domain):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Wayback save: {domain}"))
+    archive_url = data.get("archive_url", "")
+    children = []
+    if archive_url:
+        children.append(
+            ChildNodeDef(
+                title="Wayback snapshot saved",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Original URL", data.get("url", domain)),
+                        kv("Archive URL", archive_url),
+                    ]
+                ),
+                evidence=[archive_url],
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Wayback save: {domain}"),
+        kv("Saved", data.get("saved", False)),
+        kv("Archive URL", archive_url),
+        end_of("wayback save"),
+        divider(),
+    ]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_archive_save(domain, modules):
+    engine = modules.get("archive_search")
+    if not engine:
+        return TransformResult(content="Archive module not available")
+    data = await engine.save(domain)
+    return _parse_archive_save(data, domain)
+
+
+def _parse_geo_firms(data, target):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"NASA FIRMS: {target}"))
+    fires = data.get("fires") or []
+    children = []
+    for fire in fires[:CHILD_THRESHOLD]:
+        lat, lon = fire.get("latitude"), fire.get("longitude")
+        if lat is None or lon is None:
+            continue
+        children.append(
+            ChildNodeDef(
+                title=f"{lat}, {lon}",
+                entity_type="Geolocation",
+                content=_pack_content(
+                    [
+                        kv("Latitude", lat),
+                        kv("Longitude", lon),
+                        kv("Brightness", fire.get("brightness", "?")),
+                        kv("FRP", fire.get("frp", "?")),
+                        kv("Confidence", fire.get("confidence", "?")),
+                        kv("Date", fire.get("date", "?")),
+                        kv("Time", fire.get("time", "?")),
+                    ]
+                ),
+            )
+        )
+    lines = [
+        divider(),
+        title(f"NASA FIRMS near {target}"),
+        kv("Detections", data.get("count", 0)),
+        kv("Source", data.get("source", "?")),
+    ]
+    for fire in fires[:20]:
+        lines.append(
+            bullet(
+                f"{fire.get('latitude')}, {fire.get('longitude')} "
+                f"({fire.get('date', '?')} {fire.get('time', '?')})"
+            )
+        )
+    if not fires:
+        lines.append(fmt_info("No active fires detected"))
+    lines += [end_of("firms"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_geo_firms(target, modules):
+    engine = modules.get("geo_analysis")
+    if not engine:
+        return TransformResult(content="Geo module not available")
+    coords = engine.parse_coords(target)
+    if coords is None:
+        return TransformResult(content=f"Invalid coordinates: {target}")
+    lat, lon = coords
+    data = await engine.firms(bbox=(lon - 2.0, lat - 2.0, lon + 2.0, lat + 2.0))
+    return _parse_geo_firms(data, target)
+
+
+def _parse_geo_report(data, target):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Location report: {target}"))
+    children = []
+    lines = [divider(), title(f"Location report: {target}")]
+    for name, value in data.items():
+        children.append(
+            ChildNodeDef(
+                title=str(name)[:60],
+                entity_type="Custom",
+                content=render(value),
+            )
+        )
+        lines.append(bullet(str(name)))
+    lines += [end_of("location report"), divider()]
+    return TransformResult(
+        children=children[:CHILD_THRESHOLD], content=_pack_content(lines)
+    )
+
+
+async def _transform_geo_report(target, modules):
+    engine = modules.get("geo_analysis")
+    if not engine:
+        return TransformResult(content="Geo module not available")
+    coords = engine.parse_coords(target)
+    if coords is None:
+        return TransformResult(content=f"Invalid coordinates: {target}")
+    data = await engine.report(coords[0], coords[1])
+    return _parse_geo_report(data, target)
+
+
+def _parse_geo_shadow_search(results, params):
+    results = results or []
+    children = []
+    for item in results[:CHILD_THRESHOLD]:
+        lat, lon = item.get("latitude"), item.get("longitude")
+        if lat is None or lon is None:
+            continue
+        children.append(
+            ChildNodeDef(
+                title=f"{lat}, {lon}",
+                entity_type="Geolocation",
+                content=_pack_content(
+                    [
+                        kv("Latitude", lat),
+                        kv("Longitude", lon),
+                        kv("Sun altitude", item.get("sun_altitude_deg")),
+                        kv("Shadow bearing", item.get("shadow_bearing_deg")),
+                        kv("Error", item.get("error_deg")),
+                    ]
+                ),
+            )
+        )
+    lines = [
+        divider(),
+        title("Shadow search"),
+        kv("Ratio", params.get("ratio", "?")),
+        kv("Bearing", params.get("bearing", "?")),
+        kv("Candidates", len(results)),
+    ]
+    for item in results[:20]:
+        lines.append(
+            bullet(
+                f"{item.get('latitude')}, {item.get('longitude')} "
+                f"(err {item.get('error_deg')} deg)"
+            )
+        )
+    if not results:
+        lines.append(fmt_info("No matching coordinates found"))
+    lines += [end_of("shadow search"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_geo_shadow_search(content, modules):
+    engine = modules.get("geo_analysis")
+    if not engine:
+        return TransformResult(content="Geo module not available")
+    ratio_match = re.search(
+        r"shadow\s*ratio\s*[:=]\s*([0-9]+(?:\.[0-9]+)?)", content, re.IGNORECASE
+    )
+    bearing_match = re.search(
+        r"shadow\s*bearing\s*[:=]\s*(-?[0-9]+(?:\.[0-9]+)?)", content, re.IGNORECASE
+    )
+    if not ratio_match or not bearing_match:
+        return TransformResult(
+            content=(
+                "Shadow Search needs 'Shadow ratio: <n>' and "
+                "'Shadow bearing: <deg>' in the node content."
+            )
+        )
+    ratio = float(ratio_match.group(1))
+    bearing = float(bearing_match.group(1))
+    when = datetime.now(UTC)
+    results = engine.shadow_search(ratio, bearing, when)
+    params = {"ratio": ratio, "bearing": bearing, "time": when.isoformat()}
+    return _parse_geo_shadow_search(results, params)
+
+
+def _parse_photo_metadata(data, path):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Metadata: {path}"))
+    text = render(data, f"Metadata: {Path(path).name}")
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title="File metadata",
+                entity_type="Custom",
+                content=text,
+                evidence=[path],
+            )
+        ],
+        content=text,
+        evidence=[path],
+    )
+
+
+async def _transform_photo_metadata(path, modules):
+    engine = modules.get("file_analyzer")
+    if not engine:
+        return TransformResult(content="File analyzer module not available")
+    data = await engine.get_metadata(path)
+    return _parse_photo_metadata(data, path)
+
+
+def _parse_photo_gps(coords, path):
+    if not coords:
+        return TransformResult(content=f"No GPS coordinates found in {Path(path).name}")
+    lat, lon = coords
+    content = _pack_content(
+        [
+            divider(),
+            title(f"GPS: {Path(path).name}"),
+            kv("Latitude", lat),
+            kv("Longitude", lon),
+            end_of("gps"),
+            divider(),
+        ]
+    )
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"{lat}, {lon}",
+                entity_type="Geolocation",
+                content=content,
+                evidence=[path],
+            )
+        ],
+        content=content,
+        evidence=[path],
+    )
+
+
+async def _transform_photo_gps(path, modules):
+    engine = modules.get("file_analyzer")
+    if not engine:
+        return TransformResult(content="File analyzer module not available")
+    coords = await engine.get_gps_coordinates(path)
+    return _parse_photo_gps(coords, path)
+
+
+def _parse_photo_stego(data, path):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"Steganography: {path}"))
+    children = []
+    for name, value in data.items():
+        children.append(
+            ChildNodeDef(
+                title=str(name).title(),
+                entity_type="Custom",
+                content=str(value)[:4000],
+                evidence=[path],
+            )
+        )
+    lines = [divider(), title(f"Steganography: {Path(path).name}")]
+    for name, value in data.items():
+        first_line = str(value).splitlines()[0] if str(value).strip() else "empty"
+        lines.append(bullet(f"{name}: {first_line}"))
+    lines += [end_of("steganography"), divider()]
+    return TransformResult(
+        children=children[:CHILD_THRESHOLD],
+        content=_pack_content(lines),
+        evidence=[path],
+    )
+
+
+async def _transform_photo_stego(path, modules):
+    engine = modules.get("steg_analyzer")
+    if not engine:
+        return TransformResult(content="Steganography module not available")
+    data = await engine.run_full_analysis(path)
+    return _parse_photo_stego(data, path)
+
+
+def _parse_photo_faces(results, path):
+    if not isinstance(results, list):
+        return TransformResult(content=str(results))
+    children = []
+    for match in results[:CHILD_THRESHOLD]:
+        first = match.get("first_name", "")
+        last = match.get("last_name", "")
+        name = (
+            " ".join(part for part in (first, last) if part)
+            or match.get("vk_url")
+            or "Match"
+        )
+        children.append(
+            ChildNodeDef(
+                title=str(name)[:60],
+                entity_type="Person",
+                content=_pack_content(
+                    [
+                        kv("Name", name),
+                        kv("Age", match.get("age", "?")),
+                        kv("City", match.get("city", "")),
+                        kv("Country", match.get("country", "")),
+                        kv("Similarity", match.get("similarity", "?")),
+                        kv("Profile", match.get("vk_url", "")),
+                    ]
+                ),
+                evidence=[
+                    url for url in (match.get("vk_url"), match.get("photo_url")) if url
+                ],
+            )
+        )
+    if len(results) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(results) - CHILD_THRESHOLD} more matches",
+                entity_type="Person",
+                content="\n".join(
+                    match.get("vk_url", "") for match in results[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Face search: {Path(path).name}"),
+        kv("Matches", len(results)),
+    ]
+    for match in results[:20]:
+        name = " ".join(
+            part for part in (match.get("first_name"), match.get("last_name")) if part
+        )
+        lines.append(
+            bullet(
+                f"{name or match.get('vk_url', '?')} ({match.get('similarity', '?')})"
+            )
+        )
+    if not results:
+        lines.append(fmt_info("No faces found"))
+    lines += [end_of("face search"), divider()]
+    return TransformResult(
+        children=children, content=_pack_content(lines), evidence=[path]
+    )
+
+
+async def _transform_photo_faces(path, modules):
+    engine = modules.get("search4faces")
+    if not engine:
+        return TransformResult(content="Search4Faces module not available")
+    results = await engine.search_face(path)
+    return _parse_photo_faces(results, path)
+
+
+def _parse_photo_virustotal(data, path):
+    if not isinstance(data, dict) or data.get("error"):
+        return TransformResult(content=render(data, f"VirusTotal: {path}"))
+    lines = [
+        divider(),
+        title(f"VirusTotal: {Path(path).name}"),
+        kv("Hash", data.get("hash", "?")),
+        kv("Malicious", data.get("malicious", 0)),
+        kv("Suspicious", data.get("suspicious", 0)),
+        kv("Harmless", data.get("harmless", 0)),
+        kv("Undetected", data.get("undetected", 0)),
+    ]
+    children = []
+    for detected in (data.get("detected") or [])[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=str(detected)[:60],
+                entity_type="Custom",
+                content=str(detected),
+                evidence=[path],
+            )
+        )
+    for detected in data.get("detected") or []:
+        lines.append(bullet(str(detected)))
+    lines += [end_of("virustotal"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[path],
+    )
+
+
+async def _transform_photo_virustotal(path, modules):
+    engine = modules.get("file_analyzer")
+    if not engine:
+        return TransformResult(content="File analyzer module not available")
+    data = await engine.virustotal_analyze(path)
+    return _parse_photo_virustotal(data, path)
+
+
+def _parse_web_search(text, query):
+    if not isinstance(text, str):
+        return TransformResult(content=str(text))
+    stripped = text.strip()
+    if not stripped or stripped == "Not found.":
+        return TransformResult(content=f"Web search: {query}\n  · Not found.")
+    if stripped.startswith("Error:"):
+        return TransformResult(content=f"Web search failed: {stripped[6:].strip()}")
+    pattern = re.compile(
+        r"\n\d+\s+-\s+(.*?)\nURL:\s*(.*?)\nSNIPPET:\s*(.*?)(?=\n\d+\s+-|\Z)",
+        re.DOTALL,
+    )
+    matches = pattern.findall(text)
+    children = []
+    for title_text, url, snippet in matches[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=" ".join(title_text.split())[:60] or url,
+                entity_type="Custom",
+                content=" ".join(snippet.split()),
+                evidence=[url] if url else [],
+            )
+        )
+    lines = [divider(), title(f"Web search: {query}"), kv("Results", len(matches))]
+    for title_text, url, _snippet in matches[:10]:
+        lines.append(bullet(f"{' '.join(title_text.split())}: {url}"))
+    if not matches:
+        lines.append(fmt_info("No results parsed"))
+    lines += [end_of("web search"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_web_search(query, modules):
+    engine = modules.get("dorks_search_engine")
+    if not engine:
+        return TransformResult(content="Web search module not available")
+    text = await engine.search_dork(query)
+    return _parse_web_search(text, query)

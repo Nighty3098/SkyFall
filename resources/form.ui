@@ -4110,16 +4110,6 @@
               <item>
                <widget class="GraphWidget" name="graphWidget"/>
               </item>
-              <item>
-               <widget class="QLabel" name="graphStatusLabel">
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="textInteractionFlags">
-                 <set>Qt::TextInteractionFlag::TextSelectableByMouse</set>
-                </property>
-               </widget>
-              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="verticalWidget" native="true">

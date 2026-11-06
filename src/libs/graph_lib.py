@@ -2068,7 +2068,6 @@ class GraphWidget(QGraphicsView):
         """Hide nodes that fail either filter and any now-dangling edges."""
         nodes = [i for i in self._scene.items() if isinstance(i, NodeItem)]
         visible = 0
-        filtered = bool(self._filter_text or self._filter_type)
         for item in nodes:
             match = True
             if self._filter_text:
@@ -2082,31 +2081,11 @@ class GraphWidget(QGraphicsView):
             if isinstance(item, EdgeItem):
                 item.setVisible(item.source.isVisible() and item.target.isVisible())
         self._scene.update()
-        if filtered:
-            self._set_status(f"Showing {visible} of {len(nodes)} nodes")
-        else:
-            self._update_summary()
         return visible, len(nodes)
 
-    def _set_status(self, text: str):
-        top = self.window()
-        if top is None:
-            return
-        label = top.findChild(QLabel, "graphStatusLabel")
-        if label is not None:
-            label.setText(text)
-
     def _update_summary(self):
-        """Show node/edge counts on the persistent canvas status line."""
-        nodes = sum(1 for i in self._scene.items() if isinstance(i, NodeItem))
-        edges = sum(1 for i in self._scene.items() if isinstance(i, EdgeItem))
-        if nodes:
-            suffix = "" if nodes == 1 else "s"
-            self._set_status(
-                f"{nodes} node{suffix} · {edges} edge{'s' if edges != 1 else ''}"
-            )
-        else:
-            self._set_status("")
+        """Compatibility hook; status text no longer lives in the canvas layout."""
+        return None
 
     def _on_selection_changed(self):
         selected = self._scene.selectedItems()
@@ -2612,10 +2591,14 @@ class GraphWidget(QGraphicsView):
             self.status_message("Community detection requires networkx 2.x")
 
     def status_message(self, msg):
-        self._set_status(msg)
-        top = self.window()
-        if top is not None and hasattr(top, "statusBar"):
-            top.statusBar().showMessage(msg, 5000)
+        """Keep status messages out of the widget layout.
+
+        Calling ``QMainWindow.statusBar()`` creates a status bar on first use.
+        That changes the window geometry and used to leave an empty strip below
+        the graph after an action. Graph actions still work without a transient
+        status line, so this is intentionally a no-op compatibility hook.
+        """
+        _ = msg
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y()

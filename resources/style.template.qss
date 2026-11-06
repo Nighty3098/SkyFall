@@ -669,11 +669,3 @@ QLabel#graphNodeEvidenceCaption {
     font-size: $font_size_small;
     padding: 0 2px;
 }
-
-QLabel#graphStatusLabel {
-    color: $text_muted;
-    font-size: $font_size_small;
-    border-top: 1px solid $border;
-    padding: 5px 2px 0 2px;
-    min-height: 18px;
-}

@@ -259,7 +259,7 @@ class ShodanTransformTest(unittest.TestCase):
         self.assertIn("shodan_api_key", security.SENSITIVE_KEYS)
 
     def test_registry_integrates_shodan_transforms(self):
-        controller = GraphTransformController(None, {})
+        controller = GraphTransformController(None, {}, plugin_dir=None)
 
         def names(entity_type):
             node = type("Node", (), {"entity_type": entity_type})()

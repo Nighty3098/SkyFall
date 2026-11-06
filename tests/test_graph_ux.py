@@ -166,7 +166,7 @@ class GraphTransformUxTest(unittest.TestCase):
     def setUp(self):
         self.gw = GraphWidget()
         self.gw._status_timer.stop()
-        self.controller = GraphTransformController(self.gw, {})
+        self.controller = GraphTransformController(self.gw, {}, plugin_dir=None)
 
     def _nodes(self):
         return [i for i in self.gw._scene.items() if isinstance(i, NodeItem)]

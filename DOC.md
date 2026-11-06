@@ -507,6 +507,7 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS), NASA FIRMS wildfires, location report;
   - **Photo** → EXIF/metadata, GPS, steganography, Search4Faces, VirusTotal;
   - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
+- **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py` (override with `SKYFALL_TRANSFORMS_DIR`). Every plugin exposes a `TRANSFORMS` list or a `get_transforms()` function with `TransformDef` objects. Handlers may be synchronous or asynchronous and can return `TransformResult`, `ChildNodeDef`(s), a string, or a mapping with `children`/`content`/`evidence`. Plugins are shown in the same transform picker as built-ins; a broken plugin is logged and skipped without affecting the rest. The directory and a `README.md` template are created on first launch; a ready-to-copy example lives in `examples/transforms/`.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
 
 ---
@@ -605,6 +606,7 @@ src/
     tg/                     — Telegram package: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
   controllers/              — per-tab UI logic
+  transforms/               — transform API, built-in registry and plugin loader
   libs/                     — graph_lib (graph), graph_panel (palette)
   ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget
 resources/                  — form.ui, QSS themes, fonts, icons
@@ -616,7 +618,7 @@ thirdparty/txfetch/         — vendored transaction search library
 
 ## Data and Storage
 
-- **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs).
+- **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs), `transforms/` (custom transform plugins and their README template).
 - **`data/dorks.json`** — 14 categories, ~7,944 dorks. **`data/dorks.xml`** — the original GHDB database.
 - **`data/username_data.json`** — 481 site specifications for username search (URL templates, error codes, regex).
 - **`resources/form.ui`** — UI (5499 lines), loaded at runtime.

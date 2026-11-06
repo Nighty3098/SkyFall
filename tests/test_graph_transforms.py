@@ -76,7 +76,7 @@ class FakeMaigret:
 
 class RegistryTest(unittest.TestCase):
     def test_username_has_new_transforms(self):
-        controller = GraphTransformController(None, {})
+        controller = GraphTransformController(None, {}, plugin_dir=None)
         names = [t.name for t in controller.get_transforms(FakeNode())]
         self.assertIn("Reddit OSINT", names)
         self.assertIn("Sherlock + Maigret (merged)", names)
@@ -145,7 +145,7 @@ if __name__ == "__main__":
 
 class NewTransformRegistryTest(unittest.TestCase):
     def test_every_entity_type_has_a_transform(self):
-        controller = GraphTransformController(None, {})
+        controller = GraphTransformController(None, {}, plugin_dir=None)
         for etype in (
             "Person",
             "Domain",

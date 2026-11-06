@@ -2,16 +2,16 @@
 
 import unittest
 
+from src.controllers.username_search_controller import UsernameController
 from src.modules.username_merge import (
     CONFIRMED_MARK,
     UNCONFIRMED_MARK,
     canonical_site,
     canonical_url,
     merge_sources,
-    report,
     render_report,
+    report,
 )
-from src.controllers.username_search_controller import UsernameController
 from src.ui.output_formatter import render
 
 
@@ -154,18 +154,18 @@ class UsernameControllerTest(unittest.IsolatedAsyncioTestCase):
             def __init__(self):
                 self.text = ""
 
-            def setPlainText(self, text):
+            def setPlainText(self, text):  # noqa: N802 - emulates Qt
                 self.text = text
 
-            def setValue(self, _value):
+            def setValue(self, _value):  # noqa: N802 - emulates Qt
                 pass
 
-            def setRange(self, _minimum, _maximum):
+            def setRange(self, _minimum, _maximum):  # noqa: N802 - emulates Qt
                 pass
 
         class Ui:
-            usernameResultsDebug = Widget()
-            usernameSearchProgress = Widget()
+            usernameResultsDebug = Widget()  # noqa: N815 - Qt widget name
+            usernameSearchProgress = Widget()  # noqa: N815 - Qt widget name
 
         class Maigret:
             async def search_and_report_structured(self, _username, on_progress=None):

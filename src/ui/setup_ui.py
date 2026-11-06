@@ -20,6 +20,7 @@ NAV_GROUPS = [
             "WEB",
             "FILE ANALYZE",
             "GITHUB",
+            "SHODAN",
             "PHONE",
             "MAC ADDR",
             "WIFI",

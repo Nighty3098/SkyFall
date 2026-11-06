@@ -35,6 +35,7 @@ DEFAULT_SETTINGS = {
     "google_safe_api_key": "",
     "ipinfo_api_key": "",
     "github_token": "",
+    "shodan_api_key": "",
     "numverify_api_key": "",
     "abstractapi_api_key": "",
     "trongrid_api_key": "",
@@ -66,6 +67,7 @@ FIELD_MAP = {
     "google_safe_api_key": "googleSafeApiKeyEdit",
     "ipinfo_api_key": "ipinfoApiKeyEdit",
     "github_token": "githubTokenEdit",
+    "shodan_api_key": "shodanApiKeyEdit",
     "numverify_api_key": "numverifyApiKeyEdit",
     "abstractapi_api_key": "abstractapiApiKeyEdit",
     "trongrid_api_key": "trongridApiKeyEdit",
@@ -99,6 +101,7 @@ class Settings:
         self.ipinfo_api_key = ""
         self.google_safe_api_key = ""
         self.github_token = ""
+        self.shodan_api_key = ""
         self.numverify_api_key = ""
         self.abstractapi_api_key = ""
         self.trongrid_api_key = ""

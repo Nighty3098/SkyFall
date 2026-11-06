@@ -24,6 +24,7 @@ class SensitiveSettingsEncryptionTest(unittest.TestCase):
             "google_safe_api_key": "google-secret",
             "ipinfo_api_key": "ipinfo-secret",
             "github_token": "github-secret",
+            "shodan_api_key": "shodan-secret",
             "numverify_api_key": "numverify-secret",
             "abstractapi_api_key": "abstract-secret",
             "trongrid_api_key": "trongrid-secret",

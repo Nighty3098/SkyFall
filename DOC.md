@@ -26,6 +26,7 @@ Author: Nighty3098.
    - [Web](#web)
    - [File Analyze](#file-analyze)
    - [GitHub](#github)
+   - [Shodan](#shodan)
    - [Phone](#phone)
    - [MAC Addr](#mac-addr)
    - [Blockchain](#blockchain)
@@ -101,6 +102,7 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `google_safe_api_key` | `googleSafeApiKeyEdit` | Google Safe Browsing |
 | `ipinfo_api_key` | `ipinfoApiKeyEdit` | ipinfo.io IP geolocation |
 | `github_token` | `githubTokenEdit` | GitHub PAT (multiple separated by `;` for rotation) |
+| `shodan_api_key` | `shodanApiKeyEdit` | Shodan API key (hosts, search, DNS, exploits, scans, alerts) |
 | `numverify_api_key` | `numverifyApiKeyEdit` | NumVerify (phones) |
 | `abstractapi_api_key` | `abstractapiApiKeyEdit` | AbstractAPI (phones) |
 | `trongrid_api_key` | `trongridApiKeyEdit` | TronGrid (blockchain) |
@@ -121,7 +123,7 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `frameless_window` | `framelessCheck` | Frameless window |
 | `mcp_require_auth` | `mcpAuthCheck` | Require a bearer token for the MCP server |
 
-> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings, including LeakCheck, Dehashed, and NASA FIRMS credentials, are not currently in the encrypted settings set. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
+> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `shodan_api_key`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `leakcheck_api_key`, `dehashed_email`, `dehashed_api_key`, `firms_map_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings (paths, theme, font size and UI toggles) are stored in plaintext. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
 
 Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `mcpToggleButton`) to start/stop the built-in MCP server.
 
@@ -348,6 +350,24 @@ Searching via the GitHub REST API. Field `githubTokenEdit` (PAT; multiple tokens
 - `githubDorkEdit` + `githubDorkSearchBtn` + `githubDorkGroup` — an arbitrary GitHub dork by type: code / commits / issues / repositories / users.
 - Results — in `githubDebug` with progress and remaining limits (`[Page N] Rate: r/lim`).
 
+### Shodan
+
+Full Shodan API client on top of the official `shodan` Python package. Field `shodanApiKeyEdit` is saved (encrypted) in Settings → Shodan API Key. All requests run off the UI thread through `asyncio.to_thread`; API errors are shown as readable messages.
+
+- **Lookup / search** — `shodanTargetEdit` accepts an IP, hostname or raw Shodan query.
+  - `shodanHostBtn` — host lookup: open ports, services/products, hostnames, ASN/ISP, geolocation, tags and CVEs.
+  - `shodanSearchBtn` — full-text search with `shodanPageSpin`; facets and top matches are rendered.
+  - `shodanCountBtn` — result count without downloading matches.
+  - `shodanFacetsBtn` — available search facets; `shodanQueriesBtn` — community queries feed.
+  - `shodanHoneyscoreBtn` — honeypot probability for the target IP.
+- **DNS** — `shodanDomainEdit` + `shodanDnsBtn` — DNS records/subdomains via the Shodan DNS API.
+- **Exploits** — `shodanExploitEdit` + `shodanExploitsBtn` — search the Shodan exploit database (CVE, product, author, source).
+- **On-demand scans** — `shodanScanBtn` submits the target IP/network; `shodanScanIdEdit` + `shodanScanStatusBtn` checks scan progress.
+- **Alerts** — `shodanAlertNameEdit`, `shodanAlertIpEdit`, `shodanAlertCreateBtn`, `shodanAlertListBtn`, `shodanAlertIdEdit`, `shodanAlertDeleteBtn`.
+- **API utilities** — `shodanInfoBtn` (plan/credits), `shodanMyIpBtn`, `shodanCatalogBtn` (ports, protocols, services).
+- **Graph** — `shodanToGraphBtn` sends the last host/search/DNS/exploit result to the canvas as a connected subgraph (one undo step). The graph transforms below use the same client.
+- Output and progress — `shodanDebug`, `shodanProgress`.
+
 ### Phone
 
 Phone number analysis.
@@ -478,15 +498,15 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
   - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
   - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
-  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save;
-  - **IP** → geolocation, ports, domains on IP, Threat Intel;
-  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search;
+  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
+  - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**;
+  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search, **Shodan Hosts**;
   - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
   - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
   - **MAC** → geolocation;
   - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS), NASA FIRMS wildfires, location report;
   - **Photo** → EXIF/metadata, GPS, steganography, Search4Faces, VirusTotal;
-  - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing).
+  - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
 
 ---
@@ -577,6 +597,7 @@ src/
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
     email_accounts.py       — where the email is registered (Gravatar/Microsoft/… + holehe)
     social_search.py        — username search on Bluesky, Mastodon, Instagram
+    shodan_search.py        — async Shodan API client (hosts, search, DNS, exploits, scans, alerts)
     reddit_osint.py         — Reddit archival OSINT (Arctic Shift + PullPush, OAuth live profile)
     leak_search.py          — leaks and infostealers (Hudson Rock, LeakCheck, HIBP, Dehashed)
     geo_analysis.py         — sun/shadow (suncalc), fires (NASA FIRMS), disasters (GDACS)
@@ -598,7 +619,7 @@ thirdparty/txfetch/         — vendored transaction search library
 - **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs).
 - **`data/dorks.json`** — 14 categories, ~7,944 dorks. **`data/dorks.xml`** — the original GHDB database.
 - **`data/username_data.json`** — 481 site specifications for username search (URL templates, error codes, regex).
-- **`resources/form.ui`** — UI (3184 lines), loaded at runtime.
+- **`resources/form.ui`** — UI (5499 lines), loaded at runtime.
 - **Telegram DB** — SQLite `SkyFall_TG.db`: tables `channels`, `users`, `posts`, `discussions`, `members`, `links`.
 
 ---
@@ -614,6 +635,7 @@ thirdparty/txfetch/         — vendored transaction search library
 | Google Safe Browsing | domain reputation | `google_safe_api_key` |
 | ipinfo.io / ipapi.co / ip-api.com | IP geolocation | ipinfo — optional |
 | GitHub REST API | search | `github_token` |
+| Shodan API | hosts, search, DNS, exploits, scans, alerts | `shodan_api_key` |
 | NumVerify / AbstractAPI | phones | `numverify` / `abstractapi` |
 | 7tel.ru | phones (reviews) | no |
 | search4faces.com | faces | no |

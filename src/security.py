@@ -50,6 +50,7 @@ SENSITIVE_KEYS = frozenset(
         "google_safe_api_key",
         "ipinfo_api_key",
         "github_token",
+        "shodan_api_key",
         "numverify_api_key",
         "abstractapi_api_key",
         "trongrid_api_key",

@@ -38,6 +38,7 @@ from src.connectors import (
     setup_report_connectors,
     setup_s4f_connectors,
     setup_settings_connectors,
+    setup_shodan_connectors,
     setup_social_connectors,
     setup_steganography_connectors,
     setup_tg_analyzer_connectors,
@@ -65,6 +66,7 @@ from src.controllers.proxy_controller import Proxy
 from src.controllers.reddit_osint_controller import RedditOsintController
 from src.controllers.search4faces_controller import S4FController
 from src.controllers.settings_controller import Settings
+from src.controllers.shodan_controller import ShodanController
 from src.controllers.social_controller import SocialController
 from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
@@ -92,6 +94,7 @@ from src.modules.mail_search_engine import MailSearchEngine
 from src.modules.phone_search import PhoneSearch
 from src.modules.reddit_osint import RedditOsint
 from src.modules.search4faces import Search4Faces
+from src.modules.shodan_search import ShodanSearch
 from src.modules.social_search import SocialSearch
 from src.modules.steganography import SteganographyAnalyzer
 from src.modules.tg_analyzer import TgAnalyzer
@@ -247,6 +250,7 @@ class MainWindow(QMainWindow):
         self.downloadManager = DownloadManager()
         self.googleDorksDB = GoogleDorksDB()
         self.githubSearch = GitHubSearch(self.settings.github_token)
+        self.shodanSearch = ShodanSearch(self.settings.shodan_api_key)
         self.phoneSearch = PhoneSearch()
         self.usernameSearch = UsernameSearch()
         self.macLocation = MacLocation()
@@ -302,6 +306,8 @@ class MainWindow(QMainWindow):
     def _sync_tokens(self, settings):
         self.githubSearch._token = settings.github_token
         self.githubSearch._headers["Authorization"] = f"Bearer {settings.github_token}"
+
+        self.shodanSearch.set_api_key(settings.shodan_api_key)
 
         self.domainAnalyzer.API_KEYS["VIRUSTOTAL"] = settings.virustotal_api_key
         self.domainAnalyzer.API_KEYS["GOOGLE_SAFE"] = settings.google_safe_api_key
@@ -456,6 +462,11 @@ class MainWindow(QMainWindow):
             self.ui, self.tgAnalyzer, graph_widget=self.ui.graphWidget
         )
         self.githubController = GitHubController(self.ui, self.githubSearch)
+        self.shodanController = ShodanController(
+            self.ui,
+            self.shodanSearch,
+            graph_widget=self.ui.graphWidget,
+        )
         self.phoneController = PhoneController(
             self.ui,
             self.phoneSearch,
@@ -483,6 +494,7 @@ class MainWindow(QMainWindow):
         setup_tg_analyzer_connectors(self.tgAnalyzerController)
         setup_proxies_connectors(self.proxy)
         setup_github_connectors(self.githubController)
+        setup_shodan_connectors(self.shodanController)
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
         setup_wifi_map_connectors(self.wifiMapController)
@@ -507,6 +519,7 @@ class MainWindow(QMainWindow):
                 "geo_analysis": self.geoAnalysis,
                 "archive_search": self.archiveSearch,
                 "github_search": self.githubSearch,
+                "shodan_search": self.shodanSearch,
                 "file_analyzer": self.fileAnalyzer,
                 "steg_analyzer": self.stegAnalyzer,
                 "search4faces": self.search4faces,

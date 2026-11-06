@@ -404,6 +404,22 @@ class GraphTransformController:
             ],
             "Domain": [
                 TransformDef(
+                    name="Shodan DNS",
+                    description="DNS records and subdomains from Shodan",
+                    input_types=["Domain"],
+                    output_type="Domain",
+                    relationship="hosted_by",
+                    handler=_transform_shodan_dns,
+                ),
+                TransformDef(
+                    name="Shodan Hosts",
+                    description="Hosts and services indexed by Shodan for this domain",
+                    input_types=["Domain"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_shodan_domain_search,
+                ),
+                TransformDef(
                     name="Resolve IP",
                     description="Resolve domain to IP and geolocation",
                     input_types=["Domain"],
@@ -590,6 +606,22 @@ class GraphTransformController:
             ],
             "IP": [
                 TransformDef(
+                    name="Shodan Host",
+                    description="Open ports, services, hostnames and CVEs from Shodan",
+                    input_types=["IP"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_shodan_host,
+                ),
+                TransformDef(
+                    name="Shodan Honeyscore",
+                    description="Shodan honeypot probability for this IP",
+                    input_types=["IP"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_shodan_honeyscore,
+                ),
+                TransformDef(
                     name="Geolocation",
                     description="Look up IP geolocation",
                     input_types=["IP"],
@@ -623,6 +655,14 @@ class GraphTransformController:
                 ),
             ],
             "Organization": [
+                TransformDef(
+                    name="Shodan Hosts",
+                    description="Hosts indexed by Shodan for this organization",
+                    input_types=["Organization"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_shodan_org_search,
+                ),
                 TransformDef(
                     name="GitHub Profile",
                     description="GitHub organization profile and repositories",
@@ -839,6 +879,22 @@ class GraphTransformController:
                 ),
             ],
             "Custom": [
+                TransformDef(
+                    name="Shodan Search",
+                    description="Search the Shodan index with this node's text",
+                    input_types=["Custom"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_shodan_search,
+                ),
+                TransformDef(
+                    name="Shodan Exploits",
+                    description="Search the Shodan exploit database",
+                    input_types=["Custom"],
+                    output_type="Custom",
+                    relationship="associated_with",
+                    handler=_transform_shodan_exploits,
+                ),
                 TransformDef(
                     name="Web Search (Dorks)",
                     description="Web search for this node's text",
@@ -2629,6 +2685,394 @@ async def _transform_github_emails(email, modules):
         return TransformResult(content="GitHub module not available")
     data = await engine.search_emails(email)
     return _parse_github_emails(data, email)
+
+
+def _shodan_vulns(data):
+    vulns = data.get("vulns") or []
+    if isinstance(vulns, dict):
+        return list(vulns.keys())
+    return list(vulns)
+
+
+def _parse_shodan_host(data, ip):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"Shodan unavailable: {data['error']}")
+
+    host_ip = data.get("ip", ip)
+    hostnames = [str(name) for name in (data.get("hostnames") or []) if name]
+    services = data.get("data") or []
+    vulns = _shodan_vulns(data)
+    lines = [
+        divider(),
+        title(f"Shodan host: {host_ip}"),
+        kv("Organization", data.get("org", "?")),
+        kv("ISP", data.get("isp", "?")),
+        kv("ASN", data.get("asn", "?")),
+        kv("OS", data.get("os", "?")),
+        kv("Country", data.get("country_name", "?")),
+        kv("City", data.get("city", "?")),
+        kv("Last update", data.get("last_update", "?")),
+        kv("Open ports", ", ".join(str(p) for p in data.get("ports", [])[:30])),
+        kv("Hostnames", ", ".join(hostnames[:10])),
+        kv("Vulnerabilities", len(vulns)),
+    ]
+
+    children = []
+    org = data.get("org") or data.get("isp")
+    if org:
+        children.append(
+            ChildNodeDef(
+                title=str(org)[:60],
+                entity_type="Organization",
+                content=_pack_content(
+                    [
+                        kv("ISP", data.get("isp", "?")),
+                        kv("ASN", data.get("asn", "?")),
+                        kv("Organization", org),
+                    ]
+                ),
+            )
+        )
+    lat = _safe_float(data.get("latitude"))
+    lon = _safe_float(data.get("longitude"))
+    if lat is not None and lon is not None:
+        children.append(
+            ChildNodeDef(
+                title=f"{lat:.4f}, {lon:.4f}",
+                entity_type="Geolocation",
+                content=_pack_content(
+                    [
+                        kv("Latitude", lat),
+                        kv("Longitude", lon),
+                        kv("City", data.get("city", "?")),
+                        kv("Country", data.get("country_name", "?")),
+                    ]
+                ),
+            )
+        )
+    for hostname in hostnames[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=hostname,
+                entity_type="Domain",
+                content=kv("Hostname", hostname),
+            )
+        )
+    for record in services[:CHILD_THRESHOLD]:
+        port = record.get("port", "?")
+        transport = record.get("transport", "tcp")
+        children.append(
+            ChildNodeDef(
+                title=f"Port {port}/{transport}",
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Port", port),
+                        kv("Transport", transport),
+                        kv("Product", record.get("product", "?")),
+                        kv("Version", record.get("version", "?")),
+                        kv("Module", (record.get("_shodan") or {}).get("module", "?")),
+                        str(record.get("banner", ""))[:400],
+                    ]
+                ),
+            )
+        )
+    for cve in vulns[:CHILD_THRESHOLD]:
+        children.append(
+            ChildNodeDef(
+                title=str(cve),
+                entity_type="Custom",
+                content=kv("Vulnerability", cve),
+                evidence=[f"https://www.shodan.io/host/{host_ip}"],
+            )
+        )
+    lines += [end_of("shodan host"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[f"https://www.shodan.io/host/{host_ip}"],
+    )
+
+
+async def _transform_shodan_host(ip, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    data = await engine.host(ip)
+    return _parse_shodan_host(data, ip)
+
+
+def _parse_shodan_dns(data, domain):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"Shodan DNS unavailable: {data['error']}")
+
+    base = str(data.get("domain") or domain)
+    records = data.get("data") or []
+    seen = set()
+    children = []
+    for record in records:
+        subdomain = str(record.get("subdomain") or "").strip()
+        if subdomain:
+            suffix = f".{base}"
+            full = subdomain if subdomain.endswith(suffix) else f"{subdomain}.{base}"
+        else:
+            full = base
+        if full in seen:
+            continue
+        seen.add(full)
+        children.append(
+            ChildNodeDef(
+                title=full,
+                entity_type="Domain",
+                content=_pack_content(
+                    [
+                        kv("Subdomain", subdomain or base),
+                        kv("Type", record.get("type", "?")),
+                        kv("Value", record.get("value", "?")),
+                        kv("Last seen", record.get("last_seen", "?")),
+                    ]
+                ),
+            )
+        )
+        if len(children) >= CHILD_THRESHOLD:
+            break
+
+    lines = [
+        divider(),
+        title(f"Shodan DNS: {base}"),
+        kv("Records", len(records)),
+        kv("Unique names", len(seen)),
+    ]
+    for record in records[:20]:
+        lines.append(
+            bullet(
+                f"{record.get('subdomain') or base} "
+                f"{record.get('type', '?')} {record.get('value', '')}"
+            )
+        )
+    lines += [end_of("shodan dns"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_shodan_dns(domain, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    data = await engine.domain_info(domain)
+    return _parse_shodan_dns(data, domain)
+
+
+def _parse_shodan_search(data, query):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"Shodan search unavailable: {data['error']}")
+
+    matches = data.get("matches") or []
+    children = []
+    for match in matches[:CHILD_THRESHOLD]:
+        ip = match.get("ip_str", "?")
+        port = match.get("port", "?")
+        location = match.get("location") or {}
+        hostnames = match.get("hostnames") or []
+        children.append(
+            ChildNodeDef(
+                title=f"{ip}:{port}",
+                entity_type="IP",
+                content=_pack_content(
+                    [
+                        kv("IP", ip),
+                        kv("Port", port),
+                        kv("Hostnames", ", ".join(hostnames[:5])),
+                        kv("Organization", match.get("org", "?")),
+                        kv("Product", match.get("product", "?")),
+                        kv("Country", location.get("country_name", "?")),
+                        kv("City", location.get("city", "?")),
+                    ]
+                ),
+                evidence=[f"https://www.shodan.io/host/{ip}"],
+            )
+        )
+    if len(matches) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(matches) - CHILD_THRESHOLD} more hosts",
+                entity_type="Custom",
+                content="\n".join(
+                    f"{m.get('ip_str', '?')}:{m.get('port', '?')}"
+                    for m in matches[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+
+    lines = [
+        divider(),
+        title(f"Shodan search: {query}"),
+        kv("Total", data.get("total", len(matches))),
+        kv("Matches", len(matches)),
+    ]
+    facets = data.get("facets") or {}
+    for name, values in list(facets.items())[:5]:
+        top = values[:5] if isinstance(values, list) else []
+        if top:
+            lines.append(
+                bullet(
+                    f"{name}: "
+                    + ", ".join(
+                        f"{item.get('value', '?')} ({item.get('count', '?')})"
+                        for item in top
+                        if isinstance(item, dict)
+                    )
+                )
+            )
+    for match in matches[:20]:
+        lines.append(
+            bullet(
+                f"{match.get('ip_str', '?')}:{match.get('port', '?')} "
+                f"{match.get('org', '') or match.get('product', '')}"
+            )
+        )
+    if not matches:
+        lines.append(fmt_info("No Shodan matches found"))
+    lines += [end_of("shodan search"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_shodan_search(query, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+async def _transform_shodan_domain_search(domain, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    query = f"hostname:{domain}"
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+async def _transform_shodan_org_search(org, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    query = f'org:"{str(org).replace(chr(34), "")}"'
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+def _parse_shodan_honeyscore(data, ip):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"Shodan unavailable: {data['error']}")
+    score = data.get("honeyscore", "?")
+    interpretation = "likely honeypot" if _honeyscore_is_high(score) else "low"
+    lines = [
+        divider(),
+        title(f"Shodan honeyscore: {ip}"),
+        kv("Score", score),
+        kv("Interpretation", interpretation),
+    ]
+    lines += [end_of("honeyscore"), divider()]
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"Honeyscore: {score}",
+                entity_type="Custom",
+                content=_pack_content([kv("IP", ip), kv("Honeyscore", score)]),
+                evidence=[f"https://www.shodan.io/host/{ip}"],
+            )
+        ],
+        content=_pack_content(lines),
+    )
+
+
+def _honeyscore_is_high(score):
+    try:
+        return float(score) >= 0.5
+    except (TypeError, ValueError):
+        return False
+
+
+async def _transform_shodan_honeyscore(ip, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    data = await engine.honeyscore(ip)
+    return _parse_shodan_honeyscore(data, ip)
+
+
+def _parse_shodan_exploits(data, query):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("error"):
+        return TransformResult(content=f"Shodan exploits unavailable: {data['error']}")
+
+    matches = data.get("matches") or []
+    children = []
+    for match in matches[:CHILD_THRESHOLD]:
+        label = match.get("cve") or match.get("source") or match.get("_id") or "Exploit"
+        children.append(
+            ChildNodeDef(
+                title=str(label)[:70],
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Source", match.get("source", "?")),
+                        kv("CVE", match.get("cve", "?")),
+                        kv("Platform", match.get("platform", "?")),
+                        kv("Date", match.get("date", "?")),
+                        str(match.get("description", ""))[:500],
+                    ]
+                ),
+                evidence=[str(match.get("source", ""))] if match.get("source") else [],
+            )
+        )
+    if len(matches) > CHILD_THRESHOLD:
+        children.append(
+            ChildNodeDef(
+                title=f"+{len(matches) - CHILD_THRESHOLD} more exploits",
+                entity_type="Custom",
+                content="\n".join(
+                    str(m.get("cve") or m.get("source") or m.get("_id") or "Exploit")
+                    for m in matches[CHILD_THRESHOLD:]
+                ),
+            )
+        )
+
+    lines = [
+        divider(),
+        title(f"Shodan exploits: {query}"),
+        kv("Total", data.get("total", len(matches))),
+        kv("Matches", len(matches)),
+    ]
+    for match in matches[:20]:
+        lines.append(
+            bullet(
+                f"{match.get('cve') or match.get('source') or 'Exploit'}: "
+                f"{str(match.get('description', ''))[:120]}"
+            )
+        )
+    if not matches:
+        lines.append(fmt_info("No exploits found"))
+    lines += [end_of("shodan exploits"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_shodan_exploits(query, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    data = await engine.exploits(query)
+    return _parse_shodan_exploits(data, query)
 
 
 def _parse_email_hibp(data, email):

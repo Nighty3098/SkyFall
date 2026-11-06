@@ -36,6 +36,7 @@ class CaseManager:
         "geoDebug": "geo",
         "archiveDebug": "archive",
         "githubDebug": "github",
+        "shodanDebug": "shodan",
         "phoneDebug": "phone",
         "macAddrLocationDebug": "mac",
         "wifiDebug": "wifi",

@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from src.controllers.reddit_osint_controller import RedditOsintController
     from src.controllers.search4faces_controller import S4FController
     from src.controllers.settings_controller import Settings
+    from src.controllers.shodan_controller import ShodanController
     from src.controllers.steganography_controller import SteganographyController
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
     from src.controllers.tg_downloader_controller import TgDownloaderController
@@ -396,6 +397,66 @@ def setup_github_connectors(controller: "GitHubController"):
     )
     controller.ui.githubDorkSearchBtn.clicked.connect(
         lambda: asyncio.ensure_future(controller.search_dork())
+    )
+
+
+def setup_shodan_connectors(controller: "ShodanController"):
+    ui = controller.ui
+    ui.shodanHostBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.host_lookup())
+    )
+    ui.shodanSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search())
+    )
+    ui.shodanCountBtn.clicked.connect(lambda: asyncio.ensure_future(controller.count()))
+    ui.shodanFacetsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.facets())
+    )
+    ui.shodanQueriesBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.community_queries())
+    )
+    ui.shodanDnsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.domain_info())
+    )
+    ui.shodanHoneyscoreBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.honeyscore())
+    )
+    ui.shodanExploitsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.exploits())
+    )
+    ui.shodanInfoBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.account_info())
+    )
+    ui.shodanMyIpBtn.clicked.connect(lambda: asyncio.ensure_future(controller.my_ip()))
+    ui.shodanCatalogBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.catalog())
+    )
+    ui.shodanScanBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.request_scan())
+    )
+    ui.shodanScanStatusBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.scan_status())
+    )
+    ui.shodanAlertCreateBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.create_alert())
+    )
+    ui.shodanAlertListBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.list_alerts())
+    )
+    ui.shodanAlertDeleteBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.delete_alert())
+    )
+    ui.shodanToGraphBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.send_to_graph())
+    )
+    ui.shodanTargetEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.search())
+    )
+    ui.shodanDomainEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.domain_info())
+    )
+    ui.shodanExploitEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.exploits())
     )
 
 

@@ -12,12 +12,22 @@
 
 <br /><br />
 
-**Desktop OSINT investigation toolkit** — Python 3 + PySide6 (Qt 6).
+**Desktop OSINT investigation toolkit**
 
 Domain, Telegram, username, email, Reddit, phone, MAC, social, leaks, geo,
 archive, blockchain, file and image analysis wired into an interactive
 relationship graph and an AI report generator (local Ollama), plus an MCP
 server so agents can drive the tools.
+
+<br />
+
+## Install:
+
+```bash
+
+curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh | bash
+
+```
 
 <br />
 
@@ -29,29 +39,29 @@ server so agents can drive the tools.
 
 ## `FEATURES`
 
-| Module | What it does |
-|---|---|
-| **Web / Domain** | 16-step domain recon: IP + geolocation, DNS, WHOIS, SSL/TLS, headers + WAF, robots.txt, security.txt, cookies, social tags, subdomains (passive + brute), Certificate Transparency, ports (NMAP), threat intel (AbuseIPDB/GreyNoise/ThreatFox/URLHaus), reputation aggregator (VirusTotal/Google Safe Browsing/CRDF/AbuseIPDB/GreyNoise/ThreatFox/URLHaus), JS secrets scan, domains on IP (PTR/Shodan InternetDB/HackerTarget) |
-| **Telegram** | Channel/group collection via MTProto into SQLite (posts, members, links, media, avatars) + analyzer that builds a relationship graph and exports GraphML/GEXF/JSON/CSV/PNG/HTML/Obsidian |
-| **Username** | Maigret (~510 sites) + a Sherlock-style engine (~481 sites) with WAF detection; links confirmed by both engines are flagged ✅ at the top, single-engine hits are grouped by source |
-| **Mail** | IntelX search, Have I Been Pwned, `.eml`/header analyzer (SPF/DKIM/DMARC, Received chain, IP geolocation, verdict), and registered-accounts discovery (Gravatar/Microsoft/Mozilla/ProtonMail/Duolingo/Twitter + a `holehe` sweep of ~120 sites) |
-| **Social** | Username lookup on open networks — Bluesky (AT Protocol), Mastodon (ActivityPub) and Instagram (`instaloader`); profile, bio, followers/posts, plus handle matches |
-| **Reddit** | Archival profile OSINT from Arctic Shift + PullPush queried concurrently (no keys): posts/comments merged by id and classified live/removed/deleted, activity histograms + timezone estimate, PII exposure score, top subreddits and technologies, extracted identifiers; optional OAuth live profile |
-| **Leaks** | Leak & infostealer search by email/username/domain: Hudson Rock infostealer logs (no key), LeakCheck, Have I Been Pwned, Dehashed |
-| **Geo** | Sun/shadow geometry and inverse shadow geolocation (local `suncalc`), NASA FIRMS active fires, GDACS disaster alerts |
-| **Archive** | Wayback Machine (closest snapshot, CDX listing, on-demand save) and archive.today checks |
-| **GitHub** | User, repo, commit, email and secret scanning (~240 patterns) over the REST API with multi-token rotation |
-| **Phone** | Parse/validate (phonenumbers), reverse lookup (NumVerify/AbstractAPI), leaks (IntelX), reviews (7tel.ru) |
-| **MAC** | BSSID geolocation via Yandex/Apple/Google/Microsoft/Mylnikov with a map |
-| **Blockchain** | Find transactions by indirect data (time, amount, memo) across Tron, TON, Ethereum, BSC, Base, Solana, BTC, LTC, DOGE, BCH |
-| **Steganography** | LSB counts + chi-square, FFT spectral analysis, end-of-file payloads, tail-data detection, ELA heatmap |
-| **Files** | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats) |
-| **Search4Faces** | Reverse face search (VK photos) |
-| **Dorking** | ~7,900 Google dorks in 14 categories via DuckDuckGo or a local SearXNG |
-| **Graph** | 13 entity types, 12 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo), agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export |
-| **AI Report** | 7-section structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers |
-| **MCP** | 91 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878` |
-| **Cases** | Investigation workspace with automatic per-module Markdown autosave |
+| Module            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Web / Domain**  | 16-step domain recon: IP + geolocation, DNS, WHOIS, SSL/TLS, headers + WAF, robots.txt, security.txt, cookies, social tags, subdomains (passive + brute), Certificate Transparency, ports (NMAP), threat intel (AbuseIPDB/GreyNoise/ThreatFox/URLHaus), reputation aggregator (VirusTotal/Google Safe Browsing/CRDF/AbuseIPDB/GreyNoise/ThreatFox/URLHaus), JS secrets scan, domains on IP (PTR/Shodan InternetDB/HackerTarget) |
+| **Telegram**      | Channel/group collection via MTProto into SQLite (posts, members, links, media, avatars) + analyzer that builds a relationship graph and exports GraphML/GEXF/JSON/CSV/PNG/HTML/Obsidian                                                                                                                                                                                                                                        |
+| **Username**      | Maigret (~510 sites) + a Sherlock-style engine (~481 sites) with WAF detection; links confirmed by both engines are flagged ✅ at the top, single-engine hits are grouped by source                                                                                                                                                                                                                                             |
+| **Mail**          | IntelX search, Have I Been Pwned, `.eml`/header analyzer (SPF/DKIM/DMARC, Received chain, IP geolocation, verdict), and registered-accounts discovery (Gravatar/Microsoft/Mozilla/ProtonMail/Duolingo/Twitter + a `holehe` sweep of ~120 sites)                                                                                                                                                                                 |
+| **Social**        | Username lookup on open networks — Bluesky (AT Protocol), Mastodon (ActivityPub) and Instagram (`instaloader`); profile, bio, followers/posts, plus handle matches                                                                                                                                                                                                                                                              |
+| **Reddit**        | Archival profile OSINT from Arctic Shift + PullPush queried concurrently (no keys): posts/comments merged by id and classified live/removed/deleted, activity histograms + timezone estimate, PII exposure score, top subreddits and technologies, extracted identifiers; optional OAuth live profile                                                                                                                           |
+| **Leaks**         | Leak & infostealer search by email/username/domain: Hudson Rock infostealer logs (no key), LeakCheck, Have I Been Pwned, Dehashed                                                                                                                                                                                                                                                                                               |
+| **Geo**           | Sun/shadow geometry and inverse shadow geolocation (local `suncalc`), NASA FIRMS active fires, GDACS disaster alerts                                                                                                                                                                                                                                                                                                            |
+| **Archive**       | Wayback Machine (closest snapshot, CDX listing, on-demand save) and archive.today checks                                                                                                                                                                                                                                                                                                                                        |
+| **GitHub**        | User, repo, commit, email and secret scanning (~240 patterns) over the REST API with multi-token rotation                                                                                                                                                                                                                                                                                                                       |
+| **Phone**         | Parse/validate (phonenumbers), reverse lookup (NumVerify/AbstractAPI), leaks (IntelX), reviews (7tel.ru)                                                                                                                                                                                                                                                                                                                        |
+| **MAC**           | BSSID geolocation via Yandex/Apple/Google/Microsoft/Mylnikov with a map                                                                                                                                                                                                                                                                                                                                                         |
+| **Blockchain**    | Find transactions by indirect data (time, amount, memo) across Tron, TON, Ethereum, BSC, Base, Solana, BTC, LTC, DOGE, BCH                                                                                                                                                                                                                                                                                                      |
+| **Steganography** | LSB counts + chi-square, FFT spectral analysis, end-of-file payloads, tail-data detection, ELA heatmap                                                                                                                                                                                                                                                                                                                          |
+| **Files**         | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats)                                                                                                                                                                                                                                                                                                                                 |
+| **Search4Faces**  | Reverse face search (VK photos)                                                                                                                                                                                                                                                                                                                                                                                                 |
+| **Dorking**       | ~7,900 Google dorks in 14 categories via DuckDuckGo or a local SearXNG                                                                                                                                                                                                                                                                                                                                                          |
+| **Graph**         | 13 entity types, 12 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo), agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export                                                                      |
+| **AI Report**     | 7-section structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers                                                                                                                                                                                                                                                                                                              |
+| **MCP**           | 91 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878`                                                                                                                                                                                                                                                                                   |
+| **Cases**         | Investigation workspace with automatic per-module Markdown autosave                                                                                                                                                                                                                                                                                                                                                             |
 
 > Detailed per-tab reference, settings and API keys: [`DOC.md`](./DOC.md).
 
@@ -83,6 +93,14 @@ git clone https://github.com/Nighty3098/SkyFall --recurse-submodules
 ```
 
 ## `INSTALL`
+
+```bash
+
+curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh | bash
+
+```
+
+OR
 
 The installer defaults to the current user and creates a virtual environment.
 Clone the repository with its required `txfetch` submodule:
@@ -179,7 +197,9 @@ The MCP server binds to `127.0.0.1`, but any local process could still call its 
       "type": "remote",
       "url": "http://127.0.0.1:9877/sse",
       "enabled": true,
-      "headers": { "Authorization": "Bearer <contents of ~/.skyfall/mcp_token>" }
+      "headers": {
+        "Authorization": "Bearer <contents of ~/.skyfall/mcp_token>"
+      }
     }
   }
 }

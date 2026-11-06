@@ -577,11 +577,11 @@ QSplitter::handle {
 }
 
 QSplitter::handle:horizontal {
-    width: 6px;
+    width: 3px;
 }
 
 QSplitter::handle:vertical {
-    height: 6px;
+    height: 3px;
 }
 
 QSplitter::handle:hover {

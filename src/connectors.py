@@ -580,8 +580,12 @@ _GRAPH_TOOLTIPS = {
     "graphFilterCombo": "Show only one entity type",
     "graphWidget": (
         "Drag to select \u00b7 middle-drag to pan \u00b7 scroll to zoom\n"
-        "F fits the view \u00b7 Ctrl+F searches \u00b7 Delete removes the selection\n"
-        "Ctrl+Z undoes \u00b7 Ctrl+Shift+Z redoes\n"
+        "Double-click empty canvas to add an entity\n"
+        "F fits the view \u00b7 Shift+F frames the selection \u00b7 Ctrl+F searches\n"
+        "Ctrl+T runs a transform on the selection\n"
+        "Ctrl+C / Ctrl+X / Ctrl+V copy, cut and paste \u00b7 Ctrl+D duplicates\n"
+        "Ctrl+Z undoes \u00b7 Ctrl+Shift+Z redoes \u00b7 Delete removes the selection\n"
+        "Ctrl+Shift+M toggles the minimap\n"
         "Drop a .json / .graphml / .gexf / .csv file to open it"
     ),
 }

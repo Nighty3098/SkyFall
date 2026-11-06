@@ -466,9 +466,15 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 ### Canvas Capabilities
 
 - Nodes: move, resize (corner handle), drag ports to create edges, double-click — edit dialog.
+- **Quick add** — double-click empty canvas (or `Add Node…` in the context menu) to open the full node editor at that position. Dropping an entity from the palette also selects the new node ready for editing.
+- **Clipboard** — `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste nodes together with their internal edges; `Ctrl+D` duplicates the selection with a small offset. Every operation is a single undo step.
+- **Selection toolkit** — context menu → `Select`: connected nodes, same entity type, invert selection, select all. Multi-selection supports align (6 edges/centres), distribute horizontally/vertically and connect in sequence or all pairs. `Shift+F` frames only the selected nodes.
+- **Minimap** — bottom-right overview with a draggable viewport frame; `Ctrl+Shift+M` or the canvas context menu → `View → Minimap` toggles it.
+- **Transient canvas HUD** — status, transform progress, undo/redo and filter feedback are painted over the viewport instead of creating a `QStatusBar`, so the canvas layout never shifts.
 - **Photo nodes** — a gallery of thumbnails from files/URLs (with caching and a `+N` badge).
 - **Geolocation nodes** — a built-in map (OpenStreetMap tiles, zoom 5–18, marker, Ctrl+wheel to zoom).
 - Context menu: edit node/edge, edge style, attach evidence, color, delete; **Analysis** — shortest path (by click), degree centrality (node scaling + top-5), community detection (greedy modularity).
+- **Searchable transforms** — `⚡ Transforms → Search Transforms…` or `Ctrl+T` opens a filterable transform picker with descriptions. A transform can run on one node or on a common subset of the current multi-selection; result nodes are selected and grouped into one undo step.
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
   - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
   - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;

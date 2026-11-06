@@ -114,13 +114,76 @@ class GraphTransformController:
         etype = node.entity_type
         return self._registry.get(etype, [])
 
+    def _notify(self, message):
+        graph = self._graph
+        if graph is not None and hasattr(graph, "status_message"):
+            graph.status_message(message)
+
     def execute(self, node, transform_def):
+        if node is None or transform_def is None:
+            return
+        self._notify(f"Running {transform_def.name}\u2026")
         self._active_tasks = getattr(self, "_active_tasks", set())
         task = asyncio.ensure_future(self._execute_async(node, transform_def))
         self._active_tasks.add(task)
         task.add_done_callback(self._active_tasks.discard)
 
-    async def _execute_async(self, node, transform_def):
+    def execute_many(self, nodes, transform_def):
+        """Run one transform against several nodes as a single undo step."""
+        nodes = [node for node in (nodes or []) if node is not None]
+        if not nodes or transform_def is None:
+            return
+        self._active_tasks = getattr(self, "_active_tasks", set())
+        task = asyncio.ensure_future(self._execute_many_async(nodes, transform_def))
+        self._active_tasks.add(task)
+        task.add_done_callback(self._active_tasks.discard)
+
+    async def _execute_many_async(self, nodes, transform_def):
+        graph = self._graph
+        self._notify(f"Running {transform_def.name} on {len(nodes)} nodes\u2026")
+        begin = getattr(graph, "begin_bulk_edit", None)
+        end = getattr(graph, "end_bulk_edit", None)
+        if callable(begin):
+            begin()
+        total = 0
+        created = []
+        try:
+            for node in nodes:
+                node_transform = next(
+                    (
+                        candidate
+                        for candidate in self.get_transforms(node)
+                        if candidate.name == transform_def.name
+                    ),
+                    transform_def,
+                )
+                total += await self._execute_async(
+                    node, node_transform, report=False, created=created
+                )
+        finally:
+            if callable(end):
+                end()
+        if created:
+            scene = graph.scene() if callable(getattr(graph, "scene", None)) else None
+            if scene is not None:
+                scene.clearSelection()
+            for child in created:
+                try:
+                    visible = child.scene() is not None
+                except RuntimeError:
+                    visible = False
+                if visible:
+                    child.setSelected(True)
+        self._notify(
+            f"{transform_def.name}: {total} result"
+            f"{'s' if total != 1 else ''} from {len(nodes)} node"
+            f"{'s' if len(nodes) != 1 else ''}"
+        )
+
+    async def _execute_async(self, node, transform_def, report=True, created=None):
+        scene = getattr(node, "scene", None)
+        if callable(scene) and scene() is None:
+            return 0
         title = (node.title or "").strip()
         content = (node.content or "").strip()
         etype = node.entity_type
@@ -130,12 +193,16 @@ class GraphTransformController:
         if transform_def.use_content and content:
             input_value = content
         if not input_value:
-            return
+            if report:
+                self._notify(f"{transform_def.name}: no usable input value")
+            return 0
 
         try:
             result = await transform_def.handler(input_value, self._modules)
         except Exception as exc:  # noqa: BLE001 - report failures in the graph
             result = TransformResult(content=f"{transform_def.name} failed: {exc}")
+        if callable(scene) and scene() is None:
+            return 0
 
         children = list(result.children)
         if not children and result.content:
@@ -147,29 +214,60 @@ class GraphTransformController:
                     evidence=list(result.evidence),
                 )
             )
+        if not children:
+            if report:
+                self._notify(f"{transform_def.name}: no results")
+            return 0
 
+        graph = self._graph
+        if graph is None:
+            return 0
+        begin = getattr(graph, "begin_bulk_edit", None)
+        end = getattr(graph, "end_bulk_edit", None)
+        if callable(begin):
+            begin()
         child_nodes = []
-        for cd in children:
-            pos = node.pos() + QPointF(
-                220 + len(child_nodes) * 80,
-                -40 * len(children) + len(child_nodes) * 80,
+        try:
+            for cd in children:
+                pos = node.pos() + QPointF(
+                    220 + len(child_nodes) * 80,
+                    -40 * len(children) + len(child_nodes) * 80,
+                )
+                child = graph.add_node(pos, cd.entity_type)
+                child.title = cd.title
+                child.content = cd.content
+                child.evidence = cd.evidence
+                child.update()
+                child_nodes.append(child)
+
+                graph.add_edge(node, child, source_port="right", target_port="left")
+                if transform_def.relationship:
+                    for edge in child._edges:
+                        if edge.target == child or edge.source == child:
+                            edge.relationship_type = transform_def.relationship
+                            edge.update()
+
+            if child_nodes:
+                self._layout_children(node, child_nodes)
+        finally:
+            if callable(end):
+                end()
+
+        if created is not None:
+            created.extend(child_nodes)
+        scene_obj = getattr(graph, "scene", None)
+        if callable(scene_obj):
+            scene = scene_obj()
+            if scene is not None:
+                scene.clearSelection()
+        for child in child_nodes:
+            child.setSelected(True)
+        if report:
+            self._notify(
+                f"{transform_def.name}: {len(child_nodes)} result"
+                f"{'s' if len(child_nodes) != 1 else ''}"
             )
-            child = self._graph.add_node(pos, cd.entity_type)
-            child.title = cd.title
-            child.content = cd.content
-            child.evidence = cd.evidence
-            child.update()
-            child_nodes.append(child)
-
-            self._graph.add_edge(node, child, source_port="right", target_port="left")
-            if transform_def.relationship:
-                for edge in child._edges:
-                    if edge.target == child or edge.source == child:
-                        edge.relationship_type = transform_def.relationship
-                        edge.update()
-
-        if child_nodes:
-            self._layout_children(node, child_nodes)
+        return len(child_nodes)
 
     def _layout_children(self, parent, children):
         count = len(children)

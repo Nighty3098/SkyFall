@@ -82,21 +82,21 @@ class DomainController:
             dbg = self._debug("serverLocationDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                result = await self.domain_analyzer.get_domain_ip_location(domain)
+                result = await self.domain_analyzer.get_ip_and_location(domain)
                 set_output(dbg, render(result))
 
         if self._is_checked("domainDNSCheck"):
             dbg = self._debug("serverDnsAnalyzeDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                dns_info = await self.domain_analyzer.get_dns_info(domain)
+                dns_info = await self.domain_analyzer.get_dns(domain)
                 set_output(dbg, render(dns_info))
 
         if self._is_checked("domainSSLCheck"):
             dbg = self._debug("serverTlsDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                ssl_info = await self.domain_analyzer.get_ssl_info(domain)
+                ssl_info = await self.domain_analyzer.get_ssl_tls_info(domain)
                 set_output(dbg, render(ssl_info))
 
         if self._is_checked("domainNmapCheck"):
@@ -106,19 +106,13 @@ class DomainController:
                 result = await self.domain_analyzer.run_nmap_scan(domain)
                 set_output(dbg, render(result))
 
-    async def _run_js_secrets(self, domain, headers=None):
+    async def _run_js_secrets(self, domain):
         dbg = self._debug("serverJsSecretsDebug")
         if dbg is None:
             return
         set_output(dbg, info("Loading..."))
         try:
-            if headers is None:
-                headers = await self.domain_analyzer.get_headers(domain)
-            raw = headers.get("raw_response") if isinstance(headers, dict) else None
-            if raw is not None:
-                result = await self.domain_analyzer.scan_js_secrets(raw)
-            else:
-                result = await self.domain_analyzer.scan_js_secrets_url(domain)
+            result = await self.domain_analyzer.scan_js_secrets(domain)
             set_output(dbg, render(result))
         except Exception as e:
             logger.warning(f"JS secrets scan failed: {e}")
@@ -130,44 +124,37 @@ class DomainController:
             return
         self.set_domain(domain)
 
-        headers = None
-        if self._is_checked("domainHeadersCheck") or self._is_checked(
-            "domainJsSecretsCheck"
-        ):
-            try:
-                headers = await self.domain_analyzer.get_headers(domain)
-            except Exception as e:
-                logger.warning(f"Headers fetch failed: {e}")
-                headers = None
-
         if self._is_checked("domainHeadersCheck"):
             waf_dbg = self._debug("serverWafDebug")
             if waf_dbg is not None:
-                if headers is None:
-                    set_output(waf_dbg, info("Headers unavailable"))
-                else:
-                    waf = await self.domain_analyzer.detect_waf(headers)
+                set_output(waf_dbg, info("Loading..."))
+                try:
+                    headers = await self.domain_analyzer.get_http_headers(domain)
+                    waf = await self.domain_analyzer.detect_waf(domain)
                     set_output(waf_dbg, render({"Headers": headers, "WAF": waf}))
+                except Exception as e:
+                    logger.warning(f"Headers/WAF check failed: {e}")
+                    set_output(waf_dbg, info(f"Headers/WAF check failed: {e}"))
 
         if self._is_checked("securityTxtCheck"):
             dbg = self._debug("securityTxtDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                result = await self.domain_analyzer.check_security_txt(domain)
+                result = await self.domain_analyzer.get_security_txt(domain)
                 set_output(dbg, render(result))
 
         if self._is_checked("cookiesCheck"):
             dbg = self._debug("cookiesDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                result = await self.domain_analyzer.analyze_cookies(domain)
+                result = await self.domain_analyzer.get_cookies(domain)
                 set_output(dbg, render(result))
 
         if self._is_checked("socialTagsCheck"):
             dbg = self._debug("socialTagsDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                result = await self.domain_analyzer.extract_social_tags(domain)
+                result = await self.domain_analyzer.get_social_tags(domain)
                 set_output(dbg, render(result))
 
         if self._is_checked("domainRobotsCheck"):
@@ -178,7 +165,7 @@ class DomainController:
                 set_output(dbg, render(result))
 
         if self._is_checked("domainJsSecretsCheck"):
-            await self._run_js_secrets(domain, headers=headers)
+            await self._run_js_secrets(domain)
 
     async def analyze_discovery(self, domain=None):
         domain = (domain or self._resolve_domain("discoveryDomainEdit") or "").strip()
@@ -197,7 +184,7 @@ class DomainController:
             dbg = self._debug("certTrDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                result = await self.domain_analyzer.cert_transparency(domain)
+                result = await self.domain_analyzer.get_certificate_transparency(domain)
                 set_output(dbg, render(result))
 
         if self._is_checked("domainsOnIpCheck"):
@@ -211,7 +198,7 @@ class DomainController:
                 except Exception as e:
                     set_output(dbg, info(f"Could not resolve IP: {e}"))
                 else:
-                    result = await self.domain_analyzer.reverse_ip(ip)
+                    result = await self.domain_analyzer.get_domains_on_ip(ip)
                     set_output(dbg, render(result))
 
     async def analyze_security(self, domain=None):
@@ -224,7 +211,7 @@ class DomainController:
             dbg = self._debug("serverMalwareDebug")
             if dbg is not None:
                 set_output(dbg, info("Loading..."))
-                result = await self.domain_analyzer.check_malware(domain)
+                result = await self.domain_analyzer.check_malware_reputation(domain)
                 set_output(dbg, render(result))
 
         if self._is_checked("domainThreatIntelCheck"):

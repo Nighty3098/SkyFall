@@ -243,8 +243,11 @@ def print_summary(
     """Итог установки: короткая сводка с путями."""
     _suspend_progress()
     title = f"{APP_NAME} {'updated' if updating else 'installed'}"
+    launcher_value = str(bin_file)
+    if not bin_file.is_file():
+        launcher_value += " (missing)"
     rows = [
-        ("launcher", str(bin_file)),
+        ("launcher", launcher_value),
         ("app files", str(app_dir)),
     ]
     if desktop_file is not None and desktop_file.is_file():
@@ -257,11 +260,17 @@ def print_summary(
         print(f"  {dim(name.ljust(10))}{value}", flush=True)
     print(flush=True)
     if user_mode and sys.platform == "linux":
-        print(
-            f"  {dim('Tip:')} log out and back in, or run "
-            f"{bold('gtk-launch skyfall')}, to refresh the icon.",
-            flush=True,
+        run_hint = (
+            f"  {dim('Run:')} {bold(str(bin_file))}  "
+            f"{dim('(launcher file, not a directory)')}"
         )
+        print(run_hint, flush=True)
+        local_bin = str(bin_file.parent)
+        tip = (
+            f"  {dim('Tip:')} ensure {bold(local_bin)} is in PATH, or run "
+            f"{bold('gtk-launch skyfall')} / relogin to refresh the icon."
+        )
+        print(tip, flush=True)
         print(flush=True)
 
 
@@ -603,7 +612,9 @@ def write_launcher(bin_file: Path, app_dir: Path, use_venv: bool) -> None:
     bin_file.write_text(content, encoding="utf-8")
     if sys.platform != "win32":
         os.chmod(bin_file, 0o755)
-    log(f"launcher: {bin_file}")
+    if not bin_file.is_file():
+        raise OSError(f"launcher was not created: {bin_file}")
+    log(f"launcher file: {bin_file}")
 
 
 DESKTOP_TEMPLATE = """[Desktop Entry]

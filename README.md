@@ -41,7 +41,7 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 
 | Module            | What it does                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Web / Domain**  | 16-step domain recon: IP + geolocation, DNS, WHOIS, SSL/TLS, headers + WAF, robots.txt, security.txt, cookies, social tags, subdomains (passive + brute), Certificate Transparency, ports (NMAP), threat intel (AbuseIPDB/GreyNoise/ThreatFox/URLHaus), reputation aggregator (VirusTotal/Google Safe Browsing/CRDF/AbuseIPDB/GreyNoise/ThreatFox/URLHaus), JS secrets scan, domains on IP (PTR/Shodan InternetDB/HackerTarget) |
+| **Web / Domain**  | 16-step domain recon: IP + geolocation, DNS, WHOIS, SSL/TLS, headers + WAF, robots.txt, security.txt, cookies, social tags, subdomains (passive + brute), Certificate Transparency, ports (NMAP), threat intel (AbuseIPDB/GreyNoise/IPGeolocation.io/ThreatFox/URLHaus), reputation aggregator (VirusTotal/Google Safe Browsing/CRDF/AbuseIPDB/GreyNoise/IPGeolocation.io/ThreatFox/URLHaus), JS secrets scan, domains on IP (PTR/Shodan InternetDB/HackerTarget); separate **WHOIS** tab runs WHOIS history + historical DNS + investigation timeline + reverse WHOIS (WhoisFreaks, optional key) |
 | **Telegram**      | Channel/group collection via MTProto into SQLite (posts, members, links, media, avatars) + analyzer that builds a relationship graph and exports GraphML/GEXF/JSON/CSV/PNG/HTML/Obsidian                                                                                                                                                                                                                                        |
 | **Username**      | Maigret (~510 sites) + a Sherlock-style engine (~481 sites) with WAF detection; links confirmed by both engines are flagged ✅ at the top, single-engine hits are grouped by source                                                                                                                                                                                                                                             |
 | **Mail**          | IntelX search, Have I Been Pwned, `.eml`/header analyzer (SPF/DKIM/DMARC, Received chain, IP geolocation, verdict), and registered-accounts discovery (Gravatar/Microsoft/Mozilla/ProtonMail/Duolingo/Twitter + a `holehe` sweep of ~120 sites)                                                                                                                                                                                 |
@@ -51,6 +51,7 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 | **Geo**           | Sun/shadow geometry and inverse shadow geolocation (local `suncalc`), NASA FIRMS active fires, GDACS disaster alerts                                                                                                                                                                                                                                                                                                            |
 | **Archive**       | Wayback Machine (closest snapshot, CDX listing, on-demand save) and archive.today checks                                                                                                                                                                                                                                                                                                                                        |
 | **GitHub**        | User, repo, commit, email and secret scanning (~240 patterns) over the REST API with multi-token rotation                                                                                                                                                                                                                                                                                                                       |
+| **Shodan**        | Host lookup, full-text search + facets, count, DNS records, honeyscore, exploit database, on-demand scans, alerts and API catalog — plus one-click graph export and graph transforms                                                                                                                                                                                                                                            |
 | **Phone**         | Parse/validate (phonenumbers), reverse lookup (NumVerify/AbstractAPI), leaks (IntelX), reviews (7tel.ru)                                                                                                                                                                                                                                                                                                                        |
 | **MAC**           | BSSID geolocation via Yandex/Apple/Google/Microsoft/Mylnikov with a map                                                                                                                                                                                                                                                                                                                                                         |
 | **Blockchain**    | Find transactions by indirect data (time, amount, memo) across Tron, TON, Ethereum, BSC, Base, Solana, BTC, LTC, DOGE, BCH                                                                                                                                                                                                                                                                                                      |
@@ -58,12 +59,53 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 | **Files**         | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats)                                                                                                                                                                                                                                                                                                                                 |
 | **Search4Faces**  | Reverse face search (VK photos)                                                                                                                                                                                                                                                                                                                                                                                                 |
 | **Dorking**       | ~7,900 Google dorks in 14 categories via DuckDuckGo or a local SearXNG                                                                                                                                                                                                                                                                                                                                                          |
-| **Graph**         | 13 entity types, 12 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo), agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export                                                                      |
+| **Graph**         | 13 entity types, 12 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo, Shodan), **custom transform plugins from `~/.skyfall/transforms`**, agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export                                                                      |
 | **AI Report**     | 7-section structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers                                                                                                                                                                                                                                                                                                              |
-| **MCP**           | 91 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878`                                                                                                                                                                                                                                                                                   |
+| **MCP**           | 93 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878`                                                                                                                                                                                                                                                                                   |
 | **Cases**         | Investigation workspace with automatic per-module Markdown autosave                                                                                                                                                                                                                                                                                                                                                             |
 
 > Detailed per-tab reference, settings and API keys: [`DOC.md`](./DOC.md).
+
+## `CUSTOM GRAPH TRANSFORMS`
+
+SkyFall automatically loads graph transform plugins from `~/.skyfall/transforms/*.py`. The directory and a `README.md` template are created on first launch; override the path with `SKYFALL_TRANSFORMS_DIR` if needed. Plugins appear in the same `Ctrl+T` transform picker as built-ins, and the directory is refreshed automatically when a file changes.
+
+```python
+from src.transforms import ChildNodeDef, TransformDef, TransformResult
+
+
+def lookup(value, modules):
+    # value: node title/content, modules: SkyFall module objects
+    del modules
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"Result for {value}",
+                entity_type="Custom",
+                content="Details produced by the plugin.",
+            )
+        ]
+    )
+
+
+TRANSFORMS = [
+    TransformDef(
+        name="My Custom Transform",
+        description="What this transform does",
+        input_types=["Domain", "IP", "Custom"],
+        handler=lookup,
+    )
+]
+```
+
+- A plugin must expose `TRANSFORMS` or a `get_transforms()` function returning `TransformDef` objects.
+- Handlers receive `(value, modules)` and may be synchronous or asynchronous.
+- Handlers may return `TransformResult`, `ChildNodeDef`(s), a string, a mapping with `children`/`content`/`evidence`, or `None`.
+- Supported input types: `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`, `Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation`, `Custom`.
+- Broken plugins are logged and skipped; built-in transforms are unaffected. If a plugin reuses a built-in `(entity type, name)` pair, the built-in wins.
+- Ready-to-copy example: [`examples/transforms/example_transform.py`](./examples/transforms/example_transform.py). Full API reference: [DOC.md](./DOC.md#custom-graph-transforms).
+
+> **Security.** Plugins are ordinary Python code with SkyFall's permissions. Only install code you trust.
 
 ## `REQUIREMENTS`
 
@@ -72,7 +114,7 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 - **NMAP** installed system-wide (for the port-scan step)
 - **Docker** (optional) — for a local SearXNG instance used by Dorking
 - **Telegram API ID/Hash + phone** — only for the Telegram modules
-- Optional API keys (VirusTotal, IntelX, HIBP, GitHub, Etherscan, LeakCheck, Dehashed, NASA FIRMS, …) — see [`DOC.md`](./DOC.md)
+- Optional API keys (VirusTotal, IntelX, HIBP, GitHub, Shodan, Etherscan, LeakCheck, Dehashed, NASA FIRMS, …) — see [`DOC.md`](./DOC.md)
 
 ## `SETUP SEARXNG`
 
@@ -219,7 +261,7 @@ The same token also protects the graph bridge on `127.0.0.1:9878`, which the MCP
 
 ## `DATA & STORAGE`
 
-- **`~/.skyfall/`** — `settings.json` (encrypted secrets), `secret.key`, `mcp_token`, `proxies.txt`, `logs/`, `data/`.
+- **`~/.skyfall/`** — `settings.json` (encrypted secrets), `secret.key`, `mcp_token`, `proxies.txt`, `logs/`, `data/`, `transforms/` (custom graph transforms and their README template).
 - **Cases** — folder per investigation with `domains/`, `telegram/`, `username/`, `email/`, `social/`, `leaks/`, `geo/`, `archive/`, `github/`, `phone/`, `mac/`, `blockchain/`, `files/`, `steganography/`, `reports/`, `dorking/`, `downloads/`, `graph/`.
 - **Telegram DB** — SQLite `SkyFall_TG.db` (`channels`, `users`, `posts`, `discussions`, `members`, `links`) and `SkyFall_TG_media/`.
 
@@ -235,7 +277,7 @@ The same token also protects the graph bridge on `127.0.0.1:9878`, which the MCP
 
 ```
 
-The pipeline is `main.py → src/connectors.py (Qt signals) → src/controllers/ → src/modules/`.
+The pipeline is `main.py → src/connectors.py (Qt signals) → src/controllers/ → src/modules/`; graph transforms and plugin discovery live in `src/transforms/`.
 See [`DOC.md`](./DOC.md) for the full code map.
 
 ## `CONTACTS`

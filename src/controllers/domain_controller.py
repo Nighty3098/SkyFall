@@ -1,3 +1,4 @@
+import asyncio
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -10,7 +11,13 @@ if TYPE_CHECKING:
     from src.modules.domain_analyzer import DomainAnalyzer
 
 
-STEPS = 16
+DOMAIN_EDITS = (
+    "whoisDomainEdit",
+    "infraDomainEdit",
+    "webSurfaceDomainEdit",
+    "discoveryDomainEdit",
+    "securityDomainEdit",
+)
 
 
 class DomainController:
@@ -24,209 +31,345 @@ class DomainController:
         self.ui = ui
         self.domain_analyzer = domain_analyzer
         self.domain = ""
+        self._whois_cache = None
+        self._whois_cache_domain = ""
 
     def set_domain(self, domain):
-        self.domain = domain
+        self.domain = (domain or "").strip()
 
-    def _update_progress(self, step: int):
-        self.ui.domainProgress.setValue(int(step / STEPS * 100))
+    def _resolve_domain(self, *edit_names):
+        for name in edit_names:
+            edit = getattr(self.ui, name, None)
+            if edit is None or not hasattr(edit, "text"):
+                continue
+            value = (edit.text() or "").strip()
+            if value:
+                self.set_domain(value)
+                return self.domain
+        return self.domain
+
+    def _is_checked(self, name):
+        widget = getattr(self.ui, name, None)
+        return widget is not None and widget.isChecked()
+
+    def _debug(self, name):
+        return getattr(self.ui, name, None)
 
     async def analyze_domain(self):
-        self.ui.domainProgress.setValue(0)
+        """Compatibility: run enabled checks from all category tabs."""
+        if not self.domain:
+            self._resolve_domain(*DOMAIN_EDITS)
+        if not self.domain:
+            return
+        progress = getattr(self.ui, "domainProgress", None)
+        if progress is not None:
+            progress.setValue(0)
+        await self.analyze_infra(domain=self.domain)
+        await self.analyze_web_surface(domain=self.domain)
+        await self.analyze_discovery(domain=self.domain)
+        await self.analyze_security(domain=self.domain)
+        await self.analyze_whois(domain=self.domain)
+        if progress is not None:
+            progress.setValue(100)
 
-        if self.ui.domainRobotsCheck.isChecked():
-            set_output(self.ui.serverRobotsDebug, info("Loading..."))
-            set_output(
-                self.ui.serverRobotsDebug,
-                render(
-                    await self.domain_analyzer.get_robots_txt(self.domain), "Robots.txt"
-                ),
-            )
-        self._update_progress(1)
+    async def analyze_infra(self, domain=None):
+        domain = (domain or self._resolve_domain("infraDomainEdit") or "").strip()
+        if not domain:
+            return
+        self.set_domain(domain)
 
-        if self.ui.domainLocationCheck.isChecked():
-            set_output(self.ui.serverLocationDebug, info("Loading..."))
-            set_output(
-                self.ui.serverLocationDebug,
-                render(await self.domain_analyzer.get_ip_and_location(self.domain)),
-            )
-        self._update_progress(2)
+        if self._is_checked("domainLocationCheck"):
+            dbg = self._debug("serverLocationDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.get_ip_and_location(domain)
+                set_output(dbg, render(result))
 
-        if self.ui.domainSSLCheck.isChecked():
-            set_output(self.ui.serverTlsDebug, info("Loading..."))
-            set_output(
-                self.ui.serverTlsDebug,
-                render(await self.domain_analyzer.get_ssl_tls_info(self.domain)),
-            )
-        self._update_progress(3)
+        if self._is_checked("domainDNSCheck"):
+            dbg = self._debug("serverDnsAnalyzeDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                dns_info = await self.domain_analyzer.get_dns(domain)
+                set_output(dbg, render(dns_info))
 
-        if self.ui.domainDNSCheck.isChecked():
-            set_output(self.ui.serverDnsAnalyzeDebug, info("Loading..."))
-            dns_records = await self.domain_analyzer.get_dns(self.domain)
-            associated_hosts = await self.domain_analyzer.get_hosts(self.domain)
-            set_output(
-                self.ui.serverDnsAnalyzeDebug,
-                render(
-                    {"dns_records": dns_records, "associated_hosts": associated_hosts}
-                ),
-            )
-        self._update_progress(4)
+        if self._is_checked("domainSSLCheck"):
+            dbg = self._debug("serverTlsDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                ssl_info = await self.domain_analyzer.get_ssl_tls_info(domain)
+                set_output(dbg, render(ssl_info))
 
-        if self.ui.domainHeadersCheck.isChecked():
-            set_output(self.ui.serverWafDebug, info("Loading..."))
-            web_stack = await self.domain_analyzer.analyze_web_stack(self.domain)
-            combined = render(web_stack)
-            # JS secrets piggyback: only when no dedicated panel exists in form.ui.
-            if getattr(self.ui, "serverJsSecretsDebug", None) is None:
+        if self._is_checked("domainNmapCheck"):
+            dbg = self._debug("serverNmapDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.run_nmap_scan(domain)
+                set_output(dbg, render(result))
+
+    async def _run_js_secrets(self, domain):
+        dbg = self._debug("serverJsSecretsDebug")
+        if dbg is None:
+            return
+        set_output(dbg, info("Loading..."))
+        try:
+            result = await self.domain_analyzer.scan_js_secrets(domain)
+            set_output(dbg, render(result))
+        except Exception as e:
+            logger.warning(f"JS secrets scan failed: {e}")
+            set_output(dbg, info(f"JS secrets scan failed: {e}"))
+
+    async def analyze_web_surface(self, domain=None):
+        domain = (domain or self._resolve_domain("webSurfaceDomainEdit") or "").strip()
+        if not domain:
+            return
+        self.set_domain(domain)
+
+        if self._is_checked("domainHeadersCheck"):
+            waf_dbg = self._debug("serverWafDebug")
+            if waf_dbg is not None:
+                set_output(waf_dbg, info("Loading..."))
                 try:
-                    js_data = await self.domain_analyzer.scan_js_secrets(self.domain)
+                    headers = await self.domain_analyzer.get_http_headers(domain)
+                    waf = await self.domain_analyzer.detect_waf(domain)
+                    set_output(waf_dbg, render({"Headers": headers, "WAF": waf}))
                 except Exception as e:
-                    logger.warning(f"JS secrets scan failed: {e}")
-                    js_data = None
-                if js_data:
-                    combined = f"{combined}\n\n{render(js_data)}"
-            set_output(self.ui.serverWafDebug, combined)
-        self._update_progress(5)
+                    logger.warning(f"Headers/WAF check failed: {e}")
+                    set_output(waf_dbg, info(f"Headers/WAF check failed: {e}"))
 
-        if self.ui.domainWhoisCheck.isChecked():
-            set_output(self.ui.serverWhoisDebug, info("Loading..."))
-            set_output(
-                self.ui.serverWhoisDebug,
-                render(await self.domain_analyzer.get_whois_info(self.domain)),
-            )
-        self._update_progress(6)
+        if self._is_checked("securityTxtCheck"):
+            dbg = self._debug("securityTxtDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.get_security_txt(domain)
+                set_output(dbg, render(result))
 
-        if self.ui.domainNmapCheck.isChecked():
-            set_output(self.ui.serverNmapDebug, info("Loading..."))
-            set_output(
-                self.ui.serverNmapDebug,
-                render(await self.domain_analyzer.run_nmap_scan(self.domain)),
-            )
-        self._update_progress(7)
+        if self._is_checked("cookiesCheck"):
+            dbg = self._debug("cookiesDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.get_cookies(domain)
+                set_output(dbg, render(result))
 
-        if self.ui.domainMalwareCheck.isChecked():
-            set_output(self.ui.serverMalwareDebug, info("Loading..."))
-            # Skip the intel round here when the dedicated Threat Intel step
-            # runs too — avoids duplicate AbuseIPDB/GreyNoise/ThreatFox/URLHaus calls.
-            threat_separate = (
-                getattr(self.ui, "domainThreatIntelCheck", None) is not None
-                and self.ui.domainThreatIntelCheck.isChecked()
-            )
-            set_output(
-                self.ui.serverMalwareDebug,
-                render(
-                    await self.domain_analyzer.check_malware_reputation(
-                        self.domain, include_intel=not threat_separate
+        if self._is_checked("socialTagsCheck"):
+            dbg = self._debug("socialTagsDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.get_social_tags(domain)
+                set_output(dbg, render(result))
+
+        if self._is_checked("domainRobotsCheck"):
+            dbg = self._debug("serverRobotsDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.get_robots_txt(domain)
+                set_output(dbg, render(result))
+
+        if self._is_checked("domainJsSecretsCheck"):
+            await self._run_js_secrets(domain)
+
+    async def analyze_discovery(self, domain=None):
+        domain = (domain or self._resolve_domain("discoveryDomainEdit") or "").strip()
+        if not domain:
+            return
+        self.set_domain(domain)
+
+        if self._is_checked("domainSubdomainsCheck"):
+            dbg = self._debug("serverSubdomainsDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.find_subdomains(domain)
+                set_output(dbg, render(result))
+
+        if self._is_checked("certTrCheck"):
+            dbg = self._debug("certTrDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.get_certificate_transparency(domain)
+                set_output(dbg, render(result))
+
+        if self._is_checked("domainsOnIpCheck"):
+            dbg = self._debug("domainsOnIpDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                try:
+                    ip = await asyncio.to_thread(
+                        __import__("socket").gethostbyname, domain.split("/")[0]
                     )
-                ),
-            )
-        self._update_progress(8)
+                except Exception as e:
+                    set_output(dbg, info(f"Could not resolve IP: {e}"))
+                else:
+                    result = await self.domain_analyzer.get_domains_on_ip(ip)
+                    set_output(dbg, render(result))
 
-        if self.ui.domainSubdomainsCheck.isChecked():
-            set_output(self.ui.serverSubdomainsDebug, info("Loading..."))
-            set_output(
-                self.ui.serverSubdomainsDebug,
-                render(
-                    await self.domain_analyzer.find_subdomains(self.domain),
-                    "Subdomains",
-                ),
-            )
-        self._update_progress(9)
+    async def analyze_security(self, domain=None):
+        domain = (domain or self._resolve_domain("securityDomainEdit") or "").strip()
+        if not domain:
+            return
+        self.set_domain(domain)
 
-        if self.ui.securityTxtCheck.isChecked():
-            set_output(self.ui.securityTxtDebug, info("Loading..."))
-            set_output(
-                self.ui.securityTxtDebug,
-                render(
-                    await self.domain_analyzer.get_security_txt(self.domain),
-                    "security.txt",
-                ),
-            )
-        self._update_progress(10)
+        if self._is_checked("domainMalwareCheck"):
+            dbg = self._debug("serverMalwareDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                result = await self.domain_analyzer.check_malware_reputation(domain)
+                set_output(dbg, render(result))
 
-        if self.ui.cookiesCheck.isChecked():
-            set_output(self.ui.cookiesDebug, info("Loading..."))
-            set_output(
-                self.ui.cookiesDebug,
-                render(await self.domain_analyzer.get_cookies(self.domain), "Cookies"),
-            )
-        self._update_progress(11)
+        if self._is_checked("domainThreatIntelCheck"):
+            dbg = self._debug("serverThreatIntelDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                try:
+                    result = await self.domain_analyzer.check_threat_intel(domain)
+                    set_output(dbg, render(result))
+                except Exception as e:
+                    logger.warning(f"Threat intel check failed: {e}")
+                    set_output(dbg, info(f"Threat intel check failed: {e}"))
 
-        if self.ui.socialTagsCheck.isChecked():
-            set_output(self.ui.socialTagsDebug, info("Loading..."))
-            set_output(
-                self.ui.socialTagsDebug,
-                render(
-                    await self.domain_analyzer.get_social_tags(self.domain),
-                    "Social tags",
-                ),
-            )
-        self._update_progress(12)
+    async def analyze_whois(self, domain=None):
+        """WHOIS/Registration tab: basic WHOIS + history + DNS + timeline + reverse."""
+        if domain:
+            self.set_domain(str(domain).strip())
+        else:
+            self._resolve_domain("whoisDomainEdit")
+            if not self.domain:
+                # fall back to any other domain input
+                self._resolve_domain(*DOMAIN_EDITS)
 
-        if self.ui.certTrCheck.isChecked():
-            set_output(self.ui.certTrDebug, info("Loading..."))
-            set_output(
-                self.ui.certTrDebug,
-                render(
-                    await self.domain_analyzer.get_certificate_transparency(
-                        self.domain
-                    ),
-                    "Certificate Transparency",
-                ),
-            )
-        self._update_progress(13)
+        query_edit = getattr(self.ui, "reverseWhoisQueryEdit", None)
+        query = query_edit.text().strip() if query_edit is not None else ""
 
-        if self.ui.domainsOnIpCheck.isChecked():
-            set_output(self.ui.domainsOnIpDebug, info("Loading..."))
-            ip_data = await self.domain_analyzer.get_ip_and_location(self.domain)
-            ip_addr = ip_data.get("ip", "")
-            if ip_addr and "error" not in ip_data:
-                set_output(
-                    self.ui.domainsOnIpDebug,
-                    render(await self.domain_analyzer.get_domains_on_ip(ip_addr)),
-                )
-            else:
-                set_output(
-                    self.ui.domainsOnIpDebug,
-                    info(f"Could not resolve IP for {self.domain}"),
-                )
-        self._update_progress(14)
+        history_debug = self._debug("serverWhoisHistoryDebug")
+        reverse_debug = self._debug("serverReverseWhoisDebug")
+        timeline_debug = self._debug("serverDomainTimelineDebug")
+        basic_debug = self._debug("serverWhoisDebug")
 
-        # ── Dedicated panels (present in form.ui; getattr keeps back-compat) ──
-        js_check = getattr(self.ui, "domainJsSecretsCheck", None)
-        js_debug = getattr(self.ui, "serverJsSecretsDebug", None)
-        if js_check is not None and js_debug is not None and js_check.isChecked():
-            set_output(js_debug, info("Loading..."))
-            try:
-                set_output(
-                    js_debug,
-                    render(
-                        await self.domain_analyzer.scan_js_secrets(self.domain),
-                        "JS secrets",
-                    ),
-                )
-            except Exception as e:
-                logger.warning(f"JS secrets scan failed: {e}")
-                set_output(js_debug, info(f"JS secrets scan failed: {e}"))
-        self._update_progress(15)
+        if not self.domain and not query:
+            message = info("Enter a domain or a reverse WHOIS query")
+            for dbg in (history_debug, reverse_debug, timeline_debug, basic_debug):
+                if dbg is not None:
+                    set_output(dbg, message)
+            return
 
-        threat_check = getattr(self.ui, "domainThreatIntelCheck", None)
-        threat_debug = getattr(self.ui, "serverThreatIntelDebug", None)
+        whois_history = None
+        dns_history = None
+        current_whois = None
+
+        # Basic WHOIS (python-whois) if requested
         if (
-            threat_check is not None
-            and threat_debug is not None
-            and threat_check.isChecked()
+            self.domain
+            and self._is_checked("domainWhoisCheck")
+            and basic_debug is not None
         ):
-            set_output(threat_debug, info("Loading..."))
+            set_output(basic_debug, info("Loading..."))
             try:
-                set_output(
-                    threat_debug,
-                    render(
-                        await self.domain_analyzer.check_threat_intel(self.domain),
-                        "Threat intel",
-                    ),
+                if (
+                    self._whois_cache_domain == self.domain
+                    and self._whois_cache is not None
+                ):
+                    current_whois = self._whois_cache
+                else:
+                    current_whois = await self.domain_analyzer.get_whois_info(
+                        self.domain
+                    )
+                    self._whois_cache = current_whois
+                    self._whois_cache_domain = self.domain
+                set_output(basic_debug, render(current_whois, "WHOIS"))
+            except Exception as e:
+                logger.warning(f"WHOIS info failed: {e}")
+                set_output(basic_debug, info(f"WHOIS failed: {e}"))
+        elif basic_debug is not None and not self.domain:
+            set_output(basic_debug, info("Enter a domain"))
+
+        if self.domain:
+            if history_debug is not None:
+                set_output(history_debug, info("Loading..."))
+            if timeline_debug is not None:
+                set_output(timeline_debug, info("Loading..."))
+            try:
+                whois_history, dns_history = await asyncio.gather(
+                    self.domain_analyzer.get_whois_history(self.domain),
+                    self.domain_analyzer.get_dns_history(self.domain),
                 )
             except Exception as e:
-                logger.warning(f"Threat intel check failed: {e}")
-                set_output(threat_debug, info(f"Threat intel check failed: {e}"))
-        self._update_progress(16)
+                logger.warning(f"WHOIS/DNS history fetch failed: {e}")
+            if history_debug is not None:
+                if whois_history is not None:
+                    set_output(history_debug, render(whois_history, "WHOIS history"))
+                else:
+                    set_output(history_debug, info("WHOIS history unavailable"))
+            if timeline_debug is not None:
+                try:
+                    timeline = await self.domain_analyzer.build_domain_timeline(
+                        dns_history=dns_history,
+                        whois_history=whois_history,
+                        current_whois=current_whois,
+                    )
+                    set_output(timeline_debug, render(timeline, "Domain timeline"))
+                except Exception as e:
+                    logger.warning(f"Domain timeline failed: {e}")
+                    set_output(timeline_debug, info(f"Timeline failed: {e}"))
+        else:
+            if history_debug is not None:
+                set_output(history_debug, info("Enter a domain to load WHOIS history"))
+            if timeline_debug is not None:
+                set_output(timeline_debug, info("Enter a domain to build a timeline"))
+
+        if reverse_debug is None:
+            return
+
+        set_output(reverse_debug, info("Loading..."))
+        try:
+            if query:
+                reverse_result = await self.domain_analyzer.reverse_whois_from_query(
+                    query
+                )
+            elif self.domain:
+                if whois_history is None:
+                    whois_history = await self.domain_analyzer.get_whois_history(
+                        self.domain
+                    )
+                # Current WHOIS is only a fallback pivot source for history
+                # entries that are redacted; it does not consume credits.
+                if current_whois is None and (
+                    self._whois_cache_domain == self.domain
+                    and self._whois_cache is not None
+                ):
+                    current_whois = self._whois_cache
+                if current_whois is None:
+                    try:
+                        current_whois = await self.domain_analyzer.get_whois_info(
+                            self.domain
+                        )
+                        self._whois_cache = current_whois
+                        self._whois_cache_domain = self.domain
+                        # also update basic debug if it exists and is in loading/empty
+                        if basic_debug is not None and self._is_checked(
+                            "domainWhoisCheck"
+                        ):
+                            set_output(basic_debug, render(current_whois, "WHOIS"))
+                    except Exception:
+                        current_whois = None
+                reverse_result = await self.domain_analyzer.reverse_whois_from_pivots(
+                    whois_history,
+                    current_whois=current_whois,
+                )
+                # Refresh timeline with current WHOIS context if available.
+                if timeline_debug is not None and dns_history is not None:
+                    try:
+                        timeline = await self.domain_analyzer.build_domain_timeline(
+                            dns_history=dns_history,
+                            whois_history=whois_history,
+                            current_whois=current_whois,
+                        )
+                        set_output(timeline_debug, render(timeline, "Domain timeline"))
+                    except Exception:
+                        pass
+            else:
+                reverse_result = {
+                    "status": "No query",
+                    "message": "Enter a domain or a reverse WHOIS query",
+                }
+            set_output(reverse_debug, render(reverse_result, "Reverse WHOIS"))
+        except Exception as e:
+            logger.warning(f"Reverse WHOIS check failed: {e}")
+            set_output(reverse_debug, info(f"Reverse WHOIS check failed: {e}"))

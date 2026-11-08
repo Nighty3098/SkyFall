@@ -120,8 +120,9 @@ mcp = FastMCP(
     token_verifier=_StaticTokenVerifier(_MCP_TOKEN),
     instructions="""
 MCP server for the SkyFall OSINT toolkit. Provides tools to:
-- Analyze domains (DNS, WHOIS, SSL, NMAP, WAF, malware, subdomains+brute,
-  threat intel via AbuseIPDB/GreyNoise/ThreatFox/URLHaus, JS secrets scan)
+- Analyze domains (DNS, WHOIS, WHOIS history + reverse WHOIS via WhoisFreaks,
+  SSL, NMAP, WAF, malware, subdomains+brute, threat intel via
+  AbuseIPDB/GreyNoise/ThreatFox/URLHaus, JS secrets scan)
 - Search usernames across 3300+ sites (Sherlock + Maigret merged view)
 - Look up usernames on Bluesky, Mastodon and Instagram
 - Reconstruct Reddit activity from public archives (Arctic Shift, PullPush)
@@ -319,6 +320,8 @@ async def _make_da():
         ipinfo_api_key=s.get("ipinfo_api_key", ""),
         abuseipdb_api_key=s.get("abuseipdb_api_key", ""),
         greynoise_api_key=s.get("greynoise_api_key", ""),
+        whoisfreaks_api_key=s.get("whoisfreaks_api_key", ""),
+        ipgeolocation_api_key=s.get("ipgeolocation_api_key", ""),
     )
 
 
@@ -356,6 +359,144 @@ async def skyfall_domain_whois(domain: str) -> str:
     if isinstance(result, str):
         return result
     return _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_domain_whois_history(domain: str, limit: int = 50) -> str:
+    """Get historical WHOIS records for a domain (WhoisFreaks, 2 credits).
+
+    Args:
+        domain: Target domain (e.g. "example.com")
+        limit: Max records to return, newest first (0 = all records)
+    """
+    da = await _make_da()
+    result = await da.get_whois_history(domain, limit=limit or None)
+    return result if isinstance(result, str) else _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_reverse_whois(
+    email: str = "",
+    company: str = "",
+    owner: str = "",
+    keyword: str = "",
+    page: int = 1,
+    mode: str = "mini",
+    exact: bool = False,
+) -> str:
+    """Find domains registered to an email, company, owner or keyword.
+
+    Provide exactly one of email, company, owner or keyword. Uses WhoisFreaks
+    (5 credits per page). Mini mode returns 100 records/page.
+
+    Args:
+        email: Registrant email address (exact or wildcard pattern)
+        company: Registrant company name
+        owner: Registrant full name
+        keyword: Domain-name keyword (3-63 characters)
+        page: Result page (1-based)
+        mode: "mini" (100 records/page) or "default" (50 records/page)
+        exact: Exact match for company/owner/keyword (not email)
+    """
+    da = await _make_da()
+    result = await da.reverse_whois(
+        email=email,
+        company=company,
+        owner=owner,
+        keyword=keyword,
+        page=page,
+        mode=mode,
+        exact=exact,
+    )
+    return result if isinstance(result, str) else _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_domain_dns_history(
+    domain: str, dns_type: str = "all", max_pages: int = 5
+) -> str:
+    """Get historical DNS snapshots for a domain (WhoisFreaks).
+
+    Args:
+        domain: Target domain (e.g. "example.com")
+        dns_type: DNS record type filter (e.g. "all", "a", "ns", "mx")
+        max_pages: Max pages to fetch (1-20); capped to limit quota/credit usage
+    """
+    da = await _make_da()
+    result = await da.get_dns_history(domain, dns_type=dns_type, max_pages=max_pages)
+    return result if isinstance(result, str) else _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_domain_timeline(domain: str, max_pages: int = 5) -> str:
+    """Build a chronological DNS+WHOIS investigation timeline for a domain.
+
+    Combines WhoisFreaks historical DNS snapshots and WHOIS history into
+    observed/reported events. Use as triage context, not a maliciousness verdict.
+
+    Args:
+        domain: Target domain (e.g. "example.com")
+        max_pages: Max DNS history pages to fetch (1-20)
+    """
+    import asyncio
+
+    da = await _make_da()
+    whois_history, dns_history = await asyncio.gather(
+        da.get_whois_history(domain),
+        da.get_dns_history(domain, max_pages=max_pages),
+    )
+    timeline = await da.build_domain_timeline(
+        dns_history=dns_history, whois_history=whois_history
+    )
+    result = {
+        "domain": domain,
+        "timeline": timeline,
+        "whois_history_status": (whois_history or {}).get("status")
+        if isinstance(whois_history, dict)
+        else None,
+        "dns_history_status": (dns_history or {}).get("status")
+        if isinstance(dns_history, dict)
+        else None,
+    }
+    return _extract_json(result)
+
+
+@mcp.tool()
+async def skyfall_ip_security(target: str) -> str:
+    """Check IP security/anonymizer signals (IPGeolocation.io, optional key).
+
+    Returns threat score and flags such as VPN/proxy/Tor/bot/cloud/attacker.
+    Treat results as triage signals, not proof of malicious activity.
+
+    Args:
+        target: IP address or domain name (domains are resolved to an IP)
+    """
+    import asyncio
+    import ipaddress
+    import socket
+
+    da = await _make_da()
+    target = (target or "").strip()
+    ip = target
+    try:
+        ipaddress.ip_address(target)
+    except (TypeError, ValueError):
+        try:
+            ip = await asyncio.to_thread(socket.gethostbyname, target.split("/")[0])
+        except Exception:
+            ip = ""
+    if not ip:
+        return _extract_json(
+            {
+                "source": "IPGeolocation",
+                "status": "ERROR",
+                "note": "Could not resolve IP",
+            }
+        )
+    result = await da.check_ip_security(ip)
+    if isinstance(result, dict):
+        result.setdefault("target", target)
+    return result if isinstance(result, str) else _extract_json(result)
 
 
 @mcp.tool()

@@ -1984,12 +1984,6 @@ class Ui_MainWindow(object):
 
         self.graphCenterLayout.addWidget(self.graphWidget)
 
-        self.graphStatusLabel = QLabel(self.graphCenterPanel)
-        self.graphStatusLabel.setObjectName(u"graphStatusLabel")
-        self.graphStatusLabel.setTextInteractionFlags(Qt.TextSelectableByMouse)
-
-        self.graphCenterLayout.addWidget(self.graphStatusLabel)
-
         self.graphSplitter.addWidget(self.graphCenterPanel)
         self.verticalWidget = QWidget(self.graphSplitter)
         self.verticalWidget.setObjectName(u"verticalWidget")
@@ -2665,7 +2659,6 @@ class Ui_MainWindow(object):
         self.exportGraphImageButton.setText(QCoreApplication.translate("MainWindow", u"Export PNG/SVG", None))
         self.graphSearchEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Search nodes...", None))
         self.graphClearFilterButton.setText(QCoreApplication.translate("MainWindow", u"Clear", None))
-        self.graphStatusLabel.setText("")
         self.graphNodeTitleCaption.setText(QCoreApplication.translate("MainWindow", u"TITLE", None))
         self.nodeTitleEdit.setPlaceholderText(QCoreApplication.translate("MainWindow", u"Title", None))
         self.graphNodeTypeCaption.setText(QCoreApplication.translate("MainWindow", u"TYPE", None))

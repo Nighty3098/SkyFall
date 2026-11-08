@@ -9,7 +9,17 @@ import uuid
 from pathlib import Path
 
 import networkx as nx
-from PySide6.QtCore import QEvent, QLineF, QObject, QPointF, QRectF, Qt, QUrl, Signal
+from PySide6.QtCore import (
+    QEvent,
+    QLineF,
+    QObject,
+    QPointF,
+    QRectF,
+    Qt,
+    QTimer,
+    QUrl,
+    Signal,
+)
 from PySide6.QtGui import (
     QAction,
     QActionGroup,
@@ -1852,6 +1862,277 @@ class PropertiesPanel(QDockWidget):
         QDesktopServices.openUrl(url)
 
 
+class TransformPickerDialog(QDialog):
+    """Searchable transform launcher.
+
+    Maltego keeps transforms one right-click away, but large transform sets
+    become hard to scan in a plain submenu.  This dialog keeps the same
+    context-menu flow while adding incremental search and descriptions.
+    """
+
+    def __init__(self, transforms, parent=None, title="Run Transform"):
+        super().__init__(parent)
+        self.setWindowTitle(title)
+        self.setMinimumSize(460, 420)
+        self._transforms = list(transforms)
+        self._rows = []
+        self._selected = None
+
+        from src.ui.theme import dialog_palette
+
+        pal = dialog_palette()
+        self.setStyleSheet(f"""
+            QDialog {{
+                background-color: {pal["bg"]};
+                color: {pal["text"]};
+                border: 1px solid {pal["border"]};
+                border-radius: {pal["radius"]};
+            }}
+            QLineEdit, QListWidget {{
+                border-radius: {pal["radius"]};
+                border: 1px solid {pal["border"]};
+                background-color: {pal["surface"]};
+                color: {pal["text"]};
+                padding: 5px;
+                selection-background-color: {pal["accent"]};
+                selection-color: {pal["on_accent"]};
+            }}
+            QLineEdit:focus {{
+                border: 1px solid {pal["accent"]};
+            }}
+            QListWidget::item {{
+                padding: 6px 8px;
+                border-radius: 4px;
+            }}
+            QListWidget::item:selected {{
+                background-color: {pal["accent"]};
+                color: {pal["on_accent"]};
+            }}
+            QLabel#transformDescription {{
+                color: {pal["text_muted"]};
+            }}
+            QPushButton {{
+                border-radius: {pal["radius"]};
+                border: 1px solid {pal["border"]};
+                background-color: {pal["surface"]};
+                color: {pal["text"]};
+                padding: 6px 16px;
+                min-height: 24px;
+            }}
+            QPushButton:hover {{
+                background-color: {pal["border"]};
+                color: {pal["text"]};
+            }}
+            QPushButton:pressed {{
+                background-color: {pal["accent"]};
+                color: {pal["on_accent"]};
+            }}
+            QPushButton:disabled {{
+                color: {pal["text_muted"]};
+            }}
+        """)
+
+        layout = QVBoxLayout(self)
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Search transforms…")
+        self.search_edit.setClearButtonEnabled(True)
+        layout.addWidget(self.search_edit)
+
+        self.list_widget = QListWidget()
+        self.list_widget.setAlternatingRowColors(True)
+        layout.addWidget(self.list_widget, 1)
+
+        self.description = QLabel()
+        self.description.setObjectName("transformDescription")
+        self.description.setWordWrap(True)
+        self.description.setMinimumHeight(54)
+        layout.addWidget(self.description)
+
+        button_layout = QHBoxLayout()
+        button_layout.addStretch(1)
+        self.run_button = QPushButton("Run")
+        self.run_button.setDefault(True)
+        cancel_button = QPushButton("Cancel")
+        button_layout.addWidget(self.run_button)
+        button_layout.addWidget(cancel_button)
+        layout.addLayout(button_layout)
+
+        self.search_edit.textChanged.connect(self._apply_filter)
+        self.search_edit.returnPressed.connect(self._accept_current)
+        self.list_widget.currentRowChanged.connect(self._show_description)
+        self.list_widget.itemDoubleClicked.connect(lambda _item: self._accept_current())
+        self.run_button.clicked.connect(self._accept_current)
+        cancel_button.clicked.connect(self.reject)
+        self._apply_filter("")
+
+    def _apply_filter(self, text):
+        needle = (text or "").strip().lower()
+        self.list_widget.clear()
+        self._rows = []
+        for tf in self._transforms:
+            haystack = f"{tf.name} {tf.description}".lower()
+            if needle and needle not in haystack:
+                continue
+            self.list_widget.addItem(tf.name)
+            self._rows.append(tf)
+        self.run_button.setEnabled(bool(self._rows))
+        if self._rows:
+            self.list_widget.setCurrentRow(0)
+        else:
+            self.description.setText("No transforms match your search.")
+
+    def _show_description(self, row):
+        if not (0 <= row < len(self._rows)):
+            self.description.setText("")
+            return
+        tf = self._rows[row]
+        output = tf.output_type or "Custom"
+        details = [tf.description or "No description."]
+        details.append(f"Output: {output}")
+        if tf.relationship:
+            details.append(f"Relationship: {tf.relationship}")
+        self.description.setText("\n".join(details))
+
+    def _accept_current(self):
+        row = self.list_widget.currentRow()
+        if not (0 <= row < len(self._rows)):
+            return
+        self._selected = self._rows[row]
+        self.accept()
+
+    def selected_transform(self):
+        return self._selected
+
+
+class GraphMiniMap(QWidget):
+    """A compact overview of the graph with a draggable viewport frame."""
+
+    def __init__(self, parent, graph):
+        super().__init__(parent)
+        self._graph = graph
+        self._bounds = QRectF()
+        self._scale = 1.0
+        self._offset = QPointF()
+        self._dragging = False
+        self.setFixedSize(190, 130)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setToolTip("Minimap — click or drag to navigate")
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+
+    def paintEvent(self, event):
+        del event
+        from src.ui.theme import current_theme, get_palette
+
+        pal = get_palette(current_theme())
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        outer = QRectF(self.rect()).adjusted(0.5, 0.5, -0.5, -0.5)
+        background = QColor(pal["surface"])
+        background.setAlpha(232)
+        painter.setBrush(QBrush(background))
+        painter.setPen(QPen(QColor(pal["border"]), 1))
+        painter.drawRoundedRect(outer, 7, 7)
+
+        scene = self._graph.scene()
+        if scene is None:
+            return
+        nodes = [
+            item
+            for item in scene.items()
+            if isinstance(item, NodeItem) and item.isVisible()
+        ]
+        view_rect = self._graph.mapToScene(self._graph.viewport().rect()).boundingRect()
+        if not nodes:
+            self._bounds = QRectF()
+            return
+
+        scene_rect = QRectF()
+        for node in nodes:
+            scene_rect = scene_rect.united(node.sceneBoundingRect())
+        bounds = scene_rect.united(view_rect)
+        pad = max(bounds.width(), bounds.height()) * 0.05 + 8
+        bounds = bounds.adjusted(-pad, -pad, pad, pad)
+        inner = QRectF(self.rect()).adjusted(7, 7, -7, -7)
+        if bounds.width() <= 0 or bounds.height() <= 0:
+            return
+        self._scale = min(
+            inner.width() / bounds.width(), inner.height() / bounds.height()
+        )
+        self._offset = QPointF(
+            inner.left() + (inner.width() - bounds.width() * self._scale) / 2.0,
+            inner.top() + (inner.height() - bounds.height() * self._scale) / 2.0,
+        )
+        self._bounds = bounds
+
+        def to_widget(point):
+            return QPointF(
+                self._offset.x() + (point.x() - bounds.left()) * self._scale,
+                self._offset.y() + (point.y() - bounds.top()) * self._scale,
+            )
+
+        painter.setClipRect(inner)
+        painter.setPen(Qt.PenStyle.NoPen)
+        for node in nodes:
+            rect = node.sceneBoundingRect()
+            top_left = to_widget(rect.topLeft())
+            bottom_right = to_widget(rect.bottomRight())
+            color = QColor(node.color or ENTITY_COLORS.get(node.entity_type, "#636e72"))
+            if node.isSelected():
+                color = QColor(pal["accent"])
+            painter.setBrush(QBrush(color))
+            mapped = QRectF(top_left, bottom_right).normalized()
+            painter.drawRect(
+                QRectF(
+                    mapped.x(),
+                    mapped.y(),
+                    max(1.0, mapped.width()),
+                    max(1.0, mapped.height()),
+                )
+            )
+
+        viewport = QRectF(
+            to_widget(view_rect.topLeft()), to_widget(view_rect.bottomRight())
+        ).normalized()
+        viewport = viewport.intersected(inner)
+        view_color = QColor(pal["accent"])
+        view_color.setAlpha(32)
+        painter.setBrush(QBrush(view_color))
+        painter.setPen(QPen(QColor(pal["accent"]), 1.2))
+        painter.drawRect(viewport)
+        painter.setClipping(False)
+
+    def _navigate(self, pos):
+        if self._bounds.isNull() or self._scale <= 0:
+            return
+        scene_x = self._bounds.left() + (pos.x() - self._offset.x()) / self._scale
+        scene_y = self._bounds.top() + (pos.y() - self._offset.y()) / self._scale
+        self._graph.centerOn(scene_x, scene_y)
+        self._graph.viewport().update()
+        self.update()
+
+    def mousePressEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._dragging = True
+            self._navigate(event.position())
+            event.accept()
+            return
+        super().mousePressEvent(event)
+
+    def mouseMoveEvent(self, event):
+        if self._dragging and event.buttons() & Qt.MouseButton.LeftButton:
+            self._navigate(event.position())
+            event.accept()
+            return
+        super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            self._dragging = False
+            event.accept()
+            return
+        super().mouseReleaseEvent(event)
+
+
 class GraphWidget(QGraphicsView):
     nodeAdded = Signal(object)
     edgeAdded = Signal(object)
@@ -1884,6 +2165,18 @@ class GraphWidget(QGraphicsView):
         self._filter_type = ""
         self._path_source = None
 
+        # Lightweight clipboard used by Ctrl+C / Ctrl+V / Ctrl+D.  Keeping the
+        # data inside the widget (instead of the system clipboard) preserves
+        # node ids, colours and the internal edges of the copied subgraph.
+        self._clipboard = None
+
+        # Transient feedback drawn over the viewport.  It intentionally does
+        # not create a QStatusBar, so it cannot change the window geometry.
+        self._status_text = ""
+        self._status_timer = QTimer(self)
+        self._status_timer.setSingleShot(True)
+        self._status_timer.timeout.connect(self._clear_status)
+
         # Snapshot based undo/redo.  A full ``to_dict`` copy is cheap for the
         # graph sizes this canvas handles and keeps the commands trivial.
         self._undo_stack = []
@@ -1898,8 +2191,57 @@ class GraphWidget(QGraphicsView):
         self._accept_drops = True
         self.setAcceptDrops(True)
 
+        self._minimap_enabled = True
+        self._minimap = GraphMiniMap(self.viewport(), self)
+        self._minimap.hide()
+        self._scene.changed.connect(self._on_scene_changed)
+
+    def _on_scene_changed(self, *_args):
+        if hasattr(self, "_minimap"):
+            self._sync_minimap()
+
+    def _sync_minimap(self):
+        if not hasattr(self, "_minimap"):
+            return
+        visible = self._minimap_enabled and self._has_visible_nodes()
+        self._minimap.setVisible(visible)
+        if visible:
+            self._position_minimap()
+            self._minimap.raise_()
+            self._minimap.update()
+
+    def _position_minimap(self):
+        if not hasattr(self, "_minimap"):
+            return
+        margin = 14
+        width = self._minimap.width()
+        height = self._minimap.height()
+        self._minimap.move(
+            max(0, self.viewport().width() - width - margin),
+            max(0, self.viewport().height() - height - margin),
+        )
+
+    def set_minimap_visible(self, visible: bool):
+        self._minimap_enabled = bool(visible)
+        self._sync_minimap()
+        self.status_message("Minimap shown" if visible else "Minimap hidden")
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._position_minimap()
+
+    def scrollContentsBy(self, dx, dy):
+        super().scrollContentsBy(dx, dy)
+        if hasattr(self, "_minimap") and self._minimap.isVisible():
+            self._minimap.update()
+
     def _has_nodes(self) -> bool:
         return any(isinstance(i, NodeItem) for i in self._scene.items())
+
+    def _has_visible_nodes(self) -> bool:
+        return any(
+            isinstance(i, NodeItem) and i.isVisible() for i in self._scene.items()
+        )
 
     def drawBackground(self, painter, rect):
         super().drawBackground(painter, rect)
@@ -1934,26 +2276,70 @@ class GraphWidget(QGraphicsView):
 
     def drawForeground(self, painter, rect):
         super().drawForeground(painter, rect)
-        if self._has_nodes():
+        if not self._has_nodes():
+            from src.ui.theme import current_theme, get_palette
+
+            muted = QColor(get_palette(current_theme())["text_muted"])
+            center = self.mapToScene(self.viewport().rect().center())
+            painter.setPen(QPen(muted))
+            painter.setFont(_ui_font(12, bold=True))
+            title = QRectF(center.x() - 260, center.y() - 34, 520, 26)
+            painter.drawText(
+                title, Qt.AlignmentFlag.AlignCenter, "Empty investigation graph"
+            )
+            painter.setFont(_ui_font(9))
+            hint = QRectF(center.x() - 260, center.y() - 4, 520, 44)
+            painter.drawText(
+                hint,
+                Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
+                "Drag an entity from the palette, or double-click the canvas\n"
+                "to create one.  The MCP agent can also build the graph.",
+            )
+        self._paint_status_overlay(painter)
+
+    def _clear_status(self):
+        self._status_text = ""
+        self._status_timer.stop()
+        self.viewport().update()
+
+    def _paint_status_overlay(self, painter):
+        if not self._status_text:
             return
         from src.ui.theme import current_theme, get_palette
 
-        muted = QColor(get_palette(current_theme())["text_muted"])
-        center = self.mapToScene(self.viewport().rect().center())
-        painter.setPen(QPen(muted))
-        painter.setFont(_ui_font(12, bold=True))
-        title = QRectF(center.x() - 260, center.y() - 34, 520, 26)
-        painter.drawText(
-            title, Qt.AlignmentFlag.AlignCenter, "Empty investigation graph"
+        pal = get_palette(current_theme())
+        painter.save()
+        painter.resetTransform()
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        viewport = self.viewport().rect()
+        painter.setFont(_ui_font(9, bold=True))
+        metrics = painter.fontMetrics()
+        max_width = max(160, min(viewport.width() - 28, 680))
+        text = metrics.elidedText(
+            self._status_text,
+            Qt.TextElideMode.ElideRight,
+            max_width - 30,
         )
-        painter.setFont(_ui_font(9))
-        hint = QRectF(center.x() - 260, center.y() - 4, 520, 44)
+        width = min(max_width, metrics.horizontalAdvance(text) + 30)
+        height = metrics.height() + 16
+        x = float(viewport.left() + 14)
+        y = float(viewport.bottom() - height - 14)
+        chip = QRectF(x, y, width, height)
+        background = QColor(pal["surface"])
+        background.setAlpha(238)
+        painter.setBrush(QBrush(background))
+        painter.setPen(QPen(QColor(pal["border"]), 1))
+        painter.drawRoundedRect(chip, 7, 7)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QBrush(QColor(pal["accent"])))
+        painter.drawRoundedRect(QRectF(x + 1.5, y + 6, 3, height - 12), 1.5, 1.5)
+        painter.setPen(QPen(QColor(pal["text"])))
         painter.drawText(
-            hint,
-            Qt.AlignmentFlag.AlignHCenter | Qt.AlignmentFlag.AlignTop,
-            "Drag an entity from the palette, or let the MCP agent build the\n"
-            "graph with skyfall_graph_add_node / skyfall_graph_build.",
+            chip.adjusted(16, 0, -8, 0),
+            Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter,
+            text,
         )
+        painter.restore()
 
     def fit_to_view(self, margin: float = 80.0) -> bool:
         if not self._has_nodes():
@@ -1963,6 +2349,8 @@ class GraphWidget(QGraphicsView):
             return False
         bounds = bounds.adjusted(-margin, -margin, margin, margin)
         self.fitInView(bounds, Qt.AspectRatioMode.KeepAspectRatio)
+        if hasattr(self, "_minimap"):
+            self._minimap.update()
         return True
 
     def _dropped_graph_file(self, mime):
@@ -2014,9 +2402,7 @@ class GraphWidget(QGraphicsView):
         etype = event.mimeData().text()
         if etype in ENTITY_NAMES:
             scene_pos = self.mapToScene(event.position().toPoint())
-            node = self.add_node(scene_pos, etype)
-            node.title = f"New {etype}"
-            node.update()
+            self._add_default_node(scene_pos, etype)
             event.acceptProposedAction()
         else:
             super().dropEvent(event)
@@ -2068,7 +2454,6 @@ class GraphWidget(QGraphicsView):
         """Hide nodes that fail either filter and any now-dangling edges."""
         nodes = [i for i in self._scene.items() if isinstance(i, NodeItem)]
         visible = 0
-        filtered = bool(self._filter_text or self._filter_type)
         for item in nodes:
             match = True
             if self._filter_text:
@@ -2082,31 +2467,12 @@ class GraphWidget(QGraphicsView):
             if isinstance(item, EdgeItem):
                 item.setVisible(item.source.isVisible() and item.target.isVisible())
         self._scene.update()
-        if filtered:
-            self._set_status(f"Showing {visible} of {len(nodes)} nodes")
-        else:
-            self._update_summary()
+        self._sync_minimap()
         return visible, len(nodes)
 
-    def _set_status(self, text: str):
-        top = self.window()
-        if top is None:
-            return
-        label = top.findChild(QLabel, "graphStatusLabel")
-        if label is not None:
-            label.setText(text)
-
     def _update_summary(self):
-        """Show node/edge counts on the persistent canvas status line."""
-        nodes = sum(1 for i in self._scene.items() if isinstance(i, NodeItem))
-        edges = sum(1 for i in self._scene.items() if isinstance(i, EdgeItem))
-        if nodes:
-            suffix = "" if nodes == 1 else "s"
-            self._set_status(
-                f"{nodes} node{suffix} · {edges} edge{'s' if edges != 1 else ''}"
-            )
-        else:
-            self._set_status("")
+        """Compatibility hook; status text no longer lives in the canvas layout."""
+        return None
 
     def _on_selection_changed(self):
         selected = self._scene.selectedItems()
@@ -2115,6 +2481,8 @@ class GraphWidget(QGraphicsView):
             self.selectionChanged.emit(nodes[0])
         else:
             self.selectionChanged.emit(None)
+        if hasattr(self, "_minimap") and self._minimap.isVisible():
+            self._minimap.update()
 
     def _show_context_menu(self, pos):
         scene_pos = self.mapToScene(pos)
@@ -2156,9 +2524,36 @@ class GraphWidget(QGraphicsView):
             delete_action.triggered.connect(lambda: self.remove_edge(item))
             menu.addAction(delete_action)
         elif isinstance(item, NodeItem):
+            # Right-clicking an unselected node should act on that node, not
+            # on a stale selection elsewhere in the graph.
+            selected_nodes = self._selected_nodes()
+            if item not in selected_nodes:
+                self._scene.clearSelection()
+                item.setSelected(True)
+                selected_nodes = [item]
+            multi = len(selected_nodes) > 1
+
+            if multi:
+                header = QAction(f"{len(selected_nodes)} nodes selected", self)
+                header.setEnabled(False)
+                menu.addAction(header)
+
             edit_action = QAction("Edit Node\u2026", self)
             edit_action.triggered.connect(lambda: self.edit_node(item))
             menu.addAction(edit_action)
+
+            duplicate_action = QAction("Duplicate", self)
+            duplicate_action.setShortcut("Ctrl+D")
+            duplicate_action.triggered.connect(self.duplicate_selection)
+            menu.addAction(duplicate_action)
+            copy_action = QAction("Copy", self)
+            copy_action.setShortcut("Ctrl+C")
+            copy_action.triggered.connect(self.copy_selection)
+            menu.addAction(copy_action)
+            cut_action = QAction("Cut", self)
+            cut_action.setShortcut("Ctrl+X")
+            cut_action.triggered.connect(self.cut_selection)
+            menu.addAction(cut_action)
 
             center_action = QAction("Center on Node", self)
             center_action.triggered.connect(lambda: self.center_on_node(item))
@@ -2179,27 +2574,104 @@ class GraphWidget(QGraphicsView):
             sp_action = QAction("Shortest Path", self)
             sp_action.triggered.connect(lambda: self._start_shortest_path(item))
             analysis_menu.addAction(sp_action)
+            cent_action = QAction("Show Centrality", self)
+            cent_action.triggered.connect(self._show_centrality)
+            analysis_menu.addAction(cent_action)
+            cluster_action = QAction("Detect Communities", self)
+            cluster_action.triggered.connect(self._detect_communities)
+            analysis_menu.addAction(cluster_action)
             menu.addMenu(analysis_menu)
 
-            if hasattr(self, "_transform_controller"):
-                transforms = self._transform_controller.get_transforms(item)
-                if transforms:
-                    tx_menu = QMenu("\u26a1 Transforms", self)
-                    for tf in transforms:
-                        act = QAction(f"  {tf.name}", self)
-                        act.setToolTip(tf.description)
-                        act.triggered.connect(
-                            lambda checked, n=item, t=tf: (
-                                self._transform_controller.execute(n, t)
-                            )
+            selection_menu = QMenu("Select", self)
+            connected_action = QAction("Connected Nodes", self)
+            connected_action.triggered.connect(self.select_connected)
+            selection_menu.addAction(connected_action)
+            same_type_action = QAction("Same Type", self)
+            same_type_action.triggered.connect(self.select_same_type)
+            selection_menu.addAction(same_type_action)
+            invert_action = QAction("Invert Selection", self)
+            invert_action.triggered.connect(self.invert_selection)
+            selection_menu.addAction(invert_action)
+            select_all_action = QAction("All Nodes", self)
+            select_all_action.setShortcut("Ctrl+A")
+            select_all_action.triggered.connect(self.select_all_nodes)
+            selection_menu.addAction(select_all_action)
+            menu.addMenu(selection_menu)
+
+            transforms = self._transforms_for_nodes(selected_nodes)
+            if transforms:
+                tx_menu = QMenu("\u26a1 Transforms", self)
+                picker_label = (
+                    f"Search Transforms on {len(selected_nodes)} Nodes\u2026"
+                    if multi
+                    else "Search Transforms\u2026"
+                )
+                picker_action = QAction(picker_label, self)
+                picker_action.triggered.connect(
+                    lambda checked=False, nodes=list(selected_nodes): (
+                        self.run_transform_picker(nodes)
+                    )
+                )
+                tx_menu.addAction(picker_action)
+                tx_menu.addSeparator()
+                for tf in transforms:
+                    act = QAction(f"  {tf.name}", self)
+                    act.setToolTip(tf.description)
+                    act.triggered.connect(
+                        lambda checked, nodes=list(selected_nodes), t=tf: (
+                            self._execute_transform(nodes, t)
                         )
-                        tx_menu.addAction(act)
-                    menu.addMenu(tx_menu)
+                    )
+                    tx_menu.addAction(act)
+                menu.addMenu(tx_menu)
+
+            if multi:
+                arrange_menu = QMenu("Arrange", self)
+                align_menu = QMenu("Align", self)
+                for mode, label in (
+                    ("left", "Left Edges"),
+                    ("hcenter", "Horizontal Centers"),
+                    ("right", "Right Edges"),
+                    ("top", "Top Edges"),
+                    ("vcenter", "Vertical Centers"),
+                    ("bottom", "Bottom Edges"),
+                ):
+                    act = QAction(label, self)
+                    act.triggered.connect(
+                        lambda checked=False, m=mode: self.align_selected(m)
+                    )
+                    align_menu.addAction(act)
+                arrange_menu.addMenu(align_menu)
+                distribute_menu = QMenu("Distribute", self)
+                for axis, label in (
+                    ("horizontal", "Horizontally"),
+                    ("vertical", "Vertically"),
+                ):
+                    act = QAction(label, self)
+                    act.triggered.connect(
+                        lambda checked=False, a=axis: self.distribute_selected(a)
+                    )
+                    distribute_menu.addAction(act)
+                arrange_menu.addMenu(distribute_menu)
+                connect_menu = QMenu("Connect Selected", self)
+                sequence_action = QAction("In Sequence", self)
+                sequence_action.triggered.connect(
+                    lambda checked=False: self.connect_selected("sequence")
+                )
+                connect_menu.addAction(sequence_action)
+                all_pairs_action = QAction("All Pairs", self)
+                all_pairs_action.triggered.connect(
+                    lambda checked=False: self.connect_selected("all")
+                )
+                connect_menu.addAction(all_pairs_action)
+                arrange_menu.addMenu(connect_menu)
+                menu.addMenu(arrange_menu)
 
             menu.addSeparator()
 
-            delete_action = QAction("Delete Node", self)
-            delete_action.triggered.connect(lambda: self.remove_node(item))
+            delete_action = QAction("Delete Selection", self)
+            delete_action.setShortcut("Delete")
+            delete_action.triggered.connect(self.delete_selection)
             menu.addAction(delete_action)
         else:
             add_menu = QMenu("Add", self)
@@ -2207,10 +2679,34 @@ class GraphWidget(QGraphicsView):
                 sym = ENTITY_SYMBOLS.get(etype, "")
                 act = QAction(f"{sym} {etype}", self)
                 act.triggered.connect(
-                    lambda checked, t=etype: self.add_node(scene_pos, t)
+                    lambda checked, t=etype: self._add_default_node(scene_pos, t)
                 )
                 add_menu.addAction(act)
             menu.addMenu(add_menu)
+            add_custom_action = QAction("Add Node\u2026", self)
+            add_custom_action.triggered.connect(
+                lambda checked=False: self.quick_add_node(scene_pos)
+            )
+            menu.addAction(add_custom_action)
+
+            paste_action = QAction("Paste", self)
+            paste_action.setShortcut("Ctrl+V")
+            paste_action.setEnabled(self._clipboard is not None)
+            paste_action.triggered.connect(
+                lambda checked=False: self.paste_clipboard(scene_pos)
+            )
+            menu.addAction(paste_action)
+
+            selection_menu = QMenu("Select", self)
+            select_all_action = QAction("All Nodes", self)
+            select_all_action.setShortcut("Ctrl+A")
+            select_all_action.triggered.connect(self.select_all_nodes)
+            selection_menu.addAction(select_all_action)
+            invert_action = QAction("Invert Selection", self)
+            invert_action.triggered.connect(self.invert_selection)
+            selection_menu.addAction(invert_action)
+            menu.addMenu(selection_menu)
+
             menu.addSeparator()
             analysis_all = QMenu("Global Analysis", self)
             cent_action = QAction("Show Centrality", self)
@@ -2225,14 +2721,29 @@ class GraphWidget(QGraphicsView):
         view_menu = QMenu("View", self)
         fit_act = QAction("Fit to View", self)
         fit_act.triggered.connect(lambda: self.fit_to_view())
+        fit_selection_act = QAction("Fit Selection", self)
+        fit_selection_act.setEnabled(bool(self._selected_nodes()))
+        fit_selection_act.triggered.connect(lambda: self.fit_selection())
         zin_act = QAction("Zoom In", self)
         zin_act.triggered.connect(self.zoom_in)
         zout_act = QAction("Zoom Out", self)
         zout_act.triggered.connect(self.zoom_out)
         reset_act = QAction("Reset Zoom", self)
         reset_act.triggered.connect(self.reset_zoom)
-        for action in (fit_act, zin_act, zout_act, reset_act):
+        minimap_act = QAction("Minimap", self)
+        minimap_act.setCheckable(True)
+        minimap_act.setChecked(self._minimap_enabled)
+        minimap_act.triggered.connect(self.set_minimap_visible)
+        for action in (
+            fit_act,
+            fit_selection_act,
+            zin_act,
+            zout_act,
+            reset_act,
+        ):
             view_menu.addAction(action)
+        view_menu.addSeparator()
+        view_menu.addAction(minimap_act)
         menu.addMenu(view_menu)
 
         menu.exec(self.viewport().mapToGlobal(pos))
@@ -2251,16 +2762,21 @@ class GraphWidget(QGraphicsView):
         factor = target / current
         if abs(factor - 1.0) > 1e-9:
             self.scale(factor, factor)
+            if hasattr(self, "_minimap"):
+                self._minimap.update()
 
     def zoom_in(self):
         self._zoom_by(1.25)
+        self.status_message(f"Zoom {int(self._current_zoom() * 100)}%")
 
     def zoom_out(self):
         self._zoom_by(1 / 1.25)
+        self.status_message(f"Zoom {int(self._current_zoom() * 100)}%")
 
     def reset_zoom(self):
         self.resetTransform()
         self.fit_to_view()
+        self.status_message("Zoom reset")
 
     def center_on_node(self, node: NodeItem):
         """Scroll the view so ``node`` is centred without changing zoom."""
@@ -2281,6 +2797,426 @@ class GraphWidget(QGraphicsView):
         for item in self._scene.items():
             if isinstance(item, NodeItem) and item.isVisible():
                 item.setSelected(True)
+        self.status_message("Selected all visible nodes")
+
+    def _selected_nodes(self):
+        return [i for i in self._scene.selectedItems() if isinstance(i, NodeItem)]
+
+    def _selected_edges(self):
+        return [i for i in self._scene.selectedItems() if isinstance(i, EdgeItem)]
+
+    def _visible_nodes(self):
+        return [
+            i for i in self._scene.items() if isinstance(i, NodeItem) and i.isVisible()
+        ]
+
+    def select_connected(self):
+        selected = set(self._selected_nodes())
+        if not selected:
+            self.status_message("Select a node to expand its neighbourhood")
+            return 0
+        expanded = set(selected)
+        for edge in self._scene.items():
+            if not isinstance(edge, EdgeItem) or not edge.isVisible():
+                continue
+            if edge.source in selected and edge.target.isVisible():
+                expanded.add(edge.target)
+            if edge.target in selected and edge.source.isVisible():
+                expanded.add(edge.source)
+        for node in expanded:
+            node.setSelected(True)
+        self.status_message(
+            f"Selected {len(expanded)} connected node"
+            f"{'s' if len(expanded) != 1 else ''}"
+        )
+        return len(expanded)
+
+    def select_same_type(self):
+        selected = self._selected_nodes()
+        if not selected:
+            self.status_message("Select a node to match its type")
+            return 0
+        types = {node.entity_type for node in selected}
+        matched = [node for node in self._visible_nodes() if node.entity_type in types]
+        self._scene.clearSelection()
+        for node in matched:
+            node.setSelected(True)
+        self.status_message(
+            f"Selected {len(matched)} {', '.join(sorted(types))} node"
+            f"{'s' if len(matched) != 1 else ''}"
+        )
+        return len(matched)
+
+    def invert_selection(self):
+        visible = self._visible_nodes()
+        selected = set(self._selected_nodes())
+        self._scene.clearSelection()
+        for node in visible:
+            if node not in selected:
+                node.setSelected(True)
+        count = len(self._selected_nodes())
+        self.status_message(f"Selected {count} node{'s' if count != 1 else ''}")
+        return count
+
+    def delete_selection(self):
+        nodes = self._selected_nodes()
+        edges = self._selected_edges()
+        if not nodes and not edges:
+            self.status_message("Nothing selected")
+            return False
+        self.push_undo_state()
+        for edge in edges:
+            if edge.scene() is self._scene:
+                self._remove_edge_now(edge)
+        for node in nodes:
+            if node.scene() is self._scene:
+                self._remove_node_now(node)
+        self.status_message(
+            f"Deleted {len(nodes)} node{'s' if len(nodes) != 1 else ''} · "
+            f"{len(edges)} edge{'s' if len(edges) != 1 else ''}"
+        )
+        return True
+
+    def copy_selection(self):
+        nodes = self._selected_nodes()
+        if not nodes:
+            self.status_message("Select one or more nodes to copy")
+            return False
+        selected_ids = {node.id for node in nodes}
+        data = self.to_dict()
+        node_records = [
+            copy.deepcopy(record)
+            for record in data["nodes"]
+            if record["id"] in selected_ids
+        ]
+        edge_records = [
+            copy.deepcopy(record)
+            for record in data["edges"]
+            if record["source"] in selected_ids and record["target"] in selected_ids
+        ]
+        if not node_records:
+            return False
+        min_x = min(record["x"] for record in node_records)
+        min_y = min(record["y"] for record in node_records)
+        for record in node_records:
+            record["x"] -= min_x
+            record["y"] -= min_y
+        self._clipboard = {
+            "nodes": node_records,
+            "edges": edge_records,
+            "origin": (min_x, min_y),
+            "pastes": 0,
+        }
+        self.status_message(
+            f"Copied {len(node_records)} node"
+            f"{'s' if len(node_records) != 1 else ''} · "
+            f"{len(edge_records)} edge{'s' if len(edge_records) != 1 else ''}"
+        )
+        return True
+
+    def cut_selection(self):
+        nodes = self._selected_nodes()
+        edges = self._selected_edges()
+        if not nodes and not edges:
+            self.status_message("Nothing selected")
+            return False
+        if nodes and not self.copy_selection():
+            return False
+        self.push_undo_state()
+        for edge in edges:
+            if edge.scene() is self._scene:
+                self._remove_edge_now(edge)
+        for node in nodes:
+            if node.scene() is self._scene:
+                self._remove_node_now(node)
+        if nodes:
+            self.status_message(
+                f"Cut {len(nodes)} node{'s' if len(nodes) != 1 else ''}"
+            )
+        else:
+            self.status_message(
+                f"Cut {len(edges)} edge{'s' if len(edges) != 1 else ''}"
+            )
+        return True
+
+    def paste_clipboard(self, scene_pos=None):
+        if not self._clipboard:
+            self.status_message("Clipboard is empty")
+            return []
+        clip = self._clipboard
+        if scene_pos is None:
+            offset = 40 * (int(clip.get("pastes", 0)) + 1)
+            base = QPointF(
+                float(clip["origin"][0]) + offset,
+                float(clip["origin"][1]) + offset,
+            )
+        else:
+            base = QPointF(scene_pos)
+        clip["pastes"] = int(clip.get("pastes", 0)) + 1
+        self.push_undo_state()
+        self._scene.clearSelection()
+        node_map = {}
+        pasted_nodes = []
+        for record in clip["nodes"]:
+            node = self._add_node_now(
+                base + QPointF(record.get("x", 0), record.get("y", 0)),
+                record.get("entity_type", "Custom"),
+            )
+            node.title = record.get("title", "Node")
+            node.content = record.get("content", "")
+            node.evidence = list(record.get("evidence", []))
+            node.color = record.get("color")
+            node._width = int(record.get("width", node._width))
+            node._height = int(record.get("height", node._height))
+            node.prepareGeometryChange()
+            node.update()
+            node_map[record["id"]] = node
+            pasted_nodes.append(node)
+
+        pasted_edges = []
+        for record in clip["edges"]:
+            source = node_map.get(record.get("source"))
+            target = node_map.get(record.get("target"))
+            if source is None or target is None:
+                continue
+            edge = self._add_edge_now(
+                source,
+                target,
+                record.get("source_port", "right"),
+                record.get("target_port", "left"),
+            )
+            edge.label = record.get("label", "")
+            edge.relationship_type = record.get("relationship_type", "")
+            edge.style = record.get("style", "normal")
+            edge.setPen(edge._make_pen())
+            edge.update()
+            pasted_edges.append(edge)
+
+        for node in pasted_nodes:
+            node.setSelected(True)
+        self.status_message(
+            f"Pasted {len(pasted_nodes)} node"
+            f"{'s' if len(pasted_nodes) != 1 else ''} · "
+            f"{len(pasted_edges)} edge{'s' if len(pasted_edges) != 1 else ''}"
+        )
+        return pasted_nodes
+
+    def duplicate_selection(self):
+        if not self.copy_selection():
+            return []
+        return self.paste_clipboard()
+
+    def fit_selection(self, margin: float = 80.0) -> bool:
+        nodes = self._selected_nodes()
+        if not nodes:
+            self.status_message("Select nodes to frame")
+            return False
+        bounds = QRectF()
+        for node in nodes:
+            bounds = bounds.united(node.sceneBoundingRect())
+        if bounds.isNull():
+            return False
+        bounds = bounds.adjusted(-margin, -margin, margin, margin)
+        self.fitInView(bounds, Qt.AspectRatioMode.KeepAspectRatio)
+        if hasattr(self, "_minimap"):
+            self._minimap.update()
+        self.status_message(f"Framed {len(nodes)} node{'s' if len(nodes) != 1 else ''}")
+        return True
+
+    def align_selected(self, mode):
+        nodes = self._selected_nodes()
+        if len(nodes) < 2:
+            self.status_message("Select at least two nodes to align")
+            return False
+        left = min(node.pos().x() for node in nodes)
+        right = max(node.pos().x() + node._width for node in nodes)
+        top = min(node.pos().y() for node in nodes)
+        bottom = max(node.pos().y() + node._height for node in nodes)
+        center_x = (left + right) / 2.0
+        center_y = (top + bottom) / 2.0
+        self.push_undo_state()
+        for node in nodes:
+            x, y = node.pos().x(), node.pos().y()
+            if mode == "left":
+                x = left
+            elif mode == "hcenter":
+                x = center_x - node._width / 2.0
+            elif mode == "right":
+                x = right - node._width
+            elif mode == "top":
+                y = top
+            elif mode == "vcenter":
+                y = center_y - node._height / 2.0
+            elif mode == "bottom":
+                y = bottom - node._height
+            node.setPos(x, y)
+        labels = {
+            "left": "left",
+            "hcenter": "horizontally centered",
+            "right": "right",
+            "top": "top",
+            "vcenter": "vertically centered",
+            "bottom": "bottom",
+        }
+        self.status_message(f"Aligned {len(nodes)} nodes {labels.get(mode, mode)}")
+        return True
+
+    def distribute_selected(self, axis="horizontal"):
+        nodes = self._selected_nodes()
+        if len(nodes) < 3:
+            self.status_message("Select at least three nodes to distribute")
+            return False
+        horizontal = axis != "vertical"
+
+        def center(node):
+            if horizontal:
+                return node.pos().x() + node._width / 2.0
+            return node.pos().y() + node._height / 2.0
+
+        ordered = sorted(nodes, key=center)
+        first = center(ordered[0])
+        last = center(ordered[-1])
+        if abs(last - first) < 1e-6:
+            self.status_message("Nodes overlap; nothing to distribute")
+            return False
+        step = (last - first) / (len(ordered) - 1)
+        self.push_undo_state()
+        for index, node in enumerate(ordered[1:-1], start=1):
+            target = first + step * index
+            if horizontal:
+                node.setPos(QPointF(target - node._width / 2.0, node.pos().y()))
+            else:
+                node.setPos(QPointF(node.pos().x(), target - node._height / 2.0))
+        self.status_message(
+            f"Distributed {len(nodes)} nodes "
+            f"{'horizontally' if horizontal else 'vertically'}"
+        )
+        return True
+
+    def connect_selected(self, mode="sequence"):
+        nodes = self._selected_nodes()
+        if len(nodes) < 2:
+            self.status_message("Select at least two nodes to connect")
+            return 0
+        ordered = sorted(
+            nodes,
+            key=lambda node: (
+                node.pos().y() + node._height / 2.0,
+                node.pos().x() + node._width / 2.0,
+            ),
+        )
+        if mode == "sequence":
+            pairs = list(zip(ordered, ordered[1:]))
+        else:
+            pairs = []
+            for i, source in enumerate(ordered):
+                for target in ordered[i + 1 :]:
+                    pairs.append((source, target))
+        existing = {
+            frozenset((edge.source.id, edge.target.id))
+            for edge in self._scene.items()
+            if isinstance(edge, EdgeItem)
+        }
+        new_pairs = [
+            (source, target)
+            for source, target in pairs
+            if frozenset((source.id, target.id)) not in existing
+        ]
+        if not new_pairs:
+            self.status_message("Selected nodes are already connected")
+            return 0
+        self.push_undo_state()
+        for source, target in new_pairs:
+            self._add_edge_now(source, target)
+        self.status_message(
+            f"Connected {len(new_pairs)} pair{'s' if len(new_pairs) != 1 else ''}"
+        )
+        return len(new_pairs)
+
+    def quick_add_node(self, scene_pos, entity_type="Custom"):
+        dialog = NodeEditDialog("", "", entity_type, [], self)
+        dialog.setWindowTitle("Add Node")
+
+        def create(title, content, etype, evidence):
+            node = self.add_node(scene_pos, etype)
+            node.title = title.strip() or f"New {etype}"
+            node.content = content
+            node.evidence = list(evidence)
+            node.prepareGeometryChange()
+            node.update()
+            self._scene.clearSelection()
+            node.setSelected(True)
+            self.centerOn(node)
+            self.status_message(f"Added {node.title}")
+
+        dialog.data_ready.connect(create)
+        _center_dialog(dialog)
+        dialog.show()
+
+    def _add_default_node(self, scene_pos, entity_type):
+        node = self.add_node(scene_pos, entity_type)
+        node.title = f"New {entity_type}"
+        node.update()
+        self._scene.clearSelection()
+        node.setSelected(True)
+        self.centerOn(node)
+        self.status_message(f"Added {node.title}")
+        return node
+
+    def _transforms_for_nodes(self, nodes):
+        controller = getattr(self, "_transform_controller", None)
+        if controller is None or not nodes:
+            return []
+        first = {tf.name: tf for tf in controller.get_transforms(nodes[0])}
+        for node in nodes[1:]:
+            available = {tf.name for tf in controller.get_transforms(node)}
+            first = {
+                name: transform
+                for name, transform in first.items()
+                if name in available
+            }
+        return list(first.values())
+
+    def run_transform_picker(self, nodes=None):
+        controller = getattr(self, "_transform_controller", None)
+        if controller is None:
+            return False
+        selected = list(self._selected_nodes() if nodes is None else nodes)
+        if not selected:
+            self.status_message("Select a node before running a transform")
+            return False
+        transforms = self._transforms_for_nodes(selected)
+        if not transforms:
+            self.status_message("No transform is available for this selection")
+            return False
+        label = (
+            f"Run Transform on {len(selected)} Nodes"
+            if len(selected) > 1
+            else "Run Transform"
+        )
+        dialog = TransformPickerDialog(transforms, self, label)
+        _center_dialog(dialog)
+        if dialog.exec() != QDialog.DialogCode.Accepted:
+            return False
+        transform = dialog.selected_transform()
+        if transform is None:
+            return False
+        self._execute_transform(selected, transform)
+        return True
+
+    def _execute_transform(self, nodes, transform):
+        controller = getattr(self, "_transform_controller", None)
+        nodes = list(nodes or [])
+        if controller is None or not nodes:
+            return
+        execute_many = getattr(controller, "execute_many", None)
+        if len(nodes) > 1 and callable(execute_many):
+            execute_many(nodes, transform)
+        elif len(nodes) > 1:
+            for node in nodes:
+                controller.execute(node, transform)
+        else:
+            controller.execute(nodes[0], transform)
 
     def edit_node(self, node: NodeItem):
         dialog = NodeEditDialog(
@@ -2295,6 +3231,14 @@ class GraphWidget(QGraphicsView):
         dialog.show()
 
     def _on_node_edited(self, node, title, content, entity_type, evidence):
+        if (
+            node.title,
+            node.content,
+            node.entity_type,
+            node.evidence,
+        ) == (title, content, entity_type, evidence):
+            return
+        self.push_undo_state()
         node.title = title
         node.content = content
         node.entity_type = entity_type
@@ -2310,16 +3254,24 @@ class GraphWidget(QGraphicsView):
             else QColor(ENTITY_COLORS.get(node.entity_type, "#636e72"))
         )
         color = QColorDialog.getColor(current, self, "Node Color")
-        if color.isValid():
+        if color.isValid() and color.name() != node.color:
+            self.push_undo_state()
             node.color = color.name()
             node.update()
 
     def reset_node_color(self, node: NodeItem):
+        if node.color is None:
+            return
+        self.push_undo_state()
         node.color = None
         node.update()
 
     def _set_edge_style(self, edge, style):
-        edge.style = style if style in EDGE_STYLES else "normal"
+        style = style if style in EDGE_STYLES else "normal"
+        if edge.style == style:
+            return
+        self.push_undo_state()
+        edge.style = style
         edge.setPen(edge._make_pen())
         edge.update()
 
@@ -2394,9 +3346,13 @@ class GraphWidget(QGraphicsView):
         layout.addLayout(btn_layout)
         _center_dialog(dialog)
         if dialog.exec() == QDialog.DialogCode.Accepted:
-            edge.relationship_type = type_combo.currentText()
-            edge.label = line_edit.text()
-            edge.update()
+            relationship = type_combo.currentText()
+            label = line_edit.text()
+            if relationship != edge.relationship_type or label != edge.label:
+                self.push_undo_state()
+                edge.relationship_type = relationship
+                edge.label = label
+                edge.update()
 
     def add_node(self, scene_pos, entity_type="Custom"):
         self.push_undo_state()
@@ -2612,10 +3568,18 @@ class GraphWidget(QGraphicsView):
             self.status_message("Community detection requires networkx 2.x")
 
     def status_message(self, msg):
-        self._set_status(msg)
-        top = self.window()
-        if top is not None and hasattr(top, "statusBar"):
-            top.statusBar().showMessage(msg, 5000)
+        """Show transient feedback without touching the window layout.
+
+        The message is painted as an overlay inside the viewport.  This keeps
+        the graph canvas stable (no QStatusBar is created) while still giving
+        users feedback for transforms, undo/redo, filters and navigation.
+        """
+        self._status_text = str(msg or "")
+        if self._status_text:
+            self._status_timer.start(4200)
+        else:
+            self._status_timer.stop()
+        self.viewport().update()
 
     def wheelEvent(self, event):
         delta = event.angleDelta().y()
@@ -2636,6 +3600,15 @@ class GraphWidget(QGraphicsView):
                 return
         factor = 1.15 if delta > 0 else 1 / 1.15
         self._zoom_by(factor)
+
+    def mouseDoubleClickEvent(self, event):
+        if event.button() == Qt.MouseButton.LeftButton:
+            scene_pos = self.mapToScene(event.position().toPoint())
+            if self._scene.itemAt(scene_pos, self.transform()) is None:
+                self.quick_add_node(scene_pos)
+                event.accept()
+                return
+        super().mouseDoubleClickEvent(event)
 
     def mousePressEvent(self, event):
         if event.button() == Qt.MouseButton.MiddleButton:
@@ -2724,15 +3697,22 @@ class GraphWidget(QGraphicsView):
         shift = bool(modifiers & Qt.KeyboardModifier.ShiftModifier)
 
         if key == Qt.Key.Key_Delete:
-            nodes = [i for i in self._scene.selectedItems() if isinstance(i, NodeItem)]
-            edges = [i for i in self._scene.selectedItems() if isinstance(i, EdgeItem)]
-            if not nodes and not edges:
-                return
-            self.push_undo_state()
-            for edge in edges:
-                self._remove_edge_now(edge)
-            for node in nodes:
-                self._remove_node_now(node)
+            self.delete_selection()
+            return
+        if ctrl and key == Qt.Key.Key_C:
+            self.copy_selection()
+            return
+        if ctrl and key == Qt.Key.Key_X:
+            self.cut_selection()
+            return
+        if ctrl and key == Qt.Key.Key_V:
+            self.paste_clipboard()
+            return
+        if ctrl and key == Qt.Key.Key_D:
+            self.duplicate_selection()
+            return
+        if ctrl and shift and key == Qt.Key.Key_M:
+            self.set_minimap_visible(not self._minimap_enabled)
             return
         if ctrl and key in (Qt.Key.Key_Z, Qt.Key.Key_Y):
             if key == Qt.Key.Key_Y or shift:
@@ -2753,6 +3733,9 @@ class GraphWidget(QGraphicsView):
         if ctrl and key == Qt.Key.Key_A:
             self.select_all_nodes()
             return
+        if ctrl and key == Qt.Key.Key_T:
+            self.run_transform_picker()
+            return
         if ctrl:
             if key == Qt.Key.Key_Minus or key == Qt.Key.Key_Underscore:
                 self._zoom_by(1 / 1.25)
@@ -2765,7 +3748,10 @@ class GraphWidget(QGraphicsView):
                 self.fit_to_view()
                 return
         if key == Qt.Key.Key_F:
-            self.fit_to_view()
+            if shift:
+                self.fit_selection()
+            else:
+                self.fit_to_view()
             return
         step = 80
         if key == Qt.Key.Key_Up:

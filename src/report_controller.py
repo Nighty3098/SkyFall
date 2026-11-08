@@ -127,6 +127,11 @@ class ReportController:
             "server_nmap": self.ui.serverNmapDebug,
             "server_dns": self.ui.serverDnsAnalyzeDebug,
             "server_whois": self.ui.serverWhoisDebug,
+            "server_whois_history": getattr(self.ui, "serverWhoisHistoryDebug", None),
+            "server_reverse_whois": getattr(self.ui, "serverReverseWhoisDebug", None),
+            "server_domain_timeline": getattr(
+                self.ui, "serverDomainTimelineDebug", None
+            ),
             "server_malware": self.ui.serverMalwareDebug,
             "threat_intel": getattr(self.ui, "serverThreatIntelDebug", None),
             "js_secrets": getattr(self.ui, "serverJsSecretsDebug", None),
@@ -155,8 +160,23 @@ class ReportController:
         except Exception:
             pass
 
+        def _ui_text(*names):
+            for name in names:
+                widget = getattr(self.ui, name, None)
+                if widget is not None and hasattr(widget, "text"):
+                    value = (widget.text() or "").strip()
+                    if value:
+                        return value
+            return ""
+
         inputs = {
-            "url": self.ui.serverUrlEdit.text(),
+            "url": _ui_text(
+                "infraDomainEdit",
+                "webSurfaceDomainEdit",
+                "discoveryDomainEdit",
+                "securityDomainEdit",
+                "whoisDomainEdit",
+            ),
             "username": self.ui.usernameEdit.text(),
             "email": self.ui.mailEdit.text(),
             "phone": self.ui.phoneNumberEdit.text(),

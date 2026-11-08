@@ -8,6 +8,9 @@ from PySide6.QtWidgets import QFileDialog
 class CaseManager:
     CATEGORY_MAP = {
         "serverWhoisDebug": "domains",
+        "serverWhoisHistoryDebug": "domains",
+        "serverReverseWhoisDebug": "domains",
+        "serverDomainTimelineDebug": "domains",
         "serverDnsAnalyzeDebug": "domains",
         "serverSubdomainsDebug": "domains",
         "serverLocationDebug": "domains",
@@ -36,6 +39,7 @@ class CaseManager:
         "geoDebug": "geo",
         "archiveDebug": "archive",
         "githubDebug": "github",
+        "shodanDebug": "shodan",
         "phoneDebug": "phone",
         "macAddrLocationDebug": "mac",
         "wifiDebug": "wifi",

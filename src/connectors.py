@@ -26,6 +26,7 @@ if TYPE_CHECKING:
     from src.controllers.reddit_osint_controller import RedditOsintController
     from src.controllers.search4faces_controller import S4FController
     from src.controllers.settings_controller import Settings
+    from src.controllers.shodan_controller import ShodanController
     from src.controllers.steganography_controller import SteganographyController
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
     from src.controllers.tg_downloader_controller import TgDownloaderController
@@ -83,12 +84,26 @@ def setup_proxies_connectors(proxy: "Proxy"):
 
 
 def setup_domain_connectors(controller: "DomainController"):
-    controller.ui.runUrlScanButton.clicked.connect(
-        lambda: (
-            controller.set_domain(controller.ui.serverUrlEdit.text()),
-            asyncio.ensure_future(controller.analyze_domain()),
-        )
+    ui = controller.ui
+    category_actions = (
+        ("infraDomainEdit", "runInfraScanButton", controller.analyze_infra),
+        ("webSurfaceDomainEdit", "runWebScanButton", controller.analyze_web_surface),
+        ("discoveryDomainEdit", "runDiscoveryScanButton", controller.analyze_discovery),
+        ("securityDomainEdit", "runSecurityScanButton", controller.analyze_security),
+        ("whoisDomainEdit", "runWhoisAnalyze", controller.analyze_whois),
     )
+    for edit_name, button_name, method in category_actions:
+        button = getattr(ui, button_name, None)
+        if button is not None:
+            button.clicked.connect(lambda _=False, m=method: asyncio.ensure_future(m()))
+        edit = getattr(ui, edit_name, None)
+        if edit is not None:
+            edit.returnPressed.connect(lambda m=method: asyncio.ensure_future(m()))
+    whois_query = getattr(ui, "reverseWhoisQueryEdit", None)
+    if whois_query is not None:
+        whois_query.returnPressed.connect(
+            lambda: asyncio.ensure_future(controller.analyze_whois())
+        )
 
 
 def setup_mail_connectors(controller: "MailController"):
@@ -399,6 +414,66 @@ def setup_github_connectors(controller: "GitHubController"):
     )
 
 
+def setup_shodan_connectors(controller: "ShodanController"):
+    ui = controller.ui
+    ui.shodanHostBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.host_lookup())
+    )
+    ui.shodanSearchBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.search())
+    )
+    ui.shodanCountBtn.clicked.connect(lambda: asyncio.ensure_future(controller.count()))
+    ui.shodanFacetsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.facets())
+    )
+    ui.shodanQueriesBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.community_queries())
+    )
+    ui.shodanDnsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.domain_info())
+    )
+    ui.shodanHoneyscoreBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.honeyscore())
+    )
+    ui.shodanExploitsBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.exploits())
+    )
+    ui.shodanInfoBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.account_info())
+    )
+    ui.shodanMyIpBtn.clicked.connect(lambda: asyncio.ensure_future(controller.my_ip()))
+    ui.shodanCatalogBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.catalog())
+    )
+    ui.shodanScanBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.request_scan())
+    )
+    ui.shodanScanStatusBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.scan_status())
+    )
+    ui.shodanAlertCreateBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.create_alert())
+    )
+    ui.shodanAlertListBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.list_alerts())
+    )
+    ui.shodanAlertDeleteBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.delete_alert())
+    )
+    ui.shodanToGraphBtn.clicked.connect(
+        lambda: asyncio.ensure_future(controller.send_to_graph())
+    )
+    ui.shodanTargetEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.search())
+    )
+    ui.shodanDomainEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.domain_info())
+    )
+    ui.shodanExploitEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.exploits())
+    )
+
+
 def setup_phone_connectors(controller: "PhoneController"):
     controller.ui.phoneParseBtn.clicked.connect(
         lambda: asyncio.ensure_future(controller.parse_validate())
@@ -580,8 +655,12 @@ _GRAPH_TOOLTIPS = {
     "graphFilterCombo": "Show only one entity type",
     "graphWidget": (
         "Drag to select \u00b7 middle-drag to pan \u00b7 scroll to zoom\n"
-        "F fits the view \u00b7 Ctrl+F searches \u00b7 Delete removes the selection\n"
-        "Ctrl+Z undoes \u00b7 Ctrl+Shift+Z redoes\n"
+        "Double-click empty canvas to add an entity\n"
+        "F fits the view \u00b7 Shift+F frames the selection \u00b7 Ctrl+F searches\n"
+        "Ctrl+T runs a transform on the selection\n"
+        "Ctrl+C / Ctrl+X / Ctrl+V copy, cut and paste \u00b7 Ctrl+D duplicates\n"
+        "Ctrl+Z undoes \u00b7 Ctrl+Shift+Z redoes \u00b7 Delete removes the selection\n"
+        "Ctrl+Shift+M toggles the minimap\n"
         "Drop a .json / .graphml / .gexf / .csv file to open it"
     ),
 }

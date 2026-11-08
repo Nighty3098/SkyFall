@@ -14,10 +14,23 @@ def is_ip(value):
 
 
 class ThreatIntel:
-    def __init__(self, abuseipdb_api_key="", greynoise_api_key=""):
+    def __init__(
+        self, abuseipdb_api_key="", greynoise_api_key="", ipgeolocation_api_key=""
+    ):
         logger.debug("Init: ThreatIntel")
         self.abuseipdb_api_key = (abuseipdb_api_key or "").strip()
         self.greynoise_api_key = (greynoise_api_key or "").strip()
+        self.ipgeolocation_api_key = (ipgeolocation_api_key or "").strip()
+
+    async def check_ipgeolocation(self, ip):
+        logger.debug("Trying to check IPGeolocation security")
+        try:
+            from src.modules.ipgeolocation_security import IPGeolocationSecurity
+
+            return await IPGeolocationSecurity(self.ipgeolocation_api_key).check(ip)
+        except Exception as e:
+            logger.debug(f"IPGeolocation failed for {ip}: {e}")
+            return {"source": "IPGeolocation", "status": "ERROR", "note": str(e)[:200]}
 
     async def check_abuseipdb(self, ip):
         logger.debug("Trying to check AbuseIPDB")
@@ -232,10 +245,12 @@ class ThreatIntel:
         ip = resolved_ip or (target if is_ip(target) else "")
         results = []
         if ip and is_ip(ip):
-            ab, gn = await asyncio.gather(
-                self.check_abuseipdb(ip), self.check_greynoise(ip)
+            ab, gn, ig = await asyncio.gather(
+                self.check_abuseipdb(ip),
+                self.check_greynoise(ip),
+                self.check_ipgeolocation(ip),
             )
-            results += [ab, gn]
+            results += [ab, gn, ig]
             results.append(await self.check_threatfox(ip))
         else:
             results.append(
@@ -252,6 +267,13 @@ class ThreatIntel:
                     "note": "IP-only source, resolve domain first",
                 }
             )
+            results.append(
+                {
+                    "source": "IPGeolocation",
+                    "status": "SKIPPED",
+                    "note": "IP-only source, resolve domain first",
+                }
+            )
             results.append(await self.check_threatfox(target))
         results.append(await self.check_urlhaus(target if not is_ip(target) else ip))
         verdict = "CLEAN"
@@ -263,6 +285,6 @@ class ThreatIntel:
             r.get("status") in ("SUSPICIOUS", "NOISE") for r in results
         ):
             verdict = "SUSPICIOUS"
-        if all(r.get("status") in ("SKIPPED", "ERROR") for r in results):
+        if all(r.get("status") in ("SKIPPED", "ERROR", "INFO") for r in results):
             verdict = "UNKNOWN"
         return {"target": target, "ip": ip, "verdict": verdict, "results": results}

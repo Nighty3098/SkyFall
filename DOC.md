@@ -26,6 +26,7 @@ Author: Nighty3098.
    - [Web](#web)
    - [File Analyze](#file-analyze)
    - [GitHub](#github)
+   - [Shodan](#shodan)
    - [Phone](#phone)
    - [MAC Addr](#mac-addr)
    - [Blockchain](#blockchain)
@@ -36,6 +37,7 @@ Author: Nighty3098.
    - [Settings](#settings)
    - [Proxy](#proxy)
 6. [Graph](#graph-1)
+   - [Custom Graph Transforms](#custom-graph-transforms)
 7. [MCP Servers](#mcp-servers)
 8. [Code Structure](#code-structure)
 9. [Data and Storage](#data-and-storage)
@@ -101,11 +103,13 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `google_safe_api_key` | `googleSafeApiKeyEdit` | Google Safe Browsing |
 | `ipinfo_api_key` | `ipinfoApiKeyEdit` | ipinfo.io IP geolocation |
 | `github_token` | `githubTokenEdit` | GitHub PAT (multiple separated by `;` for rotation) |
+| `shodan_api_key` | `shodanApiKeyEdit` | Shodan API key (hosts, search, DNS, exploits, scans, alerts) |
 | `numverify_api_key` | `numverifyApiKeyEdit` | NumVerify (phones) |
 | `abstractapi_api_key` | `abstractapiApiKeyEdit` | AbstractAPI (phones) |
 | `trongrid_api_key` | `trongridApiKeyEdit` | TronGrid (blockchain) |
 | `abuseipdb_api_key` | `abuseipdbApiKeyEdit` | AbuseIPDB (IP reputation, threat intel) |
 | `greynoise_api_key` | `greynoiseApiKeyEdit` | GreyNoise (optional, raises community API limits) |
+| `whoisfreaks_api_key` | `whoisfreaksApiKeyEdit` | WhoisFreaks (optional; WHOIS history + reverse WHOIS) |
 | `etherscan_api_key` | `etherscanApiKeyEdit` | Etherscan (Ethereum + Base) |
 | `bscscan_api_key` | `bscscanApiKeyEdit` | BscScan (BSC) |
 | `tonapi_api_key` | `tonapiApiKeyEdit` | TonAPI (TON) |
@@ -121,7 +125,7 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `frameless_window` | `framelessCheck` | Frameless window |
 | `mcp_require_auth` | `mcpAuthCheck` | Require a bearer token for the MCP server |
 
-> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings, including LeakCheck, Dehashed, and NASA FIRMS credentials, are not currently in the encrypted settings set. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
+> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `shodan_api_key`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `whoisfreaks_api_key`, `leakcheck_api_key`, `dehashed_email`, `dehashed_api_key`, `firms_map_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings (paths, theme, font size and UI toggles) are stored in plaintext. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
 
 Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `mcpToggleButton`) to start/stop the built-in MCP server.
 
@@ -302,28 +306,55 @@ Google dorks from the `data/dorks.json` database (14 categories, ~7,944 dorks; `
 
 ### Web
 
-Full domain analysis — 16 steps (selected by checkboxes, progress `domainProgress`).
+The WEB tab is split into category sub-tabs. Each sub-tab has its own domain input, relevant checkboxes, and a start button (`Enter` in the domain input starts the same scan).
+
+**Infra** (`infraDomainEdit` + `runInfraScanButton`)
 
 | Checkbox | Panel | What it does |
 |---|---|---|
-| `domainRobotsCheck` | `serverRobotsDebug` | robots.txt |
 | `domainLocationCheck` | `serverLocationDebug` | IP + geolocation (ipapi.co, ip-api.com, ipinfo.io) |
-| `domainSSLCheck` | `serverTlsDebug` | SSL/TLS certificate (version, cipher, issuer, validity) |
 | `domainDNSCheck` | `serverDnsAnalyzeDebug` | DNS: A/MX/TXT/NS/CNAME/SOA + NS IP addresses + standard hosts |
-| `domainHeadersCheck` | `serverWafDebug` | HTTP headers, web server, WAF, technology stack |
-| `domainWhoisCheck` | `serverWhoisDebug` | WHOIS |
+| `domainSSLCheck` | `serverTlsDebug` | SSL/TLS certificate (version, cipher, issuer, validity) |
 | `domainNmapCheck` | `serverNmapDebug` | NMAP port scan 1-1024 (`--script=vuln`, requires system nmap) |
-| `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + ThreatFox + URLHaus, overall verdict |
-| `domainSubdomainsCheck` | `serverSubdomainsDebug` | Subdomains: DuckDuckGo + crt.sh + AlienVault OTX + HackerTarget + AnubisDB + DNS brute-force over a built-in top list |
-| `domainJsSecretsCheck` | `serverJsSecretsDebug` | JS Secrets: collect `<script src>`, scan up to 15 JS files for API keys/secrets/endpoints (23 regexes + keywords from GitHub search), secrets are redacted |
-| `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + ThreatFox + URLHaus with automatic domain-to-IP resolution |
+
+**Web** (`webSurfaceDomainEdit` + `runWebScanButton`)
+
+| Checkbox | Panel | What it does |
+|---|---|---|
+| `domainHeadersCheck` | `serverWafDebug` | HTTP headers, web server, WAF, technology stack |
 | `securityTxtCheck` | `securityTxtDebug` | `/.well-known/security.txt` |
 | `cookiesCheck` | `cookiesDebug` | Site cookies |
 | `socialTagsCheck` | `socialTagsDebug` | OpenGraph / Twitter meta tags |
+| `domainRobotsCheck` | `serverRobotsDebug` | robots.txt |
+| `domainJsSecretsCheck` | `serverJsSecretsDebug` | JS Secrets: collect `<script src>`, scan up to 15 JS files for API keys/secrets/endpoints (23 regexes + keywords from GitHub search), secrets are redacted |
+
+**Discovery** (`discoveryDomainEdit` + `runDiscoveryScanButton`)
+
+| Checkbox | Panel | What it does |
+|---|---|---|
+| `domainSubdomainsCheck` | `serverSubdomainsDebug` | Subdomains: DuckDuckGo + crt.sh + AlienVault OTX + HackerTarget + AnubisDB + DNS brute-force over a built-in top list |
 | `certTrCheck` | `certTrDebug` | Certificate Transparency via crt.sh |
 | `domainsOnIpCheck` | `domainsOnIpDebug` | Reverse lookup: domains on an IP (PTR, Shodan InternetDB, HackerTarget) |
 
-Additionally: `serverUrlEdit` + `runUrlScanButton` — specify a domain and run the analysis.
+**Security** (`securityDomainEdit` + `runSecurityScanButton`)
+
+| Checkbox | Panel | What it does |
+|---|---|---|
+| `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + IPGeolocation.io + ThreatFox + URLHaus, overall verdict |
+| `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + IPGeolocation.io + ThreatFox + URLHaus with automatic domain-to-IP resolution |
+
+**WHOIS** (`whoisDomainEdit` + `reverseWhoisQueryEdit` + `runWhoisAnalyze`) — WhoisFreaks WHOIS history, historical DNS, investigation timeline, reverse WHOIS, and basic WHOIS.
+
+| Control | Panel | What it does |
+|---|---|---|
+| `whoisDomainEdit` | — | Domain for WHOIS/DNS history and timeline (fallback: last resolved domain) |
+| `reverseWhoisQueryEdit` | — | `email:` / `company:` / `owner:` / `keyword:`; blank auto-pivots from WHOIS history/current WHOIS (max. 1 email + 1 company). Manual reverse queries can run without a domain. |
+| `domainWhoisCheck` | `serverWhoisDebug` | Basic WHOIS (python-whois) |
+| `runWhoisAnalyze` | `serverWhoisHistoryDebug` | WHOIS history via WhoisFreaks (optional key; 2 credits/lookup) |
+| `runWhoisAnalyze` | `serverReverseWhoisDebug` | Reverse WHOIS via WhoisFreaks (optional key; 5 credits/page) |
+| `runWhoisAnalyze` | `serverDomainTimelineDebug` | Chronological DNS+WHOIS timeline (observed snapshots + reported registration dates; triage context, not a verdict) |
+
+Pressing `Enter` in `whoisDomainEdit` or `reverseWhoisQueryEdit` starts WHOIS analysis.
 
 ### File Analyze
 
@@ -347,6 +378,24 @@ Searching via the GitHub REST API. Field `githubTokenEdit` (PAT; multiple tokens
 - `githubSecretEdit` + `githubSecretSearchBtn` — secret search: iterates ~240 secret patterns (API keys, SSH, AWS/Azure/GCP, DB strings, Stripe, GitHub/GitLab tokens, Slack, OpenAI, Twilio, Docker/K8s, JWT/OAuth, etc.). Pattern progress in `githubProgress`.
 - `githubDorkEdit` + `githubDorkSearchBtn` + `githubDorkGroup` — an arbitrary GitHub dork by type: code / commits / issues / repositories / users.
 - Results — in `githubDebug` with progress and remaining limits (`[Page N] Rate: r/lim`).
+
+### Shodan
+
+Full Shodan API client on top of the official `shodan` Python package. Field `shodanApiKeyEdit` is saved (encrypted) in Settings → Shodan API Key. All requests run off the UI thread through `asyncio.to_thread`; API errors are shown as readable messages.
+
+- **Lookup / search** — `shodanTargetEdit` accepts an IP, hostname or raw Shodan query.
+  - `shodanHostBtn` — host lookup: open ports, services/products, hostnames, ASN/ISP, geolocation, tags and CVEs.
+  - `shodanSearchBtn` — full-text search with `shodanPageSpin`; facets and top matches are rendered.
+  - `shodanCountBtn` — result count without downloading matches.
+  - `shodanFacetsBtn` — available search facets; `shodanQueriesBtn` — community queries feed.
+  - `shodanHoneyscoreBtn` — honeypot probability for the target IP.
+- **DNS** — `shodanDomainEdit` + `shodanDnsBtn` — DNS records/subdomains via the Shodan DNS API.
+- **Exploits** — `shodanExploitEdit` + `shodanExploitsBtn` — search the Shodan exploit database (CVE, product, author, source).
+- **On-demand scans** — `shodanScanBtn` submits the target IP/network; `shodanScanIdEdit` + `shodanScanStatusBtn` checks scan progress.
+- **Alerts** — `shodanAlertNameEdit`, `shodanAlertIpEdit`, `shodanAlertCreateBtn`, `shodanAlertListBtn`, `shodanAlertIdEdit`, `shodanAlertDeleteBtn`.
+- **API utilities** — `shodanInfoBtn` (plan/credits), `shodanMyIpBtn`, `shodanCatalogBtn` (ports, protocols, services).
+- **Graph** — `shodanToGraphBtn` sends the last host/search/DNS/exploit result to the canvas as a connected subgraph (one undo step). The graph transforms below use the same client.
+- Output and progress — `shodanDebug`, `shodanProgress`.
 
 ### Phone
 
@@ -379,7 +428,7 @@ Searching for transactions by indirect data (amount, time, network, memo) via th
 - `bcAmountEdit` — amount or range `min-max`.
 - `bcToleranceSpin` — amount tolerance (fractions).
 - `bcMemoEdit` — memo (for TON).
-- `bcSearchButton` + `bcProgressBar` — start; results in `bcDebug`: tx_id, confidence %, time, amount/coin, score breakdown Δt/ΔA/ΔT/M, from/to addresses, memo.
+- `bcSearchButton` + `bcProgressBar` — start; results in `bcDebug`: tx_id, confidence %, time, amount/coin, score breakdown (time delta, time score, amount score, memo score), from/to addresses, memo.
 
 **Keys:** TronGrid, Etherscan (ETH+Base), BscScan, TonAPI, Helius (Solana). BTC/LTC/DOGE/BCH — public nodes without keys.
 
@@ -459,31 +508,191 @@ See [Settings and API Keys](#settings-and-api-keys). Also the **MCP Server** blo
 
 `owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`, `communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`, `hosted_by`, `linked_to`.
 
-Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bézier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `wallet`→…) are normalised to the canonical vocabulary.
+Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bezier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `wallet`→…) are normalised to the canonical vocabulary.
 
 Nodes render as cards with an entity-coloured header band, symbol chip, and type caption; ports stay subtle until the node is hovered. The canvas paints a dotted grid, and an empty graph shows a short "how to start" hint.
 
 ### Canvas Capabilities
 
 - Nodes: move, resize (corner handle), drag ports to create edges, double-click — edit dialog.
+- **Quick add** — double-click empty canvas (or `Add Node…` in the context menu) to open the full node editor at that position. Dropping an entity from the palette also selects the new node ready for editing.
+- **Clipboard** — `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste nodes together with their internal edges; `Ctrl+D` duplicates the selection with a small offset. Every operation is a single undo step.
+- **Selection toolkit** — context menu → `Select`: connected nodes, same entity type, invert selection, select all. Multi-selection supports align (6 edges/centres), distribute horizontally/vertically and connect in sequence or all pairs. `Shift+F` frames only the selected nodes.
+- **Minimap** — bottom-right overview with a draggable viewport frame; `Ctrl+Shift+M` or the canvas context menu → `View → Minimap` toggles it.
+- **Transient canvas HUD** — status, transform progress, undo/redo and filter feedback are painted over the viewport instead of creating a `QStatusBar`, so the canvas layout never shifts.
 - **Photo nodes** — a gallery of thumbnails from files/URLs (with caching and a `+N` badge).
 - **Geolocation nodes** — a built-in map (OpenStreetMap tiles, zoom 5–18, marker, Ctrl+wheel to zoom).
 - Context menu: edit node/edge, edge style, attach evidence, color, delete; **Analysis** — shortest path (by click), degree centrality (node scaling + top-5), community detection (greedy modularity).
+- **Searchable transforms** — `⚡ Transforms → Search Transforms…` or `Ctrl+T` opens a filterable transform picker with descriptions. A transform can run on one node or on a common subset of the current multi-selection; result nodes are selected and grouped into one undo step.
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
-  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Infostealer/Leaks;
-  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback Snapshots;
-  - **IP** → geolocation, ports, domains on IP, Threat Intel;
-  - **Email** → IntelX, Registered Accounts, Infostealer/Leaks;
-  - **Phone** → parsing, reverse lookup, leaks;
+  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
+  - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
+  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, WHOIS history, reverse WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
+  - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**;
+  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search, **Shodan Hosts**;
+  - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
+  - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
   - **MAC** → geolocation;
-  - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS).
+  - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS), NASA FIRMS wildfires, location report;
+  - **Photo** → EXIF/metadata, GPS, steganography, Search4Faces, VirusTotal;
+  - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
+- **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py`; see [Custom Graph Transforms](#custom-graph-transforms) below.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
+
+### Custom Graph Transforms
+
+SkyFall's transform system is modular: the graph controller only handles node
+creation, layout and undo grouping, while transform discovery lives in
+`src/transforms/`. Built-in transforms and user plugins share the same
+`TransformDef` API and appear in the same `Ctrl+T` picker.
+
+#### Plugin directory and lifecycle
+
+- Default directory: `~/.skyfall/transforms/`.
+- Override for development or portable setups:
+  ```bash
+  export SKYFALL_TRANSFORMS_DIR=/path/to/transforms
+  ```
+- On first launch SkyFall creates the directory and a `README.md` template.
+- Every top-level `*.py` file is loaded. Files whose names start with `_` are
+  ignored, as are subdirectories.
+- The directory is checked at most once every two seconds. Adding, editing or
+  removing a plugin updates the transform picker without restarting SkyFall.
+- A broken plugin is logged as a warning and skipped. Other plugins and all
+  built-in transforms continue to work.
+- A ready-to-copy example is shipped in `examples/transforms/example_transform.py`.
+
+#### Plugin contract
+
+A plugin must define one of the following:
+
+- a module-level `TRANSFORMS` list of `TransformDef` objects;
+- a `get_transforms()` function returning such a list.
+
+Minimal example:
+
+```python
+from src.transforms import ChildNodeDef, TransformDef, TransformResult
+
+
+def lookup(value, modules):
+    # ``value`` is selected from the graph node (title or content).
+    # ``modules`` provides SkyFall's module objects.
+    del modules
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"Result for {value}",
+                entity_type="Custom",
+                content="Details produced by the plugin.",
+                evidence=["https://example.com/source"],
+            )
+        ],
+        content=f"Lookup finished for {value}",
+    )
+
+
+TRANSFORMS = [
+    TransformDef(
+        name="My Custom Transform",
+        description="What this transform does",
+        input_types=["Domain", "IP", "Custom"],
+        output_type="Custom",
+        relationship="related_to",
+        handler=lookup,
+    )
+]
+```
+
+The same plugin can expose a factory instead of a constant list:
+
+```python
+def get_transforms():
+    return [TransformDef(...)]
+```
+
+#### `TransformDef` fields
+
+| Field | Required | Default | Meaning |
+|---|---|---|---|
+| `name` | yes | — | Unique label shown in the transform picker. |
+| `description` | no | `""` | Short explanation shown next to the name. |
+| `input_types` | yes | — | Entity types for which the transform is offered. |
+| `output_type` | no | `Custom` | Entity type used for generated child nodes when no explicit children are returned. |
+| `relationship` | no | `related_to` | Edge type applied to generated child nodes. |
+| `handler` | yes | — | Callable `(value, modules) -> result`; may be sync or async. |
+| `use_content` | no | `False` | Pass the full node content instead of the title-derived value. |
+
+Supported entity types are `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`,
+`Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation` and
+`Custom`. Relationship names use the same vocabulary as the rest of the graph:
+`owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`,
+`communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`,
+`hosted_by` and `linked_to`.
+
+#### Handler contract
+
+```python
+def handler(value: str, modules: dict):
+    ...
+```
+
+`value` is the normalized node input used by built-in transforms:
+
+- `Domain`, `IP`, `Email`, `Phone`, `MAC` and `Crypto` extract the matching
+  value from the node title/content;
+- `Photo` resolves a local file path from the title, content or evidence;
+- other entity types use the node title, falling back to content.
+
+`modules` exposes the same objects used by built-in transforms. Common keys
+include `domain_analyzer`, `username_search`, `maigret_search`,
+`reddit_osint`, `phone_search`, `mac_location`, `mail_search`,
+`email_accounts`, `social_search`, `leak_search`, `geo_analysis`,
+`archive_search`, `github_search`, `shodan_search`, `file_analyzer`,
+`steg_analyzer`, `search4faces`, `dorks_search_engine`,
+`blockchain_search`, `email_header_analyzer`, `tg_analyzer` and `settings`.
+Use `modules.get("name")` and handle a missing module gracefully.
+
+Handlers should not block the UI thread. For network work, either use an
+`async def` handler with `await` or delegate blocking calls to
+`asyncio.to_thread` / `run_in_executor`.
+
+The runner accepts these return values:
+
+- `TransformResult` — full control over children, content and evidence;
+- `ChildNodeDef` or a list of `ChildNodeDef` — generated children;
+- a string — displayed as transform content;
+- a mapping with `children`, `content` and/or `evidence` keys;
+- `None` — no output.
+
+Generated children are connected to the selected node, arranged in an arc and
+selected as one undo step. Multi-node execution only offers transforms common
+to every selected entity type; results from all nodes are grouped into a
+single undo step.
+
+#### Reloading, duplicates and troubleshooting
+
+- Plugin transforms are appended after built-ins for each entity type.
+- If a plugin uses the same `(entity type, name)` as a built-in transform, the
+  built-in wins and a warning is logged.
+- Use the SkyFall log (`~/.skyfall/logs/`) to diagnose load errors, import
+  failures and invalid return values.
+- A plugin may be reloaded explicitly from Python:
+  ```python
+  window.graphTransformController.reload_plugins()
+  ```
+- Test a plugin by dropping it into the plugin directory and opening
+  `⚡ Transforms → Search Transforms…` (`Ctrl+T`) on a node of a supported type.
+
+> **Security.** Transform plugins are ordinary Python code executed with
+> SkyFall's permissions. Only install plugins you trust. Review third-party
+> plugin code before adding it to `~/.skyfall/transforms/`.
 
 ---
 
 ## MCP Servers
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 91 tools
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 93 tools
 
 FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Started/stopped from the Settings tab (MCP button) or via `McpController`.
 
@@ -491,7 +700,7 @@ FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Starte
 
 **Ollama (4):** list models, set/get model, set URL.
 
-**Domains (16):** ip, domains on IP, DNS, WHOIS, SSL, headers, web stack, nmap, WAF, reputation aggregator, threat intel, JS secrets, subdomains (passive + brute), robots.txt, security.txt, social tags.
+**Domains (18):** ip, domains on IP, DNS, WHOIS, WHOIS history, reverse WHOIS (email/company/owner/keyword), SSL, headers, web stack, nmap, WAF, reputation aggregator, threat intel, JS secrets, subdomains (passive + brute), robots.txt, security.txt, social tags.
 
 **Username (3):** Sherlock-like search (`skyfall_username_search`), maigret (`skyfall_maigret_search`), cross-check of both engines with match confirmation (`skyfall_username_merged`).
 
@@ -565,8 +774,10 @@ src/
   modules/                  — data collection (UI-independent)
     js_secrets.py           — JS scan for keys/secrets/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
+    whois_freaks.py         — WhoisFreaks WHOIS history + reverse WHOIS client
     email_accounts.py       — where the email is registered (Gravatar/Microsoft/… + holehe)
     social_search.py        — username search on Bluesky, Mastodon, Instagram
+    shodan_search.py        — async Shodan API client (hosts, search, DNS, exploits, scans, alerts)
     reddit_osint.py         — Reddit archival OSINT (Arctic Shift + PullPush, OAuth live profile)
     leak_search.py          — leaks and infostealers (Hudson Rock, LeakCheck, HIBP, Dehashed)
     geo_analysis.py         — sun/shadow (suncalc), fires (NASA FIRMS), disasters (GDACS)
@@ -574,6 +785,7 @@ src/
     tg/                     — Telegram package: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
   controllers/              — per-tab UI logic
+  transforms/               — transform API, built-in registry and plugin loader
   libs/                     — graph_lib (graph), graph_panel (palette)
   ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget
 resources/                  — form.ui, QSS themes, fonts, icons
@@ -585,10 +797,10 @@ thirdparty/txfetch/         — vendored transaction search library
 
 ## Data and Storage
 
-- **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs).
+- **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs), `transforms/` (custom transform plugins and their README template).
 - **`data/dorks.json`** — 14 categories, ~7,944 dorks. **`data/dorks.xml`** — the original GHDB database.
 - **`data/username_data.json`** — 481 site specifications for username search (URL templates, error codes, regex).
-- **`resources/form.ui`** — UI (3184 lines), loaded at runtime.
+- **`resources/form.ui`** — UI (5499 lines), loaded at runtime.
 - **Telegram DB** — SQLite `SkyFall_TG.db`: tables `channels`, `users`, `posts`, `discussions`, `members`, `links`.
 
 ---
@@ -604,6 +816,7 @@ thirdparty/txfetch/         — vendored transaction search library
 | Google Safe Browsing | domain reputation | `google_safe_api_key` |
 | ipinfo.io / ipapi.co / ip-api.com | IP geolocation | ipinfo — optional |
 | GitHub REST API | search | `github_token` |
+| Shodan API | hosts, search, DNS, exploits, scans, alerts | `shodan_api_key` |
 | NumVerify / AbstractAPI | phones | `numverify` / `abstractapi` |
 | 7tel.ru | phones (reviews) | no |
 | search4faces.com | faces | no |
@@ -612,6 +825,7 @@ thirdparty/txfetch/         — vendored transaction search library
 | Shodan InternetDB / HackerTarget | domains on IP | no |
 | AbuseIPDB | IP reputation (threat intel, malware aggregator) | `abuseipdb_api_key` |
 | GreyNoise community | scanner background noise/RIOT (threat intel) | no (key is optional) |
+| WhoisFreaks | WHOIS history + reverse WHOIS (registrant pivots) | `whoisfreaks_api_key` |
 | ThreatFox (abuse.ch) | IOC check of IP/domain | no |
 | URLHaus (abuse.ch) | malicious URLs of a host | no |
 | AlienVault OTX | passive DNS → subdomains | no |

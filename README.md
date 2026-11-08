@@ -4,7 +4,7 @@
 
 <br /><br />
 
-<img src="resources/banner.png" width="95%" />
+<img src="resources/banner.webp" width="95%" />
 
 <br /><br /><br /><br />
 

@@ -33,6 +33,13 @@ main() {
     banner
     printf '\n'
 
+    uninstall_mode=0
+    for arg in "$@"; do
+        case "$arg" in
+            --uninstall|uninstall) uninstall_mode=1 ;;
+        esac
+    done
+
     if ! command -v git >/dev/null 2>&1; then
         printf 'Error: git is required. Install git and run this script again.\n' >&2
         return 1
@@ -47,7 +54,11 @@ main() {
         return 1
     fi
 
-    step 'Starting installer...'
+    if [ "$uninstall_mode" -eq 1 ]; then
+        step 'Starting uninstaller...'
+    else
+        step 'Starting installer...'
+    fi
     printf '\n'
     cd "$INSTALL_DIR/SkyFall"
 

@@ -2936,6 +2936,282 @@ async def _transform_web_search(query, modules):
     return _parse_web_search(text, query)
 
 
+def _parse_whois_history(data, domain):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    status = data.get("status", "?")
+    records = data.get("records") or data.get("whois_records") or []
+    total = data.get("total_records")
+    if total is None:
+        total = len(records) if isinstance(records, list) else "?"
+    lines = [
+        divider(),
+        title(f"WHOIS History: {domain}"),
+        kv("Status", status),
+        kv("Records", total),
+    ]
+    note = data.get("note") or data.get("message")
+    if note:
+        lines.append(kv("Note", note))
+    if isinstance(records, list):
+        for rec in records[:CHILD_THRESHOLD]:
+            if not isinstance(rec, dict):
+                continue
+            registrar = rec.get("registrar") or rec.get("domain_registrar") or "?"
+            created = rec.get("created_date") or rec.get("createdDate") or ""
+            updated = rec.get("updated_date") or rec.get("updatedDate") or ""
+            label = str(registrar)[:60]
+            if created:
+                lines.append(bullet(f"{label} (created: {created})"))
+            elif updated:
+                lines.append(bullet(f"{label} (updated: {updated})"))
+            else:
+                lines.append(bullet(label))
+    lines += [end_of("whois history"), divider()]
+    return TransformResult(
+        content=_pack_content(lines) or render(data, "WHOIS history")
+    )
+
+
+async def _transform_domain_whois_history(domain, modules):
+    return await _run_transform(
+        modules,
+        "domain_analyzer",
+        "get_whois_history",
+        domain,
+        _parse_whois_history,
+        label="Domain analyzer",
+    )
+
+
+def _parse_dns_history(data, domain):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    lines = [
+        divider(),
+        title(f"DNS History: {domain}"),
+        kv("Status", data.get("status", "?")),
+        kv("Records", data.get("total_records", data.get("returned", "?"))),
+        kv("Pages", f"{data.get('pages_fetched', '?')}/{data.get('total_pages', '?')}"),
+    ]
+    if data.get("truncated"):
+        lines.append(fmt_info("Results truncated by page cap"))
+    note = data.get("note") or data.get("message")
+    if note:
+        lines.append(kv("Note", note))
+    snapshots = data.get("snapshots") or data.get("records") or []
+    if isinstance(snapshots, list):
+        for snap in snapshots[:CHILD_THRESHOLD]:
+            if not isinstance(snap, dict):
+                continue
+            qtime = snap.get("query_time") or snap.get("queryTime") or "snapshot"
+            types = snap.get("dns_types") or snap.get("dnsTypes") or []
+            type_text = ", ".join(types[:6]) if types else "records"
+            lines.append(bullet(f"{qtime} [{type_text}]"))
+    lines += [end_of("dns history"), divider()]
+    return TransformResult(content=_pack_content(lines) or render(data, "DNS history"))
+
+
+async def _transform_domain_dns_history(domain, modules):
+    return await _run_transform(
+        modules,
+        "domain_analyzer",
+        "get_dns_history",
+        domain,
+        _parse_dns_history,
+        label="Domain analyzer",
+    )
+
+
+def _parse_domain_timeline(data, domain):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    timeline = data.get("timeline") if "timeline" in data else data
+    if not isinstance(timeline, dict):
+        timeline = {}
+    events = timeline.get("events") or []
+    lines = [
+        divider(),
+        title(f"Domain Timeline: {domain}"),
+        kv("Status", timeline.get("status", data.get("status", "?"))),
+        kv("Events", timeline.get("total_events", len(events))),
+    ]
+    for status_key in ("whois_history_status", "dns_history_status"):
+        if data.get(status_key):
+            lines.append(kv(status_key.replace("_", " ").title(), data[status_key]))
+    if isinstance(events, list):
+        for ev in events[:12]:
+            if not isinstance(ev, dict):
+                continue
+            ts = ev.get("timestamp", "?")
+            summary = ev.get("summary") or ev.get("type") or "event"
+            sem = ev.get("semantics", "")
+            suffix = f" ({sem})" if sem else ""
+            lines.append(bullet(f"{ts}: {summary}{suffix}"))
+        if len(events) > 12:
+            lines.append(fmt_info(f"+{len(events) - 12} more events"))
+    lines += [end_of("domain timeline"), divider()]
+    return TransformResult(
+        content=_pack_content(lines) or render(data, "Domain timeline")
+    )
+
+
+async def _transform_domain_timeline(domain, modules):
+    engine = modules.get("domain_analyzer")
+    if not engine:
+        return TransformResult(content="Domain analyzer module not available")
+    try:
+        import asyncio
+
+        whois_history, dns_history = await asyncio.gather(
+            engine.get_whois_history(domain),
+            engine.get_dns_history(domain),
+        )
+        timeline = await engine.build_domain_timeline(
+            dns_history=dns_history, whois_history=whois_history
+        )
+        result = {
+            "domain": domain,
+            "timeline": timeline,
+            "whois_history_status": (whois_history or {}).get("status")
+            if isinstance(whois_history, dict)
+            else None,
+            "dns_history_status": (dns_history or {}).get("status")
+            if isinstance(dns_history, dict)
+            else None,
+        }
+        return _parse_domain_timeline(result, domain)
+    except Exception as exc:
+        return TransformResult(content=f"Domain timeline failed: {exc}")
+
+
+def _parse_reverse_whois(data, domain):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    domains = data.get("domains") or []
+    lines = [
+        divider(),
+        title(f"Reverse WHOIS: {domain}"),
+        kv("Status", data.get("status", "?")),
+        kv("Domains", len(domains) if isinstance(domains, list) else "?"),
+    ]
+    note = data.get("note") or data.get("message")
+    if note:
+        lines.append(kv("Note", note))
+    children = []
+    if isinstance(domains, list):
+        for item in domains[:CHILD_THRESHOLD]:
+            if isinstance(item, dict):
+                name = item.get("domain") or item.get("domain_name") or item.get("name")
+            else:
+                name = str(item)
+            if not name:
+                continue
+            children.append(
+                ChildNodeDef(
+                    title=str(name),
+                    entity_type="Domain",
+                    content=kv("Source", "reverse WHOIS"),
+                )
+            )
+            lines.append(bullet(str(name)))
+        if len(domains) > CHILD_THRESHOLD:
+            lines.append(fmt_info(f"+{len(domains) - CHILD_THRESHOLD} more domains"))
+    lines += [end_of("reverse whois"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines) or render(data, "Reverse WHOIS"),
+    )
+
+
+async def _transform_domain_reverse_whois(domain, modules):
+    engine = modules.get("domain_analyzer")
+    if not engine:
+        return TransformResult(content="Domain analyzer module not available")
+    try:
+        import asyncio
+
+        whois_history, current_whois = await asyncio.gather(
+            engine.get_whois_history(domain),
+            engine.get_whois_info(domain),
+            return_exceptions=True,
+        )
+        if isinstance(whois_history, Exception):
+            whois_history = None
+        if isinstance(current_whois, Exception):
+            current_whois = None
+        result = await engine.reverse_whois_from_pivots(
+            whois_history, current_whois=current_whois
+        )
+        return _parse_reverse_whois(result, domain)
+    except Exception as exc:
+        return TransformResult(content=f"Reverse WHOIS failed: {exc}")
+
+
+def _parse_ip_security(data, target):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    lines = [
+        divider(),
+        title(f"IP Security: {target}"),
+        kv("Status", data.get("status", "?")),
+        kv("Threat score", data.get("threat_score", "?")),
+    ]
+    for key in (
+        "is_vpn",
+        "is_proxy",
+        "is_tor",
+        "is_anonymous",
+        "is_bot",
+        "is_known_attacker",
+        "is_spam",
+        "is_cloud_provider",
+    ):
+        if key in data:
+            lines.append(
+                kv(key.replace("is_", "").replace("_", " ").title(), data[key])
+            )
+    for key in ("proxy_provider", "cloud_provider", "country", "city", "isp", "asn"):
+        if data.get(key):
+            lines.append(kv(key.replace("_", " ").title(), data[key]))
+    reasons = data.get("reasons") or []
+    if reasons:
+        lines.append(kv("Reasons", ", ".join(str(r) for r in reasons)))
+    note = data.get("note") or data.get("message")
+    if note:
+        lines.append(kv("Note", note))
+    lines += [end_of("ip security"), divider()]
+    return TransformResult(content=_pack_content(lines) or render(data, "IP Security"))
+
+
+async def _transform_ip_security(target, modules):
+    engine = modules.get("domain_analyzer")
+    if not engine:
+        return TransformResult(content="Domain analyzer module not available")
+    try:
+        import ipaddress
+
+        ip = str(target).strip()
+        try:
+            ipaddress.ip_address(ip)
+        except (TypeError, ValueError):
+            # resolve domain
+            import asyncio
+            import socket
+
+            ip = await asyncio.to_thread(socket.gethostbyname, ip.split("/")[0])
+        result = await engine.check_ip_security(ip)
+        if isinstance(result, dict):
+            result.setdefault("target", target)
+        return _parse_ip_security(result, target)
+    except Exception as exc:
+        return TransformResult(content=f"IP security check failed: {exc}")
+
+
+async def _transform_domain_ip_security(domain, modules):
+    return await _transform_ip_security(domain, modules)
+
+
 __all__ = [
     name
     for name, value in globals().items()

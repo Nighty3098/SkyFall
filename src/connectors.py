@@ -84,12 +84,26 @@ def setup_proxies_connectors(proxy: "Proxy"):
 
 
 def setup_domain_connectors(controller: "DomainController"):
-    controller.ui.runUrlScanButton.clicked.connect(
-        lambda: (
-            controller.set_domain(controller.ui.serverUrlEdit.text()),
-            asyncio.ensure_future(controller.analyze_domain()),
-        )
+    ui = controller.ui
+    category_actions = (
+        ("infraDomainEdit", "runInfraScanButton", controller.analyze_infra),
+        ("webSurfaceDomainEdit", "runWebScanButton", controller.analyze_web_surface),
+        ("discoveryDomainEdit", "runDiscoveryScanButton", controller.analyze_discovery),
+        ("securityDomainEdit", "runSecurityScanButton", controller.analyze_security),
+        ("whoisDomainEdit", "runWhoisAnalyze", controller.analyze_whois),
     )
+    for edit_name, button_name, method in category_actions:
+        button = getattr(ui, button_name, None)
+        if button is not None:
+            button.clicked.connect(lambda _=False, m=method: asyncio.ensure_future(m()))
+        edit = getattr(ui, edit_name, None)
+        if edit is not None:
+            edit.returnPressed.connect(lambda m=method: asyncio.ensure_future(m()))
+    whois_query = getattr(ui, "reverseWhoisQueryEdit", None)
+    if whois_query is not None:
+        whois_query.returnPressed.connect(
+            lambda: asyncio.ensure_future(controller.analyze_whois())
+        )
 
 
 def setup_mail_connectors(controller: "MailController"):

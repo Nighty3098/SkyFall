@@ -45,6 +45,8 @@ DEFAULT_SETTINGS = {
     "helius_api_key": "",
     "abuseipdb_api_key": "",
     "greynoise_api_key": "",
+    "whoisfreaks_api_key": "",
+    "ipgeolocation_api_key": "",
     "leakcheck_api_key": "",
     "dehashed_email": "",
     "dehashed_api_key": "",
@@ -77,6 +79,8 @@ FIELD_MAP = {
     "helius_api_key": "heliusApiKeyEdit",
     "abuseipdb_api_key": "abuseipdbApiKeyEdit",
     "greynoise_api_key": "greynoiseApiKeyEdit",
+    "whoisfreaks_api_key": "whoisfreaksApiKeyEdit",
+    "ipgeolocation_api_key": "ipgeolocationApiKeyEdit",
     "leakcheck_api_key": "leakcheckApiKeyEdit",
     "dehashed_email": "dehashedEmailEdit",
     "dehashed_api_key": "dehashedApiKeyEdit",
@@ -111,6 +115,8 @@ class Settings:
         self.helius_api_key = ""
         self.abuseipdb_api_key = ""
         self.greynoise_api_key = ""
+        self.whoisfreaks_api_key = ""
+        self.ipgeolocation_api_key = ""
         self.leakcheck_api_key = ""
         self.dehashed_email = ""
         self.dehashed_api_key = ""

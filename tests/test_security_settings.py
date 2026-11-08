@@ -34,6 +34,7 @@ class SensitiveSettingsEncryptionTest(unittest.TestCase):
             "helius_api_key": "helius-secret",
             "abuseipdb_api_key": "abuseipdb-secret",
             "greynoise_api_key": "greynoise-secret",
+            "whoisfreaks_api_key": "whoisfreaks-secret",
             "leakcheck_api_key": "leakcheck-secret",
             "dehashed_email": "analyst@example.test",
             "dehashed_api_key": "dehashed-secret",

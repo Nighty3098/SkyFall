@@ -58,6 +58,8 @@ class DomainAnalyzer:
         ipinfo_api_key,
         abuseipdb_api_key: str = "",
         greynoise_api_key: str = "",
+        whoisfreaks_api_key: str = "",
+        ipgeolocation_api_key: str = "",
     ) -> None:
         logger.debug("Init: DomainAnalyzer")
         self.API_KEYS = {
@@ -66,12 +68,22 @@ class DomainAnalyzer:
             "IPINFO": ipinfo_api_key,
             "ABUSEIPDB": abuseipdb_api_key or "",
             "GREYNOISE": greynoise_api_key or "",
+            "WHOISFREAKS": whoisfreaks_api_key or "",
+            "IPGEOLOCATION": ipgeolocation_api_key or "",
         }
         self.ua = UserAgent()
 
-    def update_threat_keys(self, abuseipdb_api_key="", greynoise_api_key=""):
+    def update_threat_keys(
+        self,
+        abuseipdb_api_key="",
+        greynoise_api_key="",
+        whoisfreaks_api_key="",
+        ipgeolocation_api_key="",
+    ):
         self.API_KEYS["ABUSEIPDB"] = abuseipdb_api_key or ""
         self.API_KEYS["GREYNOISE"] = greynoise_api_key or ""
+        self.API_KEYS["WHOISFREAKS"] = whoisfreaks_api_key or ""
+        self.API_KEYS["IPGEOLOCATION"] = ipgeolocation_api_key or ""
 
     @staticmethod
     def _normalize_host(value):
@@ -510,6 +522,134 @@ class DomainAnalyzer:
             logger.error(f"Error WHOIS: {e}")
             return {"error": f"Error WHOIS: {e}"}
 
+    async def get_whois_history(self, domain, limit=50):
+        logger.debug("Trying to get WHOIS history")
+        from src.modules.whois_freaks import WhoisFreaks
+
+        try:
+            wf = WhoisFreaks(self.API_KEYS.get("WHOISFREAKS", ""))
+            return await wf.history(domain, limit=limit)
+        except Exception as e:
+            logger.error(f"Error WHOIS history: {e}")
+            return {"error": f"Error WHOIS history: {e}"}
+
+    async def reverse_whois(
+        self,
+        email="",
+        company="",
+        owner="",
+        keyword="",
+        page=1,
+        mode="mini",
+        exact=None,
+    ):
+        logger.debug("Trying to get reverse WHOIS")
+        from src.modules.whois_freaks import WhoisFreaks
+
+        try:
+            wf = WhoisFreaks(self.API_KEYS.get("WHOISFREAKS", ""))
+            return await wf.reverse(
+                email=email,
+                company=company,
+                owner=owner,
+                keyword=keyword,
+                page=page,
+                mode=mode,
+                exact=exact,
+            )
+        except Exception as e:
+            logger.error(f"Error reverse WHOIS: {e}")
+            return {"error": f"Error reverse WHOIS: {e}"}
+
+    async def reverse_whois_from_query(self, query, page=1, mode="mini"):
+        logger.debug("Trying to get reverse WHOIS from query")
+        from src.modules.whois_freaks import parse_reverse_query
+
+        params = parse_reverse_query(query)
+        if not params:
+            return {
+                "source": "WhoisFreaks",
+                "kind": "reverse",
+                "status": "ERROR",
+                "note": "Empty reverse WHOIS query",
+            }
+        return await self.reverse_whois(page=page, mode=mode, **params)
+
+    async def reverse_whois_from_pivots(
+        self, history=None, current_whois=None, max_pivots=2
+    ):
+        logger.debug("Trying to get reverse WHOIS from WHOIS pivots")
+        from src.modules.whois_freaks import build_reverse_pivots, merge_reverse_results
+
+        pivots = build_reverse_pivots(
+            history,
+            current_whois=current_whois,
+            max_pivots=max_pivots,
+        )
+        if not pivots:
+            return merge_reverse_results([], [])
+
+        results = []
+        for pivot in pivots:
+            results.append(
+                await self.reverse_whois(
+                    page=1,
+                    mode="mini",
+                    **{pivot["type"]: pivot["value"]},
+                )
+            )
+        return merge_reverse_results(results, pivots)
+
+    async def get_dns_history(self, domain, dns_type="all", max_pages=5):
+        logger.debug("Trying to get historical DNS")
+        try:
+            from src.modules.whois_freaks import WhoisFreaks
+
+            wf = WhoisFreaks(self.API_KEYS.get("WHOISFREAKS", ""))
+            return await wf.dns_history(domain, dns_type=dns_type, max_pages=max_pages)
+        except Exception as e:
+            logger.debug(f"DNS history failed for {domain}: {e}")
+            return {
+                "source": "WhoisFreaks",
+                "kind": "dns_history",
+                "status": "ERROR",
+                "domain": domain,
+                "note": str(e)[:200],
+            }
+
+    async def build_domain_timeline(
+        self, dns_history=None, whois_history=None, current_whois=None
+    ):
+        logger.debug("Building domain investigation timeline")
+        try:
+            from src.modules.whois_freaks import build_domain_timeline
+
+            return await asyncio.to_thread(
+                build_domain_timeline,
+                dns_history,
+                whois_history,
+                current_whois,
+            )
+        except Exception as e:
+            logger.debug(f"Timeline build failed: {e}")
+            return {"status": "ERROR", "events": [], "note": str(e)[:200]}
+
+    async def check_ip_security(self, ip):
+        logger.debug("Trying to get IP security")
+        try:
+            from src.modules.ipgeolocation_security import IPGeolocationSecurity
+
+            return await IPGeolocationSecurity(
+                self.API_KEYS.get("IPGEOLOCATION", "")
+            ).check(ip)
+        except Exception as e:
+            logger.debug(f"IP security check failed for {ip}: {e}")
+            return {
+                "source": "IPGeolocation",
+                "status": "ERROR",
+                "note": str(e)[:200],
+            }
+
     async def run_nmap_scan(self, domain, ports="1-1024"):
         logger.debug("Trying to get nmap info")
         try:
@@ -681,6 +821,7 @@ class DomainAnalyzer:
         ti = ThreatIntel(
             abuseipdb_api_key=self.API_KEYS.get("ABUSEIPDB", ""),
             greynoise_api_key=self.API_KEYS.get("GREYNOISE", ""),
+            ipgeolocation_api_key=self.API_KEYS.get("IPGEOLOCATION", ""),
         )
         return await ti.aggregate(target, resolved_ip=resolved_ip)
 

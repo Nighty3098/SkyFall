@@ -55,14 +55,18 @@ QTabWidget {
     border: none;
 }
 
+QTabWidget#tabWidget::tab-bar {
+    alignment: center;
+}
+
 QTabBar::tab {
     width: 150px;
-    height: 30px;
+    height: 25px;
     background: $surface;
     color: $text_muted;
     border: 1px solid $border;
     border-radius: $radius;
-    margin: 5px 10px;
+    margin: 2px 2px;
 }
 
 QTabBar::tab:selected {

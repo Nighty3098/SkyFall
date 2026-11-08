@@ -109,6 +109,7 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `trongrid_api_key` | `trongridApiKeyEdit` | TronGrid (blockchain) |
 | `abuseipdb_api_key` | `abuseipdbApiKeyEdit` | AbuseIPDB (IP reputation, threat intel) |
 | `greynoise_api_key` | `greynoiseApiKeyEdit` | GreyNoise (optional, raises community API limits) |
+| `whoisfreaks_api_key` | `whoisfreaksApiKeyEdit` | WhoisFreaks (optional; WHOIS history + reverse WHOIS) |
 | `etherscan_api_key` | `etherscanApiKeyEdit` | Etherscan (Ethereum + Base) |
 | `bscscan_api_key` | `bscscanApiKeyEdit` | BscScan (BSC) |
 | `tonapi_api_key` | `tonapiApiKeyEdit` | TonAPI (TON) |
@@ -124,7 +125,7 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `frameless_window` | `framelessCheck` | Frameless window |
 | `mcp_require_auth` | `mcpAuthCheck` | Require a bearer token for the MCP server |
 
-> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `shodan_api_key`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `leakcheck_api_key`, `dehashed_email`, `dehashed_api_key`, `firms_map_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings (paths, theme, font size and UI toggles) are stored in plaintext. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
+> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `shodan_api_key`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `whoisfreaks_api_key`, `leakcheck_api_key`, `dehashed_email`, `dehashed_api_key`, `firms_map_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings (paths, theme, font size and UI toggles) are stored in plaintext. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
 
 Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `mcpToggleButton`) to start/stop the built-in MCP server.
 
@@ -305,28 +306,55 @@ Google dorks from the `data/dorks.json` database (14 categories, ~7,944 dorks; `
 
 ### Web
 
-Full domain analysis — 16 steps (selected by checkboxes, progress `domainProgress`).
+The WEB tab is split into category sub-tabs. Each sub-tab has its own domain input, relevant checkboxes, and a start button (`Enter` in the domain input starts the same scan).
+
+**Infra** (`infraDomainEdit` + `runInfraScanButton`)
 
 | Checkbox | Panel | What it does |
 |---|---|---|
-| `domainRobotsCheck` | `serverRobotsDebug` | robots.txt |
 | `domainLocationCheck` | `serverLocationDebug` | IP + geolocation (ipapi.co, ip-api.com, ipinfo.io) |
-| `domainSSLCheck` | `serverTlsDebug` | SSL/TLS certificate (version, cipher, issuer, validity) |
 | `domainDNSCheck` | `serverDnsAnalyzeDebug` | DNS: A/MX/TXT/NS/CNAME/SOA + NS IP addresses + standard hosts |
-| `domainHeadersCheck` | `serverWafDebug` | HTTP headers, web server, WAF, technology stack |
-| `domainWhoisCheck` | `serverWhoisDebug` | WHOIS |
+| `domainSSLCheck` | `serverTlsDebug` | SSL/TLS certificate (version, cipher, issuer, validity) |
 | `domainNmapCheck` | `serverNmapDebug` | NMAP port scan 1-1024 (`--script=vuln`, requires system nmap) |
-| `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + ThreatFox + URLHaus, overall verdict |
-| `domainSubdomainsCheck` | `serverSubdomainsDebug` | Subdomains: DuckDuckGo + crt.sh + AlienVault OTX + HackerTarget + AnubisDB + DNS brute-force over a built-in top list |
-| `domainJsSecretsCheck` | `serverJsSecretsDebug` | JS Secrets: collect `<script src>`, scan up to 15 JS files for API keys/secrets/endpoints (23 regexes + keywords from GitHub search), secrets are redacted |
-| `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + ThreatFox + URLHaus with automatic domain-to-IP resolution |
+
+**Web** (`webSurfaceDomainEdit` + `runWebScanButton`)
+
+| Checkbox | Panel | What it does |
+|---|---|---|
+| `domainHeadersCheck` | `serverWafDebug` | HTTP headers, web server, WAF, technology stack |
 | `securityTxtCheck` | `securityTxtDebug` | `/.well-known/security.txt` |
 | `cookiesCheck` | `cookiesDebug` | Site cookies |
 | `socialTagsCheck` | `socialTagsDebug` | OpenGraph / Twitter meta tags |
+| `domainRobotsCheck` | `serverRobotsDebug` | robots.txt |
+| `domainJsSecretsCheck` | `serverJsSecretsDebug` | JS Secrets: collect `<script src>`, scan up to 15 JS files for API keys/secrets/endpoints (23 regexes + keywords from GitHub search), secrets are redacted |
+
+**Discovery** (`discoveryDomainEdit` + `runDiscoveryScanButton`)
+
+| Checkbox | Panel | What it does |
+|---|---|---|
+| `domainSubdomainsCheck` | `serverSubdomainsDebug` | Subdomains: DuckDuckGo + crt.sh + AlienVault OTX + HackerTarget + AnubisDB + DNS brute-force over a built-in top list |
 | `certTrCheck` | `certTrDebug` | Certificate Transparency via crt.sh |
 | `domainsOnIpCheck` | `domainsOnIpDebug` | Reverse lookup: domains on an IP (PTR, Shodan InternetDB, HackerTarget) |
 
-Additionally: `serverUrlEdit` + `runUrlScanButton` — specify a domain and run the analysis.
+**Security** (`securityDomainEdit` + `runSecurityScanButton`)
+
+| Checkbox | Panel | What it does |
+|---|---|---|
+| `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + IPGeolocation.io + ThreatFox + URLHaus, overall verdict |
+| `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + IPGeolocation.io + ThreatFox + URLHaus with automatic domain-to-IP resolution |
+
+**WHOIS** (`whoisDomainEdit` + `reverseWhoisQueryEdit` + `runWhoisAnalyze`) — WhoisFreaks WHOIS history, historical DNS, investigation timeline, reverse WHOIS, and basic WHOIS.
+
+| Control | Panel | What it does |
+|---|---|---|
+| `whoisDomainEdit` | — | Domain for WHOIS/DNS history and timeline (fallback: last resolved domain) |
+| `reverseWhoisQueryEdit` | — | `email:` / `company:` / `owner:` / `keyword:`; blank auto-pivots from WHOIS history/current WHOIS (max. 1 email + 1 company). Manual reverse queries can run without a domain. |
+| `domainWhoisCheck` | `serverWhoisDebug` | Basic WHOIS (python-whois) |
+| `runWhoisAnalyze` | `serverWhoisHistoryDebug` | WHOIS history via WhoisFreaks (optional key; 2 credits/lookup) |
+| `runWhoisAnalyze` | `serverReverseWhoisDebug` | Reverse WHOIS via WhoisFreaks (optional key; 5 credits/page) |
+| `runWhoisAnalyze` | `serverDomainTimelineDebug` | Chronological DNS+WHOIS timeline (observed snapshots + reported registration dates; triage context, not a verdict) |
+
+Pressing `Enter` in `whoisDomainEdit` or `reverseWhoisQueryEdit` starts WHOIS analysis.
 
 ### File Analyze
 
@@ -499,7 +527,7 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
   - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
   - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
-  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
+  - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, WHOIS history, reverse WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
   - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**;
   - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search, **Shodan Hosts**;
   - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
@@ -664,7 +692,7 @@ single undo step.
 
 ## MCP Servers
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 91 tools
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 93 tools
 
 FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Started/stopped from the Settings tab (MCP button) or via `McpController`.
 
@@ -672,7 +700,7 @@ FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Starte
 
 **Ollama (4):** list models, set/get model, set URL.
 
-**Domains (16):** ip, domains on IP, DNS, WHOIS, SSL, headers, web stack, nmap, WAF, reputation aggregator, threat intel, JS secrets, subdomains (passive + brute), robots.txt, security.txt, social tags.
+**Domains (18):** ip, domains on IP, DNS, WHOIS, WHOIS history, reverse WHOIS (email/company/owner/keyword), SSL, headers, web stack, nmap, WAF, reputation aggregator, threat intel, JS secrets, subdomains (passive + brute), robots.txt, security.txt, social tags.
 
 **Username (3):** Sherlock-like search (`skyfall_username_search`), maigret (`skyfall_maigret_search`), cross-check of both engines with match confirmation (`skyfall_username_merged`).
 
@@ -746,6 +774,7 @@ src/
   modules/                  — data collection (UI-independent)
     js_secrets.py           — JS scan for keys/secrets/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
+    whois_freaks.py         — WhoisFreaks WHOIS history + reverse WHOIS client
     email_accounts.py       — where the email is registered (Gravatar/Microsoft/… + holehe)
     social_search.py        — username search on Bluesky, Mastodon, Instagram
     shodan_search.py        — async Shodan API client (hosts, search, DNS, exploits, scans, alerts)
@@ -796,6 +825,7 @@ thirdparty/txfetch/         — vendored transaction search library
 | Shodan InternetDB / HackerTarget | domains on IP | no |
 | AbuseIPDB | IP reputation (threat intel, malware aggregator) | `abuseipdb_api_key` |
 | GreyNoise community | scanner background noise/RIOT (threat intel) | no (key is optional) |
+| WhoisFreaks | WHOIS history + reverse WHOIS (registrant pivots) | `whoisfreaks_api_key` |
 | ThreatFox (abuse.ch) | IOC check of IP/domain | no |
 | URLHaus (abuse.ch) | malicious URLs of a host | no |
 | AlienVault OTX | passive DNS → subdomains | no |

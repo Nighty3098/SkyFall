@@ -60,6 +60,8 @@ SENSITIVE_KEYS = frozenset(
         "helius_api_key",
         "abuseipdb_api_key",
         "greynoise_api_key",
+        "whoisfreaks_api_key",
+        "ipgeolocation_api_key",
         "leakcheck_api_key",
         "dehashed_email",
         "dehashed_api_key",

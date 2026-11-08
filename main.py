@@ -263,6 +263,8 @@ class MainWindow(QMainWindow):
             self.settings.ipinfo_api_key,
             getattr(self.settings, "abuseipdb_api_key", ""),
             getattr(self.settings, "greynoise_api_key", ""),
+            getattr(self.settings, "whoisfreaks_api_key", ""),
+            getattr(self.settings, "ipgeolocation_api_key", ""),
         )
         self.tgAnalyzer = TgAnalyzer()
         self.tgDownloader = TgDownloader(
@@ -315,6 +317,8 @@ class MainWindow(QMainWindow):
         self.domainAnalyzer.update_threat_keys(
             getattr(settings, "abuseipdb_api_key", ""),
             getattr(settings, "greynoise_api_key", ""),
+            getattr(settings, "whoisfreaks_api_key", ""),
+            getattr(settings, "ipgeolocation_api_key", ""),
         )
 
         self.mailSearchEngine.api_key = settings.intelligent_x_api_key

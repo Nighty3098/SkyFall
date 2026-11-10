@@ -60,6 +60,7 @@ class DomainAnalyzer:
         greynoise_api_key: str = "",
         whoisfreaks_api_key: str = "",
         ipgeolocation_api_key: str = "",
+        ip2locationio_api_key: str = "",
     ) -> None:
         logger.debug("Init: DomainAnalyzer")
         self.API_KEYS = {
@@ -70,6 +71,7 @@ class DomainAnalyzer:
             "GREYNOISE": greynoise_api_key or "",
             "WHOISFREAKS": whoisfreaks_api_key or "",
             "IPGEOLOCATION": ipgeolocation_api_key or "",
+            "IP2LOCATIONIO": ip2locationio_api_key or "",
         }
         self.ua = UserAgent()
 
@@ -79,11 +81,13 @@ class DomainAnalyzer:
         greynoise_api_key="",
         whoisfreaks_api_key="",
         ipgeolocation_api_key="",
+        ip2locationio_api_key="",
     ):
         self.API_KEYS["ABUSEIPDB"] = abuseipdb_api_key or ""
         self.API_KEYS["GREYNOISE"] = greynoise_api_key or ""
         self.API_KEYS["WHOISFREAKS"] = whoisfreaks_api_key or ""
         self.API_KEYS["IPGEOLOCATION"] = ipgeolocation_api_key or ""
+        self.API_KEYS["IP2LOCATIONIO"] = ip2locationio_api_key or ""
 
     @staticmethod
     def _normalize_host(value):
@@ -185,6 +189,113 @@ class DomainAnalyzer:
             logger.error(f"Robots.txt: Error: {e}")
             return {"domain": domain, "error": str(e)}
 
+    @staticmethod
+    def _geo_consensus(results):
+        """Return ``(consensus, confidence)`` from multiple geo providers.
+
+        Country is compared by ISO code when available (provider names differ,
+        e.g. "United States" vs "United States of America"); city and ASN are
+        compared after light normalisation.  A value is only considered
+        consensus when at least two providers agree.
+        """
+
+        def _norm(value):
+            return " ".join(str(value).strip().lower().split()) if value else ""
+
+        def _country_key(result):
+            return _norm(result.get("country_code")) or _norm(result.get("country"))
+
+        def _asn_key(result):
+            raw = _norm(result.get("asn"))
+            if raw.startswith("as"):
+                raw = raw[2:].strip()
+            return raw.split(" ", 1)[0]
+
+        specs = {
+            "country": (_country_key, lambda result: result.get("country")),
+            "city": (
+                lambda result: _norm(result.get("city")),
+                lambda result: result.get("city"),
+            ),
+            "asn": (_asn_key, lambda result: result.get("asn")),
+        }
+
+        consensus = {}
+        total = len(results)
+        for field, (key_fn, display_fn) in specs.items():
+            counts = {}
+            display = {}
+            for result in results:
+                key = key_fn(result)
+                if not key:
+                    continue
+                counts[key] = counts.get(key, 0) + 1
+                display.setdefault(key, display_fn(result))
+            if not counts:
+                continue
+            key, count = max(counts.items(), key=lambda item: item[1])
+            if count >= 2:
+                consensus[field] = display.get(key)
+                consensus[f"{field}_agreement"] = f"{count}/{total}"
+
+        if "country" in consensus and "city" in consensus:
+            confidence = "high"
+        elif "country" in consensus:
+            confidence = "medium"
+        else:
+            confidence = "low"
+        consensus["providers"] = total
+        return consensus, confidence
+
+    @staticmethod
+    def _geo_summary(result):
+        """Compact provider entry used in the multi-provider result."""
+        keys = (
+            "provider",
+            "country",
+            "country_code",
+            "region",
+            "city",
+            "asn",
+            "lat",
+            "lon",
+            "usage_type",
+        )
+        summary = {key: result.get(key) for key in keys if result.get(key)}
+        if "is_proxy" in result:
+            summary["is_proxy"] = result["is_proxy"]
+        return summary
+
+    async def _fetch_geo_provider(self, provider):
+        try:
+            response = await asyncio.to_thread(
+                requests.get, provider["url"], timeout=4
+            )
+            if response.status_code != 200:
+                return None, f"Error {provider['url']}: HTTP {response.status_code}"
+            data = response.json()
+            if not isinstance(data, dict) or data.get("status") == "fail":
+                return None, f"Error {provider['url']}: bad response"
+            return provider["parser"](data), None
+        except Exception as err:
+            logger.error(f"Error {provider['url']}: {err}")
+            return None, f"Error {provider['url']}: {err}"
+
+    async def _fetch_ip2location(self, ip):
+        try:
+            from src.modules.ip2location_io import IP2LocationIO
+
+            result = await IP2LocationIO(
+                self.API_KEYS.get("IP2LOCATIONIO", "")
+            ).lookup(ip)
+            if result.get("status") in ("ERROR", "SKIPPED"):
+                return None, f"Error IP2Location.io: {result.get('note', '')}"
+            result["provider"] = "IP2Location.io"
+            return result, None
+        except Exception as err:
+            logger.error(f"Error IP2Location.io: {err}")
+            return None, f"Error IP2Location.io: {err}"
+
     async def get_ip_and_location(self, domain):
         logger.debug("Trying to get IP and location")
         ips = await self._resolve_ips(domain)
@@ -206,6 +317,7 @@ class DomainAnalyzer:
                 "parser": lambda res: {
                     "ip": ip,
                     "country": res.get("country_name"),
+                    "country_code": res.get("country_code"),
                     "city": res.get("city"),
                     "asn": res.get("org"),
                     "lat": res.get("latitude"),
@@ -218,6 +330,7 @@ class DomainAnalyzer:
                 "parser": lambda res: {
                     "ip": ip,
                     "country": res.get("country"),
+                    "country_code": res.get("countryCode"),
                     "city": res.get("city"),
                     "asn": res.get("as"),
                     "lat": res.get("lat"),
@@ -239,29 +352,43 @@ class DomainAnalyzer:
             },
         ]
 
-        errors = []
-        for provider in providers:
-            try:
-                response = await asyncio.to_thread(
-                    requests.get, provider["url"], timeout=4
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    if data.get("status") == "fail":
-                        continue
-                    result = provider["parser"](data)
-                    result["all_ips"] = all_ips
-                    return result
-            except Exception as err:
-                logger.error(f"Error {provider['url']}: {err}")
-                errors.append(f"Error {provider['url']}: {err}")
+        fetched = await asyncio.gather(
+            *(self._fetch_geo_provider(provider) for provider in providers),
+            self._fetch_ip2location(ip),
+        )
 
-        return {
-            "ip": ip,
-            "all_ips": all_ips,
-            "error": "GEO Error.",
-            "details": errors,
-        }
+        results = []
+        errors = []
+        for result, error in fetched:
+            if result:
+                results.append(result)
+            if error:
+                errors.append(error)
+
+        if not results:
+            return {
+                "ip": ip,
+                "all_ips": all_ips,
+                "error": "GEO Error.",
+                "details": errors,
+            }
+
+        primary = dict(results[0])
+        consensus, confidence = self._geo_consensus(results)
+        primary["all_ips"] = all_ips
+        primary["sources"] = [r.get("provider", "?") for r in results]
+        primary["providers"] = [self._geo_summary(r) for r in results]
+        primary["consensus"] = consensus
+        primary["confidence"] = confidence
+        # Prefer agreed values for the headline fields while keeping the
+        # provider-specific latitude/longitude untouched.
+        if consensus.get("country"):
+            primary["country"] = consensus["country"]
+        if consensus.get("city"):
+            primary["city"] = consensus["city"]
+        if errors:
+            primary["provider_errors"] = errors
+        return primary
 
     async def get_domains_on_ip(self, ip):
         logger.debug(f"Trying to find domains on IP: {ip}")
@@ -650,6 +777,45 @@ class DomainAnalyzer:
                 "note": str(e)[:200],
             }
 
+    async def check_ip2location(self, target):
+        """Look up an IP (or resolve a host) with IP2Location.io."""
+        logger.debug("Trying to get IP2Location.io data")
+        target = (
+            (target or "")
+            .strip()
+            .lower()
+            .removeprefix("http://")
+            .removeprefix("https://")
+            .split("/")[0]
+        )
+        try:
+            import ipaddress
+
+            ip = str(ipaddress.ip_address(target))
+        except ValueError:
+            try:
+                ip = await asyncio.to_thread(socket.gethostbyname, target)
+            except Exception as e:
+                return {
+                    "source": "IP2Location.io",
+                    "status": "SKIPPED",
+                    "note": f"Could not resolve host: {e}",
+                }
+
+        try:
+            from src.modules.ip2location_io import IP2LocationIO
+
+            return await IP2LocationIO(
+                self.API_KEYS.get("IP2LOCATIONIO", "")
+            ).lookup(ip)
+        except Exception as e:
+            logger.debug(f"IP2Location.io check failed for {target}: {e}")
+            return {
+                "source": "IP2Location.io",
+                "status": "ERROR",
+                "note": str(e)[:200],
+            }
+
     async def run_nmap_scan(self, domain, ports="1-1024"):
         logger.debug("Trying to get nmap info")
         try:
@@ -822,6 +988,7 @@ class DomainAnalyzer:
             abuseipdb_api_key=self.API_KEYS.get("ABUSEIPDB", ""),
             greynoise_api_key=self.API_KEYS.get("GREYNOISE", ""),
             ipgeolocation_api_key=self.API_KEYS.get("IPGEOLOCATION", ""),
+            ip2locationio_api_key=self.API_KEYS.get("IP2LOCATIONIO", ""),
         )
         return await ti.aggregate(target, resolved_ip=resolved_ip)
 

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.ui.output_formatter import info, render, set_output
+from src.ui.output_formatter import info, kv, render, set_output
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -224,6 +224,99 @@ class DomainController:
                 except Exception as e:
                     logger.warning(f"Threat intel check failed: {e}")
                     set_output(dbg, info(f"Threat intel check failed: {e}"))
+
+        if self._is_checked("domainIP2LocationCheck"):
+            geo_dbg = self._debug("ip2locationGeoDebug")
+            net_dbg = self._debug("ip2locationNetworkDebug")
+            threat_dbg = self._debug("ip2locationThreatDebug")
+            debug_widgets = [
+                widget
+                for widget in (geo_dbg, net_dbg, threat_dbg)
+                if widget is not None
+            ]
+            if debug_widgets:
+                for dbg in debug_widgets:
+                    set_output(dbg, info("Loading..."))
+                try:
+                    result = await self.domain_analyzer.check_ip2location(domain)
+                    geo_text, net_text, threat_text = self._ip2location_blocks(result)
+                    for dbg, text in (
+                        (geo_dbg, geo_text),
+                        (net_dbg, net_text),
+                        (threat_dbg, threat_text),
+                    ):
+                        if dbg is not None:
+                            set_output(dbg, text)
+                except Exception as e:
+                    logger.warning(f"IP2Location.io check failed: {e}")
+                    for dbg in debug_widgets:
+                        set_output(dbg, info(f"IP2Location.io check failed: {e}"))
+
+    @staticmethod
+    def _ip2location_blocks(result):
+        """Split an IP2Location.io result into the three labelled UI blocks."""
+        if not isinstance(result, dict):
+            text = render(result)
+            return text, text, text
+        if result.get("status") in ("ERROR", "SKIPPED"):
+            text = info(result.get("note", "IP2Location.io unavailable"))
+            return text, text, text
+
+        def _block(pairs):
+            lines = []
+            for label, value in pairs:
+                if value in (None, "", [], {}):
+                    continue
+                if isinstance(value, (list, tuple)):
+                    value = ", ".join(str(item) for item in value)
+                lines.append(kv(label, value))
+            return "\n".join(lines)
+
+        geo = _block(
+            [
+                ("IP", result.get("ip")),
+                ("Country", result.get("")),
+                ("Country code", result.get("")),
+                ("Region", result.get("")),
+                ("City", result.get("")),
+                ("ZIP", result.get("")),
+                ("Timezone", result.get("")),
+                ("Latitude", result.get("")),
+                ("Longitude", result.get("")),
+            ]
+        )
+        network = _block(
+            [
+                ("ASN", result.get("asn")),
+                ("AS", result.get("as")),
+                ("ISP", result.get("isp")),
+                ("Domain", result.get("domain")),
+                ("Usage type", result.get("usage_type")),
+            ]
+        )
+        flags = [
+            label
+            for key, label in (
+                ("is_proxy", "Proxy"),
+                ("is_vpn", "VPN"),
+                ("is_tor", "Tor"),
+                ("is_data_center", "Data center"),
+                ("is_residential_proxy", "Residential proxy"),
+            )
+            if result.get(key)
+        ]
+        threat = _block(
+            [
+                ("Status", result.get("status")),
+                ("Fraud score", result.get("fraud_score")),
+                ("Flags", ", ".join(flags) if flags else "none"),
+                ("Reasons", result.get("reasons")),
+                ("Mode", "keyless (1,000 queries/day)"
+                 if result.get("keyless") else "API key"),
+                ("Note", result.get("note")),
+            ]
+        )
+        return geo, network, threat
 
     async def analyze_whois(self, domain=None):
         """WHOIS/Registration tab: basic WHOIS + history + DNS + timeline + reverse."""

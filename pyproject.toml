@@ -66,6 +66,7 @@ files = [
     "src/modules/google_dorks.py",
     "src/modules/graph_io.py",
     "src/modules/graph_layout.py",
+    "src/modules/ip2location_io.py",
     "src/modules/ipgeolocation_security.py",
     "src/modules/js_secrets.py",
     "src/modules/leak_search.py",

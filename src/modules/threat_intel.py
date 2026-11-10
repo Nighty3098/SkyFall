@@ -15,12 +15,17 @@ def is_ip(value):
 
 class ThreatIntel:
     def __init__(
-        self, abuseipdb_api_key="", greynoise_api_key="", ipgeolocation_api_key=""
+        self,
+        abuseipdb_api_key="",
+        greynoise_api_key="",
+        ipgeolocation_api_key="",
+        ip2locationio_api_key="",
     ):
         logger.debug("Init: ThreatIntel")
         self.abuseipdb_api_key = (abuseipdb_api_key or "").strip()
         self.greynoise_api_key = (greynoise_api_key or "").strip()
         self.ipgeolocation_api_key = (ipgeolocation_api_key or "").strip()
+        self.ip2locationio_api_key = (ip2locationio_api_key or "").strip()
 
     async def check_ipgeolocation(self, ip):
         logger.debug("Trying to check IPGeolocation security")
@@ -31,6 +36,16 @@ class ThreatIntel:
         except Exception as e:
             logger.debug(f"IPGeolocation failed for {ip}: {e}")
             return {"source": "IPGeolocation", "status": "ERROR", "note": str(e)[:200]}
+
+    async def check_ip2location(self, ip):
+        logger.debug("Trying to check IP2Location.io")
+        try:
+            from src.modules.ip2location_io import IP2LocationIO
+
+            return await IP2LocationIO(self.ip2locationio_api_key).lookup(ip)
+        except Exception as e:
+            logger.debug(f"IP2Location.io failed for {ip}: {e}")
+            return {"source": "IP2Location.io", "status": "ERROR", "note": str(e)[:200]}
 
     async def check_abuseipdb(self, ip):
         logger.debug("Trying to check AbuseIPDB")
@@ -245,12 +260,13 @@ class ThreatIntel:
         ip = resolved_ip or (target if is_ip(target) else "")
         results = []
         if ip and is_ip(ip):
-            ab, gn, ig = await asyncio.gather(
+            ab, gn, ig, i2l = await asyncio.gather(
                 self.check_abuseipdb(ip),
                 self.check_greynoise(ip),
                 self.check_ipgeolocation(ip),
+                self.check_ip2location(ip),
             )
-            results += [ab, gn, ig]
+            results += [ab, gn, ig, i2l]
             results.append(await self.check_threatfox(ip))
         else:
             results.append(
@@ -270,6 +286,13 @@ class ThreatIntel:
             results.append(
                 {
                     "source": "IPGeolocation",
+                    "status": "SKIPPED",
+                    "note": "IP-only source, resolve domain first",
+                }
+            )
+            results.append(
+                {
+                    "source": "IP2Location.io",
                     "status": "SKIPPED",
                     "note": "IP-only source, resolve domain first",
                 }

@@ -2724,6 +2724,145 @@
                    </property>
                   </widget>
                </item>
+               <item row="3" column="0" colspan="2">
+                  <widget class="QCheckBox" name="domainIP2LocationCheck">
+                   <property name="text">
+                    <string>IP2Location.io (geolocation, ASN, proxy/fraud)</string>
+                   </property>
+                   <property name="checked">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+               </item>
+               <item row="4" column="0" colspan="2">
+                  <widget class="QGroupBox" name="ip2locationGeoGroup">
+                   <property name="title">
+                    <string>IP2Location.io — Geolocation</string>
+                   </property>
+                   <layout class="QVBoxLayout" name="ip2locationGeoLayout">
+                    <property name="spacing">
+                     <number>4</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QTextBrowser" name="ip2locationGeoDebug">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>70</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="placeholderText">
+                       <string></string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+               </item>
+               <item row="5" column="0" colspan="2">
+                  <widget class="QGroupBox" name="ip2locationNetworkGroup">
+                   <property name="title">
+                    <string>IP2Location.io — Network / ASN</string>
+                   </property>
+                   <layout class="QVBoxLayout" name="ip2locationNetworkLayout">
+                    <property name="spacing">
+                     <number>4</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QTextBrowser" name="ip2locationNetworkDebug">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>70</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="placeholderText">
+                       <string></string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+               </item>
+               <item row="6" column="0" colspan="2">
+                  <widget class="QGroupBox" name="ip2locationThreatGroup">
+                   <property name="title">
+                    <string>IP2Location.io — Proxy / Fraud</string>
+                   </property>
+                   <layout class="QVBoxLayout" name="ip2locationThreatLayout">
+                    <property name="spacing">
+                     <number>4</number>
+                    </property>
+                    <property name="leftMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="topMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="rightMargin">
+                     <number>0</number>
+                    </property>
+                    <property name="bottomMargin">
+                     <number>0</number>
+                    </property>
+                    <item>
+                     <widget class="QTextBrowser" name="ip2locationThreatDebug">
+                      <property name="minimumSize">
+                       <size>
+                        <width>0</width>
+                        <height>70</height>
+                       </size>
+                      </property>
+                      <property name="maximumSize">
+                       <size>
+                        <width>16777215</width>
+                        <height>16777215</height>
+                       </size>
+                      </property>
+                      <property name="placeholderText">
+                       <string></string>
+                      </property>
+                     </widget>
+                    </item>
+                   </layout>
+                  </widget>
+               </item>
              </layout>
             </widget>
             <widget class="QWidget" name="webWhoisTab">
@@ -5435,6 +5574,13 @@
                    <widget class="QLineEdit" name="ipgeolocationApiKeyEdit">
                     <property name="placeholderText">
                      <string>IPGeolocation.io API Key (optional, IP security/threat score)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
+                   <widget class="QLineEdit" name="ip2locationioApiKeyEdit">
+                    <property name="placeholderText">
+                     <string>IP2Location.io API Key (optional, 50k/month; keyless 1k/day)</string>
                     </property>
                    </widget>
                   </item>

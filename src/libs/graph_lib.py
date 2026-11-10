@@ -863,13 +863,13 @@ class NodeItem(QGraphicsItem):
         painter.save()
         painter.setClipPath(clip)
         band = QColor(type_color)
-        band.setAlpha(64 if custom is not None else 44)
+        band.setAlpha(0)
         painter.fillRect(QRectF(rect.left(), rect.top(), rect.width(), header_h), band)
         painter.restore()
 
         # Accent line under the header.
         accent = QColor(type_color)
-        accent.setAlpha(235 if (selected or hovered) else 175)
+        accent.setAlpha(0)
         painter.setPen(QPen(accent, 2))
         painter.drawLine(
             QPointF(rect.left() + 1, rect.top() + header_h),
@@ -883,11 +883,13 @@ class NodeItem(QGraphicsItem):
             border_w = 2.0
         elif hovered:
             border = QColor(type_color)
-            border.setAlpha(150)
+            border.setAlpha(255)
             border_w = 2.0
         else:
-            border = QColor(border_color)
-            border_w = 1.0
+            border = QColor(type_color)
+            border.setAlpha(255)
+            border_w = 2.0
+
         painter.setBrush(Qt.BrushStyle.NoBrush)
         painter.setPen(QPen(border, border_w))
         painter.drawRoundedRect(
@@ -900,8 +902,7 @@ class NodeItem(QGraphicsItem):
         chip_r = min(10.0, header_h / 2 - 2)
         chip_c = QPointF(rect.left() + 15, rect.top() + header_h / 2)
         chip_bg = QColor(type_color)
-        chip_bg.setAlpha(70)
-        painter.setBrush(QBrush(chip_bg))
+        chip_bg.setAlpha(255)
         painter.setPen(QPen(accent, 1))
         painter.drawEllipse(chip_c, chip_r, chip_r)
         painter.setPen(QPen(QColor(type_color)))
@@ -920,18 +921,19 @@ class NodeItem(QGraphicsItem):
         # Title + entity type caption.
         title_left = rect.left() + 30
         title_right = rect.right() - 10
-        if selected or hovered:
-            type_text = self.entity_type.upper()
-            painter.setFont(_ui_font(7, bold=True))
-            fm = painter.fontMetrics()
-            type_w = min(fm.horizontalAdvance(type_text), rect.width() * 0.5)
-            painter.setPen(QPen(accent))
-            painter.drawText(
-                QRectF(title_right - type_w, rect.top(), type_w, header_h),
-                Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
-                type_text,
-            )
-            title_right -= type_w + 8
+
+        type_text = self.entity_type.upper()
+        painter.setFont(_ui_font(7, bold=True))
+        fm = painter.fontMetrics()
+        type_w = min(fm.horizontalAdvance(type_text), rect.width() * 0.5)
+        painter.setPen(QPen(title_color))
+        painter.drawText(
+            QRectF(title_right - type_w, rect.top(), type_w, header_h),
+            Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter,
+            type_text,
+        )
+        title_right -= type_w + 8
+        
         title_rect = QRectF(
             title_left,
             rect.top(),
@@ -1027,17 +1029,21 @@ class NodeItem(QGraphicsItem):
         # Ports stay subtle until the node is hovered or selected.
         port_alpha = 235 if (selected or hovered) else 80
         port_color = QColor(type_color)
-        port_color.setAlpha(port_alpha)
+        port_color.setAlpha(255)
         painter.setPen(Qt.PenStyle.NoPen)
         painter.setBrush(QBrush(port_color))
         for _, pos in self._ports().items():
             painter.drawEllipse(pos, self._port_radius - 1, self._port_radius - 1)
 
         if selected:
-            hr = self._resize_handle_rect().adjusted(3, 3, -3, -3)
-            painter.setBrush(QBrush(type_color))
-            painter.setPen(QPen(type_color, 1))
-            painter.drawRoundedRect(hr, 3, 3)
+            hr = self._resize_handle_rect()
+            center = hr.center()
+            radius = min(hr.width(), hr.height()) / 2.0
+            fill = QColor(c["port_color"])
+            fill.setAlpha(80)
+            painter.setBrush(QBrush(fill))
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.drawEllipse(center, radius, radius)
 
     @staticmethod
     def _draw_wrapped(painter, text, rect):

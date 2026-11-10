@@ -33,6 +33,7 @@ class DomainController:
         self.domain = ""
         self._whois_cache = None
         self._whois_cache_domain = ""
+        self._ip2location_cache = {}
 
     def set_domain(self, domain):
         self.domain = (domain or "").strip()
@@ -67,7 +68,7 @@ class DomainController:
         await self.analyze_infra(domain=self.domain)
         await self.analyze_web_surface(domain=self.domain)
         await self.analyze_discovery(domain=self.domain)
-        await self.analyze_security(domain=self.domain)
+        await self.analyze_security(domain=self.domain, reuse_ip2location=True)
         await self.analyze_whois(domain=self.domain)
         if progress is not None:
             progress.setValue(100)
@@ -105,6 +106,28 @@ class DomainController:
                 set_output(dbg, info("Loading..."))
                 result = await self.domain_analyzer.run_nmap_scan(domain)
                 set_output(dbg, render(result))
+
+        if self._is_checked("domainIP2LocationGeoCheck"):
+            dbg = self._debug("ip2locationGeoDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                try:
+                    result = await self._ip2location_result(domain)
+                    geo_text, _, _ = self._ip2location_blocks(result)
+                    set_output(dbg, geo_text)
+                except Exception as e:
+                    logger.warning(f"IP2Location.io geolocation check failed: {e}")
+                    set_output(
+                        dbg, info(f"IP2Location.io geolocation check failed: {e}")
+                    )
+
+    async def _ip2location_result(self, domain, *, refresh=True):
+        """Fetch IP2Location.io once per domain and reuse it across tabs."""
+        if not refresh and domain in self._ip2location_cache:
+            return self._ip2location_cache[domain]
+        result = await self.domain_analyzer.check_ip2location(domain)
+        self._ip2location_cache[domain] = result
+        return result
 
     async def _run_js_secrets(self, domain):
         dbg = self._debug("serverJsSecretsDebug")
@@ -201,7 +224,7 @@ class DomainController:
                     result = await self.domain_analyzer.get_domains_on_ip(ip)
                     set_output(dbg, render(result))
 
-    async def analyze_security(self, domain=None):
+    async def analyze_security(self, domain=None, *, reuse_ip2location=False):
         domain = (domain or self._resolve_domain("securityDomainEdit") or "").strip()
         if not domain:
             return
@@ -226,22 +249,22 @@ class DomainController:
                     set_output(dbg, info(f"Threat intel check failed: {e}"))
 
         if self._is_checked("domainIP2LocationCheck"):
-            geo_dbg = self._debug("ip2locationGeoDebug")
             net_dbg = self._debug("ip2locationNetworkDebug")
             threat_dbg = self._debug("ip2locationThreatDebug")
             debug_widgets = [
                 widget
-                for widget in (geo_dbg, net_dbg, threat_dbg)
+                for widget in (net_dbg, threat_dbg)
                 if widget is not None
             ]
             if debug_widgets:
                 for dbg in debug_widgets:
                     set_output(dbg, info("Loading..."))
                 try:
-                    result = await self.domain_analyzer.check_ip2location(domain)
-                    geo_text, net_text, threat_text = self._ip2location_blocks(result)
+                    result = await self._ip2location_result(
+                        domain, refresh=not reuse_ip2location
+                    )
+                    _, net_text, threat_text = self._ip2location_blocks(result)
                     for dbg, text in (
-                        (geo_dbg, geo_text),
                         (net_dbg, net_text),
                         (threat_dbg, threat_text),
                     ):
@@ -275,16 +298,17 @@ class DomainController:
         geo = _block(
             [
                 ("IP", result.get("ip")),
-                ("Country", result.get("")),
-                ("Country code", result.get("")),
-                ("Region", result.get("")),
-                ("City", result.get("")),
-                ("ZIP", result.get("")),
-                ("Timezone", result.get("")),
-                ("Latitude", result.get("")),
-                ("Longitude", result.get("")),
+                ("Country", result.get("country_name")),
+                ("Country code", result.get("country_code")),
+                ("Region", result.get("region_name")),
+                ("City", result.get("city_name")),
+                ("ZIP", result.get("zip_code")),
+                ("Timezone", result.get("time_zone")),
+                ("Latitude", result.get("latitude")),
+                ("Longitude", result.get("longitude")),
             ]
         )
+
         network = _block(
             [
                 ("ASN", result.get("asn")),
@@ -294,6 +318,8 @@ class DomainController:
                 ("Usage type", result.get("usage_type")),
             ]
         )
+
+        proxy_info = result.get("proxy") or {}
         flags = [
             label
             for key, label in (
@@ -303,19 +329,19 @@ class DomainController:
                 ("is_data_center", "Data center"),
                 ("is_residential_proxy", "Residential proxy"),
             )
-            if result.get(key)
+            if (result.get(key) if key == "is_proxy" else proxy_info.get(key))
         ]
+
         threat = _block(
             [
-                ("Status", result.get("status")),
                 ("Fraud score", result.get("fraud_score")),
                 ("Flags", ", ".join(flags) if flags else "none"),
-                ("Reasons", result.get("reasons")),
-                ("Mode", "keyless (1,000 queries/day)"
-                 if result.get("keyless") else "API key"),
-                ("Note", result.get("note")),
+                ("Proxy type", proxy_info.get("proxy_type")),
+                ("Threat", proxy_info.get("threat")),
+                ("Provider", proxy_info.get("provider")),
             ]
         )
+
         return geo, network, threat
 
     async def analyze_whois(self, domain=None):

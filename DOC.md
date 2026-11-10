@@ -314,10 +314,11 @@ The WEB tab is split into category sub-tabs. Each sub-tab has its own domain inp
 
 | Checkbox | Panel | What it does |
 |---|---|---|
-| `domainLocationCheck` | `serverLocationDebug` | IP + geolocation (ipapi.co, ip-api.com, ipinfo.io) |
+| `domainLocationCheck` | `serverLocationDebug` | IP + geolocation (ipapi.co, ip-api.com, ipinfo.io, IP2Location.io) with provider consensus |
 | `domainDNSCheck` | `serverDnsAnalyzeDebug` | DNS: A/MX/TXT/NS/CNAME/SOA + NS IP addresses + standard hosts |
 | `domainSSLCheck` | `serverTlsDebug` | SSL/TLS certificate (version, cipher, issuer, validity) |
 | `domainNmapCheck` | `serverNmapDebug` | NMAP port scan 1-1024 (`--script=vuln`, requires system nmap) |
+| `domainIP2LocationGeoCheck` | `ip2locationGeoDebug` | IP2Location.io geolocation block (country, region, city, ZIP, timezone, coordinates; optional key, keyless works) |
 
 **Web** (`webSurfaceDomainEdit` + `runWebScanButton`)
 
@@ -344,7 +345,7 @@ The WEB tab is split into category sub-tabs. Each sub-tab has its own domain inp
 |---|---|---|
 | `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + IPGeolocation.io + IP2Location.io + ThreatFox + URLHaus, overall verdict |
 | `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + IPGeolocation.io + IP2Location.io + ThreatFox + URLHaus with automatic domain-to-IP resolution |
-| `domainIP2LocationCheck` | `ip2locationGeoDebug`, `ip2locationNetworkDebug`, `ip2locationThreatDebug` | IP2Location.io in three labelled blocks: geolocation, network/ASN and proxy/fraud (optional key; keyless works) |
+| `domainIP2LocationCheck` | `ip2locationNetworkDebug`, `ip2locationThreatDebug` | IP2Location.io network/ASN and proxy/fraud blocks (the geolocation block lives on the Infra tab; optional key, keyless works) |
 
 **WHOIS** (`whoisDomainEdit` + `reverseWhoisQueryEdit` + `runWhoisAnalyze`) — WhoisFreaks WHOIS history, historical DNS, investigation timeline, reverse WHOIS, and basic WHOIS.
 
@@ -818,7 +819,7 @@ thirdparty/txfetch/         — vendored transaction search library
 | VirusTotal API v3 | domains, files | `virustotal_api_key` |
 | Google Safe Browsing | domain reputation | `google_safe_api_key` |
 | ipinfo.io / ipapi.co / ip-api.com | IP geolocation (multi-provider consensus) | ipinfo — optional |
-| IP2Location.io | IP geolocation, ASN, proxy/fraud signals (threat intel, Security tab, email origin IP, graph) | optional (keyless 1,000/day; free key 50,000/month) |
+| IP2Location.io | IP geolocation, ASN, proxy/fraud signals (threat intel, Infra/Security tabs, email origin IP, graph) | optional (keyless 1,000/day; free key 50,000/month) |
 | GitHub REST API | search | `github_token` |
 | Shodan API | hosts, search, DNS, exploits, scans, alerts | `shodan_api_key` |
 | NumVerify / AbstractAPI | phones | `numverify` / `abstractapi` |

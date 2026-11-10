@@ -125,8 +125,8 @@ class ControllerBlocksTest(unittest.TestCase):
             {
                 "ip": "8.8.8.8",
                 "status": "SUSPICIOUS",
-                "country": "United States",
-                "city": "Mountain View",
+                "country_name": "United States",
+                "city_name": "Mountain View",
                 "asn": "15169",
                 "as": "Google LLC",
                 "isp": "Google LLC",
@@ -141,7 +141,7 @@ class ControllerBlocksTest(unittest.TestCase):
         self.assertIn("15169", network)
         self.assertIn("Proxy", threat)
         self.assertIn("Fraud score", threat)
-        self.assertIn("keyless", threat)
+        self.assertIn("Flags", threat)
 
     def test_error_is_repeated_in_every_block(self):
         blocks = DomainController._ip2location_blocks(

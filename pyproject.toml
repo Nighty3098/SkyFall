@@ -11,7 +11,7 @@ files = [
     "resources/IosevkaCharonMono-Regular.ttf",
     "resources/app_icon.png",
     "resources/app_icon.svg",
-    "resources/banner.png",
+    "resources/banner.webp",
     "resources/form.ui",
     "resources/file_drop.svg",
     "resources/icon.png",

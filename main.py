@@ -6,7 +6,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent / "thirdparty" / "txfetch"))
 
 from loguru import logger
-from PySide6.QtCore import QEvent, Qt
+from PySide6.QtCore import QEvent, Qt, QTimer
 from PySide6.QtGui import QFontDatabase
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWebEngineWidgets import QWebEngineView
@@ -181,6 +181,78 @@ class MainWindow(QMainWindow):
         self.init_font(resources_dir / "Caveat-VariableFont_wght.ttf")
         self.init_font(resources_dir / "IosevkaCharonMono-Regular.ttf")
         self.init_font(resources_dir / "BebasNeue-Regular.ttf")
+
+        self._fit_to_screen()
+
+    def _fit_to_screen(self):
+        # Defer until the layout has calculated the real size hints.
+        QTimer.singleShot(0, self._do_fit_to_screen)
+
+    def _apply_screen_limits(self):
+        """Constrain the window to the current screen (windowed mode only).
+
+        Returns the screen's available geometry, or None when no screen is
+        available.
+        """
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is None:
+            return None
+
+        available = screen.availableGeometry()
+        minimum = self.minimumSizeHint()
+
+        # The layout minimum can be wider than the screen (e.g. macOS with
+        # display scaling), and then the window manager keeps the window wider
+        # than the display. An explicit minimum lets it shrink to fit; resetting
+        # it to 0 keeps the layout-driven minimum on larger screens.
+        if minimum.width() > available.width() or minimum.height() > available.height():
+            self.setMinimumSize(
+                min(minimum.width(), available.width()),
+                min(minimum.height(), available.height()),
+            )
+        else:
+            self.setMinimumSize(0, 0)
+
+        self.setMaximumSize(available.width(), available.height())
+        return available
+
+    def _do_fit_to_screen(self):
+        if self.isFullScreen():
+            return
+
+        available = self._apply_screen_limits()
+        if available is None:
+            return
+
+        # Maximized/minimized windows are positioned by the window manager.
+        if self.isMaximized() or self.isMinimized():
+            return
+
+        minimum = self.minimumSizeHint()
+        size_hint = self.sizeHint()
+
+        # Fit the window into the screen, never exceeding the available area.
+        width = min(size_hint.width(), available.width())
+        height = min(size_hint.height(), available.height())
+        width = max(width, min(minimum.width(), available.width()))
+        height = max(height, min(minimum.height(), available.height()))
+
+        self.resize(width, height)
+
+        frame = self.frameGeometry()
+        frame.moveCenter(available.center())
+        self.move(frame.topLeft())
+
+    def changeEvent(self, event):
+        # Track fullscreen transitions: macOS needs the size limits lifted so
+        # the window manager can take over the screen, and re-applied on exit.
+        if event.type() == QEvent.Type.WindowStateChange:
+            if self.isFullScreen():
+                self.setMaximumSize(16777215, 16777215)  # QWIDGETSIZE_MAX
+            else:
+                self._apply_screen_limits()
+
+        super().changeEvent(event)
 
     def init_font(self, font_path: Path):
         font_id = QFontDatabase.addApplicationFont(str(font_path))

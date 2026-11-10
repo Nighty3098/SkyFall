@@ -223,9 +223,7 @@ class AnalyzeIP2LocationTabsTest(unittest.IsolatedAsyncioTestCase):
         await controller.analyze_infra()
         await controller.analyze_security(reuse_ip2location=True)
 
-        self.assertEqual(
-            [call[0] for call in analyzer.calls].count("ip2location"), 1
-        )
+        self.assertEqual([call[0] for call in analyzer.calls].count("ip2location"), 1)
         self.assertIn("15169", ui.ip2locationNetworkDebug.text)
         self.assertIn("CLEAN", ui.ip2locationThreatDebug.text)
 
@@ -236,9 +234,7 @@ class AnalyzeIP2LocationTabsTest(unittest.IsolatedAsyncioTestCase):
         await controller.analyze_infra()
         await controller.analyze_security()
 
-        self.assertEqual(
-            [call[0] for call in analyzer.calls].count("ip2location"), 2
-        )
+        self.assertEqual([call[0] for call in analyzer.calls].count("ip2location"), 2)
 
 
 if __name__ == "__main__":

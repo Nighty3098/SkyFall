@@ -285,9 +285,7 @@ class MainWindow(QMainWindow):
             self.settings.hibp_api_key,
         )
         self.emailHeaderAnalyzer = EmailHeaderAnalyzer(
-            ip2locationio_api_key=getattr(
-                self.settings, "ip2locationio_api_key", ""
-            )
+            ip2locationio_api_key=getattr(self.settings, "ip2locationio_api_key", "")
         )
         self.emailAccounts = EmailAccounts()
         self.socialSearch = SocialSearch()

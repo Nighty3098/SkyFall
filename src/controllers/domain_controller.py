@@ -252,9 +252,7 @@ class DomainController:
             net_dbg = self._debug("ip2locationNetworkDebug")
             threat_dbg = self._debug("ip2locationThreatDebug")
             debug_widgets = [
-                widget
-                for widget in (net_dbg, threat_dbg)
-                if widget is not None
+                widget for widget in (net_dbg, threat_dbg) if widget is not None
             ]
             if debug_widgets:
                 for dbg in debug_widgets:

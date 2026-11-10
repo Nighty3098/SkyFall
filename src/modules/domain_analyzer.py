@@ -268,9 +268,7 @@ class DomainAnalyzer:
 
     async def _fetch_geo_provider(self, provider):
         try:
-            response = await asyncio.to_thread(
-                requests.get, provider["url"], timeout=4
-            )
+            response = await asyncio.to_thread(requests.get, provider["url"], timeout=4)
             if response.status_code != 200:
                 return None, f"Error {provider['url']}: HTTP {response.status_code}"
             data = response.json()
@@ -285,9 +283,9 @@ class DomainAnalyzer:
         try:
             from src.modules.ip2location_io import IP2LocationIO
 
-            result = await IP2LocationIO(
-                self.API_KEYS.get("IP2LOCATIONIO", "")
-            ).lookup(ip)
+            result = await IP2LocationIO(self.API_KEYS.get("IP2LOCATIONIO", "")).lookup(
+                ip
+            )
             if result.get("status") in ("ERROR", "SKIPPED"):
                 return None, f"Error IP2Location.io: {result.get('note', '')}"
             result["provider"] = "IP2Location.io"
@@ -805,9 +803,9 @@ class DomainAnalyzer:
         try:
             from src.modules.ip2location_io import IP2LocationIO
 
-            return await IP2LocationIO(
-                self.API_KEYS.get("IP2LOCATIONIO", "")
-            ).lookup(ip)
+            return await IP2LocationIO(self.API_KEYS.get("IP2LOCATIONIO", "")).lookup(
+                ip
+            )
         except Exception as e:
             logger.debug(f"IP2Location.io check failed for {target}: {e}")
             return {

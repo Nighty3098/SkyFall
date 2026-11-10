@@ -211,9 +211,7 @@ class CameraInventoryTest(unittest.TestCase):
             cache_path = Path(directory) / "camera-cache.json"
             initial_response = FakeResponse([{"city": "Berlin"}])
             with (
-                mock.patch(
-                    "src.modules.camera_inventory.time.time", return_value=1000
-                ),
+                mock.patch("src.modules.camera_inventory.time.time", return_value=1000),
                 mock.patch(
                     "src.modules.camera_inventory.requests.get",
                     return_value=initial_response,

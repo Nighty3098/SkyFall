@@ -470,9 +470,7 @@ class EmailHeaderAnalyzer:
                     kv("IP2Location.io flags", ", ".join(flags) if flags else "none")
                 )
             else:
-                lines.append(
-                    line(f"IP2Location.io unavailable: {i2l.get('note', '')}")
-                )
+                lines.append(line(f"IP2Location.io unavailable: {i2l.get('note', '')}"))
         except Exception as e:
             lines.append(line(f"IP2Location.io unavailable: {e}"))
         return lines

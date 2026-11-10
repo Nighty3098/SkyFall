@@ -77,9 +77,7 @@ class CameraInventoryController:
         self.ui = ui
         self.cameras: list[Camera] = []
         self.ui.cameraInfoText.setReadOnly(True)
-        self.ui.cameraStatusLabel.setText(
-            "Loading camera metadata ..."
-        )
+        self.ui.cameraStatusLabel.setText("Loading camera metadata ...")
         self._render()
 
     async def load_from_url(self):

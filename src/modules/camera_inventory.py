@@ -17,8 +17,7 @@ CACHE_TTL_SECONDS = 30 * 60
 CACHE_PATH = Path.home() / ".skyfall" / "cache" / "camera_inventory.json"
 CAMERA_REQUEST_HEADERS = {
     "User-Agent": (
-        "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) "
-        "Gecko/20100101 Firefox/158.0"
+        "Mozilla/5.0 (X11; Linux x86_64; rv:158.0) Gecko/20100101 Firefox/158.0"
     ),
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "Accept-Language": "en-US,en;q=0.9",
@@ -134,8 +133,7 @@ def _read_cache(cache_path: Path) -> list[Camera] | None:
         ):
             return None
         if not isinstance(payload, list) or any(
-            not isinstance(camera, dict) or "stream" not in camera
-            for camera in payload
+            not isinstance(camera, dict) or "stream" not in camera for camera in payload
         ):
             return None
         return parse_cameras(payload)

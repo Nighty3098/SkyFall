@@ -225,7 +225,7 @@ class AnalyzeIP2LocationTabsTest(unittest.IsolatedAsyncioTestCase):
 
         self.assertEqual([call[0] for call in analyzer.calls].count("ip2location"), 1)
         self.assertIn("15169", ui.ip2locationNetworkDebug.text)
-        self.assertIn("CLEAN", ui.ip2locationThreatDebug.text)
+        self.assertIn("none", ui.ip2locationThreatDebug.text)
 
     async def test_standalone_security_scan_refreshes_the_result(self):
         controller, ui, analyzer = make_controller()

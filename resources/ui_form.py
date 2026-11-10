@@ -1745,21 +1745,38 @@ class Ui_MainWindow(object):
         self.verticalLayout_2.addWidget(self.label_8)
 
         self.steganographySplitter.addWidget(self.steganoFileDrop)
-        self.LSBDebug = QPlainTextEdit(self.steganographySplitter)
+        self.steganoDebugContainer = QWidget(self.steganographySplitter)
+        self.steganoDebugContainer.setObjectName(u"steganoDebugContainer")
+        self.steganoDebugLayout = QGridLayout(self.steganoDebugContainer)
+        self.steganoDebugLayout.setSpacing(8)
+        self.steganoDebugLayout.setObjectName(u"steganoDebugLayout")
+        self.steganoDebugLayout.setContentsMargins(0, 0, 0, 0)
+        self.LSBDebug = QPlainTextEdit(self.steganoDebugContainer)
         self.LSBDebug.setObjectName(u"LSBDebug")
-        self.steganographySplitter.addWidget(self.LSBDebug)
-        self.spectralAnalysisDebug = QPlainTextEdit(self.steganographySplitter)
+
+        self.steganoDebugLayout.addWidget(self.LSBDebug, 0, 0, 1, 1)
+
+        self.spectralAnalysisDebug = QPlainTextEdit(self.steganoDebugContainer)
         self.spectralAnalysisDebug.setObjectName(u"spectralAnalysisDebug")
-        self.steganographySplitter.addWidget(self.spectralAnalysisDebug)
-        self.EOIDebug = QPlainTextEdit(self.steganographySplitter)
+
+        self.steganoDebugLayout.addWidget(self.spectralAnalysisDebug, 0, 1, 1, 1)
+
+        self.EOIDebug = QPlainTextEdit(self.steganoDebugContainer)
         self.EOIDebug.setObjectName(u"EOIDebug")
-        self.steganographySplitter.addWidget(self.EOIDebug)
-        self.tailDataDetectionDebug = QPlainTextEdit(self.steganographySplitter)
+
+        self.steganoDebugLayout.addWidget(self.EOIDebug, 0, 2, 1, 1)
+
+        self.tailDataDetectionDebug = QPlainTextEdit(self.steganoDebugContainer)
         self.tailDataDetectionDebug.setObjectName(u"tailDataDetectionDebug")
-        self.steganographySplitter.addWidget(self.tailDataDetectionDebug)
-        self.elaDebug = QPlainTextEdit(self.steganographySplitter)
+
+        self.steganoDebugLayout.addWidget(self.tailDataDetectionDebug, 1, 0, 1, 2)
+
+        self.elaDebug = QPlainTextEdit(self.steganoDebugContainer)
         self.elaDebug.setObjectName(u"elaDebug")
-        self.steganographySplitter.addWidget(self.elaDebug)
+
+        self.steganoDebugLayout.addWidget(self.elaDebug, 1, 2, 1, 1)
+
+        self.steganographySplitter.addWidget(self.steganoDebugContainer)
 
         self.steganographyLayout.addWidget(self.steganographySplitter)
 

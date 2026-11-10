@@ -164,20 +164,20 @@ def render_html(text: str, theme: str | None = None) -> str:
                 f'color:{palette["text"]}">{safe_content}</div>'
             )
         elif content.startswith(WARN):
-            message = escape(content[len(WARN):].strip())
+            message = escape(content[len(WARN) :].strip())
             rows.append(
                 f'<div style="margin:4px 0;padding:6px 9px;border-radius:5px;'
                 f'background:{palette["danger"]};color:{palette["on_danger"]};">'
-                f'! {message}</div>'
+                f"! {message}</div>"
             )
         elif content.startswith(INFO):
-            message = escape(content[len(INFO):].strip())
+            message = escape(content[len(INFO) :].strip())
             rows.append(
                 f'<div style="margin:5px 0;color:{palette["text_muted"]};">'
-                f'· {message}</div>'
+                f"· {message}</div>"
             )
         elif content.startswith(BULLET):
-            item = escape(content[len(BULLET):].strip())
+            item = escape(content[len(BULLET) :].strip())
             rows.append(
                 f'<div style="margin:3px 0 3px {margin + 4}px;'
                 f'color:{palette["text"]};">'
@@ -190,7 +190,7 @@ def render_html(text: str, theme: str | None = None) -> str:
                 f'padding:4px 7px;border-radius:4px;background:{palette["surface"]};">'
                 f'<span style="color:{palette["text_muted"]};">{escape(key)}</span>'
                 f'&nbsp;&nbsp;<span style="color:{palette["text"]};">'
-                f'{escape(value.strip())}</span></div>'
+                f"{escape(value.strip())}</span></div>"
             )
         else:
             rows.append(

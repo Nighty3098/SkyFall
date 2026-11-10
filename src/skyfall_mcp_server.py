@@ -322,6 +322,7 @@ async def _make_da():
         greynoise_api_key=s.get("greynoise_api_key", ""),
         whoisfreaks_api_key=s.get("whoisfreaks_api_key", ""),
         ipgeolocation_api_key=s.get("ipgeolocation_api_key", ""),
+        ip2locationio_api_key=s.get("ip2locationio_api_key", ""),
     )
 
 

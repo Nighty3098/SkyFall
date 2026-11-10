@@ -47,6 +47,7 @@ DEFAULT_SETTINGS = {
     "greynoise_api_key": "",
     "whoisfreaks_api_key": "",
     "ipgeolocation_api_key": "",
+    "ip2locationio_api_key": "",
     "leakcheck_api_key": "",
     "dehashed_email": "",
     "dehashed_api_key": "",
@@ -81,6 +82,7 @@ FIELD_MAP = {
     "greynoise_api_key": "greynoiseApiKeyEdit",
     "whoisfreaks_api_key": "whoisfreaksApiKeyEdit",
     "ipgeolocation_api_key": "ipgeolocationApiKeyEdit",
+    "ip2locationio_api_key": "ip2locationioApiKeyEdit",
     "leakcheck_api_key": "leakcheckApiKeyEdit",
     "dehashed_email": "dehashedEmailEdit",
     "dehashed_api_key": "dehashedApiKeyEdit",
@@ -117,6 +119,7 @@ class Settings:
         self.greynoise_api_key = ""
         self.whoisfreaks_api_key = ""
         self.ipgeolocation_api_key = ""
+        self.ip2locationio_api_key = ""
         self.leakcheck_api_key = ""
         self.dehashed_email = ""
         self.dehashed_api_key = ""

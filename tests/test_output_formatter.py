@@ -55,7 +55,7 @@ class RichOutputTest(unittest.TestCase):
         text = "Showing 2 records\n\n1. First camera\n   Stream: url\n\n2. Second"
         html = render_html(text)
 
-        self.assertEqual(html.count('height:8px'), 2)
+        self.assertEqual(html.count("height:8px"), 2)
 
     def test_rich_browser_formats_plain_and_appended_output(self):
         browser = RichOutputBrowser()

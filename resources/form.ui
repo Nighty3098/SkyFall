@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>11</number>
+         <number>21</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -2018,10 +2018,10 @@
           <property name="spacing">
            <number>8</number>
           </property>
-          <item row="6" column="1">
+          <item row="5" column="0">
            <widget class="QTabWidget" name="tabWidget">
             <property name="currentIndex">
-             <number>0</number>
+             <number>4</number>
             </property>
             <widget class="QWidget" name="webInfraTab">
              <attribute name="title">
@@ -2043,167 +2043,196 @@
               <property name="spacing">
                <number>8</number>
               </property>
-               <item row="0" column="0" colspan="2">
-                <layout class="QHBoxLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLineEdit" name="infraDomainEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>https://example.com</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="runInfraScanButton">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Scan</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="1" column="0">
-                  <widget class="QCheckBox" name="domainLocationCheck">
-                   <property name="text">
-                    <string>IP / Location</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="0">
-                  <widget class="QTextBrowser" name="serverLocationDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="1">
-                  <widget class="QCheckBox" name="domainDNSCheck">
-                   <property name="text">
-                    <string>DNS</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="1">
-                  <widget class="QTextBrowser" name="serverDnsAnalyzeDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="3" column="0">
-                  <widget class="QCheckBox" name="domainSSLCheck">
-                   <property name="text">
-                    <string>SSL / TLS</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="4" column="0">
-                  <widget class="QTextBrowser" name="serverTlsDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="3" column="1">
-                  <widget class="QCheckBox" name="domainNmapCheck">
-                   <property name="text">
-                    <string>Ports (NMAP)</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="4" column="1">
-                  <widget class="QTextBrowser" name="serverNmapDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
+              <item row="4" column="1">
+               <widget class="QTextBrowser" name="serverNmapDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="domainDNSCheck">
+                <property name="text">
+                 <string>DNS</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QTextBrowser" name="serverTlsDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QTextBrowser" name="serverDnsAnalyzeDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="domainLocationCheck">
+                <property name="text">
+                 <string>IP / Location</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0" colspan="2">
+               <layout class="QHBoxLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="infraDomainEdit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="placeholderText">
+                   <string>https://example.com</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="runInfraScanButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>200</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Scan</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="2" column="0">
+               <widget class="QTextBrowser" name="serverLocationDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QCheckBox" name="domainNmapCheck">
+                <property name="text">
+                 <string>Ports (NMAP)</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QCheckBox" name="domainSSLCheck">
+                <property name="text">
+                 <string>SSL / TLS</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0">
+               <widget class="QCheckBox" name="domainIP2LocationGeoCheck">
+                <property name="text">
+                 <string>IP2Location.io (geolocation)</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="6" column="0" colspan="2">
+               <widget class="QTextBrowser" name="ip2locationGeoDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="webWebTab">
@@ -2226,225 +2255,225 @@
               <property name="spacing">
                <number>8</number>
               </property>
-               <item row="0" column="0" colspan="3">
-                <layout class="QHBoxLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLineEdit" name="webSurfaceDomainEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>https://example.com</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="runWebScanButton">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Scan</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="1" column="0">
-                  <widget class="QCheckBox" name="domainHeadersCheck">
-                   <property name="text">
-                    <string>Headers / WAF</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="0">
-                  <widget class="QTextBrowser" name="serverWafDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="1">
-                  <widget class="QCheckBox" name="securityTxtCheck">
-                   <property name="text">
-                    <string>Security.txt</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="1">
-                  <widget class="QTextBrowser" name="securityTxtDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="2">
-                  <widget class="QCheckBox" name="cookiesCheck">
-                   <property name="text">
-                    <string>Cookies</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="2">
-                  <widget class="QTextBrowser" name="cookiesDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="3" column="0">
-                  <widget class="QCheckBox" name="socialTagsCheck">
-                   <property name="text">
-                    <string>Social Tags</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="4" column="0">
-                  <widget class="QTextBrowser" name="socialTagsDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="3" column="1">
-                  <widget class="QCheckBox" name="domainRobotsCheck">
-                   <property name="text">
-                    <string>robots.txt</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="4" column="1">
-                  <widget class="QTextBrowser" name="serverRobotsDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="3" column="2">
-                  <widget class="QCheckBox" name="domainJsSecretsCheck">
-                   <property name="text">
-                    <string>JS Secrets</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="4" column="2">
-                  <widget class="QTextBrowser" name="serverJsSecretsDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
+              <item row="0" column="0" colspan="3">
+               <layout class="QHBoxLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="webSurfaceDomainEdit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="placeholderText">
+                   <string>https://example.com</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="runWebScanButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>200</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Scan</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="domainHeadersCheck">
+                <property name="text">
+                 <string>Headers / WAF</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QTextBrowser" name="serverWafDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="securityTxtCheck">
+                <property name="text">
+                 <string>Security.txt</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QTextBrowser" name="securityTxtDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QCheckBox" name="cookiesCheck">
+                <property name="text">
+                 <string>Cookies</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QTextBrowser" name="cookiesDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QCheckBox" name="socialTagsCheck">
+                <property name="text">
+                 <string>Social Tags</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0">
+               <widget class="QTextBrowser" name="socialTagsDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QCheckBox" name="domainRobotsCheck">
+                <property name="text">
+                 <string>robots.txt</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QTextBrowser" name="serverRobotsDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="2">
+               <widget class="QCheckBox" name="domainJsSecretsCheck">
+                <property name="text">
+                 <string>JS Secrets</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="2">
+               <widget class="QTextBrowser" name="serverJsSecretsDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="webDiscoveryTab">
@@ -2467,138 +2496,138 @@
               <property name="spacing">
                <number>8</number>
               </property>
-               <item row="0" column="0" colspan="3">
-                <layout class="QHBoxLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLineEdit" name="discoveryDomainEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>https://example.com</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="runDiscoveryScanButton">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Scan</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="1" column="0">
-                  <widget class="QCheckBox" name="domainSubdomainsCheck">
-                   <property name="text">
-                    <string>Subdomains</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="0">
-                  <widget class="QTextBrowser" name="serverSubdomainsDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="1">
-                  <widget class="QCheckBox" name="certTrCheck">
-                   <property name="text">
-                    <string>Cert Transparency</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="1">
-                  <widget class="QTextBrowser" name="certTrDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="2">
-                  <widget class="QCheckBox" name="domainsOnIpCheck">
-                   <property name="text">
-                    <string>Domains on IP</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="2">
-                  <widget class="QTextBrowser" name="domainsOnIpDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
+              <item row="0" column="0" colspan="3">
+               <layout class="QHBoxLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="discoveryDomainEdit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="placeholderText">
+                   <string>https://example.com</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="runDiscoveryScanButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>200</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Scan</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="domainSubdomainsCheck">
+                <property name="text">
+                 <string>Subdomains</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QTextBrowser" name="serverSubdomainsDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="certTrCheck">
+                <property name="text">
+                 <string>Cert Transparency</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QTextBrowser" name="certTrDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QCheckBox" name="domainsOnIpCheck">
+                <property name="text">
+                 <string>Domains on IP</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="2">
+               <widget class="QTextBrowser" name="domainsOnIpDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="webSecurityTab">
@@ -2621,109 +2650,157 @@
               <property name="spacing">
                <number>8</number>
               </property>
-               <item row="0" column="0" colspan="2">
-                <layout class="QHBoxLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLineEdit" name="securityDomainEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>https://example.com</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="runSecurityScanButton">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Scan</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="1" column="0">
-                  <widget class="QCheckBox" name="domainMalwareCheck">
-                   <property name="text">
-                    <string>Malware / Reputation</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="0">
-                  <widget class="QTextBrowser" name="serverMalwareDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="1">
-                  <widget class="QCheckBox" name="domainThreatIntelCheck">
-                   <property name="text">
-                    <string>Threat Intel</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="1">
-                  <widget class="QTextBrowser" name="serverThreatIntelDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
+              <item row="1" column="0">
+               <widget class="QCheckBox" name="domainMalwareCheck">
+                <property name="text">
+                 <string>Malware / Reputation</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QCheckBox" name="domainThreatIntelCheck">
+                <property name="text">
+                 <string>Threat Intel</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="0" colspan="2">
+               <layout class="QHBoxLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="securityDomainEdit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="placeholderText">
+                   <string>https://example.com</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="runSecurityScanButton">
+                  <property name="minimumSize">
+                   <size>
+                    <width>200</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Scan</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="3" column="0">
+               <widget class="QCheckBox" name="domainIP2LocationCheck">
+                <property name="text">
+                 <string>IP2Location.io (ASN, proxy/fraud)</string>
+                </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QTextBrowser" name="serverThreatIntelDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QTextBrowser" name="serverMalwareDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="0" colspan="2">
+               <widget class="QTextBrowser" name="ip2locationNetworkDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="5" column="0" colspan="2">
+               <widget class="QTextBrowser" name="ip2locationThreatDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="webWhoisTab">
@@ -2731,161 +2808,171 @@
               <string>WHOIS</string>
              </attribute>
              <layout class="QGridLayout" name="gridLayout_webWhois">
-              <property name="leftMargin"><number>12</number></property>
-              <property name="topMargin"><number>12</number></property>
-              <property name="rightMargin"><number>12</number></property>
-              <property name="bottomMargin"><number>12</number></property>
-              <property name="spacing"><number>8</number></property>
-               <item row="0" column="0" colspan="3">
-                <layout class="QHBoxLayout">
-                 <property name="spacing">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLineEdit" name="whoisDomainEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>220</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>Domain (example.com)</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLineEdit" name="reverseWhoisQueryEdit">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>Email / company (blank = from WHOIS)</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QCheckBox" name="domainWhoisCheck">
-                   <property name="text">
-                    <string>Basic WHOIS</string>
-                   </property>
-                   <property name="checked">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QPushButton" name="runWhoisAnalyze">
-                   <property name="minimumSize">
-                    <size>
-                     <width>200</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>30</height>
-                    </size>
-                   </property>
-                   <property name="text">
-                    <string>Analyze</string>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </item>
-               <item row="1" column="0">
-                  <widget class="QTextBrowser" name="serverWhoisDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="1">
-                  <widget class="QTextBrowser" name="serverWhoisHistoryDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="1" column="2">
-                  <widget class="QTextBrowser" name="serverReverseWhoisDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>70</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string></string>
-                   </property>
-                  </widget>
-               </item>
-               <item row="2" column="0" colspan="3">
-                  <widget class="QTextBrowser" name="serverDomainTimelineDebug">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>110</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>16777215</height>
-                    </size>
-                   </property>
-                   <property name="placeholderText">
-                    <string>Domain timeline (DNS history + WHOIS events)</string>
-                   </property>
-                  </widget>
-               </item>
+              <property name="leftMargin">
+               <number>12</number>
+              </property>
+              <property name="topMargin">
+               <number>12</number>
+              </property>
+              <property name="rightMargin">
+               <number>12</number>
+              </property>
+              <property name="bottomMargin">
+               <number>12</number>
+              </property>
+              <property name="spacing">
+               <number>8</number>
+              </property>
+              <item row="0" column="0" colspan="3">
+               <layout class="QHBoxLayout">
+                <property name="spacing">
+                 <number>8</number>
+                </property>
+                <item>
+                 <widget class="QLineEdit" name="whoisDomainEdit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>220</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Domain (example.com)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLineEdit" name="reverseWhoisQueryEdit">
+                  <property name="minimumSize">
+                   <size>
+                    <width>0</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="placeholderText">
+                   <string>Email / company (blank = from WHOIS)</string>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QCheckBox" name="domainWhoisCheck">
+                  <property name="text">
+                   <string>Basic WHOIS</string>
+                  </property>
+                  <property name="checked">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="runWhoisAnalyze">
+                  <property name="minimumSize">
+                   <size>
+                    <width>200</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>30</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>Analyze</string>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+              <item row="1" column="0">
+               <widget class="QTextBrowser" name="serverWhoisDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QTextBrowser" name="serverWhoisHistoryDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QTextBrowser" name="serverReverseWhoisDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>70</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string/>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0" colspan="3">
+               <widget class="QTextBrowser" name="serverDomainTimelineDebug">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>110</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>16777215</height>
+                 </size>
+                </property>
+                <property name="placeholderText">
+                 <string>Domain timeline (DNS history + WHOIS events)</string>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
            </widget>
@@ -3392,7 +3479,7 @@
                    <x>0</x>
                    <y>0</y>
                    <width>669</width>
-                   <height>1074</height>
+                   <height>1070</height>
                   </rect>
                  </property>
                  <layout class="QVBoxLayout" name="shodanScrollLayout">
@@ -4554,30 +4641,59 @@
               </item>
              </layout>
             </widget>
-            <widget class="QPlainTextEdit" name="LSBDebug">
-             <property name="placeholderText">
-              <string>LSB</string>
-             </property>
-            </widget>
-            <widget class="QPlainTextEdit" name="spectralAnalysisDebug">
-             <property name="placeholderText">
-              <string>Spectral Analysis</string>
-             </property>
-            </widget>
-            <widget class="QPlainTextEdit" name="EOIDebug">
-             <property name="placeholderText">
-              <string>EOI/EOD</string>
-             </property>
-            </widget>
-            <widget class="QPlainTextEdit" name="tailDataDetectionDebug">
-             <property name="placeholderText">
-              <string>Tail Data Detection</string>
-             </property>
-            </widget>
-            <widget class="QPlainTextEdit" name="elaDebug">
-             <property name="placeholderText">
-              <string>ELA</string>
-             </property>
+            <widget class="QWidget" name="steganoDebugContainer">
+             <layout class="QGridLayout" name="steganoDebugLayout">
+              <property name="leftMargin">
+               <number>0</number>
+              </property>
+              <property name="topMargin">
+               <number>0</number>
+              </property>
+              <property name="rightMargin">
+               <number>0</number>
+              </property>
+              <property name="bottomMargin">
+               <number>0</number>
+              </property>
+              <property name="spacing">
+               <number>8</number>
+              </property>
+              <item row="0" column="0">
+               <widget class="QPlainTextEdit" name="LSBDebug">
+                <property name="placeholderText">
+                 <string>LSB</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QPlainTextEdit" name="spectralAnalysisDebug">
+                <property name="placeholderText">
+                 <string>Spectral Analysis</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="2">
+               <widget class="QPlainTextEdit" name="EOIDebug">
+                <property name="placeholderText">
+                 <string>EOI/EOD</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="0" colspan="2">
+               <widget class="QPlainTextEdit" name="tailDataDetectionDebug">
+                <property name="placeholderText">
+                 <string>Tail Data Detection</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPlainTextEdit" name="elaDebug">
+                <property name="placeholderText">
+                 <string>ELA</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
             </widget>
            </widget>
           </item>
@@ -4682,8 +4798,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1042</width>
-               <height>1039</height>
+               <width>942</width>
+               <height>1033</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -4734,6 +4850,18 @@
           </item>
           <item row="0" column="0" rowspan="2">
            <widget class="QLabel" name="s4fTargetLabel">
+            <property name="minimumSize">
+             <size>
+              <width>400</width>
+              <height>0</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>400</width>
+              <height>16777215</height>
+             </size>
+            </property>
             <property name="text">
              <string/>
             </property>
@@ -5199,7 +5327,7 @@
                <x>0</x>
                <y>0</y>
                <width>1338</width>
-               <height>1156</height>
+               <height>1294</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="settingsTabScrollContainerLayout">
@@ -5439,6 +5567,13 @@
                    </widget>
                   </item>
                   <item>
+                   <widget class="QLineEdit" name="ip2locationioApiKeyEdit">
+                    <property name="placeholderText">
+                     <string>IP2Location.io API Key (optional, 50k/month; keyless 1k/day)</string>
+                    </property>
+                   </widget>
+                  </item>
+                  <item>
                    <widget class="QLineEdit" name="leakcheckApiKeyEdit">
                     <property name="placeholderText">
                      <string>LeakCheck API Key (optional)</string>
@@ -5669,7 +5804,7 @@
      <x>0</x>
      <y>0</y>
      <width>1592</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

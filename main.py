@@ -265,6 +265,7 @@ class MainWindow(QMainWindow):
             getattr(self.settings, "greynoise_api_key", ""),
             getattr(self.settings, "whoisfreaks_api_key", ""),
             getattr(self.settings, "ipgeolocation_api_key", ""),
+            getattr(self.settings, "ip2locationio_api_key", ""),
         )
         self.tgAnalyzer = TgAnalyzer()
         self.tgDownloader = TgDownloader(
@@ -283,7 +284,9 @@ class MainWindow(QMainWindow):
             self.settings.intelligent_x_api_key,
             self.settings.hibp_api_key,
         )
-        self.emailHeaderAnalyzer = EmailHeaderAnalyzer()
+        self.emailHeaderAnalyzer = EmailHeaderAnalyzer(
+            ip2locationio_api_key=getattr(self.settings, "ip2locationio_api_key", "")
+        )
         self.emailAccounts = EmailAccounts()
         self.socialSearch = SocialSearch()
         self.redditOsint = RedditOsint(
@@ -319,6 +322,7 @@ class MainWindow(QMainWindow):
             getattr(settings, "greynoise_api_key", ""),
             getattr(settings, "whoisfreaks_api_key", ""),
             getattr(settings, "ipgeolocation_api_key", ""),
+            getattr(settings, "ip2locationio_api_key", ""),
         )
 
         self.mailSearchEngine.api_key = settings.intelligent_x_api_key
@@ -326,6 +330,11 @@ class MainWindow(QMainWindow):
         self.mailSearchEngine.hibp_api_key = settings.hibp_api_key
 
         self.fileAnalyzer.update_api_key(settings.virustotal_api_key)
+
+        if hasattr(self, "emailHeaderAnalyzer"):
+            self.emailHeaderAnalyzer.ip2locationio_api_key = getattr(
+                settings, "ip2locationio_api_key", ""
+            )
 
         self.blockchainSearch._set_env_keys(
             {

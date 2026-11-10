@@ -96,10 +96,16 @@ def _parse_received(raw: str) -> dict:
 class EmailHeaderAnalyzer:
     """Phishing-oriented email header / .eml analyzer (offline-first)."""
 
-    def __init__(self, geo_timeout: float = 8.0, dns_timeout: float = 8.0):
+    def __init__(
+        self,
+        geo_timeout: float = 8.0,
+        dns_timeout: float = 8.0,
+        ip2locationio_api_key: str = "",
+    ):
         logger.debug("Init: EmailHeaderAnalyzer")
         self.geo_timeout = geo_timeout
         self.dns_timeout = dns_timeout
+        self.ip2locationio_api_key = (ip2locationio_api_key or "").strip()
 
     # ── public API ────────────────────────────────────────────────
 
@@ -420,6 +426,53 @@ class EmailHeaderAnalyzer:
                     lines.append(line(f"Geo lookup HTTP {resp.status_code}"))
         except Exception as e:
             lines.append(line(f"Geo lookup unavailable (offline?): {e}"))
+
+        try:
+            from src.modules.ip2location_io import IP2LocationIO
+
+            i2l = await IP2LocationIO(
+                self.ip2locationio_api_key, timeout=self.geo_timeout
+            ).lookup(ip)
+            if i2l.get("status") not in ("ERROR", "SKIPPED"):
+                geo = ", ".join(
+                    part
+                    for part in (
+                        i2l.get("country"),
+                        i2l.get("region"),
+                        i2l.get("city"),
+                    )
+                    if part
+                )
+                lines.append(kv("IP2Location.io geo", geo or "?"))
+                network = " / ".join(
+                    part
+                    for part in (
+                        i2l.get("isp"),
+                        f"AS{i2l['asn']}" if i2l.get("asn") else "",
+                        i2l.get("usage_type"),
+                    )
+                    if part
+                )
+                if network:
+                    lines.append(kv("IP2Location.io network", network))
+                flags = [
+                    label
+                    for key, label in (
+                        ("is_proxy", "PROXY"),
+                        ("is_vpn", "VPN"),
+                        ("is_tor", "TOR"),
+                        ("is_data_center", "HOSTING/DC"),
+                        ("is_residential_proxy", "RESIDENTIAL PROXY"),
+                    )
+                    if i2l.get(key)
+                ]
+                lines.append(
+                    kv("IP2Location.io flags", ", ".join(flags) if flags else "none")
+                )
+            else:
+                lines.append(line(f"IP2Location.io unavailable: {i2l.get('note', '')}"))
+        except Exception as e:
+            lines.append(line(f"IP2Location.io unavailable: {e}"))
         return lines
 
     def _verdict_section(

@@ -46,6 +46,7 @@ from .builtin_handlers import (
     _transform_github_repos,
     _transform_github_user,
     _transform_instagram_profile,
+    _transform_ip2location_lookup,
     _transform_ip_domains,
     _transform_ip_geo,
     _transform_ip_security,
@@ -497,6 +498,14 @@ def build_builtin_registry():
                 output_type="Custom",
                 relationship="associated_with",
                 handler=_transform_ip_security,
+            ),
+            TransformDef(
+                name="IP2Location.io lookup",
+                description="Geolocation, ASN and proxy/fraud signals (optional key)",
+                input_types=["IP"],
+                output_type="Custom",
+                relationship="associated_with",
+                handler=_transform_ip2location_lookup,
             ),
         ],
         "Organization": [

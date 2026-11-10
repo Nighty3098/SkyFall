@@ -76,6 +76,19 @@ class FakeAnalyzer:
         self.calls.append(("timeline", dns_history, whois_history))
         return {"status": "OK", "total_events": 1, "events": [{"type": "dns_snapshot"}]}
 
+    async def check_ip2location(self, domain):
+        self.calls.append(("ip2location", domain))
+        return {
+            "ip": "8.8.8.8",
+            "status": "CLEAN",
+            "country_name": "United States",
+            "city_name": "Mountain View",
+            "asn": "15169",
+            "as": "Google LLC",
+            "is_proxy": False,
+            "keyless": True,
+        }
+
 
 def make_controller(url="example.com", query="", whois_domain=""):
     ui = SimpleNamespace(
@@ -181,6 +194,47 @@ class AnalyzeWhoisTest(unittest.IsolatedAsyncioTestCase):
         self.assertEqual(controller.domain, "whois.example")
         self.assertIn(("history", "whois.example"), analyzer.calls)
         self.assertNotIn(("history", "basic.example"), analyzer.calls)
+
+
+class AnalyzeIP2LocationTabsTest(unittest.IsolatedAsyncioTestCase):
+    def _enable(self, ui):
+        ui.domainIP2LocationGeoCheck = FakeCheck(True)
+        ui.ip2locationGeoDebug = FakeOutput()
+        ui.domainIP2LocationCheck = FakeCheck(True)
+        ui.ip2locationNetworkDebug = FakeOutput()
+        ui.ip2locationThreatDebug = FakeOutput()
+
+    async def test_infra_renders_only_the_geolocation_block(self):
+        controller, ui, analyzer = make_controller()
+        self._enable(ui)
+
+        await controller.analyze_infra()
+
+        self.assertIn("United States", ui.ip2locationGeoDebug.text)
+        self.assertEqual(
+            [call for call in analyzer.calls if call[0] == "ip2location"],
+            [("ip2location", "example.com")],
+        )
+
+    async def test_security_reuses_the_infra_result(self):
+        controller, ui, analyzer = make_controller()
+        self._enable(ui)
+
+        await controller.analyze_infra()
+        await controller.analyze_security(reuse_ip2location=True)
+
+        self.assertEqual([call[0] for call in analyzer.calls].count("ip2location"), 1)
+        self.assertIn("15169", ui.ip2locationNetworkDebug.text)
+        self.assertIn("none", ui.ip2locationThreatDebug.text)
+
+    async def test_standalone_security_scan_refreshes_the_result(self):
+        controller, ui, analyzer = make_controller()
+        self._enable(ui)
+
+        await controller.analyze_infra()
+        await controller.analyze_security()
+
+        self.assertEqual([call[0] for call in analyzer.calls].count("ip2location"), 2)
 
 
 if __name__ == "__main__":

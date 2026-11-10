@@ -109,6 +109,8 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `trongrid_api_key` | `trongridApiKeyEdit` | TronGrid (blockchain) |
 | `abuseipdb_api_key` | `abuseipdbApiKeyEdit` | AbuseIPDB (IP reputation, threat intel) |
 | `greynoise_api_key` | `greynoiseApiKeyEdit` | GreyNoise (optional, raises community API limits) |
+| `ipgeolocation_api_key` | `ipgeolocationApiKeyEdit` | IPGeolocation.io (optional; IP security/threat score) |
+| `ip2locationio_api_key` | `ip2locationioApiKeyEdit` | IP2Location.io (optional; geolocation + proxy/fraud signals; keyless 1,000/day, free key 50,000/month) |
 | `whoisfreaks_api_key` | `whoisfreaksApiKeyEdit` | WhoisFreaks (optional; WHOIS history + reverse WHOIS) |
 | `etherscan_api_key` | `etherscanApiKeyEdit` | Etherscan (Ethereum + Base) |
 | `bscscan_api_key` | `bscscanApiKeyEdit` | BscScan (BSC) |
@@ -125,7 +127,7 @@ All settings are stored in `~/.skyfall/settings.json`. They are saved with the *
 | `frameless_window` | `framelessCheck` | Frameless window |
 | `mcp_require_auth` | `mcpAuthCheck` | Require a bearer token for the MCP server |
 
-> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `shodan_api_key`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `whoisfreaks_api_key`, `leakcheck_api_key`, `dehashed_email`, `dehashed_api_key`, `firms_map_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings (paths, theme, font size and UI toggles) are stored in plaintext. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
+> **Security.** These settings are encrypted with Fernet (`enc:v1:`) before being written to `settings.json`: `tg_api_key`, `telegram_api_hash`, `telegram_phone`, `intelligent_x_api_key`, `hibp_api_key`, `virustotal_api_key`, `google_safe_api_key`, `ipinfo_api_key`, `github_token`, `shodan_api_key`, `numverify_api_key`, `abstractapi_api_key`, `trongrid_api_key`, `etherscan_api_key`, `bscscan_api_key`, `tonapi_api_key`, `helius_api_key`, `abuseipdb_api_key`, `greynoise_api_key`, `ipgeolocation_api_key`, `ip2locationio_api_key`, `whoisfreaks_api_key`, `leakcheck_api_key`, `dehashed_email`, `dehashed_api_key`, `firms_map_key`, `reddit_client_id`, and `reddit_client_secret`. Other settings (paths, theme, font size and UI toggles) are stored in plaintext. The encryption key is stored in `~/.skyfall/secret.key` (`0600`); `settings.json` and the `~/.skyfall` directory are restricted to `0600`/`0700`. Legacy plaintext values for encrypted settings are read as-is and re-encrypted on the next **Save** (`src/security.py`).
 
 Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `mcpToggleButton`) to start/stop the built-in MCP server.
 
@@ -312,10 +314,11 @@ The WEB tab is split into category sub-tabs. Each sub-tab has its own domain inp
 
 | Checkbox | Panel | What it does |
 |---|---|---|
-| `domainLocationCheck` | `serverLocationDebug` | IP + geolocation (ipapi.co, ip-api.com, ipinfo.io) |
+| `domainLocationCheck` | `serverLocationDebug` | IP + geolocation (ipapi.co, ip-api.com, ipinfo.io, IP2Location.io) with provider consensus |
 | `domainDNSCheck` | `serverDnsAnalyzeDebug` | DNS: A/MX/TXT/NS/CNAME/SOA + NS IP addresses + standard hosts |
 | `domainSSLCheck` | `serverTlsDebug` | SSL/TLS certificate (version, cipher, issuer, validity) |
 | `domainNmapCheck` | `serverNmapDebug` | NMAP port scan 1-1024 (`--script=vuln`, requires system nmap) |
+| `domainIP2LocationGeoCheck` | `ip2locationGeoDebug` | IP2Location.io geolocation block (country, region, city, ZIP, timezone, coordinates; optional key, keyless works) |
 
 **Web** (`webSurfaceDomainEdit` + `runWebScanButton`)
 
@@ -340,8 +343,9 @@ The WEB tab is split into category sub-tabs. Each sub-tab has its own domain inp
 
 | Checkbox | Panel | What it does |
 |---|---|---|
-| `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + IPGeolocation.io + ThreatFox + URLHaus, overall verdict |
-| `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + IPGeolocation.io + ThreatFox + URLHaus with automatic domain-to-IP resolution |
+| `domainMalwareCheck` | `serverMalwareDebug` | Reputation (aggregator): VirusTotal + Google Safe Browsing + CRDF Labs + AbuseIPDB + GreyNoise + IPGeolocation.io + IP2Location.io + ThreatFox + URLHaus, overall verdict |
+| `domainThreatIntelCheck` | `serverThreatIntelDebug` | One-click Threat Intel: AbuseIPDB + GreyNoise + IPGeolocation.io + IP2Location.io + ThreatFox + URLHaus with automatic domain-to-IP resolution |
+| `domainIP2LocationCheck` | `ip2locationNetworkDebug`, `ip2locationThreatDebug` | IP2Location.io network/ASN and proxy/fraud blocks (the geolocation block lives on the Infra tab; optional key, keyless works) |
 
 **WHOIS** (`whoisDomainEdit` + `reverseWhoisQueryEdit` + `runWhoisAnalyze`) — WhoisFreaks WHOIS history, historical DNS, investigation timeline, reverse WHOIS, and basic WHOIS.
 
@@ -528,7 +532,7 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
   - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
   - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, WHOIS history, reverse WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
-  - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**;
+  - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**, IP Security, **IP2Location.io lookup**;
   - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search, **Shodan Hosts**;
   - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
   - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
@@ -814,7 +818,8 @@ thirdparty/txfetch/         — vendored transaction search library
 | Have I Been Pwned | email | `hibp_api_key` |
 | VirusTotal API v3 | domains, files | `virustotal_api_key` |
 | Google Safe Browsing | domain reputation | `google_safe_api_key` |
-| ipinfo.io / ipapi.co / ip-api.com | IP geolocation | ipinfo — optional |
+| ipinfo.io / ipapi.co / ip-api.com | IP geolocation (multi-provider consensus) | ipinfo — optional |
+| IP2Location.io | IP geolocation, ASN, proxy/fraud signals (threat intel, Infra/Security tabs, email origin IP, graph) | optional (keyless 1,000/day; free key 50,000/month) |
 | GitHub REST API | search | `github_token` |
 | Shodan API | hosts, search, DNS, exploits, scans, alerts | `shodan_api_key` |
 | NumVerify / AbstractAPI | phones | `numverify` / `abstractapi` |

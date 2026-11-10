@@ -82,6 +82,51 @@ def _parse_username_search(results, username):
     )
 
 
+def _geo_extra_lines(data):
+    """Render multi-provider consensus details as readable graph text."""
+    lines = []
+    if data.get("error"):
+        lines.append(kv("Error", data["error"]))
+    details = data.get("details")
+    if isinstance(details, (list, tuple)):
+        for detail in details:
+            lines.append(bullet(f"Error: {detail}"))
+
+    consensus = data.get("consensus")
+    if isinstance(consensus, dict):
+        for key, label in (
+            ("country", "Country consensus"),
+            ("city", "City consensus"),
+            ("asn", "ASN consensus"),
+        ):
+            if consensus.get(key):
+                agreement = consensus.get(f"{key}_agreement")
+                suffix = f" ({agreement})" if agreement else ""
+                lines.append(kv(label, f"{consensus[key]}{suffix}"))
+    if data.get("confidence"):
+        lines.append(kv("Confidence", data["confidence"]))
+
+    providers = data.get("providers")
+    if isinstance(providers, list):
+        for provider in providers:
+            if not isinstance(provider, dict):
+                continue
+            bits = [
+                str(provider[key])
+                for key in ("country", "city", "usage_type")
+                if provider.get(key)
+            ]
+            if provider.get("asn"):
+                bits.append(f"ASN {provider['asn']}")
+            suffix = f" — {', '.join(bits)}" if bits else ""
+            lines.append(bullet(f"{provider.get('provider', '?')}{suffix}"))
+
+    all_ips = data.get("all_ips")
+    if isinstance(all_ips, (list, tuple)) and len(all_ips) > 1:
+        lines.append(kv("All IPs", ", ".join(str(ip) for ip in all_ips)))
+    return lines
+
+
 def _parse_domain_ip(data, domain):
     if not isinstance(data, dict):
         return TransformResult(content=str(data))
@@ -112,7 +157,19 @@ def _parse_domain_ip(data, domain):
                 content=f"{kv('Latitude', lat)}\n{kv('Longitude', lon)}",
             )
         )
-    content = _pack_content([kv(k, v) for k, v in data.items() if v])
+    fields = [
+        kv(label, data[key])
+        for label, key in (
+            ("IP", "ip"),
+            ("Country", "country"),
+            ("City", "city"),
+            ("ASN", "asn"),
+            ("Provider", "provider"),
+        )
+        if data.get(key)
+    ]
+    fields += _geo_extra_lines(data)
+    content = _pack_content(fields)
     return TransformResult(children=children, content=content or str(data))
 
 
@@ -469,7 +526,18 @@ def _parse_ip_geo(data, ip_addr):
                 ),
             ),
         )
-    fields = [kv(k, v) for k, v in data.items() if v]
+    fields = [
+        kv(label, data[key])
+        for label, key in (
+            ("IP", "ip"),
+            ("Country", "country"),
+            ("City", "city"),
+            ("ASN", "asn"),
+            ("Provider", "provider"),
+        )
+        if data.get(key)
+    ]
+    fields += _geo_extra_lines(data)
     content = "\n".join(
         [divider(), title(f"IP Geo: {ip_addr}")]
         + fields
@@ -3182,6 +3250,109 @@ def _parse_ip_security(data, target):
         lines.append(kv("Note", note))
     lines += [end_of("ip security"), divider()]
     return TransformResult(content=_pack_content(lines) or render(data, "IP Security"))
+
+
+def _parse_ip2location(data, target):
+    if not isinstance(data, dict):
+        return TransformResult(content=str(data))
+    if data.get("status") in ("ERROR", "SKIPPED"):
+        return TransformResult(
+            content=f"IP2Location.io: {data.get('note', 'lookup unavailable')}"
+        )
+
+    lines = [
+        divider(),
+        title(f"IP2Location.io: {data.get('ip', target)}"),
+        kv("Status", data.get("status", "?")),
+    ]
+    for label, key in (
+        ("Country", "country"),
+        ("Country code", "country_code"),
+        ("Region", "region"),
+        ("City", "city"),
+        ("ZIP", "zip"),
+        ("Timezone", "timezone"),
+        ("Latitude", "lat"),
+        ("Longitude", "lon"),
+        ("ASN", "asn"),
+        ("AS", "as"),
+        ("ISP", "isp"),
+        ("Domain", "domain"),
+        ("Usage type", "usage_type"),
+        ("Fraud score", "fraud_score"),
+    ):
+        if data.get(key) not in (None, "", []):
+            lines.append(kv(label, data[key]))
+
+    flags = [
+        label
+        for key, label in (
+            ("is_proxy", "Proxy"),
+            ("is_vpn", "VPN"),
+            ("is_tor", "Tor"),
+            ("is_data_center", "Data center"),
+            ("is_residential_proxy", "Residential proxy"),
+        )
+        if data.get(key)
+    ]
+    lines.append(kv("Flags", ", ".join(flags) if flags else "none"))
+
+    reasons = data.get("reasons") or []
+    if reasons:
+        lines.append(kv("Reasons", ", ".join(str(r) for r in reasons)))
+    if data.get("keyless"):
+        lines.append(kv("Mode", "keyless (1,000 queries/day)"))
+    note = data.get("note")
+    if note:
+        lines.append(kv("Note", note))
+    lines += [end_of("ip2location"), divider()]
+
+    children = []
+    lat = _safe_float(data.get("lat"))
+    lon = _safe_float(data.get("lon"))
+    if lat is not None and lon is not None:
+        children.append(
+            ChildNodeDef(
+                title=f"{lat:.2f}, {lon:.2f}",
+                entity_type="Geolocation",
+                content="\n".join(
+                    [
+                        kv("IP", data.get("ip", target)),
+                        kv("Country", data.get("country", "?")),
+                        kv("City", data.get("city", "?")),
+                        kv("Latitude", lat),
+                        kv("Longitude", lon),
+                    ]
+                ),
+            )
+        )
+    org = data.get("as") or data.get("isp")
+    if org:
+        children.append(
+            ChildNodeDef(
+                title=str(org),
+                entity_type="Organization",
+                content="\n".join(
+                    [
+                        kv("ASN", data.get("asn", "?")),
+                        kv("AS", data.get("as", "?")),
+                        kv("ISP", data.get("isp", "?")),
+                    ]
+                ),
+            )
+        )
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+async def _transform_ip2location_lookup(target, modules):
+    engine = modules.get("domain_analyzer")
+    if not engine:
+        return TransformResult(content="Domain analyzer module not available")
+    try:
+        result = await engine.check_ip2location(target)
+        return _parse_ip2location(result, target)
+    except Exception as exc:
+        return TransformResult(content=f"IP2Location.io lookup failed: {exc}")
 
 
 async def _transform_ip_security(target, modules):

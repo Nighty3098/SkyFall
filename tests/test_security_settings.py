@@ -35,6 +35,8 @@ class SensitiveSettingsEncryptionTest(unittest.TestCase):
             "abuseipdb_api_key": "abuseipdb-secret",
             "greynoise_api_key": "greynoise-secret",
             "whoisfreaks_api_key": "whoisfreaks-secret",
+            "ipgeolocation_api_key": "ipgeolocation-secret",
+            "ip2locationio_api_key": "ip2locationio-secret",
             "leakcheck_api_key": "leakcheck-secret",
             "dehashed_email": "analyst@example.test",
             "dehashed_api_key": "dehashed-secret",

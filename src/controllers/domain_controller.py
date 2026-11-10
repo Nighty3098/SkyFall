@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from src.ui.output_formatter import info, render, set_output
+from src.ui.output_formatter import info, kv, render, set_output
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -33,6 +33,7 @@ class DomainController:
         self.domain = ""
         self._whois_cache = None
         self._whois_cache_domain = ""
+        self._ip2location_cache = {}
 
     def set_domain(self, domain):
         self.domain = (domain or "").strip()
@@ -67,7 +68,7 @@ class DomainController:
         await self.analyze_infra(domain=self.domain)
         await self.analyze_web_surface(domain=self.domain)
         await self.analyze_discovery(domain=self.domain)
-        await self.analyze_security(domain=self.domain)
+        await self.analyze_security(domain=self.domain, reuse_ip2location=True)
         await self.analyze_whois(domain=self.domain)
         if progress is not None:
             progress.setValue(100)
@@ -105,6 +106,28 @@ class DomainController:
                 set_output(dbg, info("Loading..."))
                 result = await self.domain_analyzer.run_nmap_scan(domain)
                 set_output(dbg, render(result))
+
+        if self._is_checked("domainIP2LocationGeoCheck"):
+            dbg = self._debug("ip2locationGeoDebug")
+            if dbg is not None:
+                set_output(dbg, info("Loading..."))
+                try:
+                    result = await self._ip2location_result(domain)
+                    geo_text, _, _ = self._ip2location_blocks(result)
+                    set_output(dbg, geo_text)
+                except Exception as e:
+                    logger.warning(f"IP2Location.io geolocation check failed: {e}")
+                    set_output(
+                        dbg, info(f"IP2Location.io geolocation check failed: {e}")
+                    )
+
+    async def _ip2location_result(self, domain, *, refresh=True):
+        """Fetch IP2Location.io once per domain and reuse it across tabs."""
+        if not refresh and domain in self._ip2location_cache:
+            return self._ip2location_cache[domain]
+        result = await self.domain_analyzer.check_ip2location(domain)
+        self._ip2location_cache[domain] = result
+        return result
 
     async def _run_js_secrets(self, domain):
         dbg = self._debug("serverJsSecretsDebug")
@@ -201,7 +224,7 @@ class DomainController:
                     result = await self.domain_analyzer.get_domains_on_ip(ip)
                     set_output(dbg, render(result))
 
-    async def analyze_security(self, domain=None):
+    async def analyze_security(self, domain=None, *, reuse_ip2location=False):
         domain = (domain or self._resolve_domain("securityDomainEdit") or "").strip()
         if not domain:
             return
@@ -224,6 +247,100 @@ class DomainController:
                 except Exception as e:
                     logger.warning(f"Threat intel check failed: {e}")
                     set_output(dbg, info(f"Threat intel check failed: {e}"))
+
+        if self._is_checked("domainIP2LocationCheck"):
+            net_dbg = self._debug("ip2locationNetworkDebug")
+            threat_dbg = self._debug("ip2locationThreatDebug")
+            debug_widgets = [
+                widget for widget in (net_dbg, threat_dbg) if widget is not None
+            ]
+            if debug_widgets:
+                for dbg in debug_widgets:
+                    set_output(dbg, info("Loading..."))
+                try:
+                    result = await self._ip2location_result(
+                        domain, refresh=not reuse_ip2location
+                    )
+                    _, net_text, threat_text = self._ip2location_blocks(result)
+                    for dbg, text in (
+                        (net_dbg, net_text),
+                        (threat_dbg, threat_text),
+                    ):
+                        if dbg is not None:
+                            set_output(dbg, text)
+                except Exception as e:
+                    logger.warning(f"IP2Location.io check failed: {e}")
+                    for dbg in debug_widgets:
+                        set_output(dbg, info(f"IP2Location.io check failed: {e}"))
+
+    @staticmethod
+    def _ip2location_blocks(result):
+        """Split an IP2Location.io result into the three labelled UI blocks."""
+        if not isinstance(result, dict):
+            text = render(result)
+            return text, text, text
+        if result.get("status") in ("ERROR", "SKIPPED"):
+            text = info(result.get("note", "IP2Location.io unavailable"))
+            return text, text, text
+
+        def _block(pairs):
+            lines = []
+            for label, value in pairs:
+                if value in (None, "", [], {}):
+                    continue
+                if isinstance(value, (list, tuple)):
+                    value = ", ".join(str(item) for item in value)
+                lines.append(kv(label, value))
+            return "\n".join(lines)
+
+        geo = _block(
+            [
+                ("IP", result.get("ip")),
+                ("Country", result.get("country_name")),
+                ("Country code", result.get("country_code")),
+                ("Region", result.get("region_name")),
+                ("City", result.get("city_name")),
+                ("ZIP", result.get("zip_code")),
+                ("Timezone", result.get("time_zone")),
+                ("Latitude", result.get("latitude")),
+                ("Longitude", result.get("longitude")),
+            ]
+        )
+
+        network = _block(
+            [
+                ("ASN", result.get("asn")),
+                ("AS", result.get("as")),
+                ("ISP", result.get("isp")),
+                ("Domain", result.get("domain")),
+                ("Usage type", result.get("usage_type")),
+            ]
+        )
+
+        proxy_info = result.get("proxy") or {}
+        flags = [
+            label
+            for key, label in (
+                ("is_proxy", "Proxy"),
+                ("is_vpn", "VPN"),
+                ("is_tor", "Tor"),
+                ("is_data_center", "Data center"),
+                ("is_residential_proxy", "Residential proxy"),
+            )
+            if (result.get(key) if key == "is_proxy" else proxy_info.get(key))
+        ]
+
+        threat = _block(
+            [
+                ("Fraud score", result.get("fraud_score")),
+                ("Flags", ", ".join(flags) if flags else "none"),
+                ("Proxy type", proxy_info.get("proxy_type")),
+                ("Threat", proxy_info.get("threat")),
+                ("Provider", proxy_info.get("provider")),
+            ]
+        )
+
+        return geo, network, threat
 
     async def analyze_whois(self, domain=None):
         """WHOIS/Registration tab: basic WHOIS + history + DNS + timeline + reverse."""

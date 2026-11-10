@@ -47,10 +47,11 @@ class UsernameController:
         self.ui.usernameSearchProgress.setValue(0)
 
         try:
-            maigret_report, maigret_matches = (
-                await self.maigret_search.search_and_report_structured(
-                    username, on_progress=self._on_progress
-                )
+            (
+                maigret_report,
+                maigret_matches,
+            ) = await self.maigret_search.search_and_report_structured(
+                username, on_progress=self._on_progress
             )
 
             self._set_status(

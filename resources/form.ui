@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>21</number>
+         <number>6</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -182,16 +182,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="downloaderSplitter">
@@ -204,16 +204,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="telegramUsernameEdit">
@@ -416,16 +416,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="telegramDownloaderDebug">
@@ -449,16 +449,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="analyzerSplitter">
@@ -471,16 +471,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPushButton" name="telegramAnalyzerLoadDBButton">
@@ -736,16 +736,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="telegramAnalyzerDebug">
@@ -844,16 +844,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="mailSplitter">
@@ -866,16 +866,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="mailEdit">
@@ -933,16 +933,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QSplitter" name="mailDebugSplitter">
@@ -998,16 +998,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="socialSplitter">
@@ -1020,16 +1020,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="socialUsernameEdit">
@@ -1097,16 +1097,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="socialDebug">
@@ -1130,16 +1130,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="redditSplitter">
@@ -1152,16 +1152,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="redditUsernameEdit">
@@ -1325,16 +1325,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="redditOsintDebug">
@@ -1358,16 +1358,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="leaksSplitter">
@@ -1380,16 +1380,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="leakTargetEdit">
@@ -1454,16 +1454,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="leakDebug">
@@ -1487,16 +1487,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="geoSplitter">
@@ -1509,16 +1509,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="geoCoordEdit">
@@ -1610,16 +1610,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="geoDebug">
@@ -1643,16 +1643,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="archiveSplitter">
@@ -1665,16 +1665,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QLineEdit" name="archiveUrlEdit">
@@ -1739,16 +1739,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="archiveDebug">
@@ -2021,7 +2021,7 @@
           <item row="5" column="0">
            <widget class="QTabWidget" name="tabWidget">
             <property name="currentIndex">
-             <number>4</number>
+             <number>5</number>
             </property>
             <widget class="QWidget" name="webInfraTab">
              <attribute name="title">
@@ -2975,6 +2975,483 @@
               </item>
              </layout>
             </widget>
+            <widget class="QWidget" name="shodan">
+             <attribute name="title">
+              <string>Shodan</string>
+             </attribute>
+             <layout class="QHBoxLayout" name="horizontalLayout_9">
+              <item>
+               <widget class="QSplitter" name="shodanSplitter">
+                <property name="orientation">
+                 <enum>Qt::Orientation::Horizontal</enum>
+                </property>
+                <property name="childrenCollapsible">
+                 <bool>false</bool>
+                </property>
+                <widget class="QWidget" name="shodanSettingsSection">
+                 <property name="minimumSize">
+                  <size>
+                   <width>330</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <layout class="QVBoxLayout" name="shodanSettingsLayout">
+                  <property name="spacing">
+                   <number>8</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QScrollArea" name="shodanScrollArea">
+                    <property name="frameShape">
+                     <enum>QFrame::Shape::NoFrame</enum>
+                    </property>
+                    <property name="horizontalScrollBarPolicy">
+                     <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                    </property>
+                    <property name="widgetResizable">
+                     <bool>true</bool>
+                    </property>
+                    <widget class="QWidget" name="shodanScrollContainer">
+                     <property name="geometry">
+                      <rect>
+                       <x>0</x>
+                       <y>0</y>
+                       <width>646</width>
+                       <height>995</height>
+                      </rect>
+                     </property>
+                     <layout class="QVBoxLayout" name="shodanScrollLayout">
+                      <property name="spacing">
+                       <number>8</number>
+                      </property>
+                      <property name="leftMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="topMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="rightMargin">
+                       <number>0</number>
+                      </property>
+                      <property name="bottomMargin">
+                       <number>0</number>
+                      </property>
+                      <item>
+                       <widget class="QLineEdit" name="shodanTargetEdit">
+                        <property name="placeholderText">
+                         <string>IP, hostname or Shodan query</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <layout class="QHBoxLayout" name="shodanPageLayout">
+                        <property name="spacing">
+                         <number>8</number>
+                        </property>
+                        <property name="leftMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="topMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="rightMargin">
+                         <number>0</number>
+                        </property>
+                        <property name="bottomMargin">
+                         <number>0</number>
+                        </property>
+                        <item>
+                         <widget class="QLabel" name="shodanPageLabel">
+                          <property name="text">
+                           <string>Page</string>
+                          </property>
+                         </widget>
+                        </item>
+                        <item>
+                         <widget class="QSpinBox" name="shodanPageSpin">
+                          <property name="minimum">
+                           <number>1</number>
+                          </property>
+                          <property name="maximum">
+                           <number>100</number>
+                          </property>
+                         </widget>
+                        </item>
+                       </layout>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanHostBtn">
+                        <property name="text">
+                         <string>Host Lookup</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanSearchBtn">
+                        <property name="text">
+                         <string>Search</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanCountBtn">
+                        <property name="text">
+                         <string>Count Results</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanFacetsBtn">
+                        <property name="text">
+                         <string>Search Facets</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanQueriesBtn">
+                        <property name="text">
+                         <string>Community Queries</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanHoneyscoreBtn">
+                        <property name="text">
+                         <string>Honeyscore</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QGroupBox" name="shodanDnsGroup">
+                        <property name="title">
+                         <string>DNS</string>
+                        </property>
+                        <layout class="QVBoxLayout" name="shodanDnsLayout">
+                         <property name="spacing">
+                          <number>8</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QLineEdit" name="shodanDomainEdit">
+                           <property name="placeholderText">
+                            <string>example.com</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="shodanDnsBtn">
+                           <property name="text">
+                            <string>Domain Info</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QGroupBox" name="shodanExploitsGroup">
+                        <property name="title">
+                         <string>Exploits</string>
+                        </property>
+                        <layout class="QVBoxLayout" name="shodanExploitsLayout">
+                         <property name="spacing">
+                          <number>8</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QLineEdit" name="shodanExploitEdit">
+                           <property name="placeholderText">
+                            <string>Exploit query (CVE, product, author...)</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="shodanExploitsBtn">
+                           <property name="text">
+                            <string>Search Exploits</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QGroupBox" name="shodanScanGroup">
+                        <property name="title">
+                         <string>On-Demand Scan</string>
+                        </property>
+                        <layout class="QVBoxLayout" name="shodanScanLayout">
+                         <property name="spacing">
+                          <number>8</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QPushButton" name="shodanScanBtn">
+                           <property name="text">
+                            <string>Scan Target IP</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLineEdit" name="shodanScanIdEdit">
+                           <property name="placeholderText">
+                            <string>Scan ID</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="shodanScanStatusBtn">
+                           <property name="text">
+                            <string>Scan Status</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QGroupBox" name="shodanAlertsGroup">
+                        <property name="title">
+                         <string>Alerts</string>
+                        </property>
+                        <layout class="QVBoxLayout" name="shodanAlertsLayout">
+                         <property name="spacing">
+                          <number>8</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QLineEdit" name="shodanAlertNameEdit">
+                           <property name="placeholderText">
+                            <string>Alert name</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLineEdit" name="shodanAlertIpEdit">
+                           <property name="placeholderText">
+                            <string>IP or network (e.g. 1.2.3.0/24)</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="shodanAlertCreateBtn">
+                           <property name="text">
+                            <string>Create Alert</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QLineEdit" name="shodanAlertIdEdit">
+                           <property name="placeholderText">
+                            <string>Alert ID</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <layout class="QHBoxLayout" name="shodanAlertActionsLayout">
+                           <property name="spacing">
+                            <number>8</number>
+                           </property>
+                           <property name="leftMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="topMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="rightMargin">
+                            <number>0</number>
+                           </property>
+                           <property name="bottomMargin">
+                            <number>0</number>
+                           </property>
+                           <item>
+                            <widget class="QPushButton" name="shodanAlertListBtn">
+                             <property name="text">
+                              <string>List</string>
+                             </property>
+                            </widget>
+                           </item>
+                           <item>
+                            <widget class="QPushButton" name="shodanAlertDeleteBtn">
+                             <property name="text">
+                              <string>Delete</string>
+                             </property>
+                            </widget>
+                           </item>
+                          </layout>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QGroupBox" name="shodanApiGroup">
+                        <property name="title">
+                         <string>API</string>
+                        </property>
+                        <layout class="QHBoxLayout" name="shodanApiLayout">
+                         <property name="spacing">
+                          <number>8</number>
+                         </property>
+                         <property name="leftMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="topMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="rightMargin">
+                          <number>0</number>
+                         </property>
+                         <property name="bottomMargin">
+                          <number>0</number>
+                         </property>
+                         <item>
+                          <widget class="QPushButton" name="shodanInfoBtn">
+                           <property name="text">
+                            <string>Account</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="shodanMyIpBtn">
+                           <property name="text">
+                            <string>My IP</string>
+                           </property>
+                          </widget>
+                         </item>
+                         <item>
+                          <widget class="QPushButton" name="shodanCatalogBtn">
+                           <property name="text">
+                            <string>Catalog</string>
+                           </property>
+                          </widget>
+                         </item>
+                        </layout>
+                       </widget>
+                      </item>
+                      <item>
+                       <widget class="QPushButton" name="shodanToGraphBtn">
+                        <property name="text">
+                         <string>Send Last Result to Graph</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item>
+                       <spacer name="shodanVerticalSpacer">
+                        <property name="orientation">
+                         <enum>Qt::Orientation::Vertical</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>20</width>
+                          <height>40</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                      <item>
+                       <widget class="QProgressBar" name="shodanProgress">
+                        <property name="value">
+                         <number>0</number>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+                <widget class="QWidget" name="shodanDebugSection">
+                 <property name="minimumSize">
+                  <size>
+                   <width>420</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <layout class="QVBoxLayout" name="shodanDebugLayout">
+                  <property name="spacing">
+                   <number>8</number>
+                  </property>
+                  <property name="leftMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="topMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="rightMargin">
+                   <number>0</number>
+                  </property>
+                  <property name="bottomMargin">
+                   <number>0</number>
+                  </property>
+                  <item>
+                   <widget class="QPlainTextEdit" name="shodanDebug">
+                    <property name="readOnly">
+                     <bool>true</bool>
+                    </property>
+                   </widget>
+                  </item>
+                 </layout>
+                </widget>
+               </widget>
+              </item>
+             </layout>
+            </widget>
            </widget>
           </item>
          </layout>
@@ -3161,16 +3638,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="githubSplitter">
@@ -3411,498 +3888,6 @@
           </item>
          </layout>
         </widget>
-        <widget class="QWidget" name="shodanTab">
-         <attribute name="title">
-          <string>SHODAN</string>
-         </attribute>
-         <layout class="QHBoxLayout" name="shodanHorizontalLayout">
-          <property name="spacing">
-           <number>8</number>
-          </property>
-          <property name="leftMargin">
-           <number>0</number>
-          </property>
-          <property name="topMargin">
-           <number>0</number>
-          </property>
-          <property name="rightMargin">
-           <number>0</number>
-          </property>
-          <property name="bottomMargin">
-           <number>0</number>
-          </property>
-          <item>
-           <widget class="QSplitter" name="shodanSplitter">
-            <property name="orientation">
-             <enum>Qt::Orientation::Horizontal</enum>
-            </property>
-            <property name="childrenCollapsible">
-             <bool>false</bool>
-            </property>
-            <widget class="QWidget" name="shodanSettingsSection">
-             <property name="minimumSize">
-              <size>
-               <width>330</width>
-               <height>0</height>
-              </size>
-             </property>
-             <layout class="QVBoxLayout" name="shodanSettingsLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <property name="leftMargin">
-               <number>12</number>
-              </property>
-              <property name="topMargin">
-               <number>12</number>
-              </property>
-              <property name="rightMargin">
-               <number>12</number>
-              </property>
-              <property name="bottomMargin">
-               <number>12</number>
-              </property>
-              <item>
-               <widget class="QScrollArea" name="shodanScrollArea">
-                <property name="frameShape">
-                 <enum>QFrame::Shape::NoFrame</enum>
-                </property>
-                <property name="horizontalScrollBarPolicy">
-                 <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-                </property>
-                <property name="widgetResizable">
-                 <bool>true</bool>
-                </property>
-                <widget class="QWidget" name="shodanScrollContainer">
-                 <property name="geometry">
-                  <rect>
-                   <x>0</x>
-                   <y>0</y>
-                   <width>669</width>
-                   <height>1070</height>
-                  </rect>
-                 </property>
-                 <layout class="QVBoxLayout" name="shodanScrollLayout">
-                  <property name="spacing">
-                   <number>8</number>
-                  </property>
-                  <property name="leftMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="topMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="rightMargin">
-                   <number>0</number>
-                  </property>
-                  <property name="bottomMargin">
-                   <number>0</number>
-                  </property>
-                  <item>
-                   <widget class="QLineEdit" name="shodanTargetEdit">
-                    <property name="placeholderText">
-                     <string>IP, hostname or Shodan query</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <layout class="QHBoxLayout" name="shodanPageLayout">
-                    <property name="spacing">
-                     <number>8</number>
-                    </property>
-                    <property name="leftMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="topMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="rightMargin">
-                     <number>0</number>
-                    </property>
-                    <property name="bottomMargin">
-                     <number>0</number>
-                    </property>
-                    <item>
-                     <widget class="QLabel" name="shodanPageLabel">
-                      <property name="text">
-                       <string>Page</string>
-                      </property>
-                     </widget>
-                    </item>
-                    <item>
-                     <widget class="QSpinBox" name="shodanPageSpin">
-                      <property name="minimum">
-                       <number>1</number>
-                      </property>
-                      <property name="maximum">
-                       <number>100</number>
-                      </property>
-                     </widget>
-                    </item>
-                   </layout>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanHostBtn">
-                    <property name="text">
-                     <string>Host Lookup</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanSearchBtn">
-                    <property name="text">
-                     <string>Search</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanCountBtn">
-                    <property name="text">
-                     <string>Count Results</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanFacetsBtn">
-                    <property name="text">
-                     <string>Search Facets</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanQueriesBtn">
-                    <property name="text">
-                     <string>Community Queries</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanHoneyscoreBtn">
-                    <property name="text">
-                     <string>Honeyscore</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="shodanDnsGroup">
-                    <property name="title">
-                     <string>DNS</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="shodanDnsLayout">
-                     <property name="spacing">
-                      <number>8</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QLineEdit" name="shodanDomainEdit">
-                       <property name="placeholderText">
-                        <string>example.com</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="shodanDnsBtn">
-                       <property name="text">
-                        <string>Domain Info</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="shodanExploitsGroup">
-                    <property name="title">
-                     <string>Exploits</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="shodanExploitsLayout">
-                     <property name="spacing">
-                      <number>8</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QLineEdit" name="shodanExploitEdit">
-                       <property name="placeholderText">
-                        <string>Exploit query (CVE, product, author...)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="shodanExploitsBtn">
-                       <property name="text">
-                        <string>Search Exploits</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="shodanScanGroup">
-                    <property name="title">
-                     <string>On-Demand Scan</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="shodanScanLayout">
-                     <property name="spacing">
-                      <number>8</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QPushButton" name="shodanScanBtn">
-                       <property name="text">
-                        <string>Scan Target IP</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="shodanScanIdEdit">
-                       <property name="placeholderText">
-                        <string>Scan ID</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="shodanScanStatusBtn">
-                       <property name="text">
-                        <string>Scan Status</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="shodanAlertsGroup">
-                    <property name="title">
-                     <string>Alerts</string>
-                    </property>
-                    <layout class="QVBoxLayout" name="shodanAlertsLayout">
-                     <property name="spacing">
-                      <number>8</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QLineEdit" name="shodanAlertNameEdit">
-                       <property name="placeholderText">
-                        <string>Alert name</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="shodanAlertIpEdit">
-                       <property name="placeholderText">
-                        <string>IP or network (e.g. 1.2.3.0/24)</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="shodanAlertCreateBtn">
-                       <property name="text">
-                        <string>Create Alert</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QLineEdit" name="shodanAlertIdEdit">
-                       <property name="placeholderText">
-                        <string>Alert ID</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <layout class="QHBoxLayout" name="shodanAlertActionsLayout">
-                       <property name="spacing">
-                        <number>8</number>
-                       </property>
-                       <property name="leftMargin">
-                        <number>0</number>
-                       </property>
-                       <property name="topMargin">
-                        <number>0</number>
-                       </property>
-                       <property name="rightMargin">
-                        <number>0</number>
-                       </property>
-                       <property name="bottomMargin">
-                        <number>0</number>
-                       </property>
-                       <item>
-                        <widget class="QPushButton" name="shodanAlertListBtn">
-                         <property name="text">
-                          <string>List</string>
-                         </property>
-                        </widget>
-                       </item>
-                       <item>
-                        <widget class="QPushButton" name="shodanAlertDeleteBtn">
-                         <property name="text">
-                          <string>Delete</string>
-                         </property>
-                        </widget>
-                       </item>
-                      </layout>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QGroupBox" name="shodanApiGroup">
-                    <property name="title">
-                     <string>API</string>
-                    </property>
-                    <layout class="QHBoxLayout" name="shodanApiLayout">
-                     <property name="spacing">
-                      <number>8</number>
-                     </property>
-                     <property name="leftMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="topMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="rightMargin">
-                      <number>0</number>
-                     </property>
-                     <property name="bottomMargin">
-                      <number>0</number>
-                     </property>
-                     <item>
-                      <widget class="QPushButton" name="shodanInfoBtn">
-                       <property name="text">
-                        <string>Account</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="shodanMyIpBtn">
-                       <property name="text">
-                        <string>My IP</string>
-                       </property>
-                      </widget>
-                     </item>
-                     <item>
-                      <widget class="QPushButton" name="shodanCatalogBtn">
-                       <property name="text">
-                        <string>Catalog</string>
-                       </property>
-                      </widget>
-                     </item>
-                    </layout>
-                   </widget>
-                  </item>
-                  <item>
-                   <widget class="QPushButton" name="shodanToGraphBtn">
-                    <property name="text">
-                     <string>Send Last Result to Graph</string>
-                    </property>
-                   </widget>
-                  </item>
-                  <item>
-                   <spacer name="shodanVerticalSpacer">
-                    <property name="orientation">
-                     <enum>Qt::Orientation::Vertical</enum>
-                    </property>
-                    <property name="sizeHint" stdset="0">
-                     <size>
-                      <width>20</width>
-                      <height>40</height>
-                     </size>
-                    </property>
-                   </spacer>
-                  </item>
-                  <item>
-                   <widget class="QProgressBar" name="shodanProgress">
-                    <property name="value">
-                     <number>0</number>
-                    </property>
-                   </widget>
-                  </item>
-                 </layout>
-                </widget>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="shodanDebugSection">
-             <property name="minimumSize">
-              <size>
-               <width>420</width>
-               <height>0</height>
-              </size>
-             </property>
-             <layout class="QVBoxLayout" name="shodanDebugLayout">
-              <property name="spacing">
-               <number>8</number>
-              </property>
-              <property name="leftMargin">
-               <number>12</number>
-              </property>
-              <property name="topMargin">
-               <number>12</number>
-              </property>
-              <property name="rightMargin">
-               <number>12</number>
-              </property>
-              <property name="bottomMargin">
-               <number>12</number>
-              </property>
-              <item>
-               <widget class="QPlainTextEdit" name="shodanDebug">
-                <property name="readOnly">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </widget>
-          </item>
-         </layout>
-        </widget>
         <widget class="QWidget" name="phoneTab">
          <attribute name="title">
           <string>PHONE</string>
@@ -3912,16 +3897,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="phoneSplitter">
@@ -4288,16 +4273,16 @@
            <number>8</number>
           </property>
           <property name="leftMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="topMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="rightMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <property name="bottomMargin">
-           <number>0</number>
+           <number>12</number>
           </property>
           <item>
            <widget class="QSplitter" name="bcSplitter">
@@ -4310,16 +4295,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QComboBox" name="bcNetworkCombo">
@@ -4552,16 +4537,16 @@
                <number>8</number>
               </property>
               <property name="leftMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="topMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="rightMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <property name="bottomMargin">
-               <number>12</number>
+               <number>0</number>
               </property>
               <item>
                <widget class="QPlainTextEdit" name="bcDebug">

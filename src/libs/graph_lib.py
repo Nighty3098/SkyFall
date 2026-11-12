@@ -1105,6 +1105,9 @@ class NodeItem(QGraphicsItem):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             for edge in self._connected_edges():
                 edge.adjust()
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
+            for edge in self._connected_edges():
+                edge.update()
         return super().itemChange(change, value)
 
     def add_edge_ref(self, edge):
@@ -1125,8 +1128,13 @@ class NodeItem(QGraphicsItem):
                 return name
         return None
 
+    def _set_connected_edges_highlight(self, highlighted):
+        for edge in self._connected_edges():
+            edge.set_node_highlight(id(self), highlighted)
+
     def hoverEnterEvent(self, event):
         self._hovered = True
+        self._set_connected_edges_highlight(True)
         self.update()
         super().hoverEnterEvent(event)
 
@@ -1141,6 +1149,7 @@ class NodeItem(QGraphicsItem):
 
     def hoverLeaveEvent(self, event):
         self._hovered = False
+        self._set_connected_edges_highlight(False)
         self.setCursor(Qt.CursorShape.ArrowCursor)
         self.update()
         super().hoverLeaveEvent(event)
@@ -1258,6 +1267,7 @@ class EdgeItem(QGraphicsPathItem):
         self.relationship_type = relationship_type
         self.style = style if style in EDGE_STYLES else "normal"
         self._hovered = False
+        self._node_highlights = set()
         self.setPen(self._make_pen())
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -1267,9 +1277,19 @@ class EdgeItem(QGraphicsPathItem):
     def _make_pen(self):
         spec = EDGE_STYLES.get(self.style, EDGE_STYLES["normal"])
         color = QColor(_theme_colors()["edge_color"])
-        if self.isSelected() or self._hovered:
+        # A clicked (selected) endpoint keeps its connections highlighted after
+        # the pointer leaves, until the node is deselected.
+        node_exposed = (
+            bool(self._node_highlights)
+            or self.source.isSelected()
+            or self.target.isSelected()
+        )
+        highlighted = self.isSelected() or self._hovered or node_exposed
+        if highlighted:
             color = QColor(_theme_colors()["card_title"])
         width = {"normal": 2, "dashed": 2, "bold": 4}.get(self.style, 2)
+        if node_exposed and not (self.isSelected() or self._hovered):
+            width += 1
         pen = QPen(
             color,
             width,
@@ -1280,6 +1300,16 @@ class EdgeItem(QGraphicsPathItem):
         if self.style == "dashed":
             pen.setDashPattern([6, 4])
         return pen
+
+    def set_node_highlight(self, node_key, highlighted):
+        """Highlight this edge while one of its endpoint nodes is hovered."""
+        before = bool(self._node_highlights)
+        if highlighted:
+            self._node_highlights.add(node_key)
+        else:
+            self._node_highlights.discard(node_key)
+        if before != bool(self._node_highlights):
+            self.update()
 
     def hoverEnterEvent(self, event):
         self._hovered = True
@@ -3385,6 +3415,9 @@ class GraphWidget(QGraphicsView):
         self._scene.addItem(edge)
         source_node.add_edge_ref(edge)
         target_node.add_edge_ref(edge)
+        for node in (source_node, target_node):
+            if getattr(node, "_hovered", False):
+                edge.set_node_highlight(id(node), True)
         self.edgeAdded.emit(edge)
         self._update_summary()
         return edge

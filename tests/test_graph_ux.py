@@ -7,7 +7,12 @@ import unittest
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QPointF  # noqa: E402
-from PySide6.QtWidgets import QApplication, QLabel, QStatusBar  # noqa: E402
+from PySide6.QtWidgets import (  # noqa: E402
+    QApplication,
+    QGraphicsSceneHoverEvent,
+    QLabel,
+    QStatusBar,
+)
 
 from src.controllers.graph_transform_controller import (  # noqa: E402
     ChildNodeDef,
@@ -160,6 +165,53 @@ class GraphUxTest(unittest.TestCase):
         self.assertFalse(self.gw._minimap_enabled)
         self.gw.set_minimap_visible(True)
         self.assertTrue(self.gw._minimap_enabled)
+
+    def test_hovering_node_highlights_incoming_and_outgoing_edges(self):
+        first = self._add(0, 0, "A")
+        middle = self._add(300, 0, "B")
+        last = self._add(600, 0, "C")
+        incoming = self.gw.add_edge(first, middle)
+        outgoing = self.gw.add_edge(middle, last)
+        unrelated = self.gw.add_edge(first, last)
+
+        event = QGraphicsSceneHoverEvent()
+        middle.hoverEnterEvent(event)
+
+        self.assertTrue(incoming._node_highlights)
+        self.assertTrue(outgoing._node_highlights)
+        self.assertFalse(unrelated._node_highlights)
+        self.assertNotEqual(incoming._make_pen().color(), unrelated._make_pen().color())
+
+        # Hovering another endpoint keeps a shared edge highlighted until both
+        # nodes are left again.
+        first.hoverEnterEvent(event)
+        middle.hoverLeaveEvent(event)
+        self.assertTrue(incoming._node_highlights)
+        self.assertFalse(outgoing._node_highlights)
+
+        first.hoverLeaveEvent(event)
+        self.assertFalse(incoming._node_highlights)
+        self.assertEqual(incoming._make_pen().color(), unrelated._make_pen().color())
+
+    def test_selected_node_keeps_connections_highlighted(self):
+        first = self._add(0, 0, "A")
+        middle = self._add(300, 0, "B")
+        last = self._add(600, 0, "C")
+        incoming = self.gw.add_edge(first, middle)
+        outgoing = self.gw.add_edge(middle, last)
+        unrelated = self.gw.add_edge(first, last)
+
+        event = QGraphicsSceneHoverEvent()
+        middle.hoverEnterEvent(event)
+        middle.setSelected(True)
+        middle.hoverLeaveEvent(event)
+
+        self.assertNotEqual(incoming._make_pen().color(), unrelated._make_pen().color())
+        self.assertNotEqual(outgoing._make_pen().color(), unrelated._make_pen().color())
+
+        middle.setSelected(False)
+        self.assertEqual(incoming._make_pen().color(), unrelated._make_pen().color())
+        self.assertEqual(outgoing._make_pen().color(), unrelated._make_pen().color())
 
 
 class GraphTransformUxTest(unittest.TestCase):

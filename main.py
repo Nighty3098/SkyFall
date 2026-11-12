@@ -1,3 +1,6 @@
+import time
+start = time.perf_counter()
+
 import argparse
 import asyncio
 import sys
@@ -641,13 +644,13 @@ if __name__ == "__main__":
         setup_logging(False)
 
     app = QApplication(sys.argv)
-    # Wayland app-id должен совпадать с именем skyfall.desktop,
-    # иначе DE покажет generic-иконку вместо нашей.
+
     app.setApplicationName("skyfall")
     app.setOrganizationName("skyfall")
     app.setDesktopFileName("skyfall")
     widget = MainWindow()
 
+    logger.debug(f"Startup time: {time.perf_counter() - start:.2f} sec")
     widget.show()
 
     loop = QEventLoop(app)

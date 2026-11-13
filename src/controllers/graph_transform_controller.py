@@ -104,6 +104,12 @@ class GraphTransformController:
         finally:
             if callable(end):
                 end()
+        auto_resolve = getattr(graph, "auto_merge_exact_duplicates", None)
+        if callable(auto_resolve):
+            try:
+                auto_resolve(notify=False)
+            except Exception:
+                pass
         if created:
             scene = graph.scene() if callable(getattr(graph, "scene", None)) else None
             if scene is not None:
@@ -202,6 +208,15 @@ class GraphTransformController:
             if callable(end):
                 end()
 
+        # Merge exact duplicates created by this transform before reporting,
+        # so a graph never visibly accumulates the same e-mail/phone twice.
+        auto_resolve = getattr(graph, "auto_merge_exact_duplicates", None)
+        if created is None and callable(auto_resolve):
+            try:
+                auto_resolve(notify=False)
+            except Exception:
+                pass
+
         if created is not None:
             created.extend(child_nodes)
         scene_obj = getattr(graph, "scene", None)
@@ -210,7 +225,15 @@ class GraphTransformController:
             if scene is not None:
                 scene.clearSelection()
         for child in child_nodes:
-            child.setSelected(True)
+            # Auto-resolution may have merged one of the new children into an
+            # existing entity, which removes it from the scene.  Selecting the
+            # survivors is enough; touching a deleted QGraphicsItem would raise.
+            try:
+                if child.scene() is None:
+                    continue
+                child.setSelected(True)
+            except RuntimeError:
+                continue
         if report:
             self._notify(
                 f"{transform_def.name}: {len(child_nodes)} result"

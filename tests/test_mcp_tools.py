@@ -14,7 +14,7 @@ from unittest.mock import patch
 
 import src.skyfall_mcp_server as mcp_mod
 
-EXPECTED_TOOL_COUNT = 96
+EXPECTED_TOOL_COUNT = 98
 
 NEW_TOOLS = [
     "skyfall_domain_whois_history",
@@ -33,6 +33,8 @@ NEW_TOOLS = [
     "skyfall_reddit_archive_search",
     "skyfall_graph_build",
     "skyfall_graph_layout",
+    "skyfall_graph_find_duplicates",
+    "skyfall_graph_merge_duplicates",
 ]
 
 

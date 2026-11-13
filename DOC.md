@@ -37,6 +37,7 @@ Author: Nighty3098.
    - [Settings](#settings)
    - [Proxy](#proxy)
 6. [Graph](#graph-1)
+   - [Entity Resolution](#entity-resolution)
    - [Custom Graph Transforms](#custom-graph-transforms)
 7. [MCP Servers](#mcp-servers)
 8. [Code Structure](#code-structure)
@@ -135,9 +136,14 @@ Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `m
 
 ## Cases (Case Manager)
 
-`src/case_manager.py` — the concept of an investigation "case". Menu **SkyFall → New case / Open case**.
+`src/case_manager.py` + `src/modules/case_store.py` — an investigation "case" is both a folder tree and a small SQLite database. Menu **SkyFall → New case / Open case**; **File → Case Manager…** (`Ctrl+Alt+C`), **File → Graph History…** (`Ctrl+Alt+H`) and **File → Save Graph Version…** (`Ctrl+Alt+S`).
 
-- When a case is created/opened, a folder structure is generated: `domains`, `telegram`, `username`, `email`, `social`, `reddit`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads` + `graph`.
+- When a case is created/opened, a folder structure is generated: `domains`, `telegram`, `username`, `email`, `social`, `reddit`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads`, `notes`, `evidence`, `screenshots`, `logs/requests` + `graph/versions`.
+- **Unified store** — `<case>/case.db` (SQLite, WAL) keeps notes, attachments, request logs and graph versions together; it is created eagerly and used by the UI, MCP tools and tests. The Case Manager dialog has four tabs: **Notes**, **Evidence & screenshots**, **Raw requests**, and **Graph history**.
+- **Notes** — title, Markdown body, tags and timestamps. Search covers note titles/bodies/tags, request module/target/URL/response bodies, and attachment names/captions.
+- **Evidence & screenshots** — files are copied into `<case>/evidence` (captures into `<case>/screenshots`) and recorded with SHA-256, size, MIME type and an optional note link. **Capture graph screenshot** captures the graph canvas directly into the selected note.
+- **Raw requests** — module, target, URL, method, status, duration, headers and bodies are stored in the database; the complete request/response is also written to `<case>/logs/requests/*.log`.
+- **Graph versions** — full snapshots with content hashes, labels, action, node/edge counts and an optional parent id. Content changes create a version while node positions are ignored; identical content is deduplicated, history is capped at 200 versions, and any version can be restored into the canvas as an undoable edit. When a case is open, graph edits are autosaved as versions after a short (1.8 s) debounce.
 - **Autosave**: the contents of all debug panels are automatically saved to timestamped Markdown files (`YYYY-MM-DD_HH-MM-SS_<label>.md`) in the corresponding categories. Recurring (extended) content overwrites the current file instead of creating a new one.
 - The case name is shown in the SkyFall menu.
 - Directories: `<case>/graph`, `<case>/reports` (if there is no case — `~/.skyfall/data`).
@@ -466,6 +472,7 @@ A visual relationship graph with an entity palette (`entityPalette`, drag onto t
 - `graphClearButton` — clear the graph.
 - `Graph → Layout` — choose an automatic layout (spring / kamada_kawai / shell / spectral / circular / hierarchical / Telegram Hub-and-Cluster); choosing applies it immediately to selected nodes, or to the whole graph when nothing is selected.
 - `graphSearchEdit` + `graphClearFilterButton` + `graphFilterCombo` — filtering by text and entity type.
+- `Graph → Find Duplicate Entities…` / `Merge Selected Entities` / `Auto-resolve after Transforms` — entity-resolution controls (see [Entity Resolution](#entity-resolution)); the same actions are available from the canvas context menu.
 - Node panel: `nodeTitleEdit`, `nodeTypeCombo`, `nodeContentEdit`, `nodeEvidenceList`, `nodeEvidenceAddFileBtn`, `nodeEvidenceAddUrlBtn`, `nodeEvidenceRemoveBtn`.
 
 ### AI Report
@@ -571,6 +578,17 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
 - **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py`; see [Custom Graph Transforms](#custom-graph-transforms) below.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
+
+### Entity Resolution
+
+SkyFall can collapse duplicate entities produced by transforms, imports and manual edits. The engine lives in `src/modules/entity_resolution.py` (Qt-free) and is shared by the canvas, the graph bridge and MCP.
+
+- **Normalisation** — Unicode NFKC, case/whitespace folding, Cyrillic→Latin transliteration, phone canonicalisation, URL masking, and labelled key/value extraction (`Email:`, `Phone:`, `Телефон:`, `Почта:`, etc.). Identifier types are compared independently so an email is never matched against a phone number.
+- **Matching** — exact identifiers (email, phone, username, domain, IP, URL, hash) plus name/content similarity with blocking and complete-link clustering. Different entity types never match; `Person`/`Organization`/`Custom` titles with the same token set (including word-order variants such as `Ivan Petrov` / `Petrov Ivan`) are treated as the same identity.
+- **Conservative automation** — high-confidence groups are merged automatically; medium-confidence candidates are collected in **Find Duplicate Entities…** for analyst review (`src/ui/entity_resolution_dialog.py`). The thresholds live in the resolution config (`auto_threshold`, `review_threshold`, weights).
+- **Merge semantics** — titles and previous aliases become `aliases`, removed records become `merged_from`, evidence/content are unioned, and a `resolution` metadata block records score/reasons/time. Edges are rewired onto the surviving node, duplicate edges are collapsed, and self-loops created by a merge are dropped. The surviving node is chosen by edge degree, evidence and content. A whole merge batch is a single undo step.
+- **Automatic pass** — after every transform batch `graph_transform_controller` runs the high-confidence pass (unless disabled via **Graph → Auto-resolve after Transforms**); only nodes that still exist are re-selected afterwards.
+- **Agent access** — `skyfall_graph_find_duplicates` and `skyfall_graph_merge_duplicates` expose the same behaviour to MCP clients through the graph bridge.
 
 ### Custom Graph Transforms
 
@@ -730,7 +748,7 @@ single undo step.
 
 ## MCP Servers
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 93 tools
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 98 tools
 
 FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Started/stopped from the Settings tab (MCP button) or via `McpController`.
 
@@ -768,7 +786,7 @@ FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Starte
 
 **Dorking (1):** search via DuckDuckGo/SearXNG.
 
-**Graph (14, require a running GUI + graph bridge on 127.0.0.1:9878):** `skyfall_graph_build` (batch node/edge creation with refs and automatic placement), `skyfall_graph_layout` (re-arrange + frame the canvas), add/update/remove/move node, add/remove edge, get, summary, get_node, clear, file import (JSON/GraphML/GEXF/CSV), export PNG/SVG.
+**Graph (16, require a running GUI + graph bridge on 127.0.0.1:9878):** `skyfall_graph_build` (batch node/edge creation with refs and automatic placement), `skyfall_graph_layout` (re-arrange + frame the canvas), add/update/remove/move node, add/remove edge, get, summary, get_node, clear, file import (JSON/GraphML/GEXF/CSV), export PNG/SVG, `skyfall_graph_find_duplicates` (discover automatic or review-only duplicate clusters), `skyfall_graph_merge_duplicates` (merge clusters in one undoable edit).
 
 The graph tools follow a small rule set: entity types and relationships are normalised (with synonym mapping), `add_node` deduplicates by `(entity_type, title)` and merges content, nodes are positioned automatically (around `anchor_id` when given), duplicate edges are merged, and self-loops are rejected. Call `skyfall_graph_summary` before editing an existing graph.
 
@@ -788,7 +806,7 @@ Stdio transport, Ollama `http://127.0.0.1:11434`, default model `hf.co/OBLITERAT
 
 ### Graph Bridge (`src/graph_bridge.py`)
 
-TCP bridge `127.0.0.1:9878`, protocol: 4-byte length prefix (big-endian) + JSON. Actions: `add_node`, `add_edge`, `get_graph`, `get_node`, `update_node`, `move_node`, `remove_node`, `remove_edge`, `clear_graph`, `graph_summary`. All operations are marshaled to the GUI thread via a Qt signal (thread-safe). Every request must contain a `token` (the shared token from `~/.skyfall/mcp_token`); requests without a valid token are rejected (`{"error": "unauthorized"}`).
+TCP bridge `127.0.0.1:9878`, protocol: 4-byte length prefix (big-endian) + JSON. Actions: `add_node`, `add_edge`, `get_graph`, `get_node`, `update_node`, `move_node`, `remove_node`, `remove_edge`, `clear_graph`, `graph_summary`, `find_duplicates`, `merge_duplicates`. All operations are marshaled to the GUI thread via a Qt signal (thread-safe). Every request must contain a `token` (the shared token from `~/.skyfall/mcp_token`); requests without a valid token are rejected (`{"error": "unauthorized"}`).
 
 ---
 
@@ -800,7 +818,7 @@ setup_telegram.py           — Telegram session authorization
 logger_setup.py             — logger setup (loguru)
 src/
   connectors.py             — binding Qt signals to controllers
-  case_manager.py           — investigation cases, autosave
+  case_manager.py           — investigation cases, autosave, unified case store API
   security.py               — settings encryption and the shared MCP/bridge token
   report_controller.py      — AI report via Ollama
   mcp_controller.py         — MCP server lifecycle + graph bridge
@@ -810,6 +828,8 @@ src/
   utils.py                  — list filtering, text highlighting
   searxng_search.py         — local SearXNG client
   modules/                  — data collection (UI-independent)
+    entity_resolution.py    — identifier normalisation, duplicate matching and graph merging
+    case_store.py           — SQLite case store: notes, evidence, request logs, graph versions
     js_secrets.py           — JS scan for keys/secrets/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
     whois_freaks.py         — WhoisFreaks WHOIS history + reverse WHOIS client
@@ -822,10 +842,11 @@ src/
     archive_search.py       — web archives (Wayback Machine, archive.today)
     tg/                     — Telegram package: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
-  controllers/              — per-tab UI logic
+  controllers/              — per-tab UI logic (case_controller: case dialog + graph-version autosave)
   transforms/               — transform API, built-in registry and plugin loader
   libs/                     — graph_lib (graph), graph_panel (palette)
-  ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget
+  ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget,
+                              case_dialog (unified workspace), entity_resolution_dialog (review)
 resources/                  — form.ui, QSS themes, fonts, icons
 data/                       — dorks.json, dorks.xml, username_data.json
 thirdparty/txfetch/         — vendored transaction search library
@@ -836,6 +857,7 @@ thirdparty/txfetch/         — vendored transaction search library
 ## Data and Storage
 
 - **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs), `transforms/` (custom transform plugins and their README template).
+- **Case database** — `<case>/case.db` (SQLite, WAL): `notes`, `attachments`, `request_logs`, `graph_versions`, `activity`, `meta`. Evidence files live under `<case>/evidence` and `<case>/screenshots`; raw HTTP transcripts under `<case>/logs/requests`; graph snapshots are also mirrored in the database for history/rollback.
 - **`data/dorks.json`** — 14 categories, ~7,944 dorks. **`data/dorks.xml`** — the original GHDB database.
 - **`data/username_data.json`** — 481 site specifications for username search (URL templates, error codes, regex).
 - **`resources/form.ui`** — UI (5499 lines), loaded at runtime.

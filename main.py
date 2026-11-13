@@ -53,6 +53,7 @@ from src.connectors import (
 from src.controllers.archive_controller import ArchiveController
 from src.controllers.blockchain_controller import BlockchainController
 from src.controllers.camera_inventory_controller import CameraInventoryController
+from src.controllers.case_controller import CaseController
 from src.controllers.domain_controller import DomainController
 from src.controllers.dorking_controller import DorkingController
 from src.controllers.download_controller import DownloadController
@@ -170,6 +171,7 @@ class MainWindow(QMainWindow):
             self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         self.case_manager = CaseManager(self.ui.menu_SkyFall)
+        self.case_manager.set_graph_widget(self.ui.graphWidget)
         self._init_modules()
         self.settings.on_save(self._sync_tokens)
         setup_ui(self)
@@ -282,6 +284,11 @@ class MainWindow(QMainWindow):
         super().closeEvent(event)
 
     async def _shutdown(self):
+        if hasattr(self, "caseController"):
+            try:
+                self.caseController.shutdown()
+            except Exception:
+                logger.exception("Failed to stop the case controller")
         if hasattr(self, "mcpController"):
             try:
                 self.mcpController.cleanup()
@@ -625,6 +632,10 @@ class MainWindow(QMainWindow):
         setup_report_connectors(self.reportController)
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
         setup_graph_connectors(self.ui, self.nodeController, self.case_manager)
+
+        self.caseController = CaseController(
+            self.ui, self.case_manager, self.ui.graphWidget
+        )
 
         self.graphLayoutController = GraphLayoutController(self.ui, self.ui.graphWidget)
         setup_graph_layout_connectors(self.graphLayoutController)

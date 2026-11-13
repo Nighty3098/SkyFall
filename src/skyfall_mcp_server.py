@@ -1780,6 +1780,66 @@ async def skyfall_graph_summary() -> str:
 
 
 @mcp.tool()
+async def skyfall_graph_find_duplicates(
+    include_review: bool = True,
+    selected_only: bool = False,
+) -> str:
+    """Find graph entities that look like the same real-world record.
+
+    Exact identifiers (e-mail, phone, URL, domain, username, wallet, hash) and
+    very close names are grouped. High-confidence groups are marked with
+    ``auto=true``; the rest need analyst review.
+
+    Args:
+        include_review: Also return medium-confidence groups
+        selected_only: Only compare the currently selected nodes
+    """
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    return await _graph_bridge_send(
+        bridge, "find_duplicates", include_review, selected_only
+    )
+
+
+@mcp.tool()
+async def skyfall_graph_merge_duplicates(
+    groups: str = "",
+    include_review: bool = False,
+    auto_only: bool = True,
+) -> str:
+    """Merge duplicate graph entities, preserving aliases, evidence and edges.
+
+    Without ``groups`` the tool uses detected duplicate clusters. By default
+    only high-confidence (auto) clusters are merged.
+
+    Args:
+        groups: Optional JSON list of node-id lists to merge, e.g.
+                [["id1", "id2"], ["id3", "id4"]]
+        include_review: Consider medium-confidence groups when auto_only=false
+        auto_only: Merge only groups marked as safe for automatic merging
+    """
+    if not _graph_bridge_available():
+        return _graph_not_available_bridge()
+    bridge = _graph_bridge()
+    if bridge is None:
+        return _graph_not_available_bridge()
+    parsed_groups = None
+    if groups.strip():
+        try:
+            parsed_groups = json.loads(groups)
+        except json.JSONDecodeError as exc:
+            return _extract_json({"error": f"groups must be JSON: {exc}"})
+        if not isinstance(parsed_groups, list):
+            return _extract_json({"error": "groups must be a JSON list"})
+    return await _graph_bridge_send(
+        bridge, "merge_duplicates", parsed_groups, include_review, auto_only
+    )
+
+
+@mcp.tool()
 async def skyfall_graph_get_node(node_id: str) -> str:
     """Get detailed info about a specific graph node including its connections.
 

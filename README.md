@@ -2,15 +2,22 @@
 
 # `SkyFall Project`
 
-<br /><br />
-
-<img src="resources/banner.webp" width="95%" />
-
-<br /><br /><br /><br />
-
 <img src="resources/img.png" width="95%" />
 
-<br /><br />
+<br/>
+
+<p align="center">
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/stars/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="GitHub Stars" src="https://www.shieldcn.dev/github/stars/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/forks/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="GitHub Forks" src="https://www.shieldcn.dev/github/forks/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/last-commit/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="Last commit" src="https://www.shieldcn.dev/github/last-commit/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/open-issues/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="Open issues" src="https://www.shieldcn.dev/github/open-issues/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/closed-issues/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="Closed issues" src="https://www.shieldcn.dev/github/closed-issues/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/open-prs/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="Open PRs" src="https://www.shieldcn.dev/github/open-prs/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/ci/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="CI" src="https://www.shieldcn.dev/github/ci/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/license/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=dark&amp;theme=neutral&amp;font=geist"><img alt="License" src="https://www.shieldcn.dev/github/license/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=light&amp;theme=neutral&amp;font=geist"></picture>
+</p>
+
+<br />
 
 **Desktop OSINT investigation toolkit**
 
@@ -264,21 +271,6 @@ The same token also protects the graph bridge on `127.0.0.1:9878`, which the MCP
 - **`~/.skyfall/`** — `settings.json` (encrypted secrets), `secret.key`, `mcp_token`, `proxies.txt`, `logs/`, `data/`, `transforms/` (custom graph transforms and their README template).
 - **Cases** — folder per investigation with `domains/`, `telegram/`, `username/`, `email/`, `social/`, `leaks/`, `geo/`, `archive/`, `github/`, `phone/`, `mac/`, `blockchain/`, `files/`, `steganography/`, `reports/`, `dorking/`, `downloads/`, `graph/`.
 - **Telegram DB** — SQLite `SkyFall_TG.db` (`channels`, `users`, `posts`, `discussions`, `members`, `links`) and `SkyFall_TG_media/`.
-
-## `DEVELOPMENT`
-
-```bash
-
-# Lint check
-./check.sh
-
-# Auto-format
-./format.sh
-
-```
-
-The pipeline is `main.py → src/connectors.py (Qt signals) → src/controllers/ → src/modules/`; graph transforms and plugin discovery live in `src/transforms/`.
-See [`DOC.md`](./DOC.md) for the full code map.
 
 ## `CONTACTS`
 

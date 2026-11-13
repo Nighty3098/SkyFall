@@ -4997,6 +4997,68 @@
                 </layout>
                </widget>
               </item>
+              <item>
+               <widget class="QListWidget" name="graphStatsRelationshipList">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>200</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>200</height>
+                 </size>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::FocusPolicy::NoFocus</enum>
+                </property>
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>12</width>
+                  <height>12</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QListWidget" name="graphStatsEntityList">
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>200</height>
+                 </size>
+                </property>
+                <property name="maximumSize">
+                 <size>
+                  <width>16777215</width>
+                  <height>200</height>
+                 </size>
+                </property>
+                <property name="focusPolicy">
+                 <enum>Qt::FocusPolicy::NoFocus</enum>
+                </property>
+                <property name="horizontalScrollBarPolicy">
+                 <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+                </property>
+                <property name="iconSize">
+                 <size>
+                  <width>12</width>
+                  <height>12</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
              </layout>
             </widget>
             <widget class="QWidget" name="graphCenterPanel" native="true">
@@ -5075,9 +5137,54 @@
                 </property>
                </widget>
               </item>
-              </layout>
-             </widget>
-             <widget class="QWidget" name="verticalWidget" native="true">
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout_12">
+                <property name="sizeConstraint">
+                 <enum>QLayout::SizeConstraint::SetMinimumSize</enum>
+                </property>
+                <property name="topMargin">
+                 <number>0</number>
+                </property>
+                <item>
+                 <widget class="QLabel" name="graphStatsSummary">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>0 nodes · 0 edges · 0 evidence</string>
+                  </property>
+                  <property name="alignment">
+                   <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QLabel" name="graphStatsMeta">
+                  <property name="maximumSize">
+                   <size>
+                    <width>16777215</width>
+                    <height>20</height>
+                   </size>
+                  </property>
+                  <property name="text">
+                   <string>0 of 0 visible · 0 selected · 0 isolated</string>
+                  </property>
+                  <property name="wordWrap">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+            <widget class="QWidget" name="verticalWidget" native="true">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -5199,126 +5306,6 @@
                  </widget>
                 </item>
                </layout>
-              </item>
-              <item>
-               <widget class="QGroupBox" name="graphStatsPanel">
-                <property name="title">
-                 <string>GRAPH STATISTICS</string>
-                </property>
-                <layout class="QVBoxLayout" name="graphStatsLayout">
-                 <property name="spacing">
-                  <number>6</number>
-                 </property>
-                 <property name="leftMargin">
-                  <number>8</number>
-                 </property>
-                 <property name="topMargin">
-                  <number>8</number>
-                 </property>
-                 <property name="rightMargin">
-                  <number>8</number>
-                 </property>
-                 <property name="bottomMargin">
-                  <number>8</number>
-                 </property>
-                 <item>
-                  <widget class="QLabel" name="graphStatsSummary">
-                   <property name="text">
-                    <string>0 nodes · 0 edges · 0 evidence</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="graphStatsMeta">
-                   <property name="text">
-                    <string>0 of 0 visible · 0 selected · 0 isolated</string>
-                   </property>
-                   <property name="wordWrap">
-                    <bool>true</bool>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="graphStatsEntitiesCaption">
-                   <property name="text">
-                    <string>ENTITIES</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QListWidget" name="graphStatsEntityList">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>120</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>120</height>
-                    </size>
-                   </property>
-                   <property name="focusPolicy">
-                    <enum>Qt::FocusPolicy::NoFocus</enum>
-                   </property>
-                   <property name="horizontalScrollBarPolicy">
-                    <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-                   </property>
-                   <property name="selectionMode">
-                    <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>12</width>
-                     <height>12</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QLabel" name="graphStatsRelationshipsCaption">
-                   <property name="text">
-                    <string>RELATIONSHIPS</string>
-                   </property>
-                  </widget>
-                 </item>
-                 <item>
-                  <widget class="QListWidget" name="graphStatsRelationshipList">
-                   <property name="minimumSize">
-                    <size>
-                     <width>0</width>
-                     <height>120</height>
-                    </size>
-                   </property>
-                   <property name="maximumSize">
-                    <size>
-                     <width>16777215</width>
-                     <height>120</height>
-                    </size>
-                   </property>
-                   <property name="focusPolicy">
-                    <enum>Qt::FocusPolicy::NoFocus</enum>
-                   </property>
-                   <property name="horizontalScrollBarPolicy">
-                    <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
-                   </property>
-                   <property name="selectionMode">
-                    <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
-                   </property>
-                   <property name="iconSize">
-                    <size>
-                     <width>12</width>
-                     <height>12</height>
-                    </size>
-                   </property>
-                  </widget>
-                 </item>
-                </layout>
-               </widget>
               </item>
              </layout>
             </widget>

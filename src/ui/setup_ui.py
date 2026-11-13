@@ -1,6 +1,7 @@
 from PySide6.QtCore import QSize, Qt
 from PySide6.QtWidgets import QListWidgetItem, QSplitter, QWidget
 
+from src.utils import get_current_ip
 from src.ui.layout_polish import polish_ui
 
 # Logical grouping of the tabs shown in the navigation sidebar.  Tabs are
@@ -166,6 +167,11 @@ def normalize_splitters(parent, outer=12, gap=8, spacing=8):
                 play.setContentsMargins(outer, outer, outer, outer)
                 play.setSpacing(spacing)
 
+def setup_home_tab(parent):
+    label = getattr(parent.ui, "currentIpLabel", None)
+    if label is None:
+        return
+    label.setText(f"Current IP: {get_current_ip()}")
 
 def setup_ui(self):
     setup_navbar(self)
@@ -174,3 +180,4 @@ def setup_ui(self):
     setup_source_code_link(self)
     polish_ui(self)
     normalize_splitters(self)
+    setup_home_tab(self)

@@ -1,4 +1,5 @@
 from typing import TYPE_CHECKING
+import requests
 
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import QTextEdit
@@ -40,3 +41,6 @@ def find_text(controller, text):
         extra_selections.append(selection)
 
     widget.setExtraSelections(extra_selections)
+
+def get_current_ip():
+    return requests.get('https://api.ipify.org/?format=text').text

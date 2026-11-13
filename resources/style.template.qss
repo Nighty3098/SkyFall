@@ -428,7 +428,7 @@ QLabel {
 QLabel#sourceCodeLinkLabel {
     text-decoration: none;
     color: $text;
-    font-family: "Bebas Neue", monospace;
+    font-family: "Iosevka Charon Mono", monospace;
 }
 
 QLabel#metadataFilePath {

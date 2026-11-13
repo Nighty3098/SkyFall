@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1592</width>
-    <height>1153</height>
+    <width>1070</width>
+    <height>828</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>6</number>
+         <number>22</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -3027,8 +3027,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>646</width>
-                       <height>995</height>
+                       <width>368</width>
+                       <height>950</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="shodanScrollLayout">
@@ -4783,8 +4783,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>942</width>
-               <height>1033</height>
+               <width>420</width>
+               <height>708</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -5069,11 +5069,15 @@
                </layout>
               </item>
               <item>
-               <widget class="GraphWidget" name="graphWidget"/>
+               <widget class="GraphWidget" name="graphWidget">
+                <property name="styleSheet">
+                 <string notr="true">border: none;</string>
+                </property>
+               </widget>
               </item>
-             </layout>
-            </widget>
-            <widget class="QWidget" name="verticalWidget" native="true">
+              </layout>
+             </widget>
+             <widget class="QWidget" name="verticalWidget" native="true">
              <property name="minimumSize">
               <size>
                <width>0</width>
@@ -5196,6 +5200,126 @@
                 </item>
                </layout>
               </item>
+              <item>
+               <widget class="QGroupBox" name="graphStatsPanel">
+                <property name="title">
+                 <string>GRAPH STATISTICS</string>
+                </property>
+                <layout class="QVBoxLayout" name="graphStatsLayout">
+                 <property name="spacing">
+                  <number>6</number>
+                 </property>
+                 <property name="leftMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="topMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="rightMargin">
+                  <number>8</number>
+                 </property>
+                 <property name="bottomMargin">
+                  <number>8</number>
+                 </property>
+                 <item>
+                  <widget class="QLabel" name="graphStatsSummary">
+                   <property name="text">
+                    <string>0 nodes · 0 edges · 0 evidence</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="graphStatsMeta">
+                   <property name="text">
+                    <string>0 of 0 visible · 0 selected · 0 isolated</string>
+                   </property>
+                   <property name="wordWrap">
+                    <bool>true</bool>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="graphStatsEntitiesCaption">
+                   <property name="text">
+                    <string>ENTITIES</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QListWidget" name="graphStatsEntityList">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>120</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>120</height>
+                    </size>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::FocusPolicy::NoFocus</enum>
+                   </property>
+                   <property name="horizontalScrollBarPolicy">
+                    <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                   </property>
+                   <property name="selectionMode">
+                    <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>12</width>
+                     <height>12</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QLabel" name="graphStatsRelationshipsCaption">
+                   <property name="text">
+                    <string>RELATIONSHIPS</string>
+                   </property>
+                  </widget>
+                 </item>
+                 <item>
+                  <widget class="QListWidget" name="graphStatsRelationshipList">
+                   <property name="minimumSize">
+                    <size>
+                     <width>0</width>
+                     <height>120</height>
+                    </size>
+                   </property>
+                   <property name="maximumSize">
+                    <size>
+                     <width>16777215</width>
+                     <height>120</height>
+                    </size>
+                   </property>
+                   <property name="focusPolicy">
+                    <enum>Qt::FocusPolicy::NoFocus</enum>
+                   </property>
+                   <property name="horizontalScrollBarPolicy">
+                    <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                   </property>
+                   <property name="selectionMode">
+                    <enum>QAbstractItemView::SelectionMode::NoSelection</enum>
+                   </property>
+                   <property name="iconSize">
+                    <size>
+                     <width>12</width>
+                     <height>12</height>
+                    </size>
+                   </property>
+                  </widget>
+                 </item>
+                </layout>
+               </widget>
+              </item>
              </layout>
             </widget>
            </widget>
@@ -5311,7 +5435,7 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1338</width>
+               <width>816</width>
                <height>1294</height>
               </rect>
              </property>
@@ -5788,7 +5912,7 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1592</width>
+     <width>1070</width>
      <height>24</height>
     </rect>
    </property>

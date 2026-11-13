@@ -753,6 +753,10 @@ class GraphBridgeServer:
                         "id": item.id,
                         "title": item.title,
                         "entity_type": item.entity_type,
+                        "evidence": len(item.evidence or []),
+                        "visible": item.isVisible(),
+                        "selected": item.isSelected(),
+                        "isolated": not item._connected_edges(),
                     }
                 )
             elif isinstance(item, EdgeItem):
@@ -769,10 +773,22 @@ class GraphBridgeServer:
             t = n["entity_type"]
             type_counts[t] = type_counts.get(t, 0) + 1
 
+        relationship_counts = {}
+        for e in edges:
+            relationship = e["relationship"] or "associated_with"
+            relationship_counts[relationship] = (
+                relationship_counts.get(relationship, 0) + 1
+            )
+
         return {
             "total_nodes": len(nodes),
             "total_edges": len(edges),
             "entity_types": type_counts,
+            "relationship_types": relationship_counts,
+            "total_evidence": sum(n["evidence"] for n in nodes),
+            "visible_nodes": sum(1 for n in nodes if n["visible"]),
+            "selected_nodes": sum(1 for n in nodes if n["selected"]),
+            "isolated_nodes": sum(1 for n in nodes if n["isolated"]),
             "nodes": nodes,
             "edges": edges,
         }

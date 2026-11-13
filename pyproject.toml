@@ -32,6 +32,7 @@ files = [
     "src/controllers/github_controller.py",
     "src/controllers/graph_layout_controller.py",
     "src/controllers/graph_node_controller.py",
+    "src/controllers/graph_stats_controller.py",
     "src/controllers/graph_transform_controller.py",
     "src/controllers/leak_controller.py",
     "src/controllers/mac_location_controller.py",

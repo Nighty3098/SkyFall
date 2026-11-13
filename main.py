@@ -1,4 +1,5 @@
 import time
+
 start = time.perf_counter()
 
 import argparse
@@ -60,6 +61,7 @@ from src.controllers.geo_controller import GeoController
 from src.controllers.github_controller import GitHubController
 from src.controllers.graph_layout_controller import GraphLayoutController
 from src.controllers.graph_node_controller import GraphNodeController
+from src.controllers.graph_stats_controller import GraphStatsController
 from src.controllers.graph_transform_controller import GraphTransformController
 from src.controllers.leak_controller import LeakController
 from src.controllers.mac_location_controller import MacLocationController
@@ -565,6 +567,7 @@ class MainWindow(QMainWindow):
 
         self.blockchainController = BlockchainController(self.ui, self.blockchainSearch)
         self.nodeController = GraphNodeController(self.ui)
+        self.graphStatsController = GraphStatsController(self.ui, self.ui.graphWidget)
         self.s4fController = S4FController(self.ui, self.search4faces)
 
         setup_dorking_connectors(self.dorkingController)

@@ -673,3 +673,15 @@ QLabel#graphNodeEvidenceCaption {
     font-size: $font_size_small;
     padding: 0 2px;
 }
+
+QGroupBox#graphStatsPanel {
+    padding: 8px;
+}
+
+QLabel#graphStatsEntitiesCaption,
+QLabel#graphStatsRelationshipsCaption,
+QLabel#graphStatsMeta {
+    color: $text;
+    font-size: $font_size_small;
+    padding: 0 2px;
+}

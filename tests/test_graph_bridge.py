@@ -49,6 +49,36 @@ class GraphBridgeServerTest(unittest.TestCase):
     def test_add_node_requires_title(self):
         self.assertIn("error", self.server._add_node({"title": "  "}))
 
+    def test_add_node_accepts_maltego_style_types(self):
+        cases = {
+            "url": "URL",
+            "asn": "ASN",
+            "cidr": "Netblock",
+            "port": "Port",
+            "tls_cert": "Certificate",
+            "sha256": "Hash",
+            "social_media": "SocialMedia",
+            "file": "Document",
+            "dns_server": "Nameserver",
+        }
+        for index, (raw, expected) in enumerate(cases.items()):
+            res = self.server._add_node({"title": f"value-{index}", "entity_type": raw})
+            self.assertEqual(res.get("entity_type"), expected, raw)
+
+    def test_add_edge_accepts_new_relationship_vocabulary(self):
+        a = self.server._add_node({"title": "a.example", "entity_type": "Domain"})
+        b = self.server._add_node({"title": "b.example", "entity_type": "Domain"})
+        res = self.server._add_edge(
+            {
+                "source_id": a["node_id"],
+                "target_id": b["node_id"],
+                "relationship": "subdomain",
+            }
+        )
+        self.assertTrue(res["created"])
+        self.assertEqual(res["relationship"], "subdomain_of")
+        self.assertTrue(res["relationship_known"])
+
     def test_add_node_deduplicates_and_merges(self):
         first = self.server._add_node({"title": "alice", "entity_type": "Username"})
         second = self.server._add_node(

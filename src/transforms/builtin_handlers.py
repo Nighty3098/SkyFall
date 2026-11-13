@@ -9,8 +9,10 @@ instead.
 from __future__ import annotations
 
 import inspect
+import ipaddress
 import math
 import re
+import urllib.parse
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -147,6 +149,9 @@ def _parse_domain_ip(data, domain):
                 ),
             ),
         )
+    asn_child = _asn_child(data.get("asn"))
+    if asn_child is not None:
+        children.append(asn_child)
     lat = _safe_float(data.get("lat"))
     lon = _safe_float(data.get("lon"))
     if lat is not None and lon is not None:
@@ -184,7 +189,14 @@ def _parse_domain_dns(data, domain):
             lines.append(section(rtype))
             for rec in records[:3]:
                 lines.append(bullet(str(rec)))
-                child_type = "IP" if rtype in ("A", "AAAA") else "Custom"
+                if rtype in ("A", "AAAA"):
+                    child_type = "IP"
+                elif rtype == "NS":
+                    child_type = "Nameserver"
+                elif rtype in ("MX", "CNAME"):
+                    child_type = "Domain"
+                else:
+                    child_type = "Custom"
                 children.append(ChildNodeDef(title=str(rec), entity_type=child_type))
     soa = data.get("SOA", {})
     if soa:
@@ -218,8 +230,9 @@ def _parse_domain_ssl(data, domain):
         children=[
             ChildNodeDef(
                 title=subject.get("commonName", domain),
-                entity_type="Custom",
+                entity_type="Certificate",
                 content=_pack_content(lines),
+                evidence=[f"https://{domain}"] if domain else [],
             ),
         ],
         content=_pack_content(lines),
@@ -473,8 +486,8 @@ def _parse_domain_nmap(data, domain):
         for p in ports[:CHILD_THRESHOLD]:
             children.append(
                 ChildNodeDef(
-                    title=f"Port {p['port']}/{p.get('service', '?')}",
-                    entity_type="Custom",
+                    title=f"{p['port']}/{p.get('service', 'tcp')}",
+                    entity_type="Port",
                     content=_pack_content(
                         [
                             f"State: {p.get('state', '?')}",
@@ -526,6 +539,9 @@ def _parse_ip_geo(data, ip_addr):
                 ),
             ),
         )
+    asn_child = _asn_child(data.get("asn"))
+    if asn_child is not None:
+        children.append(asn_child)
     fields = [
         kv(label, data[key])
         for label, key in (
@@ -784,7 +800,242 @@ def _parse_mac_geo(data, mac):
     return TransformResult(content="No geolocation data found for this MAC")
 
 
+# ── Maltego-style entity helpers ──────────────────────────────────
+
+
+_ASN_PREFIX_RE = re.compile(r"^(?:AS)?\s*(\d{1,10})$", re.IGNORECASE)
+
+
+def _extract_host(value):
+    """Return the hostname from a URL, hostname or free-form text."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    candidate = text if "://" in text else f"http://{text}"
+    try:
+        host = urllib.parse.urlsplit(candidate).hostname or ""
+    except ValueError:
+        host = ""
+    if host:
+        host = host.rstrip(".").lower()
+        if (
+            _PATTERNS["Domain"].fullmatch(host)
+            or _PATTERNS["IP"].fullmatch(host)
+            or ":" in host
+        ):
+            return host
+    for pattern in (_PATTERNS["Domain"], _PATTERNS["IP"]):
+        match = pattern.search(text)
+        if match:
+            return match.group().rstrip(".").lower()
+    return ""
+
+
+def _parse_url_host(url):
+    text = str(url or "").strip()
+    host = _extract_host(text)
+    if not host:
+        return TransformResult(content=f"URL: no host in {text}")
+    if "://" not in text:
+        text = f"http://{text}"
+    try:
+        parsed = urllib.parse.urlsplit(text)
+    except ValueError:
+        parsed = urllib.parse.SplitResult("", host, "", "", "")
+    content = _pack_content(
+        [
+            divider(),
+            title(f"URL host: {host}"),
+            kv("Scheme", parsed.scheme or "?"),
+            kv("Host", host),
+            kv("Path", parsed.path or "/"),
+            kv("Query", parsed.query or ""),
+            kv("Fragment", parsed.fragment or ""),
+            end_of("url"),
+            divider(),
+        ]
+    )
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=host,
+                entity_type="Domain",
+                content=content,
+                evidence=[text],
+            )
+        ],
+        content=content,
+        evidence=[text],
+    )
+
+
+def _parse_netblock_ips(netblock, limit=64):
+    text = str(netblock or "").strip()
+    try:
+        network = ipaddress.ip_network(text, strict=False)
+    except ValueError:
+        return TransformResult(content=f"Invalid netblock: {text}")
+    children = []
+    for address in network.hosts():
+        if len(children) >= limit:
+            break
+        children.append(
+            ChildNodeDef(
+                title=str(address),
+                entity_type="IP",
+                content=_pack_content(
+                    [
+                        kv("Netblock", network.with_prefixlen),
+                        kv("Version", f"IPv{network.version}"),
+                    ]
+                ),
+            )
+        )
+    lines = [
+        divider(),
+        title(f"Netblock: {network.with_prefixlen}"),
+        kv("Version", f"IPv{network.version}"),
+        kv("Addresses", network.num_addresses),
+        kv("Listed", len(children)),
+    ]
+    if not children:
+        lines.append(fmt_info("No usable host addresses"))
+    lines += [end_of("netblock"), divider()]
+    return TransformResult(children=children, content=_pack_content(lines))
+
+
+def _normalise_asn(value):
+    text = str(value or "").strip()
+    match = _ASN_PREFIX_RE.fullmatch(text)
+    if match:
+        return f"AS{match.group(1)}"
+    return text
+
+
+def _asn_child(value):
+    text = str(value or "").strip()
+    if not text:
+        return None
+    return ChildNodeDef(
+        title=_normalise_asn(text),
+        entity_type="ASN",
+        content=kv("ASN", text),
+    )
+
+
+def _extract_port(value):
+    match = re.match(r"\s*(\d{1,5})", str(value or ""))
+    return match.group(1) if match else str(value or "").strip()
+
+
+def _extract_service(value):
+    return str(value or "").strip().replace('"', "")
+
+
+def _parse_hash_virustotal(data, hash_value):
+    result = _parse_photo_virustotal(data, hash_value)
+    if isinstance(data, dict) and not data.get("error"):
+        evidence = [f"https://www.virustotal.com/gui/file/{hash_value}"]
+        result.evidence = evidence
+        for child in result.children:
+            child.evidence = list(evidence)
+    return result
+
+
 # ── Transform wrappers ────────────────────────────────────────────
+
+
+def _transform_url_host(url, modules):
+    del modules
+    return _parse_url_host(url)
+
+
+async def _transform_url_headers(url, modules):
+    host = _extract_host(url)
+    if not host:
+        return TransformResult(content=f"URL: no host in {url}")
+    return await _transform_domain_headers(host, modules)
+
+
+async def _transform_url_waf(url, modules):
+    host = _extract_host(url)
+    if not host:
+        return TransformResult(content=f"URL: no host in {url}")
+    return await _transform_domain_waf(host, modules)
+
+
+async def _transform_url_malware(url, modules):
+    host = _extract_host(url)
+    if not host:
+        return TransformResult(content=f"URL: no host in {url}")
+    return await _transform_domain_malware(host, modules)
+
+
+async def _transform_certificate_domains(certificate, modules):
+    host = _extract_host(certificate)
+    if not host:
+        return TransformResult(content="Certificate: no domain found")
+    return await _transform_domain_ct(host, modules)
+
+
+def _transform_netblock_ips(netblock, modules):
+    del modules
+    return _parse_netblock_ips(netblock)
+
+
+async def _transform_netblock_hosts(netblock, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    query = f"net:{netblock}"
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+async def _transform_asn_hosts(asn, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    query = f"asn:{_normalise_asn(asn)}"
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+async def _transform_port_hosts(port, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    query = f"port:{_extract_port(port)}"
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+async def _transform_service_hosts(service, modules):
+    engine = modules.get("shodan_search")
+    if not engine:
+        return TransformResult(content="Shodan module not available")
+    query = f'product:"{_extract_service(service)}"'
+    data = await engine.search(query)
+    return _parse_shodan_search(data, query)
+
+
+async def _transform_hash_virustotal(hash_value, modules):
+    engine = modules.get("file_analyzer")
+    if not engine:
+        return TransformResult(content="File analyzer module not available")
+    report = await engine.check_file_by_hash(hash_value)
+    if not report:
+        return TransformResult(content=f"VirusTotal: no report for {hash_value}")
+    try:
+        attributes = report["data"]["attributes"]
+        stats = attributes["last_analysis_stats"]
+        results = attributes.get("last_analysis_results")
+        info = engine.get_virustotal_info(hash_value, stats, results)
+    except (KeyError, TypeError):
+        return TransformResult(
+            content=f"VirusTotal: unexpected response for {hash_value}"
+        )
+    return _parse_hash_virustotal(info, hash_value)
 
 
 async def _transform_username_search(username, modules):
@@ -1880,6 +2131,9 @@ def _parse_shodan_host(data, ip):
                 ),
             )
         )
+    asn_child = _asn_child(data.get("asn"))
+    if asn_child is not None:
+        children.append(asn_child)
     lat = _safe_float(data.get("latitude"))
     lon = _safe_float(data.get("longitude"))
     if lat is not None and lon is not None:
@@ -1905,18 +2159,20 @@ def _parse_shodan_host(data, ip):
                 content=kv("Hostname", hostname),
             )
         )
+    seen_services = set()
     for record in services[:CHILD_THRESHOLD]:
         port = record.get("port", "?")
         transport = record.get("transport", "tcp")
+        product = str(record.get("product") or "").strip()
         children.append(
             ChildNodeDef(
-                title=f"Port {port}/{transport}",
-                entity_type="Custom",
+                title=f"{port}/{transport}",
+                entity_type="Port",
                 content=_pack_content(
                     [
                         kv("Port", port),
                         kv("Transport", transport),
-                        kv("Product", record.get("product", "?")),
+                        kv("Product", product or "?"),
                         kv("Version", record.get("version", "?")),
                         kv("Module", (record.get("_shodan") or {}).get("module", "?")),
                         str(record.get("banner", ""))[:400],
@@ -1924,6 +2180,21 @@ def _parse_shodan_host(data, ip):
                 ),
             )
         )
+        if product and product.lower() not in seen_services:
+            seen_services.add(product.lower())
+            children.append(
+                ChildNodeDef(
+                    title=product[:60],
+                    entity_type="Service",
+                    content=_pack_content(
+                        [
+                            kv("Product", product),
+                            kv("Port", f"{port}/{transport}"),
+                            kv("Version", record.get("version", "?")),
+                        ]
+                    ),
+                )
+            )
     for cve in vulns[:CHILD_THRESHOLD]:
         children.append(
             ChildNodeDef(
@@ -1969,10 +2240,17 @@ def _parse_shodan_dns(data, domain):
         if full in seen:
             continue
         seen.add(full)
+        record_type = str(record.get("type", "")).upper()
+        if record_type == "NS":
+            node_title = str(record.get("value") or full).rstrip(".").lower()
+            entity_type = "Nameserver"
+        else:
+            node_title = full
+            entity_type = "Domain"
         children.append(
             ChildNodeDef(
-                title=full,
-                entity_type="Domain",
+                title=node_title,
+                entity_type=entity_type,
                 content=_pack_content(
                     [
                         kv("Subdomain", subdomain or base),

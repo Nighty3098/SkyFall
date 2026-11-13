@@ -23,12 +23,23 @@ _PATTERNS: dict[str, re.Pattern] = {
     "Phone": re.compile(r"\+?\d[\d\s\-().]{6,}\d"),
     "MAC": re.compile(r"(?:[0-9A-Fa-f]{2}[:-]){5}[0-9A-Fa-f]{2}"),
     "Crypto": re.compile(r"(?:1|3|bc1|0x)[a-zA-Z0-9]{25,}"),
+    "URL": re.compile(r"https?://[^\s\"'<>]+", re.IGNORECASE),
+    "ASN": re.compile(r"(?:AS)?\d{1,10}", re.IGNORECASE),
+    "Netblock": re.compile(
+        r"(?:(?:\d{1,3}\.){3}\d{1,3}/\d{1,2}|[0-9a-f:]+/\d{1,3})",
+        re.IGNORECASE,
+    ),
+    "Port": re.compile(r"\d{1,5}(?:/[a-z0-9_-]+)?", re.IGNORECASE),
+    "Hash": re.compile(r"[a-fA-F0-9]{32,64}"),
 }
+
+# Entity types whose value is a local file path (metadata/VT/stego lookups).
+FILE_TYPES = frozenset({"Photo", "Document"})
 
 
 def transform_input(node, etype, title, content, default_prefix):
     """Pick the value a transform should send to its handler."""
-    if etype == "Photo":
+    if etype in FILE_TYPES:
         candidates = [title, content, *(getattr(node, "evidence", None) or [])]
         for candidate in candidates:
             path = local_file_path(candidate)
@@ -119,6 +130,7 @@ _safe_float = safe_float
 
 __all__ = [
     "CHILD_THRESHOLD",
+    "FILE_TYPES",
     "local_file_path",
     "pack_content",
     "run_transform",

@@ -148,8 +148,10 @@ GRAPH BUILDING RULES (investigation graph tools):
   the title ("example.com", "@alice", "1.2.3.4"); put short, sourced notes in
   content. Do not stuff relationships into the title.
 - Entity types: Person, Domain, IP, Email, Phone, MAC, Username, Crypto,
-  Organization, Passport, Photo, Geolocation, Custom. Common synonyms are mapped
-  automatically (handle->Username, wallet->Crypto, location->Geolocation, ...).
+  Organization, Passport, Photo, Geolocation, URL, ASN, Netblock, Port, Service,
+  Certificate, Hash, SocialMedia, Device, Event, Document, Vehicle, Malware,
+  Nameserver, Phrase, Custom. Common synonyms are mapped automatically
+  (handle->Username, wallet->Crypto, location->Geolocation, cidr->Netblock, ...).
 - Titles are canonical. add_node deduplicates by (entity_type, title) and merges
   content, so call it freely to enrich a node instead of creating duplicates.
   Set allow_duplicate=true only when two distinct entities share a title.
@@ -159,8 +161,11 @@ GRAPH BUILDING RULES (investigation graph tools):
   creates and positions everything and returns a ref->node_id map.
 - Relationship vocabulary: owns, registered_at, resolved_to, member_of,
   located_at, communicates_with, associated_with, works_at, created_by, attends,
-  hosted_by, linked_to. Use associated_with when the link is uncertain. Common
-  aliases are normalised for you.
+  hosted_by, linked_to, related_to, archived_at, subdomain_of, contains,
+  has_port, runs, serves, secured_by, issued_by, issued_to, signed_by,
+  registered_by, aliases, mentions, participates_in, assigned_to, delegated_to,
+  redirects_to. Use associated_with when the link is uncertain. Common aliases
+  are normalised for you.
 - Duplicate edges are merged and self-loops are rejected.
 - Call skyfall_graph_summary before editing an existing graph, and
   skyfall_graph_layout afterwards if you want a different arrangement.
@@ -1639,7 +1644,10 @@ async def skyfall_graph_add_node(
         title: Identifier for the entity (e.g. "example.com", "@alice")
         content: Short factual note, ideally with its source
         entity_type: Person, Domain, IP, Email, Phone, MAC, Username, Crypto,
-                     Organization, Passport, Photo, Geolocation, Custom
+                     Organization, Passport, Photo, Geolocation, URL, ASN,
+                     Netblock, Port, Service, Certificate, Hash, SocialMedia,
+                     Device, Event, Document, Vehicle, Malware, Nameserver,
+                     Phrase, Custom
         anchor_id: Optional id of a related node to position next to
         allow_duplicate: Create a second node even if one already matches
     """
@@ -1822,7 +1830,9 @@ async def skyfall_graph_update_node(
         content: New content/description (optional)
         entity_type: New entity type (optional): Person, Domain, IP, Email, Phone,
                      MAC, Username, Crypto, Organization, Passport, Photo,
-                     Geolocation, Custom
+                     Geolocation, URL, ASN, Netblock, Port, Service, Certificate,
+                     Hash, SocialMedia, Device, Event, Document, Vehicle,
+                     Malware, Nameserver, Phrase, Custom
     """
     if not _graph_bridge_available():
         return _graph_not_available_bridge()

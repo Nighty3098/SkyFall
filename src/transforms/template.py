@@ -64,7 +64,9 @@ def get_transforms():
 
 Supported entity types: ``Person``, ``Domain``, ``IP``, ``Email``, ``Phone``,
 ``MAC``, ``Username``, ``Crypto``, ``Organization``, ``Passport``, ``Photo``,
-``Geolocation`` and ``Custom``.
+``Geolocation``, ``URL``, ``ASN``, ``Netblock``, ``Port``, ``Service``,
+``Certificate``, ``Hash``, ``SocialMedia``, ``Device``, ``Event``, ``Document``,
+``Vehicle``, ``Malware``, ``Nameserver``, ``Phrase`` and ``Custom``.
 
 Use unique transform names. If a plugin uses the same name as a built-in
 transform for the same entity type, the built-in one wins and the duplicate is

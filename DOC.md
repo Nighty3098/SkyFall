@@ -490,7 +490,7 @@ See [Settings and API Keys](#settings-and-api-keys). Also the **MCP Server** blo
 
 ## Graph
 
-### Entities (13 types)
+### Entities (28 types, Maltego-style)
 
 | Type | Color | Symbol |
 |---|---|---|
@@ -506,13 +506,30 @@ See [Settings and API Keys](#settings-and-api-keys). Also the **MCP Server** blo
 | Passport | `#e84393` | 📄 |
 | Photo | `#a29bfe` | 🖼️ |
 | Geolocation | `#55efc4` | 📍 |
+| URL | `#0984e3` | 🔗 |
+| ASN | `#00cec9` | 🛰️ |
+| Netblock | `#e1b12c` | 🧱 |
+| Port | `#74b9ff` | 🚪 |
+| Service | `#8e44ad` | 🛠️ |
+| Certificate | `#fdcb6e` | 📜 |
+| Hash | `#b2bec3` | #️⃣ |
+| SocialMedia | `#ff7675` | 💬 |
+| Device | `#6ab04c` | 💻 |
+| Event | `#f0932b` | 📅 |
+| Document | `#d63031` | 📁 |
+| Vehicle | `#40739e` | 🚗 |
+| Malware | `#c23616` | 🦠 |
+| Nameserver | `#0097e6` | 🗄️ |
+| Phrase | `#9c88ff` | 🔤 |
 | Custom | `#636e72` | ⚙️ |
 
-### Relations (12 types)
+Aliases map Maltego-style names onto these types (for example `url`/`uri`→`URL`, `cidr`→`Netblock`, `ssl_cert`→`Certificate`, `sha256`→`Hash`, `social_media`→`SocialMedia`, `file`→`Document`, `dns_server`→`Nameserver`, `keyword`→`Phrase`).
 
-`owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`, `communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`, `hosted_by`, `linked_to`.
+### Relations (30 types)
 
-Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bezier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `wallet`→…) are normalised to the canonical vocabulary.
+`owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`, `communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`, `hosted_by`, `linked_to`, `related_to`, `archived_at`, `subdomain_of`, `contains`, `has_port`, `runs`, `serves`, `secured_by`, `issued_by`, `issued_to`, `signed_by`, `registered_by`, `aliases`, `mentions`, `participates_in`, `assigned_to`, `delegated_to`, `redirects_to`.
+
+Edge styles: `normal` (solid), `dashed` (dotted), `bold` (thickened). Edges are cubic Bezier curves with an arrow. A relation-type chip is shown while the edge is hovered or selected, and a user label is always shown. Common relationship aliases (`employed_by`, `lives in`, `subdomain`, `has_port`, `ssl`, `aka`, `redirected_to`, …) are normalised to the canonical vocabulary.
 
 Nodes render as cards with an entity-coloured header band, symbol chip, and type caption; ports stay subtle until the node is hovered. The canvas paints a dotted grid, and an empty graph shows a short "how to start" hint.
 
@@ -523,6 +540,7 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 - **Clipboard** — `Ctrl+C` / `Ctrl+X` / `Ctrl+V` copy, cut and paste nodes together with their internal edges; `Ctrl+D` duplicates the selection with a small offset. Every operation is a single undo step.
 - **Selection toolkit** — context menu → `Select`: connected nodes, same entity type, invert selection, select all. Multi-selection supports align (6 edges/centres), distribute horizontally/vertically and connect in sequence or all pairs. `Shift+F` frames only the selected nodes.
 - **Minimap** — bottom-right overview with a draggable viewport frame; `Ctrl+Shift+M` or the canvas context menu → `View → Minimap` toggles it.
+- **Statistics panel** — the right sidebar keeps a live **Graph Statistics** breakdown: total nodes, edges and evidence, visible/selected/isolated node counts, plus per-entity-type and per-relationship-type tallies with shares. It updates automatically after every canvas change; the same counters are exposed to agents through `skyfall_graph_summary`.
 - **Transient canvas HUD** — status, transform progress, undo/redo and filter feedback are painted over the viewport instead of creating a `QStatusBar`, so the canvas layout never shifts.
 - **Photo nodes** — a gallery of thumbnails from files/URLs (with caching and a `+N` badge).
 - **Geolocation nodes** — a built-in map (OpenStreetMap tiles, zoom 5–18, marker, Ctrl+wheel to zoom).
@@ -538,7 +556,18 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
   - **MAC** → geolocation;
   - **Geolocation** → Sun/Shadow, Nearby Disasters (GDACS), NASA FIRMS wildfires, location report;
-  - **Photo** → EXIF/metadata, GPS, steganography, Search4Faces, VirusTotal;
+  - **Photo / Document** → EXIF/metadata, GPS (Photo), steganography, Search4Faces (Photo), VirusTotal, web search;
+  - **URL** → host resolution, HTTP headers, WAF detection, reputation, Wayback snapshots, web search;
+  - **ASN / Netblock** → Shodan host pivots, CIDR-to-IP expansion (Netblock), web search;
+  - **Port / Service** → Shodan host pivots by port/product, web search;
+  - **Certificate** → Certificate Transparency domains, web search;
+  - **Hash** → VirusTotal hash lookup, web search;
+  - **SocialMedia** → Bluesky/Mastodon, Instagram, GitHub, web search;
+  - **Device** → Shodan host, port scan, domains on IP, web search;
+  - **Event / Vehicle** → web search;
+  - **Malware** → Shodan exploits, web search;
+  - **Nameserver** → DNS records, IP resolution, WHOIS, web search;
+  - **Phrase** → web search, Shodan search, Infostealer/Leaks;
   - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
 - **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py`; see [Custom Graph Transforms](#custom-graph-transforms) below.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
@@ -628,11 +657,16 @@ def get_transforms():
 | `use_content` | no | `False` | Pass the full node content instead of the title-derived value. |
 
 Supported entity types are `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`,
-`Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation` and
+`Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation`, `URL`,
+`ASN`, `Netblock`, `Port`, `Service`, `Certificate`, `Hash`, `SocialMedia`,
+`Device`, `Event`, `Document`, `Vehicle`, `Malware`, `Nameserver`, `Phrase` and
 `Custom`. Relationship names use the same vocabulary as the rest of the graph:
 `owns`, `registered_at`, `resolved_to`, `member_of`, `located_at`,
 `communicates_with`, `associated_with`, `works_at`, `created_by`, `attends`,
-`hosted_by` and `linked_to`.
+`hosted_by`, `linked_to`, `related_to`, `archived_at`, `subdomain_of`,
+`contains`, `has_port`, `runs`, `serves`, `secured_by`, `issued_by`,
+`issued_to`, `signed_by`, `registered_by`, `aliases`, `mentions`,
+`participates_in`, `assigned_to`, `delegated_to` and `redirects_to`.
 
 #### Handler contract
 

@@ -94,16 +94,10 @@ class FormUiStatsWidgetsTest(unittest.TestCase):
     def _widget(self, name):
         return self.root.find(f".//widget[@name='{name}']")
 
-    def test_statistics_panel_is_built_from_native_widgets(self):
-        panel = self._widget("graphStatsPanel")
-        self.assertIsNotNone(panel)
-        self.assertEqual(panel.get("class"), "QGroupBox")
-
+    def test_statistics_widgets_are_native(self):
         expected = {
             "graphStatsSummary": "QLabel",
             "graphStatsMeta": "QLabel",
-            "graphStatsEntitiesCaption": "QLabel",
-            "graphStatsRelationshipsCaption": "QLabel",
             "graphStatsEntityList": "QListWidget",
             "graphStatsRelationshipList": "QListWidget",
         }

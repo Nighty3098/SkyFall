@@ -1,3 +1,7 @@
+import time
+
+start = time.perf_counter()
+
 import argparse
 import asyncio
 import sys
@@ -57,6 +61,7 @@ from src.controllers.geo_controller import GeoController
 from src.controllers.github_controller import GitHubController
 from src.controllers.graph_layout_controller import GraphLayoutController
 from src.controllers.graph_node_controller import GraphNodeController
+from src.controllers.graph_stats_controller import GraphStatsController
 from src.controllers.graph_transform_controller import GraphTransformController
 from src.controllers.leak_controller import LeakController
 from src.controllers.mac_location_controller import MacLocationController
@@ -562,6 +567,7 @@ class MainWindow(QMainWindow):
 
         self.blockchainController = BlockchainController(self.ui, self.blockchainSearch)
         self.nodeController = GraphNodeController(self.ui)
+        self.graphStatsController = GraphStatsController(self.ui, self.ui.graphWidget)
         self.s4fController = S4FController(self.ui, self.search4faces)
 
         setup_dorking_connectors(self.dorkingController)
@@ -641,13 +647,13 @@ if __name__ == "__main__":
         setup_logging(False)
 
     app = QApplication(sys.argv)
-    # Wayland app-id должен совпадать с именем skyfall.desktop,
-    # иначе DE покажет generic-иконку вместо нашей.
+
     app.setApplicationName("skyfall")
     app.setOrganizationName("skyfall")
     app.setDesktopFileName("skyfall")
     widget = MainWindow()
 
+    logger.debug(f"Startup time: {time.perf_counter() - start:.2f} sec")
     widget.show()
 
     loop = QEventLoop(app)

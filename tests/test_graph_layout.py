@@ -163,6 +163,17 @@ class NormalizeEntityTypeTest(unittest.TestCase):
         self.assertEqual(normalize_entity_type("wallet"), "Crypto")
         self.assertEqual(normalize_entity_type("location"), "Geolocation")
 
+    def test_maltego_style_aliases(self):
+        self.assertEqual(normalize_entity_type("uri"), "URL")
+        self.assertEqual(normalize_entity_type("cidr"), "Netblock")
+        self.assertEqual(normalize_entity_type("tls_cert"), "Certificate")
+        self.assertEqual(normalize_entity_type("sha256"), "Hash")
+        self.assertEqual(normalize_entity_type("social_media"), "SocialMedia")
+        self.assertEqual(normalize_entity_type("router"), "Device")
+        self.assertEqual(normalize_entity_type("file"), "Document")
+        self.assertEqual(normalize_entity_type("dns_server"), "Nameserver")
+        self.assertEqual(normalize_entity_type("keyword"), "Phrase")
+
     def test_unknown_returns_empty(self):
         self.assertEqual(normalize_entity_type("nanobot"), "")
         self.assertEqual(normalize_entity_type(None), "")
@@ -176,6 +187,15 @@ class NormalizeRelationshipTest(unittest.TestCase):
     def test_aliases(self):
         self.assertEqual(normalize_relationship("employed_by"), "works_at")
         self.assertEqual(normalize_relationship("lives in"), "located_at")
+
+    def test_maltego_style_aliases(self):
+        self.assertEqual(normalize_relationship("subdomain"), "subdomain_of")
+        self.assertEqual(normalize_relationship("has_port"), "has_port")
+        self.assertEqual(normalize_relationship("ssl"), "secured_by")
+        self.assertEqual(normalize_relationship("issuer"), "issued_by")
+        self.assertEqual(normalize_relationship("aka"), "aliases")
+        self.assertEqual(normalize_relationship("mentioned_in"), "mentions")
+        self.assertEqual(normalize_relationship("redirected_to"), "redirects_to")
 
     def test_unknown_is_kept(self):
         self.assertEqual(normalize_relationship("paid_for"), "paid_for")

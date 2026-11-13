@@ -1,6 +1,7 @@
 from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QListWidgetItem
+from PySide6.QtWidgets import QListWidgetItem, QSplitter, QWidget
 
+from src.utils import get_current_ip
 from src.ui.layout_polish import polish_ui
 
 # Logical grouping of the tabs shown in the navigation sidebar.  Tabs are
@@ -10,24 +11,46 @@ NAV_GROUPS = [
     ("Home", ["SKYFALL"]),
     ("Telegram", ["TELEGRAM DOWNLOADER", "TELEGRAM ANALYZER"]),
     (
-        "Identity & OSINT",
-        ["USERNAME", "MAIL", "SOCIAL", "REDDIT", "LEAKS", "GEO", "ARCHIVE"],
+        "Social",
+        [
+            "USERNAME",
+            "MAIL",
+            "REDDIT",
+            "SOCIAL",
+        ],
+    ),
+    (
+        "Identity",
+        [
+            "SEARCH4FACES",
+            "PHONE",
+            "GEO",
+            "LEAKS",
+            "ARCHIVE",
+        ],
     ),
     (
         "Web & Infrastructure",
         [
             "DORKING",
             "WEB",
-            "FILE ANALYZE",
             "GITHUB",
-            "SHODAN",
-            "PHONE",
             "MAC ADDR",
             "WIFI",
             "OPEN CAMERAS",
+        ],
+    ),
+    (
+        "Blockchain",
+        [
             "BLOCKCHAIN",
+        ],
+    ),
+    (
+        "File analyze",
+        [
             "STEGANOGRAPHY",
-            "SEARCH4FACES",
+            "FILE ANALYZE",
         ],
     ),
     ("Workspace", ["DOWNLOADER", "GRAPH", "AI REPORT"]),
@@ -126,9 +149,35 @@ def setup_source_code_link(parent):
     label.installEventFilter(parent)
 
 
+def normalize_splitters(parent, outer=12, gap=8, spacing=8):
+    splitters = parent.findChildren(QSplitter)
+    nested = {n for s in splitters for n in s.findChildren(QSplitter)}
+
+    for s in splitters:
+        s.setHandleWidth(gap)
+        s.setChildrenCollapsible(False)
+        for i in range(s.count()):
+            lay = s.widget(i).layout()
+            if lay:
+                lay.setContentsMargins(0, 0, 0, 0)
+                lay.setSpacing(spacing)
+        if s not in nested:
+            play = s.parentWidget().layout()
+            if play:
+                play.setContentsMargins(outer, outer, outer, outer)
+                play.setSpacing(spacing)
+
+def setup_home_tab(parent):
+    label = getattr(parent.ui, "currentIpLabel", None)
+    if label is None:
+        return
+    label.setText(f"Current IP: {get_current_ip()}")
+
 def setup_ui(self):
     setup_navbar(self)
     setup_view_menu(self)
     setup_navigation_action(self)
     setup_source_code_link(self)
     polish_ui(self)
+    normalize_splitters(self)
+    setup_home_tab(self)

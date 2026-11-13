@@ -428,7 +428,7 @@ QLabel {
 QLabel#sourceCodeLinkLabel {
     text-decoration: none;
     color: $text;
-    font-family: "Bebas Neue", monospace;
+    font-family: "Iosevka Charon Mono", monospace;
 }
 
 QLabel#metadataFilePath {
@@ -670,6 +670,18 @@ QLabel#graphNodeTypeCaption,
 QLabel#graphNodeContentCaption,
 QLabel#graphNodeEvidenceCaption {
     color: $text_muted;
+    font-size: $font_size_small;
+    padding: 0 2px;
+}
+
+QGroupBox#graphStatsPanel {
+    padding: 8px;
+}
+
+QLabel#graphStatsEntitiesCaption,
+QLabel#graphStatsRelationshipsCaption,
+QLabel#graphStatsMeta {
+    color: $text;
     font-size: $font_size_small;
     padding: 0 2px;
 }

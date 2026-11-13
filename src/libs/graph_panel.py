@@ -13,14 +13,17 @@ from src.libs.graph_lib import (
 )
 
 
-def _swatch(color: str) -> QPixmap:
+def _swatch(color: str, size: int = 14) -> QPixmap:
     """Small rounded colour chip used as the palette item icon."""
-    pix = QPixmap(14, 14)
+    pix = QPixmap(size, size)
     pix.fill(Qt.GlobalColor.transparent)
     painter = QPainter(pix)
     painter.setRenderHint(QPainter.RenderHint.Antialiasing)
     path = QPainterPath()
-    path.addRoundedRect(1, 1, 12, 12, 4, 4)
+    inset = max(1.0, size / 14.0)
+    path.addRoundedRect(
+        inset, inset, size - inset * 2, size - inset * 2, size / 3.5, size / 3.5
+    )
     painter.fillPath(path, QColor(color))
     painter.end()
     return pix

@@ -2,15 +2,22 @@
 
 # `SkyFall Project`
 
-<br /><br />
-
-<img src="resources/banner.webp" width="95%" />
-
-<br /><br /><br /><br />
-
 <img src="resources/img.png" width="95%" />
 
-<br /><br />
+<br/>
+
+<p align="center" style="max-width: 500px">
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/stars/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=grey&amp;font=geist"><img alt="GitHub Stars" src="https://www.shieldcn.dev/github/stars/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=grey&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/forks/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=grey&amp;font=geist"><img alt="GitHub Forks" src="https://www.shieldcn.dev/github/forks/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=grey&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/last-commit/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=grey&amp;font=geist"><img alt="Last commit" src="https://www.shieldcn.dev/github/last-commit/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=grey&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/open-issues/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=grey&amp;font=geist"><img alt="Open issues" src="https://www.shieldcn.dev/github/open-issues/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=grey&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/closed-issues/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=dark&amp;theme=green&amp;font=geist"><img alt="Closed issues" src="https://www.shieldcn.dev/github/closed-issues/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=light&amp;theme=green&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/open-prs/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=grey&amp;font=geist"><img alt="Open PRs" src="https://www.shieldcn.dev/github/open-prs/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=grey&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/ci/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=dark&amp;theme=grey&amp;font=geist"><img alt="CI" src="https://www.shieldcn.dev/github/ci/Nighty3098/SkyFall.svg?variant=secondary&amp;mode=light&amp;theme=grey&amp;font=geist"></picture>
+<picture><source media="(prefers-color-scheme: dark)" srcset="https://www.shieldcn.dev/github/license/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=dark&amp;theme=green&amp;font=geist"><img alt="License" src="https://www.shieldcn.dev/github/license/Nighty3098/SkyFall.svg?variant=ghost&amp;mode=light&amp;theme=green&amp;font=geist"></picture>
+</p>
+
+<br />
 
 **Desktop OSINT investigation toolkit**
 
@@ -59,7 +66,7 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 | **Files**         | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats)                                                                                                                                                                                                                                                                                                                                 |
 | **Search4Faces**  | Reverse face search (VK photos)                                                                                                                                                                                                                                                                                                                                                                                                 |
 | **Dorking**       | ~7,900 Google dorks in 14 categories via DuckDuckGo or a local SearXNG                                                                                                                                                                                                                                                                                                                                                          |
-| **Graph**         | 13 entity types, 12 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo, Shodan), **custom transform plugins from `~/.skyfall/transforms`**, agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export                                                                      |
+| **Graph**         | 28 entity types, 30 relation types, drag-and-drop palette, colour-coded entity cards, dotted canvas, Fit View, transforms that enrich nodes via the modules above (incl. Reddit OSINT, merged username, leaks, archive, geo, Shodan), **custom transform plugins from `~/.skyfall/transforms`**, agent-friendly build via MCP (dedup + auto-placement), shortest path / centrality / community detection, JSON + image export                                                                      |
 | **AI Report**     | 7-section structured OSINT report from every panel via local Ollama, with `[FACT]/[INFERRED]/[HYPOTHESIS]` markers                                                                                                                                                                                                                                                                                                              |
 | **MCP**           | 93 tools over stdio/SSE so AI agents can drive the modules; optional bearer-token auth and a token-protected graph bridge on `127.0.0.1:9878`                                                                                                                                                                                                                                                                                   |
 | **Cases**         | Investigation workspace with automatic per-module Markdown autosave                                                                                                                                                                                                                                                                                                                                                             |
@@ -101,7 +108,7 @@ TRANSFORMS = [
 - A plugin must expose `TRANSFORMS` or a `get_transforms()` function returning `TransformDef` objects.
 - Handlers receive `(value, modules)` and may be synchronous or asynchronous.
 - Handlers may return `TransformResult`, `ChildNodeDef`(s), a string, a mapping with `children`/`content`/`evidence`, or `None`.
-- Supported input types: `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`, `Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation`, `Custom`.
+- Supported input types: `Person`, `Domain`, `IP`, `Email`, `Phone`, `MAC`, `Username`, `Crypto`, `Organization`, `Passport`, `Photo`, `Geolocation`, `URL`, `ASN`, `Netblock`, `Port`, `Service`, `Certificate`, `Hash`, `SocialMedia`, `Device`, `Event`, `Document`, `Vehicle`, `Malware`, `Nameserver`, `Phrase`, `Custom`.
 - Broken plugins are logged and skipped; built-in transforms are unaffected. If a plugin reuses a built-in `(entity type, name)` pair, the built-in wins.
 - Ready-to-copy example: [`examples/transforms/example_transform.py`](./examples/transforms/example_transform.py). Full API reference: [DOC.md](./DOC.md#custom-graph-transforms).
 
@@ -264,21 +271,6 @@ The same token also protects the graph bridge on `127.0.0.1:9878`, which the MCP
 - **`~/.skyfall/`** — `settings.json` (encrypted secrets), `secret.key`, `mcp_token`, `proxies.txt`, `logs/`, `data/`, `transforms/` (custom graph transforms and their README template).
 - **Cases** — folder per investigation with `domains/`, `telegram/`, `username/`, `email/`, `social/`, `leaks/`, `geo/`, `archive/`, `github/`, `phone/`, `mac/`, `blockchain/`, `files/`, `steganography/`, `reports/`, `dorking/`, `downloads/`, `graph/`.
 - **Telegram DB** — SQLite `SkyFall_TG.db` (`channels`, `users`, `posts`, `discussions`, `members`, `links`) and `SkyFall_TG_media/`.
-
-## `DEVELOPMENT`
-
-```bash
-
-# Lint check
-./check.sh
-
-# Auto-format
-./format.sh
-
-```
-
-The pipeline is `main.py → src/connectors.py (Qt signals) → src/controllers/ → src/modules/`; graph transforms and plugin discovery live in `src/transforms/`.
-See [`DOC.md`](./DOC.md) for the full code map.
 
 ## `CONTACTS`
 

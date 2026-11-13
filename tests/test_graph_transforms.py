@@ -5,10 +5,22 @@ import unittest
 
 from src.controllers.graph_transform_controller import (
     GraphTransformController,
+    _parse_domain_dns,
+    _parse_domain_nmap,
+    _parse_domain_ssl,
+    _parse_netblock_ips,
     _parse_reddit_report,
+    _parse_url_host,
+    _transform_asn_hosts,
+    _transform_hash_virustotal,
+    _transform_netblock_hosts,
+    _transform_port_hosts,
     _transform_reddit_osint,
+    _transform_service_hosts,
+    _transform_url_headers,
     _transform_username_merged,
 )
+from src.libs.graph_lib import ENTITY_NAMES
 
 REPORT = {
     "username": "alice",
@@ -146,23 +158,30 @@ if __name__ == "__main__":
 class NewTransformRegistryTest(unittest.TestCase):
     def test_every_entity_type_has_a_transform(self):
         controller = GraphTransformController(None, {}, plugin_dir=None)
-        for etype in (
-            "Person",
-            "Domain",
-            "IP",
-            "Email",
-            "Phone",
-            "MAC",
-            "Username",
-            "Crypto",
-            "Organization",
-            "Passport",
-            "Photo",
-            "Geolocation",
-            "Custom",
-        ):
+        for etype in ENTITY_NAMES:
             node = type("Node", (), {"entity_type": etype})()
             self.assertTrue(controller.get_transforms(node), etype)
+
+    def test_expected_transforms_are_wired_for_new_types(self):
+        controller = GraphTransformController(None, {}, plugin_dir=None)
+
+        def names(entity_type):
+            node = type("Node", (), {"entity_type": entity_type})()
+            return {transform.name for transform in controller.get_transforms(node)}
+
+        self.assertIn("Resolve Host", names("URL"))
+        self.assertIn("Shodan Hosts", names("ASN"))
+        self.assertIn("Enumerate IPs", names("Netblock"))
+        self.assertIn("Shodan Hosts", names("Port"))
+        self.assertIn("Shodan Hosts", names("Service"))
+        self.assertIn("Certificate Transparency", names("Certificate"))
+        self.assertIn("VirusTotal Lookup", names("Hash"))
+        self.assertIn("Instagram Profile", names("SocialMedia"))
+        self.assertIn("Port Scan", names("Device"))
+        self.assertIn("File Metadata", names("Document"))
+        self.assertIn("Shodan Exploits", names("Malware"))
+        self.assertIn("DNS Records", names("Nameserver"))
+        self.assertIn("Infostealer / Leaks", names("Phrase"))
 
     def test_result_accepts_evidence(self):
         from src.controllers.graph_transform_controller import TransformResult
@@ -521,3 +540,140 @@ class PhotoParserTest(unittest.TestCase):
         )
         self.assertEqual(result.children[0].title, "Not found")
         self.assertIn("VirusTotal", result.content)
+
+
+class MaltegoEntityParserTest(unittest.TestCase):
+    def test_url_host_parser_extracts_domain(self):
+        result = _parse_url_host("https://user:pass@Example.COM:8443/path?q=1#frag")
+        self.assertEqual(result.children[0].title, "example.com")
+        self.assertEqual(result.children[0].entity_type, "Domain")
+        self.assertEqual(
+            result.evidence, ["https://user:pass@Example.COM:8443/path?q=1#frag"]
+        )
+
+    def test_url_host_parser_rejects_empty_host(self):
+        result = _parse_url_host("not a url")
+        self.assertFalse(result.children)
+        self.assertIn("no host", result.content)
+
+    def test_netblock_parser_enumerates_ips_with_a_limit(self):
+        result = _parse_netblock_ips("192.0.2.0/29")
+        self.assertEqual(len(result.children), 6)
+        self.assertEqual(result.children[0].title, "192.0.2.1")
+        self.assertEqual(result.children[0].entity_type, "IP")
+        capped = _parse_netblock_ips("10.0.0.0/16", limit=3)
+        self.assertEqual(len(capped.children), 3)
+
+    def test_netblock_parser_handles_invalid_input(self):
+        result = _parse_netblock_ips("not-a-cidr")
+        self.assertIn("Invalid netblock", result.content)
+        self.assertFalse(result.children)
+
+    def test_ssl_parser_emits_certificate_node(self):
+        result = _parse_domain_ssl(
+            {
+                "version": "TLSv1.3",
+                "cipher": ("TLS_AES_256_GCM_SHA384", "TLSv1.3", 256),
+                "issuer": {"commonName": "Example CA"},
+                "subject": {"commonName": "example.com"},
+                "expires": "2030-01-01",
+            },
+            "example.com",
+        )
+        self.assertEqual(result.children[0].entity_type, "Certificate")
+        self.assertEqual(result.children[0].title, "example.com")
+
+    def test_dns_parser_emits_nameserver_nodes(self):
+        result = _parse_domain_dns(
+            {"NS": ["ns1.example.com", "ns2.example.com"]}, "example.com"
+        )
+        self.assertTrue(result.children)
+        self.assertEqual(result.children[0].entity_type, "Nameserver")
+
+    def test_nmap_parser_emits_port_nodes(self):
+        result = _parse_domain_nmap(
+            {"example.com": [{"port": 443, "service": "https", "state": "open"}]},
+            "example.com",
+        )
+        self.assertEqual(result.children[0].entity_type, "Port")
+        self.assertEqual(result.children[0].title, "443/https")
+
+    def test_url_headers_wrapper_extracts_host(self):
+        class FakeDomainAnalyzer:
+            def __init__(self):
+                self.domain = None
+
+            async def get_http_headers(self, domain):
+                self.domain = domain
+                return {
+                    "status_code": 200,
+                    "headers": {},
+                    "final_url": "https://example.com/",
+                }
+
+        engine = FakeDomainAnalyzer()
+        result = asyncio.run(
+            _transform_url_headers(
+                "https://example.com/landing?x=1", {"domain_analyzer": engine}
+            )
+        )
+        self.assertEqual(engine.domain, "example.com")
+        self.assertIn("200", result.children[0].title)
+
+    def test_shodan_wrappers_build_typed_queries(self):
+        class FakeShodan:
+            def __init__(self):
+                self.queries = []
+
+            async def search(self, query):
+                self.queries.append(query)
+                return {"total": 0, "matches": []}
+
+        engine = FakeShodan()
+        asyncio.run(_transform_asn_hosts("15169", {"shodan_search": engine}))
+        asyncio.run(_transform_netblock_hosts("10.0.0.0/24", {"shodan_search": engine}))
+        asyncio.run(_transform_port_hosts("443/tcp", {"shodan_search": engine}))
+        asyncio.run(_transform_service_hosts("nginx", {"shodan_search": engine}))
+        self.assertEqual(
+            engine.queries,
+            ["asn:AS15169", "net:10.0.0.0/24", "port:443", 'product:"nginx"'],
+        )
+
+    def test_hash_virustotal_wrapper(self):
+        class FakeFileAnalyzer:
+            async def check_file_by_hash(self, hash_value):
+                return {
+                    "data": {
+                        "attributes": {
+                            "last_analysis_stats": {
+                                "malicious": 1,
+                                "suspicious": 0,
+                                "harmless": 10,
+                                "undetected": 2,
+                            },
+                            "last_analysis_results": {
+                                "Engine": {"category": "malicious", "result": "Trojan"}
+                            },
+                        }
+                    }
+                }
+
+            def get_virustotal_info(self, hash_value, stats, results=None):
+                return {
+                    "hash": hash_value,
+                    "malicious": stats["malicious"],
+                    "suspicious": stats["suspicious"],
+                    "harmless": stats["harmless"],
+                    "undetected": stats["undetected"],
+                    "detected": ["[MALICIOUS] Engine: Trojan"],
+                }
+
+        digest = "a" * 64
+        result = asyncio.run(
+            _transform_hash_virustotal(digest, {"file_analyzer": FakeFileAnalyzer()})
+        )
+        self.assertIn("VirusTotal", result.content)
+        self.assertEqual(
+            result.evidence, [f"https://www.virustotal.com/gui/file/{digest}"]
+        )
+        self.assertEqual(result.children[0].title, "[MALICIOUS] Engine: Trojan")

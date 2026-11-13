@@ -75,6 +75,21 @@ ENTITY_TYPES = [
     ("Passport", "#e84393", "\U0001f4c4"),
     ("Photo", "#a29bfe", "\U0001f5bc\ufe0f"),
     ("Geolocation", "#55efc4", "\U0001f4cd"),
+    ("URL", "#0984e3", "\U0001f517"),
+    ("ASN", "#00cec9", "\U0001f6f0\ufe0f"),
+    ("Netblock", "#e1b12c", "\U0001f9f1"),
+    ("Port", "#74b9ff", "\U0001f6aa"),
+    ("Service", "#8e44ad", "\U0001f6e0\ufe0f"),
+    ("Certificate", "#fdcb6e", "\U0001f4dc"),
+    ("Hash", "#b2bec3", "#\ufe0f\u20e3"),
+    ("SocialMedia", "#ff7675", "\U0001f4ac"),
+    ("Device", "#6ab04c", "\U0001f4bb"),
+    ("Event", "#f0932b", "\U0001f4c5"),
+    ("Document", "#d63031", "\U0001f4c1"),
+    ("Vehicle", "#40739e", "\U0001f697"),
+    ("Malware", "#c23616", "\U0001f9a0"),
+    ("Nameserver", "#0097e6", "\U0001f5c4\ufe0f"),
+    ("Phrase", "#9c88ff", "\U0001f524"),
     ("Custom", "#636e72", "\u2699\ufe0f"),
 ]
 
@@ -102,6 +117,24 @@ RELATIONSHIP_TYPES = [
     "attends",
     "hosted_by",
     "linked_to",
+    "related_to",
+    "archived_at",
+    "subdomain_of",
+    "contains",
+    "has_port",
+    "runs",
+    "serves",
+    "secured_by",
+    "issued_by",
+    "issued_to",
+    "signed_by",
+    "registered_by",
+    "aliases",
+    "mentions",
+    "participates_in",
+    "assigned_to",
+    "delegated_to",
+    "redirects_to",
 ]
 
 EDGE_STYLES = {
@@ -127,6 +160,21 @@ ENTITY_DESCRIPTIONS = {
     "Passport": "An identity document",
     "Photo": "An image or photo evidence",
     "Geolocation": "A location or coordinates",
+    "URL": "A web address or link",
+    "ASN": "An autonomous system number",
+    "Netblock": "An IP network / CIDR range",
+    "Port": "A network port and transport",
+    "Service": "A network service or product",
+    "Certificate": "A TLS/SSL certificate",
+    "Hash": "A file hash or checksum",
+    "SocialMedia": "A social media profile or account",
+    "Device": "A host, device or endpoint",
+    "Event": "An event, incident or meeting",
+    "Document": "A document or file artefact",
+    "Vehicle": "A vehicle or registration",
+    "Malware": "Malicious software or an exploit",
+    "Nameserver": "A DNS nameserver",
+    "Phrase": "A free-form phrase or keyword",
     "Custom": "Anything that does not fit another type",
 }
 
@@ -145,7 +193,7 @@ _ENTITY_ALIASES = {
     "person": "Person",
     "hostname": "Domain",
     "website": "Domain",
-    "url": "Domain",
+    "url": "URL",
     "web": "Domain",
     "ipaddress": "IP",
     "ip_address": "IP",
@@ -173,8 +221,6 @@ _ENTITY_ALIASES = {
     "org": "Organization",
     "group": "Organization",
     "employer": "Organization",
-    "service": "Organization",
-    "document": "Passport",
     "image": "Photo",
     "picture": "Photo",
     "media": "Photo",
@@ -185,6 +231,72 @@ _ENTITY_ALIASES = {
     "place": "Geolocation",
     "city": "Geolocation",
     "country": "Geolocation",
+    "uri": "URL",
+    "link": "URL",
+    "hyperlink": "URL",
+    "asn": "ASN",
+    "as_number": "ASN",
+    "autonomous_system": "ASN",
+    "autonomoussystem": "ASN",
+    "netblock": "Netblock",
+    "cidr": "Netblock",
+    "subnet": "Netblock",
+    "network": "Netblock",
+    "prefix": "Netblock",
+    "port": "Port",
+    "tcp_port": "Port",
+    "udp_port": "Port",
+    "service": "Service",
+    "banner": "Service",
+    "product": "Service",
+    "certificate": "Certificate",
+    "cert": "Certificate",
+    "ssl_cert": "Certificate",
+    "tls_cert": "Certificate",
+    "x509": "Certificate",
+    "hash": "Hash",
+    "md5": "Hash",
+    "sha1": "Hash",
+    "sha256": "Hash",
+    "checksum": "Hash",
+    "fingerprint": "Hash",
+    "social": "SocialMedia",
+    "social_media": "SocialMedia",
+    "socialmedia": "SocialMedia",
+    "social_profile": "SocialMedia",
+    "device": "Device",
+    "endpoint": "Device",
+    "iot": "Device",
+    "router": "Device",
+    "server": "Device",
+    "event": "Event",
+    "incident": "Event",
+    "meeting": "Event",
+    "document": "Document",
+    "file": "Document",
+    "doc": "Document",
+    "attachment": "Document",
+    "pdf": "Document",
+    "passport": "Passport",
+    "id_card": "Passport",
+    "identity_document": "Passport",
+    "vehicle": "Vehicle",
+    "car": "Vehicle",
+    "plate": "Vehicle",
+    "license_plate": "Vehicle",
+    "malware": "Malware",
+    "exploit": "Malware",
+    "virus": "Malware",
+    "trojan": "Malware",
+    "nameserver": "Nameserver",
+    "name_server": "Nameserver",
+    "dns_server": "Nameserver",
+    "ns": "Nameserver",
+    "phrase": "Phrase",
+    "keyword": "Phrase",
+    "text": "Phrase",
+    "snippet": "Phrase",
+    "quote": "Phrase",
     "other": "Custom",
     "unknown": "Custom",
     "note": "Custom",
@@ -221,7 +333,6 @@ _RELATIONSHIP_ALIASES = {
     "messaged": "communicates_with",
     "associated": "associated_with",
     "linked": "associated_with",
-    "related_to": "associated_with",
     "connection": "associated_with",
     "connected_to": "associated_with",
     "uses": "associated_with",
@@ -243,6 +354,54 @@ _RELATIONSHIP_ALIASES = {
     "same_as": "linked_to",
     "alias_of": "linked_to",
     "duplicate_of": "linked_to",
+    "related": "related_to",
+    "related_to": "related_to",
+    "archived": "archived_at",
+    "wayback": "archived_at",
+    "snapshot_of": "archived_at",
+    "subdomain": "subdomain_of",
+    "child_domain": "subdomain_of",
+    "child_of": "subdomain_of",
+    "hosts": "contains",
+    "has_child": "contains",
+    "has_children": "contains",
+    "port": "has_port",
+    "open_port": "has_port",
+    "listens_on": "has_port",
+    "run": "runs",
+    "running": "runs",
+    "runs_on": "runs",
+    "serve": "serves",
+    "served_by": "serves",
+    "service": "serves",
+    "secure": "secured_by",
+    "ssl": "secured_by",
+    "tls": "secured_by",
+    "certificate": "secured_by",
+    "issuer": "issued_by",
+    "issued": "issued_by",
+    "subject": "issued_to",
+    "issued_for": "issued_to",
+    "signed": "signed_by",
+    "signature": "signed_by",
+    "registered_by": "registered_by",
+    "registrant": "registered_by",
+    "alias": "aliases",
+    "same_identity": "aliases",
+    "also_known_as": "aliases",
+    "aka": "aliases",
+    "mention": "mentions",
+    "mentioned": "mentions",
+    "mentioned_in": "mentions",
+    "participates": "participates_in",
+    "participant": "participates_in",
+    "assigned": "assigned_to",
+    "allocated_to": "assigned_to",
+    "delegated": "delegated_to",
+    "delegation": "delegated_to",
+    "redirect": "redirects_to",
+    "redirects": "redirects_to",
+    "redirected_to": "redirects_to",
 }
 
 
@@ -933,7 +1092,7 @@ class NodeItem(QGraphicsItem):
             type_text,
         )
         title_right -= type_w + 8
-        
+
         title_rect = QRectF(
             title_left,
             rect.top(),
@@ -1027,7 +1186,6 @@ class NodeItem(QGraphicsItem):
             )
 
         # Ports stay subtle until the node is hovered or selected.
-        port_alpha = 235 if (selected or hovered) else 80
         port_color = QColor(type_color)
         port_color.setAlpha(255)
         painter.setPen(Qt.PenStyle.NoPen)
@@ -1105,6 +1263,9 @@ class NodeItem(QGraphicsItem):
         if change == QGraphicsItem.GraphicsItemChange.ItemPositionHasChanged:
             for edge in self._connected_edges():
                 edge.adjust()
+        elif change == QGraphicsItem.GraphicsItemChange.ItemSelectedHasChanged:
+            for edge in self._connected_edges():
+                edge.update()
         return super().itemChange(change, value)
 
     def add_edge_ref(self, edge):
@@ -1125,8 +1286,13 @@ class NodeItem(QGraphicsItem):
                 return name
         return None
 
+    def _set_connected_edges_highlight(self, highlighted):
+        for edge in self._connected_edges():
+            edge.set_node_highlight(id(self), highlighted)
+
     def hoverEnterEvent(self, event):
         self._hovered = True
+        self._set_connected_edges_highlight(True)
         self.update()
         super().hoverEnterEvent(event)
 
@@ -1141,6 +1307,7 @@ class NodeItem(QGraphicsItem):
 
     def hoverLeaveEvent(self, event):
         self._hovered = False
+        self._set_connected_edges_highlight(False)
         self.setCursor(Qt.CursorShape.ArrowCursor)
         self.update()
         super().hoverLeaveEvent(event)
@@ -1258,6 +1425,7 @@ class EdgeItem(QGraphicsPathItem):
         self.relationship_type = relationship_type
         self.style = style if style in EDGE_STYLES else "normal"
         self._hovered = False
+        self._node_highlights = set()
         self.setPen(self._make_pen())
         self.setZValue(-1)
         self.setFlag(QGraphicsItem.GraphicsItemFlag.ItemIsSelectable, True)
@@ -1267,9 +1435,19 @@ class EdgeItem(QGraphicsPathItem):
     def _make_pen(self):
         spec = EDGE_STYLES.get(self.style, EDGE_STYLES["normal"])
         color = QColor(_theme_colors()["edge_color"])
-        if self.isSelected() or self._hovered:
+        # A clicked (selected) endpoint keeps its connections highlighted after
+        # the pointer leaves, until the node is deselected.
+        node_exposed = (
+            bool(self._node_highlights)
+            or self.source.isSelected()
+            or self.target.isSelected()
+        )
+        highlighted = self.isSelected() or self._hovered or node_exposed
+        if highlighted:
             color = QColor(_theme_colors()["card_title"])
         width = {"normal": 2, "dashed": 2, "bold": 4}.get(self.style, 2)
+        if node_exposed and not (self.isSelected() or self._hovered):
+            width += 1
         pen = QPen(
             color,
             width,
@@ -1280,6 +1458,16 @@ class EdgeItem(QGraphicsPathItem):
         if self.style == "dashed":
             pen.setDashPattern([6, 4])
         return pen
+
+    def set_node_highlight(self, node_key, highlighted):
+        """Highlight this edge while one of its endpoint nodes is hovered."""
+        before = bool(self._node_highlights)
+        if highlighted:
+            self._node_highlights.add(node_key)
+        else:
+            self._node_highlights.discard(node_key)
+        if before != bool(self._node_highlights):
+            self.update()
 
     def hoverEnterEvent(self, event):
         self._hovered = True
@@ -3385,6 +3573,9 @@ class GraphWidget(QGraphicsView):
         self._scene.addItem(edge)
         source_node.add_edge_ref(edge)
         target_node.add_edge_ref(edge)
+        for node in (source_node, target_node):
+            if getattr(node, "_hovered", False):
+                edge.set_node_highlight(id(node), True)
         self.edgeAdded.emit(edge)
         self._update_summary()
         return edge

@@ -9,7 +9,6 @@ from src.ui.layout_polish import polish_ui
 # inserted into form.ui.
 NAV_GROUPS = [
     ("Home", ["SKYFALL"]),
-    ("Telegram", ["TELEGRAM DOWNLOADER", "TELEGRAM ANALYZER"]),
     (
         "Social",
         [
@@ -17,6 +16,7 @@ NAV_GROUPS = [
             "MAIL",
             "REDDIT",
             "SOCIAL",
+            "TELEGRAM",
         ],
     ),
     (

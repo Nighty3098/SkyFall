@@ -57,6 +57,8 @@ DEFAULT_SETTINGS = {
     "light_theme": False,
     "font_size_pt": 10,
     "frameless_window": True,
+    "use_system_proxy": False,
+    "telegram_use_proxy": False,
 }
 
 FIELD_MAP = {
@@ -129,6 +131,8 @@ class Settings:
         self.light_theme = False
         self.font_size_pt = 10
         self.frameless_window = True
+        self.use_system_proxy = False
+        self.telegram_use_proxy = False
         self._settings_load_failed = False
         self._post_save_callbacks = []
 
@@ -181,6 +185,14 @@ class Settings:
         if frameless:
             frameless.setChecked(self.frameless_window)
 
+        use_system_proxy = getattr(self.ui, "useSystemProxyCheck", None)
+        if use_system_proxy:
+            use_system_proxy.setChecked(self.use_system_proxy)
+
+        telegram_use_proxy = getattr(self.ui, "telegramUseProxyCheck", None)
+        if telegram_use_proxy:
+            telegram_use_proxy.setChecked(self.telegram_use_proxy)
+
         mcp_auth = getattr(self.ui, "mcpAuthCheck", None)
         if mcp_auth:
             mcp_auth.setChecked(True)
@@ -230,6 +242,14 @@ class Settings:
         frameless = getattr(self.ui, "framelessCheck", None)
         if frameless:
             self.frameless_window = frameless.isChecked()
+
+        use_system_proxy = getattr(self.ui, "useSystemProxyCheck", None)
+        if use_system_proxy:
+            self.use_system_proxy = use_system_proxy.isChecked()
+
+        telegram_use_proxy = getattr(self.ui, "telegramUseProxyCheck", None)
+        if telegram_use_proxy:
+            self.telegram_use_proxy = telegram_use_proxy.isChecked()
 
         font_size = getattr(self.ui, "fontSizeSpinBox", None)
         if font_size:

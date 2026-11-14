@@ -136,14 +136,9 @@ Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `m
 
 ## Cases (Case Manager)
 
-`src/case_manager.py` + `src/modules/case_store.py` — an investigation "case" is both a folder tree and a small SQLite database. Menu **SkyFall → New case / Open case**; **File → Case Manager…** (`Ctrl+Alt+C`), **File → Graph History…** (`Ctrl+Alt+H`) and **File → Save Graph Version…** (`Ctrl+Alt+S`).
+`src/case_manager.py` — the concept of an investigation "case". Menu **SkyFall → New case / Open case**.
 
-- When a case is created/opened, a folder structure is generated: `domains`, `telegram`, `username`, `email`, `social`, `reddit`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads`, `notes`, `evidence`, `screenshots`, `logs/requests` + `graph/versions`.
-- **Unified store** — `<case>/case.db` (SQLite, WAL) keeps notes, attachments, request logs and graph versions together; it is created eagerly and used by the UI, MCP tools and tests. The Case Manager dialog has four tabs: **Notes**, **Evidence & screenshots**, **Raw requests**, and **Graph history**.
-- **Notes** — title, Markdown body, tags and timestamps. Search covers note titles/bodies/tags, request module/target/URL/response bodies, and attachment names/captions.
-- **Evidence & screenshots** — files are copied into `<case>/evidence` (captures into `<case>/screenshots`) and recorded with SHA-256, size, MIME type and an optional note link. **Capture graph screenshot** captures the graph canvas directly into the selected note.
-- **Raw requests** — module, target, URL, method, status, duration, headers and bodies are stored in the database; the complete request/response is also written to `<case>/logs/requests/*.log`.
-- **Graph versions** — full snapshots with content hashes, labels, action, node/edge counts and an optional parent id. Content changes create a version while node positions are ignored; identical content is deduplicated, history is capped at 200 versions, and any version can be restored into the canvas as an undoable edit. When a case is open, graph edits are autosaved as versions after a short (1.8 s) debounce.
+- When a case is created/opened, a folder structure is generated: `domains`, `telegram`, `username`, `email`, `social`, `reddit`, `leaks`, `geo`, `archive`, `github`, `phone`, `mac`, `blockchain`, `files`, `steganography`, `reports`, `dorking`, `downloads` + `graph`.
 - **Autosave**: the contents of all debug panels are automatically saved to timestamped Markdown files (`YYYY-MM-DD_HH-MM-SS_<label>.md`) in the corresponding categories. Recurring (extended) content overwrites the current file instead of creating a new one.
 - The case name is shown in the SkyFall menu.
 - Directories: `<case>/graph`, `<case>/reports` (if there is no case — `~/.skyfall/data`).
@@ -818,7 +813,7 @@ setup_telegram.py           — Telegram session authorization
 logger_setup.py             — logger setup (loguru)
 src/
   connectors.py             — binding Qt signals to controllers
-  case_manager.py           — investigation cases, autosave, unified case store API
+  case_manager.py           — investigation cases, autosave
   security.py               — settings encryption and the shared MCP/bridge token
   report_controller.py      — AI report via Ollama
   mcp_controller.py         — MCP server lifecycle + graph bridge
@@ -829,7 +824,6 @@ src/
   searxng_search.py         — local SearXNG client
   modules/                  — data collection (UI-independent)
     entity_resolution.py    — identifier normalisation, duplicate matching and graph merging
-    case_store.py           — SQLite case store: notes, evidence, request logs, graph versions
     js_secrets.py           — JS scan for keys/secrets/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
     whois_freaks.py         — WhoisFreaks WHOIS history + reverse WHOIS client
@@ -842,11 +836,11 @@ src/
     archive_search.py       — web archives (Wayback Machine, archive.today)
     tg/                     — Telegram package: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
-  controllers/              — per-tab UI logic (case_controller: case dialog + graph-version autosave)
+  controllers/              — per-tab UI logic (graph_entity_controller: duplicate detection & merging)
   transforms/               — transform API, built-in registry and plugin loader
   libs/                     — graph_lib (graph), graph_panel (palette)
   ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget,
-                              case_dialog (unified workspace), entity_resolution_dialog (review)
+                              entity_resolution_dialog (review)
 resources/                  — form.ui, QSS themes, fonts, icons
 data/                       — dorks.json, dorks.xml, username_data.json
 thirdparty/txfetch/         — vendored transaction search library
@@ -857,7 +851,6 @@ thirdparty/txfetch/         — vendored transaction search library
 ## Data and Storage
 
 - **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs), `transforms/` (custom transform plugins and their README template).
-- **Case database** — `<case>/case.db` (SQLite, WAL): `notes`, `attachments`, `request_logs`, `graph_versions`, `activity`, `meta`. Evidence files live under `<case>/evidence` and `<case>/screenshots`; raw HTTP transcripts under `<case>/logs/requests`; graph snapshots are also mirrored in the database for history/rollback.
 - **`data/dorks.json`** — 14 categories, ~7,944 dorks. **`data/dorks.xml`** — the original GHDB database.
 - **`data/username_data.json`** — 481 site specifications for username search (URL templates, error codes, regex).
 - **`resources/form.ui`** — UI (5499 lines), loaded at runtime.

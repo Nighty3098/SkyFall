@@ -46,10 +46,10 @@ from src.connectors import (
     setup_social_connectors,
     setup_steganography_connectors,
     setup_tg_analyzer_connectors,
+    setup_tg_connectors,
     setup_tg_downloader_connectors,
     setup_username_connectors,
     setup_wifi_map_connectors,
-    setup_tg_connectors,
 )
 from src.controllers.archive_controller import ArchiveController
 from src.controllers.blockchain_controller import BlockchainController
@@ -78,9 +78,9 @@ from src.controllers.social_controller import SocialController
 from src.controllers.steganography_controller import SteganographyController
 from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
+from src.controllers.tg_osint_controller import TgOSINTController
 from src.controllers.username_search_controller import UsernameController
 from src.controllers.wifi_map_controller import WifiMapController
-from src.controllers.tg_osint_controller import TgOSINTController
 from src.libs.graph_lib import GraphWidget, NodeItem
 from src.libs.graph_panel import EntityPalette
 from src.mcp_controller import McpController
@@ -653,9 +653,7 @@ class MainWindow(QMainWindow):
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
         setup_graph_connectors(self.ui, self.nodeController, self.case_manager)
 
-        self.graphEntityController = GraphEntityController(
-            self.ui, self.ui.graphWidget
-        )
+        self.graphEntityController = GraphEntityController(self.ui, self.ui.graphWidget)
 
         self.graphLayoutController = GraphLayoutController(self.ui, self.ui.graphWidget)
         setup_graph_layout_connectors(self.graphLayoutController)

@@ -1,19 +1,15 @@
 from __future__ import annotations
 
 import re
-import asyncio
-import os
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
     from src.modules.tg_osint import TgOSINT
+
 
 class TgOSINTController:
     def __init__(
@@ -38,7 +34,6 @@ class TgOSINTController:
             re.IGNORECASE,
         )
         self._BOT_TOKEN_RE = re.compile(r"\d{5,16}:[A-Za-z0-9_-]{30,}")
-
 
     def detect_id_type(self, value: str) -> int | None:
         """

@@ -41,7 +41,15 @@ _TME_LINK_RE = re.compile(
     re.IGNORECASE,
 )
 _RESERVED_PATHS = {
-    "joinchat", "c", "s", "addstickers", "addtheme", "share", "iv", "proxy", "socks",
+    "joinchat",
+    "c",
+    "s",
+    "addstickers",
+    "addtheme",
+    "share",
+    "iv",
+    "proxy",
+    "socks",
 }
 
 
@@ -57,7 +65,9 @@ class TgOSINT:
         self.state = CollectorState()
         self.client: TelegramClient | None = None
         self._proxy_ready = False
-        self._id_cache: dict[str, tuple[int, int]] = {}  # username -> (raw_id, marked_id)
+        self._id_cache: dict[
+            str, tuple[int, int]
+        ] = {}  # username -> (raw_id, marked_id)
         self._username_cache: dict[int, str] = {}
 
     async def get_id_by_username(
@@ -332,8 +342,11 @@ class TgOSINT:
                             timeout=5,
                         )
                     return TelegramClient(
-                        session, aid, ah,
-                        proxy=(host, int(port), str(secret)), timeout=5,
+                        session,
+                        aid,
+                        ah,
+                        proxy=(host, int(port), str(secret)),
+                        timeout=5,
                     )
 
                 user = proxy[3] if len(proxy) > 3 and proxy[3] else None

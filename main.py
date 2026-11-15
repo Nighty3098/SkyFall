@@ -49,6 +49,7 @@ from src.connectors import (
     setup_tg_downloader_connectors,
     setup_username_connectors,
     setup_wifi_map_connectors,
+    setup_tg_connectors,
 )
 from src.controllers.archive_controller import ArchiveController
 from src.controllers.blockchain_controller import BlockchainController
@@ -59,6 +60,7 @@ from src.controllers.download_controller import DownloadController
 from src.controllers.file_analyzer_controller import FileAnalyzeController
 from src.controllers.geo_controller import GeoController
 from src.controllers.github_controller import GitHubController
+from src.controllers.graph_entity_controller import GraphEntityController
 from src.controllers.graph_layout_controller import GraphLayoutController
 from src.controllers.graph_node_controller import GraphNodeController
 from src.controllers.graph_stats_controller import GraphStatsController
@@ -78,6 +80,7 @@ from src.controllers.tg_analyzer_controller import TgAnalyzerController
 from src.controllers.tg_downloader_controller import TgDownloaderController
 from src.controllers.username_search_controller import UsernameController
 from src.controllers.wifi_map_controller import WifiMapController
+from src.controllers.tg_osint_controller import TgOSINTController
 from src.libs.graph_lib import GraphWidget, NodeItem
 from src.libs.graph_panel import EntityPalette
 from src.mcp_controller import McpController
@@ -104,6 +107,7 @@ from src.modules.social_search import SocialSearch
 from src.modules.steganography import SteganographyAnalyzer
 from src.modules.tg_analyzer import TgAnalyzer
 from src.modules.tg_downloader import TgDownloader
+from src.modules.tg_osint import TgOSINT
 from src.modules.username_search import UsernameSearch
 from src.modules.wifi_map import WifiMap
 from src.report_controller import ReportController
@@ -292,6 +296,11 @@ class MainWindow(QMainWindow):
                 await self.fileAnalyzer.close()
             except Exception:
                 logger.exception("Failed to close the file analyzer")
+        if hasattr(self, "tgOSINT"):
+            try:
+                await self.tgOSINT.close()
+            except Exception:
+                logger.exception("Failed to close the TG OSINT client")
         self._shutdown_complete = True
         self.close()
 
@@ -319,7 +328,7 @@ class MainWindow(QMainWindow):
     def _init_modules(self):
         logger.debug("Init modules")
 
-        self.proxy = Proxy(self.ui)
+        self.proxy = Proxy(self.ui, settings=self.settings)
         from pathlib import Path
 
         tg_data_path = str(Path.home() / ".skyfall" / "data")
@@ -345,6 +354,15 @@ class MainWindow(QMainWindow):
             getattr(self.settings, "ip2locationio_api_key", ""),
         )
         self.tgAnalyzer = TgAnalyzer()
+        self.tgOSINT = TgOSINT(
+            {
+                "api_id": self.ui.tgApiKeyEdit.text(),
+                "api_hash": self.ui.telegramApiHashEdit.text(),
+                "path": tg_data_path,
+                "use_proxy": bool(self.proxy.get_proxy_url()),
+                "proxy_list": self.proxy.get_proxy_url() or "",
+            }
+        )
         self.tgDownloader = TgDownloader(
             {
                 "api_id": self.ui.tgApiKeyEdit.text(),
@@ -425,6 +443,9 @@ class MainWindow(QMainWindow):
 
         self.tgDownloader.api_id = settings.tg_api_key
         self.tgDownloader.api_hash = settings.telegram_api_hash
+
+        self.tgOSINT.api_id = settings.tg_api_key
+        self.tgOSINT.api_hash = settings.telegram_api_hash
 
         if hasattr(self, "leakSearch"):
             self.leakSearch.keys = {
@@ -541,6 +562,9 @@ class MainWindow(QMainWindow):
         self.archiveController = ArchiveController(self.ui, self.archiveSearch)
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.wifiMapController = WifiMapController(self.ui, self.wifiMap)
+        self.tgOsintController = TgOSINTController(
+            self.ui, self.tgOSINT, proxy=self.proxy
+        )
         self.tgDownloaderController = TgDownloaderController(
             self.ui,
             self.tgDownloader,
@@ -589,6 +613,7 @@ class MainWindow(QMainWindow):
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
         setup_wifi_map_connectors(self.wifiMapController)
+        setup_tg_connectors(self.tgOsintController)
         setup_camera_inventory_connectors(self.cameraInventoryController)
         asyncio.ensure_future(self.cameraInventoryController.load_from_url())
         setup_blockchain_connectors(self.blockchainController)
@@ -618,6 +643,8 @@ class MainWindow(QMainWindow):
                 "blockchain_search": self.blockchainSearch,
                 "email_header_analyzer": self.emailHeaderAnalyzer,
                 "tg_analyzer": self.tgAnalyzer,
+                "tg_osint": self.tgOSINT,
+                "proxy": self.proxy,
                 "settings": self.settings,
             },
         )
@@ -625,6 +652,10 @@ class MainWindow(QMainWindow):
         setup_report_connectors(self.reportController)
         setup_graph_transform_connectors(self.ui, self.graphTransformController)
         setup_graph_connectors(self.ui, self.nodeController, self.case_manager)
+
+        self.graphEntityController = GraphEntityController(
+            self.ui, self.ui.graphWidget
+        )
 
         self.graphLayoutController = GraphLayoutController(self.ui, self.ui.graphWidget)
         setup_graph_layout_connectors(self.graphLayoutController)

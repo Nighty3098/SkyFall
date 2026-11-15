@@ -31,6 +31,7 @@ if TYPE_CHECKING:
     from src.controllers.tg_analyzer_controller import TgAnalyzerController
     from src.controllers.tg_downloader_controller import TgDownloaderController
     from src.controllers.wifi_map_controller import WifiMapController
+    from src.controllers.tg_osint_controller import TgOSINTController
 
 
 def setup_dorking_connectors(controller: "DorkingController"):
@@ -494,6 +495,14 @@ def setup_mac_location_connectors(controller: "MacLocationController"):
         lambda: asyncio.ensure_future(controller.start_searching())
     )
 
+
+def setup_tg_connectors(controller: "TgOSINTController"):
+    controller.ui.runTgOsintButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.analyze())
+    )
+    controller.ui.tgOsintEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.analyze())
+    )
 
 def setup_wifi_map_connectors(controller: "WifiMapController"):
     controller.ui.wifiSearchButton.clicked.connect(

@@ -37,6 +37,7 @@ Author: Nighty3098.
    - [Settings](#settings)
    - [Proxy](#proxy)
 6. [Graph](#graph-1)
+   - [Entity Resolution](#entity-resolution)
    - [Custom Graph Transforms](#custom-graph-transforms)
 7. [MCP Servers](#mcp-servers)
 8. [Code Structure](#code-structure)
@@ -466,6 +467,7 @@ A visual relationship graph with an entity palette (`entityPalette`, drag onto t
 - `graphClearButton` — clear the graph.
 - `Graph → Layout` — choose an automatic layout (spring / kamada_kawai / shell / spectral / circular / hierarchical / Telegram Hub-and-Cluster); choosing applies it immediately to selected nodes, or to the whole graph when nothing is selected.
 - `graphSearchEdit` + `graphClearFilterButton` + `graphFilterCombo` — filtering by text and entity type.
+- `Graph → Find Duplicate Entities…` / `Merge Selected Entities` / `Auto-resolve after Transforms` — entity-resolution controls (see [Entity Resolution](#entity-resolution)); the same actions are available from the canvas context menu.
 - Node panel: `nodeTitleEdit`, `nodeTypeCombo`, `nodeContentEdit`, `nodeEvidenceList`, `nodeEvidenceAddFileBtn`, `nodeEvidenceAddUrlBtn`, `nodeEvidenceRemoveBtn`.
 
 ### AI Report
@@ -547,11 +549,11 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 - Context menu: edit node/edge, edge style, attach evidence, color, delete; **Analysis** — shortest path (by click), degree centrality (node scaling + top-5), community detection (greedy modularity).
 - **Searchable transforms** — `⚡ Transforms → Search Transforms…` or `Ctrl+T` opens a filterable transform picker with descriptions. A transform can run on one node or on a common subset of the current multi-selection; result nodes are selected and grouped into one undo step.
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
-  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
-  - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
+  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks, **Telegram User ID**;
+  - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, **Telegram Lookup**, web search;
   - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, WHOIS history, reverse WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
   - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**, IP Security, **IP2Location.io lookup**;
-  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search, **Shodan Hosts**;
+  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, **Telegram Lookup**, web search, **Shodan Hosts**;
   - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
   - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
   - **MAC** → geolocation;
@@ -562,15 +564,26 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Port / Service** → Shodan host pivots by port/product, web search;
   - **Certificate** → Certificate Transparency domains, web search;
   - **Hash** → VirusTotal hash lookup, web search;
-  - **SocialMedia** → Bluesky/Mastodon, Instagram, GitHub, web search;
+  - **SocialMedia** → Bluesky/Mastodon, Instagram, GitHub, **Telegram Lookup**, web search;
   - **Device** → Shodan host, port scan, domains on IP, web search;
   - **Event / Vehicle** → web search;
   - **Malware** → Shodan exploits, web search;
   - **Nameserver** → DNS records, IP resolution, WHOIS, web search;
   - **Phrase** → web search, Shodan search, Infostealer/Leaks;
-  - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
+  - **Passport / Crypto / Custom** → web search (Custom also exposes **Telegram Lookup**, **Telegram ID → Username**, **Check Telegram Bot Token**, inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
 - **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py`; see [Custom Graph Transforms](#custom-graph-transforms) below.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
+
+### Entity Resolution
+
+SkyFall can collapse duplicate entities produced by transforms, imports and manual edits. The engine lives in `src/modules/entity_resolution.py` (Qt-free) and is shared by the canvas, the graph bridge and MCP.
+
+- **Normalisation** — Unicode NFKC, case/whitespace folding, Cyrillic→Latin transliteration, phone canonicalisation, URL masking, and labelled key/value extraction (`Email:`, `Phone:`, `Телефон:`, `Почта:`, etc.). Identifier types are compared independently so an email is never matched against a phone number.
+- **Matching** — exact identifiers (email, phone, username, domain, IP, URL, hash) plus name/content similarity with blocking and complete-link clustering. Different entity types never match; `Person`/`Organization`/`Custom` titles with the same token set (including word-order variants such as `Ivan Petrov` / `Petrov Ivan`) are treated as the same identity.
+- **Conservative automation** — high-confidence groups are merged automatically; medium-confidence candidates are collected in **Find Duplicate Entities…** for analyst review (`src/ui/entity_resolution_dialog.py`). The thresholds live in the resolution config (`auto_threshold`, `review_threshold`, weights).
+- **Merge semantics** — titles and previous aliases become `aliases`, removed records become `merged_from`, evidence/content are unioned, and a `resolution` metadata block records score/reasons/time. Edges are rewired onto the surviving node, duplicate edges are collapsed, and self-loops created by a merge are dropped. The surviving node is chosen by edge degree, evidence and content. A whole merge batch is a single undo step.
+- **Automatic pass** — after every transform batch `graph_transform_controller` runs the high-confidence pass (unless disabled via **Graph → Auto-resolve after Transforms**); only nodes that still exist are re-selected afterwards.
+- **Agent access** — `skyfall_graph_find_duplicates` and `skyfall_graph_merge_duplicates` expose the same behaviour to MCP clients through the graph bridge.
 
 ### Custom Graph Transforms
 
@@ -730,7 +743,7 @@ single undo step.
 
 ## MCP Servers
 
-### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 93 tools
+### SkyFall MCP Server (`src/skyfall_mcp_server.py`) — 98 tools
 
 FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Started/stopped from the Settings tab (MCP button) or via `McpController`.
 
@@ -768,7 +781,7 @@ FastMCP server: `--host 127.0.0.1 --port 9877`, transports `stdio`/`sse`. Starte
 
 **Dorking (1):** search via DuckDuckGo/SearXNG.
 
-**Graph (14, require a running GUI + graph bridge on 127.0.0.1:9878):** `skyfall_graph_build` (batch node/edge creation with refs and automatic placement), `skyfall_graph_layout` (re-arrange + frame the canvas), add/update/remove/move node, add/remove edge, get, summary, get_node, clear, file import (JSON/GraphML/GEXF/CSV), export PNG/SVG.
+**Graph (16, require a running GUI + graph bridge on 127.0.0.1:9878):** `skyfall_graph_build` (batch node/edge creation with refs and automatic placement), `skyfall_graph_layout` (re-arrange + frame the canvas), add/update/remove/move node, add/remove edge, get, summary, get_node, clear, file import (JSON/GraphML/GEXF/CSV), export PNG/SVG, `skyfall_graph_find_duplicates` (discover automatic or review-only duplicate clusters), `skyfall_graph_merge_duplicates` (merge clusters in one undoable edit).
 
 The graph tools follow a small rule set: entity types and relationships are normalised (with synonym mapping), `add_node` deduplicates by `(entity_type, title)` and merges content, nodes are positioned automatically (around `anchor_id` when given), duplicate edges are merged, and self-loops are rejected. Call `skyfall_graph_summary` before editing an existing graph.
 
@@ -788,7 +801,7 @@ Stdio transport, Ollama `http://127.0.0.1:11434`, default model `hf.co/OBLITERAT
 
 ### Graph Bridge (`src/graph_bridge.py`)
 
-TCP bridge `127.0.0.1:9878`, protocol: 4-byte length prefix (big-endian) + JSON. Actions: `add_node`, `add_edge`, `get_graph`, `get_node`, `update_node`, `move_node`, `remove_node`, `remove_edge`, `clear_graph`, `graph_summary`. All operations are marshaled to the GUI thread via a Qt signal (thread-safe). Every request must contain a `token` (the shared token from `~/.skyfall/mcp_token`); requests without a valid token are rejected (`{"error": "unauthorized"}`).
+TCP bridge `127.0.0.1:9878`, protocol: 4-byte length prefix (big-endian) + JSON. Actions: `add_node`, `add_edge`, `get_graph`, `get_node`, `update_node`, `move_node`, `remove_node`, `remove_edge`, `clear_graph`, `graph_summary`, `find_duplicates`, `merge_duplicates`. All operations are marshaled to the GUI thread via a Qt signal (thread-safe). Every request must contain a `token` (the shared token from `~/.skyfall/mcp_token`); requests without a valid token are rejected (`{"error": "unauthorized"}`).
 
 ---
 
@@ -810,6 +823,7 @@ src/
   utils.py                  — list filtering, text highlighting
   searxng_search.py         — local SearXNG client
   modules/                  — data collection (UI-independent)
+    entity_resolution.py    — identifier normalisation, duplicate matching and graph merging
     js_secrets.py           — JS scan for keys/secrets/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
     whois_freaks.py         — WhoisFreaks WHOIS history + reverse WHOIS client
@@ -822,10 +836,11 @@ src/
     archive_search.py       — web archives (Wayback Machine, archive.today)
     tg/                     — Telegram package: db, models, proxy, throttler,
                               client_manager, session_manager, users, cache, extractors, state
-  controllers/              — per-tab UI logic
+  controllers/              — per-tab UI logic (graph_entity_controller: duplicate detection & merging)
   transforms/               — transform API, built-in registry and plugin loader
   libs/                     — graph_lib (graph), graph_panel (palette)
-  ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget
+  ui/                       — setup_ui, drop_widget, output_formatter, s4f_result_widget,
+                              entity_resolution_dialog (review)
 resources/                  — form.ui, QSS themes, fonts, icons
 data/                       — dorks.json, dorks.xml, username_data.json
 thirdparty/txfetch/         — vendored transaction search library

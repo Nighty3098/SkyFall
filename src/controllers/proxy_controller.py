@@ -6,14 +6,17 @@ from loguru import logger
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
 
+    from src.controllers.settings_controller import Settings
+
 CONFIG_DIR = Path.home() / ".skyfall"
 PROXY_FILE = CONFIG_DIR / "proxies.txt"
 
 
 class Proxy:
-    def __init__(self, ui: "QMainWindow"):
+    def __init__(self, ui: "QMainWindow", settings: "Settings | None" = None):
         logger.debug("Init: Proxy")
         self.ui = ui
+        self.settings = settings
         self._load_proxies()
 
     def _load_proxies(self):
@@ -54,3 +57,6 @@ class Proxy:
                 proxies_file.write(self.ui.proxyListEdit.toPlainText())
         except Exception as e:
             logger.error(f"Saving proxy error: {e}")
+            return
+        if self.settings is not None:
+            self.settings.save()

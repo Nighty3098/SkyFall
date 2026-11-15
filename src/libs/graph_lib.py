@@ -62,6 +62,14 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from src.modules.entity_resolution import (
+    DEFAULT_CONFIG,
+    DuplicateGroup,
+    EntityRecord,
+    find_duplicate_groups_from_graph,
+    merge_record_group,
+)
+
 ENTITY_TYPES = [
     ("Person", "#4ecdc4", "\U0001f464"),
     ("Domain", "#45b7d1", "\U0001f310"),
@@ -813,6 +821,9 @@ class NodeItem(QGraphicsItem):
         self.entity_type = entity_type if entity_type in ENTITY_NAMES else "Custom"
         self.evidence = []
         self.color = None
+        self.metadata = {}
+        self.aliases = []
+        self.merged_from = []
         self._edges = []
         self._photo_cache = {}
         self._map_zoom = MAP_ZOOM
@@ -2331,6 +2342,7 @@ class GraphWidget(QGraphicsView):
     nodeAdded = Signal(object)
     edgeAdded = Signal(object)
     selectionChanged = Signal(object)
+    graphChanged = Signal(str)
 
     # Manual zoom is clamped to this range so the graph can never be lost by
     # scrolling all the way in or out.  ``fit_to_view`` may go below the
@@ -2389,6 +2401,11 @@ class GraphWidget(QGraphicsView):
         self._minimap = GraphMiniMap(self.viewport(), self)
         self._minimap.hide()
         self._scene.changed.connect(self._on_scene_changed)
+
+        # Entity resolution: exact duplicates are merged after transforms by
+        # default; fuzzy matches always require an explicit confirmation.
+        self._auto_resolve_enabled = True
+        self._resolution_config = DEFAULT_CONFIG
 
     def _on_scene_changed(self, *_args):
         if hasattr(self, "_minimap"):
@@ -2776,6 +2793,37 @@ class GraphWidget(QGraphicsView):
             analysis_menu.addAction(cluster_action)
             menu.addMenu(analysis_menu)
 
+            resolution_menu = QMenu("Entity Resolution", self)
+            find_duplicates = QAction("Find Duplicates\u2026", self)
+            find_duplicates.triggered.connect(
+                lambda checked=False: self.run_entity_resolution(False)
+            )
+            resolution_menu.addAction(find_duplicates)
+            find_in_selection = QAction("Find Duplicates in Selection\u2026", self)
+            find_in_selection.triggered.connect(
+                lambda checked=False: self.run_entity_resolution(True)
+            )
+            resolution_menu.addAction(find_in_selection)
+            auto_resolve = QAction("Auto-merge Exact Duplicates", self)
+            auto_resolve.triggered.connect(
+                lambda checked=False: self.auto_merge_exact_duplicates()
+            )
+            resolution_menu.addAction(auto_resolve)
+            auto_after = QAction("Auto-resolve after Transforms", self)
+            auto_after.setCheckable(True)
+            auto_after.setChecked(self._auto_resolve_enabled)
+            auto_after.toggled.connect(self.set_auto_resolve_enabled)
+            resolution_menu.addAction(auto_after)
+            if multi:
+                merge_selected_action = QAction(
+                    f"Merge {len(selected_nodes)} Selected Nodes", self
+                )
+                merge_selected_action.triggered.connect(
+                    lambda checked=False: self.merge_selected_entities()
+                )
+                resolution_menu.addAction(merge_selected_action)
+            menu.addMenu(resolution_menu)
+
             selection_menu = QMenu("Select", self)
             connected_action = QAction("Connected Nodes", self)
             connected_action.triggered.connect(self.select_connected)
@@ -2909,6 +2957,16 @@ class GraphWidget(QGraphicsView):
             cluster_action = QAction("Detect Communities", self)
             cluster_action.triggered.connect(self._detect_communities)
             analysis_all.addAction(cluster_action)
+            dup_action = QAction("Find Duplicate Entities\u2026", self)
+            dup_action.triggered.connect(
+                lambda checked=False: self.run_entity_resolution(False)
+            )
+            analysis_all.addAction(dup_action)
+            auto_dup_action = QAction("Auto-merge Exact Duplicates", self)
+            auto_dup_action.triggered.connect(
+                lambda checked=False: self.auto_merge_exact_duplicates()
+            )
+            analysis_all.addAction(auto_dup_action)
             menu.addMenu(analysis_all)
 
         menu.addSeparator()
@@ -3440,6 +3498,7 @@ class GraphWidget(QGraphicsView):
         node._photo_cache.clear()
         node.prepareGeometryChange()
         node.update()
+        self._emit_graph_changed("node_edited")
 
     def set_node_color(self, node: NodeItem):
         current = (
@@ -3558,6 +3617,7 @@ class GraphWidget(QGraphicsView):
         self._scene.addItem(node)
         self.nodeAdded.emit(node)
         self._update_summary()
+        self._emit_graph_changed("node_added")
         return node
 
     def add_edge(
@@ -3578,6 +3638,7 @@ class GraphWidget(QGraphicsView):
                 edge.set_node_highlight(id(node), True)
         self.edgeAdded.emit(edge)
         self._update_summary()
+        self._emit_graph_changed("edge_added")
         return edge
 
     def remove_node(self, node: NodeItem):
@@ -3589,6 +3650,7 @@ class GraphWidget(QGraphicsView):
             self._remove_edge_now(edge)
         self._scene.removeItem(node)
         self._update_summary()
+        self._emit_graph_changed("node_removed")
 
     def remove_edge(self, edge: EdgeItem):
         self.push_undo_state()
@@ -3611,6 +3673,7 @@ class GraphWidget(QGraphicsView):
         self._filter_type = ""
         self._scene.clear()
         self._update_summary()
+        self._emit_graph_changed("graph_cleared")
 
     # ------------------------------------------------------------- undo/redo
 
@@ -3675,6 +3738,294 @@ class GraphWidget(QGraphicsView):
                     label=item.relationship_type or item.label,
                 )
         return g
+
+    # ------------------------------------------------------- entity resolution
+
+    def _emit_graph_changed(self, action: str):
+        try:
+            self.graphChanged.emit(str(action))
+        except RuntimeError:
+            # The widget can be shutting down while an async transform finishes.
+            pass
+
+    def set_auto_resolve_enabled(self, enabled: bool):
+        self._auto_resolve_enabled = bool(enabled)
+        self.status_message(
+            "Automatic entity resolution enabled"
+            if self._auto_resolve_enabled
+            else "Automatic entity resolution disabled"
+        )
+
+    def _entity_records(self, graph: dict | None = None) -> list[EntityRecord]:
+        if graph is None:
+            graph = self.to_dict()
+        return [EntityRecord.from_dict(node) for node in graph.get("nodes", [])]
+
+    def _entity_degrees(self, graph: dict | None = None) -> dict[str, int]:
+        if graph is None:
+            graph = self.to_dict()
+        degrees: dict[str, int] = {}
+        for edge in graph.get("edges", []):
+            source = str(edge.get("source", ""))
+            target = str(edge.get("target", ""))
+            degrees[source] = degrees.get(source, 0) + 1
+            degrees[target] = degrees.get(target, 0) + 1
+        return degrees
+
+    def find_entity_duplicates(
+        self,
+        include_review: bool = True,
+        selected_only: bool = False,
+        config=None,
+    ) -> list[DuplicateGroup]:
+        """Return duplicate clusters, optionally limited to selected nodes."""
+        graph = self.to_dict()
+        if selected_only:
+            selected = {node.id for node in self._selected_nodes()}
+            if not selected:
+                return []
+            graph = {
+                "nodes": [
+                    node for node in graph["nodes"] if str(node.get("id")) in selected
+                ],
+                "edges": [
+                    edge
+                    for edge in graph["edges"]
+                    if str(edge.get("source")) in selected
+                    and str(edge.get("target")) in selected
+                ],
+            }
+        return find_duplicate_groups_from_graph(
+            graph,
+            config=config or self._resolution_config,
+            include_review=include_review,
+        )
+
+    def _existing_edge(
+        self, source: NodeItem, target: NodeItem, relationship: str
+    ) -> EdgeItem | None:
+        for edge in source._edges:
+            if edge.source is source and edge.target is target:
+                if (edge.relationship_type or "") == (relationship or ""):
+                    return edge
+            elif edge.source is target and edge.target is source:
+                if (edge.relationship_type or "") == (relationship or ""):
+                    return edge
+        return None
+
+    def merge_entity_groups(self, groups, notify: bool = True) -> list[dict]:
+        """Merge duplicate groups in one undoable graph edit.
+
+        Every alias, content line and evidence item is preserved on the
+        surviving node; edges from merged nodes are rewired and self-loops or
+        duplicate edges are dropped.
+        """
+        live_nodes = {
+            node.id: node
+            for node in self._scene.items()
+            if isinstance(node, NodeItem) and node.scene() is self._scene
+        }
+        records = [
+            EntityRecord.from_dict(self._node_to_dict(node))
+            for node in live_nodes.values()
+        ]
+        degrees = self._entity_degrees()
+        normalized: list[DuplicateGroup] = []
+        for group in groups or []:
+            if isinstance(group, DuplicateGroup):
+                if len(group.node_ids) >= 2:
+                    normalized.append(group)
+                continue
+            ids = tuple(str(node_id) for node_id in group)
+            present = [live_nodes[node_id] for node_id in ids if node_id in live_nodes]
+            if len(present) < 2:
+                continue
+            primary = max(
+                present,
+                key=lambda node: (
+                    len(node._edges),
+                    len(node.evidence),
+                    len(node.content or ""),
+                    node.id,
+                ),
+            )
+            normalized.append(
+                DuplicateGroup(
+                    node_ids=tuple(node.id for node in present),
+                    score=1.0,
+                    auto=False,
+                    reasons=("manual selection",),
+                    primary_id=primary.id,
+                    aliases=tuple(node.title for node in present if node.title),
+                )
+            )
+        if not normalized:
+            return []
+
+        # Build the plans first so edges can be rewired even when the target
+        # node belongs to a group processed later in the batch.
+        plans = []
+        for group in normalized:
+            if any(node_id not in live_nodes for node_id in group.node_ids):
+                continue
+            report = merge_record_group(records, group, degrees)
+            if report and report.get("id") in live_nodes:
+                plans.append((group, report))
+        if not plans:
+            return []
+
+        final_primary: dict[str, str] = {}
+        for _, report in plans:
+            for removed_id in report.get("removed_ids", []):
+                final_primary[removed_id] = report["id"]
+
+        self.begin_bulk_edit()
+        edge_specs: list[dict] = []
+        reports: list[dict] = []
+        try:
+            for group, report in plans:
+                primary = live_nodes.get(report["id"])
+                if primary is None or primary.scene() is not self._scene:
+                    continue
+                removed_ids = set(report.get("removed_ids", []))
+                for removed_id in list(removed_ids):
+                    node = live_nodes.get(removed_id)
+                    if node is None or node.scene() is not self._scene:
+                        continue
+                    for edge in list(node._edges):
+                        other = edge.target if edge.source is node else edge.source
+                        if other.id in removed_ids or other is primary:
+                            self._remove_edge_now(edge)
+                            continue
+                        node_is_source = edge.source is node
+                        edge_specs.append(
+                            {
+                                "primary_id": primary.id,
+                                "other_id": other.id,
+                                "node_is_source": node_is_source,
+                                "relationship": edge.relationship_type or "",
+                                "label": edge.label or "",
+                                "style": edge.style,
+                            }
+                        )
+                        self._remove_edge_now(edge)
+                    self._remove_node_now(node)
+
+                primary.title = report.get("title", primary.title)
+                primary.content = report.get("content", primary.content)
+                primary.evidence = list(report.get("evidence") or [])
+                primary.metadata = dict(report.get("metadata") or {})
+                primary.aliases = list(report.get("aliases") or [])
+                primary.merged_from = list(report.get("merged_from") or [])
+                primary._photo_cache.clear()
+                primary.update()
+                reports.append(
+                    {
+                        "primary_id": primary.id,
+                        "removed_ids": list(removed_ids),
+                        "score": report.get("score", group.score),
+                        "auto": report.get("auto", group.auto),
+                        "reasons": list(report.get("reasons") or group.reasons),
+                        "aliases": list(report.get("aliases") or []),
+                    }
+                )
+
+            # Rewire the saved edges onto the surviving nodes, skipping
+            # self-loops created by merging two endpoints of one edge.
+            for spec in edge_specs:
+                other_id = final_primary.get(spec["other_id"], spec["other_id"])
+                if other_id == spec["primary_id"]:
+                    continue
+                source = live_nodes.get(
+                    spec["primary_id"] if spec["node_is_source"] else other_id
+                )
+                target = live_nodes.get(
+                    other_id if spec["node_is_source"] else spec["primary_id"]
+                )
+                if source is None or target is None:
+                    continue
+                if (
+                    source.scene() is not self._scene
+                    or target.scene() is not self._scene
+                ):
+                    continue
+                relationship = spec.get("relationship") or ""
+                existing = self._existing_edge(source, target, relationship)
+                if existing is not None:
+                    if spec.get("label") and spec["label"] not in (
+                        existing.label or ""
+                    ):
+                        existing.label = (
+                            f"{existing.label} · {spec['label']}"
+                            if existing.label
+                            else spec["label"]
+                        )
+                        existing.update()
+                    continue
+                source_port, target_port = auto_ports(source, target)
+                edge = self._add_edge_now(source, target, source_port, target_port)
+                edge.relationship_type = relationship
+                edge.label = spec.get("label") or ""
+                edge.style = spec.get("style") or "normal"
+                edge.update()
+        finally:
+            self.end_bulk_edit()
+
+        self.viewport().update()
+        if reports:
+            self._emit_graph_changed("entities_merged")
+            if notify:
+                merged_count = sum(len(item["removed_ids"]) for item in reports)
+                self.status_message(
+                    f"Entity resolution: {merged_count} duplicate node"
+                    f"{'s' if merged_count != 1 else ''} merged into "
+                    f"{len(reports)} entit{'ies' if len(reports) != 1 else 'y'}"
+                )
+        return reports
+
+    def merge_selected_entities(self) -> list[dict]:
+        nodes = self._selected_nodes()
+        if len(nodes) < 2:
+            self.status_message("Select at least two nodes to merge")
+            return []
+        return self.merge_entity_groups([tuple(node.id for node in nodes)])
+
+    def auto_merge_exact_duplicates(self, notify: bool = True) -> list[dict]:
+        """Merge high-confidence duplicates after a transform batch."""
+        if not self._auto_resolve_enabled:
+            return []
+        groups = self.find_entity_duplicates(include_review=False)
+        auto_groups = [group for group in groups if group.auto]
+        if not auto_groups:
+            return []
+        reports = self.merge_entity_groups(auto_groups, notify=False)
+        if reports and notify:
+            removed = sum(len(item["removed_ids"]) for item in reports)
+            self.status_message(
+                f"Auto-resolved {removed} duplicate entit"
+                f"{'ies' if removed != 1 else 'y'}"
+            )
+        return reports
+
+    def run_entity_resolution(self, selected_only: bool = False):
+        """Open the duplicate review dialog and merge the chosen groups."""
+        groups = self.find_entity_duplicates(
+            include_review=True, selected_only=selected_only
+        )
+        if not groups:
+            self.status_message("No duplicate entities found")
+            return
+        from src.ui.entity_resolution_dialog import EntityResolutionDialog
+
+        records = {record.id: record for record in self._entity_records()}
+        dialog = EntityResolutionDialog(groups, self, records=records)
+        _center_dialog(dialog)
+        if dialog.exec() == QDialog.DialogCode.Accepted:
+            selected = dialog.selected_groups()
+            if selected:
+                self.merge_entity_groups(selected)
+            else:
+                self.status_message("No duplicate groups selected")
 
     def _start_shortest_path(self, source_node):
         self._path_source = source_node
@@ -3862,6 +4213,7 @@ class GraphWidget(QGraphicsView):
                 entry["y"] = pos.y()
         self._push_snapshot(snapshot)
         self.status_message("Moved node")
+        self._emit_graph_changed("node_moved")
 
     def mouseMoveEvent(self, event):
         if self._panning and event.buttons() & Qt.MouseButton.MiddleButton:
@@ -3969,25 +4321,29 @@ class GraphWidget(QGraphicsView):
             return
         super().keyPressEvent(event)
 
+    def _node_to_dict(self, item: NodeItem) -> dict:
+        return {
+            "id": item.id,
+            "title": item.title,
+            "content": item.content,
+            "entity_type": item.entity_type,
+            "evidence": item.evidence,
+            "x": item.pos().x(),
+            "y": item.pos().y(),
+            "width": item._width,
+            "height": item._height,
+            "color": item.color,
+            "metadata": dict(getattr(item, "metadata", {}) or {}),
+            "aliases": list(getattr(item, "aliases", []) or []),
+            "merged_from": list(getattr(item, "merged_from", []) or []),
+        }
+
     def to_dict(self):
         nodes = []
         edges = []
         for item in self._scene.items():
             if isinstance(item, NodeItem):
-                nodes.append(
-                    {
-                        "id": item.id,
-                        "title": item.title,
-                        "content": item.content,
-                        "entity_type": item.entity_type,
-                        "evidence": item.evidence,
-                        "x": item.pos().x(),
-                        "y": item.pos().y(),
-                        "width": item._width,
-                        "height": item._height,
-                        "color": item.color,
-                    }
-                )
+                nodes.append(self._node_to_dict(item))
             elif isinstance(item, EdgeItem):
                 edges.append(
                     {
@@ -4018,6 +4374,11 @@ class GraphWidget(QGraphicsView):
             )
             node.evidence = n.get("evidence", [])
             node.color = n.get("color")
+            node.metadata = dict(n.get("metadata") or {})
+            node.aliases = list(n.get("aliases") or node.metadata.get("aliases") or [])
+            node.merged_from = list(
+                n.get("merged_from") or node.metadata.get("merged_from") or []
+            )
             node._width = int(n.get("width", 160))
             node._height = int(n.get("height", 120))
             node.setPos(n.get("x", 0), n.get("y", 0))
@@ -4042,6 +4403,7 @@ class GraphWidget(QGraphicsView):
                 src.add_edge_ref(edge)
                 tgt.add_edge_ref(edge)
         self._update_summary()
+        self._emit_graph_changed("graph_loaded")
 
     def save_to_json(self, filepath):
         with open(filepath, "w", encoding="utf-8") as f:

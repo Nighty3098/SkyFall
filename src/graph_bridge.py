@@ -265,6 +265,10 @@ class GraphBridgeServer:
                 return self._invoke_on_main(self._fit_view)
             if action == "graph_summary":
                 return self._invoke_on_main(self._graph_summary)
+            if action == "find_duplicates":
+                return self._invoke_on_main(self._find_duplicates, msg)
+            if action == "merge_duplicates":
+                return self._invoke_on_main(self._merge_duplicates, msg)
             if action == "import_dict":
                 return self._invoke_on_main(self._import_dict, msg)
             if action == "export_image":
@@ -737,6 +741,52 @@ class GraphBridgeServer:
         except Exception as e:
             return {"error": str(e)}
 
+    def _find_duplicates(self, msg: dict) -> dict:
+        from src.modules.entity_resolution import summarize_groups
+
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+        groups = gw.find_entity_duplicates(
+            include_review=bool(msg.get("include_review", True)),
+            selected_only=bool(msg.get("selected_only", False)),
+        )
+        return summarize_groups(groups)
+
+    def _merge_duplicates(self, msg: dict) -> dict:
+        gw = self._graph_widget
+        if gw is None:
+            return {"error": "Graph widget not available"}
+
+        raw_groups = msg.get("groups")
+        if raw_groups:
+            groups = []
+            for raw in raw_groups:
+                if isinstance(raw, dict):
+                    ids = raw.get("node_ids") or raw.get("ids") or []
+                else:
+                    ids = raw
+                if len(ids) >= 2:
+                    groups.append(tuple(str(node_id) for node_id in ids))
+        else:
+            groups = [
+                group
+                for group in gw.find_entity_duplicates(
+                    include_review=bool(msg.get("include_review", False))
+                )
+                if not msg.get("auto_only", True) or group.auto
+            ]
+
+        reports = gw.merge_entity_groups(groups, notify=False)
+        summary = self._graph_summary()
+        return {
+            "merged": sum(len(report.get("removed_ids", [])) for report in reports),
+            "groups": len(reports),
+            "reports": reports,
+            "total_nodes": summary.get("total_nodes", 0),
+            "total_edges": summary.get("total_edges", 0),
+        }
+
     def _graph_summary(self) -> dict:
         from src.libs.graph_lib import EdgeItem, NodeItem
 
@@ -911,6 +961,32 @@ class GraphBridgeClient:
 
     def graph_summary(self) -> dict:
         return self.send({"action": "graph_summary"})
+
+    def find_duplicates(
+        self, include_review: bool = True, selected_only: bool = False
+    ) -> dict:
+        return self.send(
+            {
+                "action": "find_duplicates",
+                "include_review": include_review,
+                "selected_only": selected_only,
+            }
+        )
+
+    def merge_duplicates(
+        self,
+        groups: list | None = None,
+        include_review: bool = False,
+        auto_only: bool = True,
+    ) -> dict:
+        msg: dict = {
+            "action": "merge_duplicates",
+            "include_review": include_review,
+            "auto_only": auto_only,
+        }
+        if groups:
+            msg["groups"] = groups
+        return self.send(msg)
 
     def import_dict(self, data: dict) -> dict:
         return self.send({"action": "import_dict", "data": data})

@@ -55,7 +55,7 @@ QTabWidget {
     border: none;
 }
 
-QTabWidget#tabWidget::tab-bar {
+QTabWidget::tab-bar {
     alignment: center;
 }
 

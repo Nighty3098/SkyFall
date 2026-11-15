@@ -643,6 +643,8 @@ class MainWindow(QMainWindow):
                 "blockchain_search": self.blockchainSearch,
                 "email_header_analyzer": self.emailHeaderAnalyzer,
                 "tg_analyzer": self.tgAnalyzer,
+                "tg_osint": self.tgOSINT,
+                "proxy": self.proxy,
                 "settings": self.settings,
             },
         )

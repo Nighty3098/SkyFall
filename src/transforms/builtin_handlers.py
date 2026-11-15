@@ -40,6 +40,25 @@ from .helpers import (
 )
 from .models import ChildNodeDef, TransformResult
 
+_TG_BOT_TOKEN_RE = re.compile(r"\d{5,16}:[A-Za-z0-9_-]{30,}")
+_TG_USER_ID_RE = re.compile(r"-?(?:100)?\d{5,16}")
+_TG_USERNAME_PLAIN_RE = re.compile(r"[A-Za-z][A-Za-z0-9_]{3,31}")
+_TG_TME_LINK_RE = re.compile(
+    r"^(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/(.+)$",
+    re.IGNORECASE,
+)
+_TG_RESERVED_PATHS = {
+    "addstickers",
+    "addtheme",
+    "c",
+    "iv",
+    "joinchat",
+    "proxy",
+    "s",
+    "share",
+    "socks",
+}
+
 # ── Parsers ───────────────────────────────────────────────────────
 
 
@@ -1287,6 +1306,289 @@ async def _transform_social_search(username, modules):
         return TransformResult(content="Social module not available")
     data = await engine.search_structured(username)
     return _parse_social_search(data, username)
+
+
+# ── Telegram OSINT ────────────────────────────────────────────────
+
+
+def _get_tg_engine(modules):
+    engine = modules.get("tg_osint")
+    if not engine:
+        return None
+    proxy = modules.get("proxy")
+    if proxy is not None:
+        try:
+            proxy_url = proxy.get_proxy_url() or proxy.get_first_proxy()
+            desired_url = proxy_url or ""
+            desired_use = bool(proxy_url)
+            config = getattr(engine, "config", None)
+            unchanged = (
+                isinstance(config, dict)
+                and config.get("proxy_list", "") == desired_url
+                and bool(config.get("use_proxy", False)) == desired_use
+            )
+            if not unchanged:
+                engine.set_proxy(proxy_url, use_proxy=desired_use)
+        except Exception:  # noqa: BLE001 - proxy refresh must not block lookups
+            pass
+    return engine
+
+
+def _normalize_tg_username(value):
+    text = str(value or "").strip()
+    if not text:
+        return None
+
+    link = _TG_TME_LINK_RE.match(text)
+    if link:
+        text = link.group(1)
+    elif text.lower().startswith("tg://resolve"):
+        domain = re.search(r"[?&]domain=([^&]+)", text, re.IGNORECASE)
+        if not domain:
+            return None
+        text = domain.group(1)
+
+    text = text.split("?", 1)[0].split("/", 1)[0].strip().lstrip("@")
+    if not text or text.startswith("+") or text.lower() in _TG_RESERVED_PATHS:
+        return None
+    if not _TG_USERNAME_PLAIN_RE.fullmatch(text):
+        return None
+    return text
+
+
+def _detect_tg_target(value):
+    """Return ``(normalized value, kind)`` for a Telegram identifier."""
+    text = str(value or "").strip()
+    if not text:
+        return None, None
+    if _TG_BOT_TOKEN_RE.fullmatch(text):
+        return text, "bot_token"
+    if _TG_USER_ID_RE.fullmatch(text):
+        return text, "id"
+    username = _normalize_tg_username(text)
+    if username:
+        return username, "username"
+    return None, None
+
+
+def _extract_tg_target(value):
+    """Detect a Telegram identifier directly or inside node content."""
+    text = str(value or "").strip()
+    target, kind = _detect_tg_target(text)
+    if kind:
+        return target, kind
+
+    bot_token = _TG_BOT_TOKEN_RE.search(text)
+    if bot_token:
+        return bot_token.group(0), "bot_token"
+
+    tg_id = re.search(r"tg_id:\s*(?:user|channel):\s*(-?\d+)", text, re.IGNORECASE)
+    if tg_id:
+        return tg_id.group(1), "id"
+
+    username_line = re.search(
+        r"username:\s*@?([A-Za-z][A-Za-z0-9_]{3,31})", text, re.IGNORECASE
+    )
+    if username_line:
+        return username_line.group(1), "username"
+
+    for link in re.finditer(
+        r"(?:https?://)?(?:www\.)?(?:t\.me|telegram\.me|telegram\.dog)/\S+",
+        text,
+        re.IGNORECASE,
+    ):
+        username = _normalize_tg_username(link.group(0))
+        if username:
+            return username, "username"
+
+    mention = re.search(r"(?<![\w.])@([A-Za-z][A-Za-z0-9_]{3,31})\b", text)
+    if mention:
+        return mention.group(1), "username"
+    return None, None
+
+
+def _parse_tg_username_ids(username, raw_id, marked_id):
+    children = []
+    seen = set()
+    for label, value in (("raw", raw_id), ("marked", marked_id)):
+        if value is None or value in seen:
+            continue
+        seen.add(value)
+        children.append(
+            ChildNodeDef(
+                title=str(value),
+                entity_type="Custom",
+                content=_pack_content(
+                    [
+                        kv("Telegram ID", value),
+                        kv("ID kind", label),
+                        kv("Username", f"@{username}"),
+                    ]
+                ),
+                evidence=[f"https://t.me/{username}"],
+            )
+        )
+
+    lines = [divider(), title(f"Telegram: @{username}")]
+    if not children:
+        lines.append(fmt_info("No Telegram account found"))
+    else:
+        lines.append(kv("Raw ID", raw_id if raw_id is not None else "?"))
+        if marked_id is not None:
+            lines.append(kv("Marked ID", marked_id))
+        lines.append(kv("Profile", f"https://t.me/{username}"))
+    lines += [end_of("telegram lookup"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[f"https://t.me/{username}"] if children else [],
+    )
+
+
+def _parse_tg_id_username(peer_id, username):
+    children = []
+    if username:
+        children.append(
+            ChildNodeDef(
+                title=f"@{username}",
+                entity_type="Username",
+                content=_pack_content(
+                    [
+                        kv("Telegram ID", peer_id),
+                        kv("Username", f"@{username}"),
+                        kv("Profile", f"https://t.me/{username}"),
+                    ]
+                ),
+                evidence=[f"https://t.me/{username}"],
+            )
+        )
+
+    lines = [divider(), title(f"Telegram ID: {peer_id}")]
+    if username:
+        lines.append(kv("Username", f"@{username}"))
+        lines.append(kv("Profile", f"https://t.me/{username}"))
+    else:
+        lines.append(fmt_info("No public username found"))
+    lines += [end_of("telegram lookup"), divider()]
+    return TransformResult(
+        children=children,
+        content=_pack_content(lines),
+        evidence=[f"https://t.me/{username}"] if username else [],
+    )
+
+
+def _parse_tg_bot(username):
+    lines = [
+        divider(),
+        title("Telegram bot token"),
+        kv("Valid", "yes"),
+        kv("Bot", f"@{username}"),
+        kv("Profile", f"https://t.me/{username}"),
+        end_of("telegram bot check"),
+        divider(),
+    ]
+    return TransformResult(
+        children=[
+            ChildNodeDef(
+                title=f"@{username}",
+                entity_type="Username",
+                content=_pack_content(
+                    [
+                        kv("Telegram bot", f"@{username}"),
+                        kv("Profile", f"https://t.me/{username}"),
+                    ]
+                ),
+                evidence=[f"https://t.me/{username}"],
+            )
+        ],
+        content=_pack_content(lines),
+        evidence=[f"https://t.me/{username}"],
+    )
+
+
+async def _tg_call(engine, method, *args, **kwargs):
+    result = getattr(engine, method)(*args, **kwargs)
+    if inspect.isawaitable(result):
+        result = await result
+    return result
+
+
+async def _tg_lookup_username(engine, username):
+    raw_id = await _tg_call(engine, "get_id_by_username", username, marked=False)
+    marked_id = raw_id
+    if raw_id is not None:
+        marked = await _tg_call(engine, "get_id_by_username", username, marked=True)
+        if marked is not None:
+            marked_id = marked
+    return _parse_tg_username_ids(username, raw_id, marked_id)
+
+
+async def _tg_lookup_id(engine, peer_id):
+    username = await _tg_call(engine, "get_username_by_id", peer_id)
+    return _parse_tg_id_username(peer_id, username)
+
+
+async def _tg_lookup_bot(engine, token):
+    username = await _tg_call(engine, "get_username_by_bot_token", token)
+    if not username:
+        return TransformResult(content="Telegram bot token is invalid or expired")
+    return _parse_tg_bot(username)
+
+
+async def _transform_tg_username_to_id(value, modules):
+    engine = _get_tg_engine(modules)
+    if engine is None:
+        return TransformResult(content="TG OSINT module not available")
+    target, kind = _extract_tg_target(value)
+    if kind != "username":
+        return TransformResult(content=f"Not a Telegram username: {value}")
+    try:
+        return await _tg_lookup_username(engine, target)
+    except Exception as exc:  # noqa: BLE001 - surface failures in the graph
+        return TransformResult(content=f"Telegram username lookup failed: {exc}")
+
+
+async def _transform_tg_id_to_username(value, modules):
+    engine = _get_tg_engine(modules)
+    if engine is None:
+        return TransformResult(content="TG OSINT module not available")
+    target, kind = _extract_tg_target(value)
+    if kind != "id":
+        return TransformResult(content=f"Not a Telegram ID: {value}")
+    try:
+        return await _tg_lookup_id(engine, target)
+    except Exception as exc:  # noqa: BLE001 - surface failures in the graph
+        return TransformResult(content=f"Telegram ID lookup failed: {exc}")
+
+
+async def _transform_tg_bot_token(value, modules):
+    engine = _get_tg_engine(modules)
+    if engine is None:
+        return TransformResult(content="TG OSINT module not available")
+    target, kind = _extract_tg_target(value)
+    if kind != "bot_token":
+        return TransformResult(content="Input is not a recognized Telegram bot token")
+    try:
+        return await _tg_lookup_bot(engine, target)
+    except Exception as exc:  # noqa: BLE001 - surface failures in the graph
+        return TransformResult(content=f"Telegram bot token check failed: {exc}")
+
+
+async def _transform_tg_osint(value, modules):
+    engine = _get_tg_engine(modules)
+    if engine is None:
+        return TransformResult(content="TG OSINT module not available")
+    target, kind = _extract_tg_target(value)
+    try:
+        if kind == "bot_token":
+            return await _tg_lookup_bot(engine, target)
+        if kind == "id":
+            return await _tg_lookup_id(engine, target)
+        if kind == "username":
+            return await _tg_lookup_username(engine, target)
+    except Exception as exc:  # noqa: BLE001 - surface failures in the graph
+        return TransformResult(content=f"Telegram lookup failed: {exc}")
+    return TransformResult(content=f"Not a Telegram username, ID or bot token: {value}")
 
 
 async def _transform_domain_ip(domain, modules):

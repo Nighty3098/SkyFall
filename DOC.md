@@ -549,11 +549,11 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
 - Context menu: edit node/edge, edge style, attach evidence, color, delete; **Analysis** — shortest path (by click), degree centrality (node scaling + top-5), community detection (greedy modularity).
 - **Searchable transforms** — `⚡ Transforms → Search Transforms…` or `Ctrl+T` opens a filterable transform picker with descriptions. A transform can run on one node or on a common subset of the current multi-selection; result nodes are selected and grouped into one undo step.
 - **⚡ Transforms** (graph enrichment, `graph_transform_controller`): child result nodes are built from a node and arranged in an arc:
-  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks;
-  - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, web search;
+  - **Username** → social search, Maigret, Sherlock + Maigret (merged — links confirmed by both engines), Bluesky/Mastodon, Reddit OSINT (archival profile: top subreddits, identifiers, external domains, mentioned users, technologies), Instagram, GitHub, Infostealer/Leaks, **Telegram User ID**;
+  - **Person** → social search, GitHub, Instagram, Bluesky/Mastodon, Reddit OSINT, **Telegram Lookup**, web search;
   - **Domain** → IP, DNS, SSL/TLS, web stack, WHOIS, WHOIS history, reverse WHOIS, HTTP headers, WAF, host discovery, subdomains, Certificate Transparency, social tags, reputation, security.txt, cookies, robots.txt, ports, JS Secrets, Threat Intel, Infostealer/Leaks, Wayback snapshots/availability/save, **Shodan DNS**, **Shodan Hosts**;
   - **IP** → geolocation, ports, domains on IP, Threat Intel, **Shodan Host**, **Shodan Honeyscore**, IP Security, **IP2Location.io lookup**;
-  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, web search, **Shodan Hosts**;
+  - **Organization** → GitHub profile/repositories, Bluesky/Mastodon, **Telegram Lookup**, web search, **Shodan Hosts**;
   - **Email** → IntelX, Registered Accounts, Infostealer/Leaks, HIBP, GitHub code search;
   - **Phone** → parsing, reverse lookup, leaks, 7tel caller ID;
   - **MAC** → geolocation;
@@ -564,13 +564,13 @@ Nodes render as cards with an entity-coloured header band, symbol chip, and type
   - **Port / Service** → Shodan host pivots by port/product, web search;
   - **Certificate** → Certificate Transparency domains, web search;
   - **Hash** → VirusTotal hash lookup, web search;
-  - **SocialMedia** → Bluesky/Mastodon, Instagram, GitHub, web search;
+  - **SocialMedia** → Bluesky/Mastodon, Instagram, GitHub, **Telegram Lookup**, web search;
   - **Device** → Shodan host, port scan, domains on IP, web search;
   - **Event / Vehicle** → web search;
   - **Malware** → Shodan exploits, web search;
   - **Nameserver** → DNS records, IP resolution, WHOIS, web search;
   - **Phrase** → web search, Shodan search, Infostealer/Leaks;
-  - **Passport / Crypto / Custom** → web search (Custom also exposes inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
+  - **Passport / Crypto / Custom** → web search (Custom also exposes **Telegram Lookup**, **Telegram ID → Username**, **Check Telegram Bot Token**, inverse Shadow Search from sun/shadow ratio and bearing, **Shodan Search** and **Shodan Exploits**).
 - **Custom transforms** — plugins are loaded automatically from `~/.skyfall/transforms/*.py`; see [Custom Graph Transforms](#custom-graph-transforms) below.
 - Persistence: JSON (`to_dict`/`from_dict`, `save_to_json`/`load_from_json`).
 

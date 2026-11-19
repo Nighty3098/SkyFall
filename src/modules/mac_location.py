@@ -12,7 +12,7 @@ APPLE_SENTINEL = -18000000000
 
 class MacLocation:
     def __init__(self):
-        pass
+        logger.debug("Init: Mac Location")
 
     @staticmethod
     def _decode_varint(data, offset):

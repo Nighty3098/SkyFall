@@ -74,6 +74,8 @@ files = [
     "src/modules/ip2location_io.py",
     "src/modules/ipgeolocation_security.py",
     "src/modules/ip_logger.py",
+    "src/modules/ip_logger_forwarder.py",
+    "src/modules/ip_logger_privilege.py",
     "src/modules/js_secrets.py",
     "src/modules/leak_search.py",
     "src/modules/mac_location.py",

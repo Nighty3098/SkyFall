@@ -1,9 +1,10 @@
+import asyncio
 import json
 from typing import TYPE_CHECKING, Any
 
 from loguru import logger
 
-from src.ui.output_formatter import bullet, error, info, line, render
+from src.ui.output_formatter import bullet, error, info, line
 
 if TYPE_CHECKING:
     from PySide6.QtWidgets import QMainWindow
@@ -11,34 +12,8 @@ if TYPE_CHECKING:
     from src.modules.ip_logger import IpLogger
 
 
-MAP_STYLES = (
-    (
-        "OpenStreetMap",
-        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-        "&copy; OpenStreetMap contributors",
-    ),
-    (
-        "CARTO Dark",
-        "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
-        "&copy; OpenStreetMap contributors &copy; CARTO",
-    ),
-    (
-        "CARTO Light",
-        "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
-        "&copy; OpenStreetMap contributors &copy; CARTO",
-    ),
-    (
-        "OpenTopoMap",
-        "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-        "&copy; OpenStreetMap contributors &copy; OpenTopoMap",
-    ),
-    (
-        "Esri Satellite",
-        "https://server.arcgisonline.com/ArcGIS/rest/services/"
-        "World_Imagery/MapServer/tile/{z}/{y}/{x}",
-        "Tiles &copy; Esri",
-    ),
-)
+MAP_TILES = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+MAP_ATTRIBUTION = "&copy; OpenStreetMap contributors"
 
 IP_LOGGER_MAP_HTML = """<!DOCTYPE html>
 <html>
@@ -91,16 +66,45 @@ class IpLoggerController:
         self.ui = ui
         self.ip_logger = ip_logger
         self.hits: list[dict[str, Any]] = []
-        self._style_index = 0
+        self._start_note = ""
+        self._public_ip_task: asyncio.Task | None = None
 
-        selector = getattr(self.ui, "ipLoggerStyleSelector", None)
-        if selector is not None:
-            selector.addItems([style[0] for style in MAP_STYLES])
-            self._style_index = max(0, selector.currentIndex())
-
+        self._populate_sites()
         self.ip_logger.on_hit(self._on_hit)
+        self.ip_logger.on_state(self._on_state)
         self.hits = list(self.ip_logger.hits)
         self._render()
+
+    def _site_selector(self):
+        selector = getattr(self.ui, "ipLoggerSiteSelector", None)
+        if selector is None:
+            selector = getattr(self.ui, "ipLoggerStyleSelector", None)
+        return selector
+
+    def _populate_sites(self) -> None:
+        selector = self._site_selector()
+        if selector is None:
+            return
+        templates = self.ip_logger.refresh_templates()
+        selector.clear()
+        if not templates:
+            selector.addItem("NO HTML TEMPLATES FOUND")
+            selector.setEnabled(False)
+            return
+        selector.setEnabled(True)
+        selector.addItems([template.label for template in templates])
+        current = self.ip_logger.current_template
+        if current is not None:
+            index = next(
+                (
+                    i
+                    for i, template in enumerate(templates)
+                    if template.path == current.path
+                ),
+                0,
+            )
+            self.ip_logger.select_template(index)
+            selector.setCurrentIndex(index)
 
     async def toggle_server(self) -> None:
         if self.ip_logger.is_running:
@@ -120,6 +124,7 @@ class IpLoggerController:
                 debug.setPlainText("IP Logger\n  ! Enter a port to start the server")
             return
 
+        self._populate_sites()
         try:
             result = await self.ip_logger.start_server(port_text)
         except (ValueError, OSError, RuntimeError) as exc:
@@ -129,37 +134,50 @@ class IpLoggerController:
 
         self.hits = []
         self._set_button_text("STOP SERVER")
-        if debug is not None:
-            debug.setPlainText(
-                render(
-                    {
-                        "status": "listening",
-                        "port": result.get("port", port_text),
-                        "links": result.get("urls", []),
-                        "note": (
-                            "Every request to a link is logged below "
-                            "and plotted on the map."
-                        ),
-                    },
-                    title="IP Logger",
-                )
+        notes = [
+            "Every request to a link is logged below and plotted on the map.",
+            f"Site: {result.get('template') or 'built-in fallback'}",
+        ]
+        if result.get("elevated"):
+            notes.append(
+                "Low port: approved through the system admin prompt "
+                "(native elevation helper)."
             )
-        self._render_map()
+        self._start_note = " ".join(notes)
+        self._render()
+        self._start_public_ip_lookup()
+
+    def _start_public_ip_lookup(self) -> None:
+        task = self._public_ip_task
+        if task is not None and not task.done():
+            return
+        try:
+            loop = asyncio.get_running_loop()
+        except RuntimeError:
+            return
+        self._public_ip_task = loop.create_task(self.ip_logger.resolve_public_ip())
 
     async def stop_server(self) -> None:
+        task, self._public_ip_task = self._public_ip_task, None
+        if task is not None and not task.done():
+            task.cancel()
         await self.ip_logger.stop()
+        self._start_note = ""
         self.hits = list(self.ip_logger.hits)
         self._set_button_text("START SERVER")
         self._render()
 
-    def style_changed(self, index: int) -> None:
-        if not isinstance(index, int) or not 0 <= index < len(MAP_STYLES):
+    def site_changed(self, index: int) -> None:
+        if not self.ip_logger.select_template(index):
             return
-        self._style_index = index
-        self._render_map()
+        if self.ip_logger.is_running:
+            self._render()
 
     def _on_hit(self, _hit: dict[str, Any]) -> None:
         self.hits = list(self.ip_logger.hits)
+        self._render()
+
+    def _on_state(self) -> None:
         self._render()
 
     def _set_button_text(self, text: str) -> None:
@@ -175,18 +193,22 @@ class IpLoggerController:
 
     def _report(self) -> str:
         total = len(self.hits)
-        state = (
-            f"listening on {self.ip_logger.port}"
-            if self.ip_logger.is_running
-            else "stopped"
-        )
+        running = self.ip_logger.is_running
+        state = f"listening on {self.ip_logger.port}" if running else "stopped"
+        template = self.ip_logger.current_template
+        site = f" — site: {template.label}" if template else ""
         noun = "hit" if total == 1 else "hits"
-        lines = [f"IP Logger — {state} — {total} {noun}"]
+        lines = [f"IP Logger — {state}{site} — {total} {noun}"]
+        if running:
+            for url in self.ip_logger.urls():
+                lines.append(line(f"link: {url}"))
+            if self._start_note:
+                lines.append(info(self._start_note))
         if not total:
             lines.append(
                 info(
                     "Waiting for incoming requests..."
-                    if self.ip_logger.is_running
+                    if running
                     else "Start the server to capture visitor IPs."
                 )
             )
@@ -199,16 +221,73 @@ class IpLoggerController:
             )
             method = hit.get("method") or "GET"
             lines.append(line(f"{method} {hit.get('path') or '/'}"))
+
+            if hit.get("page_title"):
+                lines.append(line(f"title: {hit['page_title']}"))
+            if hit.get("page_url"):
+                lines.append(line(f"page: {hit['page_url']}"))
             if hit.get("user_agent"):
                 lines.append(line(f"user-agent: {hit['user_agent']}"))
             if hit.get("referer"):
                 lines.append(line(f"referer: {hit['referer']}"))
+            if hit.get("page_referrer"):
+                lines.append(line(f"page-referer: {hit['page_referrer']}"))
             if hit.get("language"):
                 lines.append(line(f"language: {hit['language']}"))
-            if hit.get("geo_status") and hit["geo_status"] != "CLEAN":
+            if hit.get("browser_language"):
+                lines.append(line(f"browser-language: {hit['browser_language']}"))
+            if hit.get("screen") or hit.get("timezone"):
+                lines.append(
+                    line(
+                        f"browser: {hit.get('screen', '')} "
+                        f"{hit.get('timezone', '')}".strip()
+                    )
+                )
+            if hit.get("host"):
+                lines.append(line(f"host: {hit['host']}"))
+            if hit.get("x_forwarded_for"):
+                lines.append(line(f"x-forwarded-for: {hit['x_forwarded_for']}"))
+            if hit.get("isp") or hit.get("asn"):
+                lines.append(
+                    line(f"isp/asn: {hit.get('isp', '')} {hit.get('asn', '')}".strip())
+                )
+            if hit.get("lat") is not None and hit.get("lng") is not None:
+                lines.append(line(f"coords: {hit['lat']}, {hit['lng']}"))
+            if hit.get("geo_status"):
                 lines.append(line(f"geo: {hit['geo_status']}"))
             if hit.get("geo_note"):
                 lines.append(error(hit["geo_note"]))
+
+            shown = {
+                "time",
+                "ip",
+                "method",
+                "path",
+                "page_path",
+                "page_title",
+                "page_url",
+                "user_agent",
+                "referer",
+                "page_referrer",
+                "language",
+                "browser_language",
+                "screen",
+                "timezone",
+                "host",
+                "x_forwarded_for",
+                "isp",
+                "asn",
+                "lat",
+                "lng",
+                "location",
+                "geo_status",
+                "geo_note",
+                "view_id",
+            }
+            for key, value in hit.items():
+                if key in shown or value in (None, "", [], {}):
+                    continue
+                lines.append(line(f"{key}: {value}"))
         return "\n".join(lines)
 
     def _render_map(self) -> None:
@@ -216,7 +295,6 @@ class IpLoggerController:
         if map_view is None:
             return
 
-        _, tiles, attribution = MAP_STYLES[self._style_index]
         markers = []
         for hit in self.hits:
             if hit.get("lat") is None or hit.get("lng") is None:
@@ -240,8 +318,8 @@ class IpLoggerController:
         page = IP_LOGGER_MAP_HTML.format(
             bg=pal["bg"],
             fg=pal["text"],
-            tiles=self._script_json(tiles),
-            attribution=self._script_json(attribution),
+            tiles=self._script_json(MAP_TILES),
+            attribution=self._script_json(MAP_ATTRIBUTION),
             markers=self._script_json(markers),
         )
         map_view.setHtml(page)

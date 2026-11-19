@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tandem — find your person</title>
+<meta name="description" content="Tandem is a quieter way to meet someone worth knowing. Real profiles, real conversations, compatibility that goes deeper than a photo.">
+<style>
+  :root {
+    --bg: #000000;
+    --surface: #0a0a0a;
+    --surface-2: #111111;
+    --border: #262626;
+    --border-strong: #3a3a3a;
+    --fg: #f5f5f5;
+    --muted: #a1a1a1;
+    --faint: #6b6b6b;
+    --accent: #ff5c5c;
+    --accent-soft: rgba(255, 92, 92, .12);
+    --sans: "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    --mono: ui-monospace, "SFMono-Regular", "Geist Mono", Menlo, Consolas, monospace;
+    --serif: "Iowan Old Style", "Palatino Linotype", Georgia, "Times New Roman", serif;
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--sans);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  a { color: inherit; text-decoration: none; }
+  button, input { font: inherit; }
+  ::selection { background: var(--accent); color: #000; }
+  .sr-only {
+    position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+    overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+  }
+
+  .container { width: min(1200px, calc(100% - 48px)); margin: 0 auto; }
+  .mono, .kicker, .eyebrow, .cell-label, .step-n, .plan-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- buttons ---------- */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    min-height: 46px;
+    padding: 0 22px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    font-size: 14px;
+    font-weight: 560;
+    letter-spacing: -.01em;
+    white-space: nowrap;
+    transition: background .18s ease, color .18s ease, border-color .18s ease, transform .18s ease;
+  }
+  .btn:hover { transform: translateY(-1px); }
+  .btn:active { transform: translateY(0); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .btn-primary { background: var(--fg); color: #000; }
+  .btn-primary:hover { background: #fff; }
+  .btn-ghost { border-color: var(--border-strong); color: var(--fg); background: transparent; }
+  .btn-ghost:hover { border-color: var(--fg); background: var(--surface); }
+  .btn-sm { min-height: 36px; padding: 0 16px; font-size: 13px; }
+  .btn-dark { background: #000; color: #fff; }
+  .btn-dark:hover { background: #222; }
+  .link { font-size: 14px; color: var(--muted); transition: color .18s ease; }
+  .link:hover { color: var(--fg); }
+
+  /* ---------- header ---------- */
+  .header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(0, 0, 0, .72);
+    backdrop-filter: saturate(160%) blur(14px);
+    border-bottom: 1px solid var(--border);
+  }
+  .header-inner { display: flex; align-items: center; gap: 32px; height: 64px; }
+  .brand { display: inline-flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 600; letter-spacing: -.04em; }
+  .brand-mark { width: 26px; height: 26px; flex: none; }
+  .brand-dot { color: var(--accent); }
+  .nav { display: flex; align-items: center; gap: 28px; margin-left: auto; }
+  .nav a { font-size: 14px; color: var(--muted); transition: color .18s ease; }
+  .nav a:hover { color: var(--fg); }
+  .header-actions { display: flex; align-items: center; gap: 18px; }
+
+  /* ---------- hero ---------- */
+  .hero { position: relative; overflow: hidden; border-bottom: 1px solid var(--border); }
+  .grid-overlay {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      linear-gradient(to right, rgba(255, 255, 255, .045) 1px, transparent 1px),
+      linear-gradient(to bottom, rgba(255, 255, 255, .045) 1px, transparent 1px);
+    background-size: 72px 72px;
+    -webkit-mask-image: radial-gradient(ellipse 75% 70% at 45% 20%, #000 0%, transparent 100%);
+    mask-image: radial-gradient(ellipse 75% 70% at 45% 20%, #000 0%, transparent 100%);
+  }
+  .hero-glow {
+    position: absolute;
+    top: -260px;
+    right: -120px;
+    width: 720px;
+    height: 720px;
+    pointer-events: none;
+    background: radial-gradient(circle, var(--accent-soft) 0%, transparent 62%);
+    filter: blur(10px);
+  }
+  .hero-inner {
+    position: relative;
+    display: grid;
+    grid-template-columns: 1.05fr .95fr;
+    gap: 64px;
+    align-items: center;
+    padding: 108px 0 112px;
+  }
+  .eyebrow { display: flex; align-items: center; gap: 10px; color: var(--muted); margin: 0 0 26px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); flex: none; }
+  h1, h2, h3, p { margin-top: 0; }
+  h1 {
+    font-size: clamp(3.4rem, 7.6vw, 7rem);
+    line-height: .94;
+    letter-spacing: -.075em;
+    font-weight: 640;
+    margin-bottom: 28px;
+  }
+  h1 .script {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    letter-spacing: -.055em;
+    color: var(--accent);
+  }
+  .lead { max-width: 520px; font-size: 18px; line-height: 1.65; color: var(--muted); margin-bottom: 34px; }
+  .hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 18px; }
+  .fine { font-size: 12px; color: var(--faint); margin: 0; }
+
+  /* ---------- hero art: profile cards ---------- */
+  .hero-art { position: relative; min-height: 520px; display: grid; place-items: center; }
+  .orbit {
+    position: absolute;
+    inset: 0;
+    display: grid;
+    place-items: center;
+    color: var(--border-strong);
+  }
+  .orbit svg { width: min(100%, 520px); height: auto; }
+  .stack { position: relative; width: 320px; max-width: 100%; }
+  .card {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 18px;
+    border: 1px solid var(--border-strong);
+    border-radius: 18px;
+    background: var(--surface-2);
+    box-shadow: 0 24px 70px rgba(0, 0, 0, .7);
+    transition: transform .35s cubic-bezier(.2, .8, .2, 1), opacity .35s ease, border-color .2s ease;
+  }
+  .card-back { transform: translate(44px, -54px) rotate(9deg) scale(.9); opacity: .45; }
+  .card-mid { transform: translate(-42px, -26px) rotate(-8deg) scale(.95); opacity: .7; }
+  .card-front { position: relative; z-index: 3; }
+  .card-front:hover { border-color: #555; }
+  .card.passed { transform: translate(-140px, 30px) rotate(-16deg); opacity: 0; pointer-events: none; }
+  .card-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .tag, .online { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+  .tag { padding: 4px 9px; border: 1px solid var(--border-strong); border-radius: 999px; color: var(--muted); }
+  .online { display: inline-flex; align-items: center; gap: 6px; color: var(--muted); }
+  .online i { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+  .avatar {
+    display: grid;
+    place-items: center;
+    height: 220px;
+    border-radius: 12px;
+    overflow: hidden;
+    color: #8f8f8f;
+  }
+  .avatar svg { width: 62%; height: 62%; }
+  .av-1 { background: linear-gradient(145deg, #3b3b3b 0%, #151515 70%); }
+  .av-2 { background: linear-gradient(145deg, #2c3438 0%, #101314 70%); }
+  .av-3 { background: linear-gradient(145deg, #3a3236 0%, #141112 70%); }
+  .card-body { padding: 16px 2px 4px; }
+  .card-body h3 { font-size: 22px; letter-spacing: -.045em; font-weight: 600; margin: 0 0 2px; }
+  .card-body h3 .verified { color: var(--accent); font-size: 15px; margin-left: 4px; }
+  .card-body p { font-size: 13px; color: var(--muted); margin: 0 0 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chips span { padding: 5px 10px; border-radius: 999px; background: var(--surface); border: 1px solid var(--border); font-size: 11px; color: var(--muted); }
+  .card-actions { display: flex; justify-content: center; gap: 14px; margin-top: 18px; }
+  .round {
+    width: 48px; height: 48px; border-radius: 50%; cursor: pointer;
+    border: 1px solid var(--border-strong); background: var(--surface); color: var(--fg);
+    display: grid; place-items: center; font-size: 18px;
+    transition: transform .16s ease, background .16s ease, border-color .16s ease;
+  }
+  .round:hover { transform: scale(1.08); border-color: var(--fg); }
+  .round:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .round-accent { background: var(--accent); border-color: var(--accent); color: #000; }
+  .round-accent:hover { background: #ff7373; border-color: #ff7373; }
+  .card.liked .round-accent { box-shadow: 0 0 0 6px var(--accent-soft); }
+  .match-toast {
+    position: absolute;
+    z-index: 4;
+    left: 50%;
+    bottom: -18px;
+    transform: translate(-50%, 14px);
+    opacity: 0;
+    display: flex; align-items: center; gap: 9px;
+    padding: 9px 16px;
+    border: 1px solid var(--border-strong);
+    border-radius: 999px;
+    background: #111;
+    font-size: 12px;
+    white-space: nowrap;
+    transition: opacity .25s ease, transform .25s ease;
+  }
+  .match-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ---------- sections ---------- */
+  .section { padding: 112px 0; border-bottom: 1px solid var(--border); }
+  .section-head { max-width: 760px; margin-bottom: 48px; }
+  .kicker { color: var(--faint); margin-bottom: 20px; }
+  h2 {
+    font-size: clamp(2.2rem, 4.6vw, 3.8rem);
+    line-height: 1.04;
+    letter-spacing: -.055em;
+    font-weight: 620;
+    margin-bottom: 20px;
+  }
+  .muted-h { color: var(--faint); }
+  .section-sub { color: var(--muted); font-size: 17px; max-width: 560px; margin: 0; }
+
+  /* ---------- bento ---------- */
+  .bento { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .cell {
+    position: relative;
+    overflow: hidden;
+    min-height: 286px;
+    padding: 30px;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    background: var(--surface);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    gap: 28px;
+    transition: border-color .2s ease, background .2s ease;
+  }
+  .cell:hover { border-color: var(--border-strong); background: var(--surface-2); }
+  .cell-lg { grid-column: span 2; grid-row: span 2; min-height: 584px; }
+  .cell-wide { grid-column: span 3; min-height: 230px; }
+  .cell-label { color: var(--faint); }
+  .cell h3 { font-size: 25px; line-height: 1.2; letter-spacing: -.04em; font-weight: 600; margin: 0 0 10px; }
+  .cell p { color: var(--muted); font-size: 14px; max-width: 440px; margin: 0; }
+  .cell-lg h3 { font-size: clamp(1.8rem, 3vw, 2.6rem); }
+
+  .signal-bars { display: grid; gap: 14px; margin-top: 8px; max-width: 420px; }
+  .signal { display: grid; grid-template-columns: 96px 1fr 38px; align-items: center; gap: 14px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .signal .track { height: 4px; border-radius: 999px; background: var(--border); overflow: hidden; }
+  .signal .fill { display: block; height: 100%; border-radius: 999px; background: #636363; }
+  .signal:first-child .fill { background: var(--accent); }
+  .signal b { color: var(--fg); font-weight: 500; text-align: right; }
+
+  .chat { display: grid; gap: 8px; font-size: 13px; }
+  .bubble { max-width: 90%; padding: 10px 13px; border-radius: 13px; line-height: 1.45; }
+  .bubble.them { background: var(--surface-2); border: 1px solid var(--border); color: var(--muted); }
+  .bubble.me { justify-self: end; background: var(--fg); color: #000; }
+
+  .checks { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; font-size: 13px; color: var(--muted); }
+  .checks li::before { content: "✓"; color: var(--accent); margin-right: 10px; }
+
+  .date-plan { display: flex; align-items: center; gap: 16px; font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  .date-plan .line { flex: 1; height: 1px; background: linear-gradient(to right, var(--accent), var(--border)); position: relative; }
+  .date-plan .line::before, .date-plan .line::after {
+    content: ""; position: absolute; top: 50%; width: 9px; height: 9px; border-radius: 50%;
+    transform: translateY(-50%); border: 2px solid var(--accent); background: #000;
+  }
+  .date-plan .line::before { left: 0; }
+  .date-plan .line::after { right: 0; border-color: var(--border-strong); }
+
+  /* ---------- numbers ---------- */
+  .numbers { padding: 64px 0; border-bottom: 1px solid var(--border); }
+  .numbers-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+  .numbers-grid div { border-left: 1px solid var(--border); padding-left: 22px; }
+  .numbers-grid strong { display: block; font-size: clamp(2.2rem, 4vw, 3.4rem); letter-spacing: -.06em; font-weight: 600; line-height: 1; margin-bottom: 10px; }
+  .numbers-grid span { font-size: 13px; color: var(--muted); }
+
+  /* ---------- steps ---------- */
+  .steps { list-style: none; padding: 0; margin: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .steps li { padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .step-n { color: var(--accent); display: block; margin-bottom: 34px; }
+  .steps h3 { font-size: 20px; letter-spacing: -.035em; font-weight: 600; margin: 0 0 10px; }
+  .steps p { color: var(--muted); font-size: 14px; margin: 0; }
+
+  /* ---------- stories ---------- */
+  .stories-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .story { padding: 28px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); display: flex; flex-direction: column; justify-content: space-between; gap: 30px; }
+  .story blockquote { margin: 0; font-size: 17px; line-height: 1.5; letter-spacing: -.02em; }
+  .story .who { display: flex; align-items: center; gap: 11px; font-size: 13px; }
+  .story .who i { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-family: var(--mono); font-size: 10px; background: var(--surface-2); border: 1px solid var(--border-strong); color: var(--muted); }
+  .story .who span { color: var(--faint); }
+
+  /* ---------- pricing ---------- */
+  .plans { display: grid; grid-template-columns: repeat(2, minmax(0, 420px)); gap: 12px; }
+  .plan { position: relative; padding: 30px; border: 1px solid var(--border); border-radius: 16px; background: var(--surface); }
+  .plan-featured { border-color: var(--border-strong); background: linear-gradient(180deg, rgba(255, 92, 92, .06), var(--surface) 45%); }
+  .plan-tag { position: absolute; top: 22px; right: 24px; color: var(--accent); }
+  .plan h3 { font-size: 18px; letter-spacing: -.03em; margin: 0 0 18px; }
+  .price { font-size: 44px; letter-spacing: -.06em; font-weight: 600; line-height: 1; margin-bottom: 24px; }
+  .price span { font-size: 13px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+  .plan ul { list-style: none; padding: 0; margin: 0 0 28px; display: grid; gap: 11px; font-size: 14px; color: var(--muted); }
+  .plan li::before { content: "—"; color: var(--faint); margin-right: 10px; }
+  .plan .btn { width: 100%; }
+
+  /* ---------- inverted CTA ---------- */
+  .cta { background: #f5f5f5; color: #000; padding: 104px 0; }
+  .cta .kicker { color: #777; }
+  .cta h2 { font-size: clamp(2.8rem, 6vw, 5rem); }
+  .cta p.lead { color: #555; }
+  .join-form { display: flex; flex-wrap: wrap; gap: 10px; max-width: 480px; margin-top: 30px; }
+  .join-form input {
+    flex: 1 1 240px; min-height: 46px; padding: 0 16px;
+    border: 1px solid #ccc; border-radius: 999px; background: #fff; color: #000; font-size: 14px;
+  }
+  .join-form input:focus { outline: 2px solid #000; outline-offset: 2px; }
+  .cta .fine { color: #888; margin-top: 14px; }
+  .cta .form-note { font-size: 12px; color: #888; margin: 14px 0 0; min-height: 18px; }
+
+  /* ---------- footer ---------- */
+  .footer { padding: 64px 0 34px; }
+  .footer-top { display: grid; grid-template-columns: 2fr repeat(3, 1fr); gap: 40px; padding-bottom: 56px; }
+  .footer-brand p { color: var(--faint); font-size: 13px; max-width: 260px; margin: 16px 0 0; }
+  .footer-col h4 { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--faint); font-weight: 500; margin: 0 0 18px; }
+  .footer-col a { display: block; font-size: 13px; color: var(--muted); margin-bottom: 11px; }
+  .footer-col a:hover { color: var(--fg); }
+  .footer-bottom { display: flex; justify-content: space-between; gap: 20px; padding-top: 26px; border-top: 1px solid var(--border); font-size: 12px; color: var(--faint); }
+
+  /* ---------- responsive ---------- */
+  @media (max-width: 900px) {
+    .nav, .header-actions .link { display: none; }
+    .header-actions { margin-left: auto; }
+    .hero-inner { grid-template-columns: 1fr; gap: 40px; padding: 72px 0 88px; }
+    .hero-art { min-height: 470px; }
+    .bento, .steps, .stories-grid, .numbers-grid { grid-template-columns: repeat(2, 1fr); }
+    .cell-lg { grid-column: span 2; grid-row: auto; min-height: 360px; }
+    .cell-wide { grid-column: span 2; }
+    .plan-featured { grid-column: span 2; }
+    .footer-top { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 600px) {
+    .container { width: calc(100% - 32px); }
+    .section { padding: 72px 0; }
+    .bento, .steps, .stories-grid, .numbers-grid, .plans, .plan-featured { grid-template-columns: 1fr; grid-column: span 1; }
+    .cell-lg, .cell-wide { grid-column: span 1; }
+    .numbers-grid { gap: 30px; }
+    .footer-top { grid-template-columns: 1fr 1fr; gap: 32px; }
+    .footer-bottom { flex-direction: column; }
+    .hero-art { transform: scale(.88); margin: -30px 0; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { transition-duration: .01ms !important; }
+  }
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="container header-inner">
+    <a class="brand" href="#top" aria-label="Tandem home">
+      <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <circle cx="12" cy="16" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="20" cy="16" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+        <circle cx="16" cy="16" r="2.6" style="fill: var(--accent)"/>
+      </svg>
+      <span>tandem<span class="brand-dot">.</span></span>
+    </a>
+    <nav class="nav" aria-label="Main navigation">
+      <a href="#features">Why Tandem</a>
+      <a href="#how">How it works</a>
+      <a href="#stories">Stories</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <div class="header-actions">
+      <a class="link" href="#signin">Sign in</a>
+      <a class="btn btn-sm btn-primary" href="#join">Get started <span aria-hidden="true">↗</span></a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <section class="hero" id="top">
+    <div class="grid-overlay" aria-hidden="true"></div>
+    <div class="hero-glow" aria-hidden="true"></div>
+    <div class="container hero-inner">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="dot" aria-hidden="true"></span> Dating, minus the noise</p>
+        <h1>Find your<br><span class="script">person.</span></h1>
+        <p class="lead">Tandem matches you on the things that actually last — values, rhythm, the way you spend a Sunday. Fewer profiles. Better conversations.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="#join">Start meeting — it's free <span aria-hidden="true">→</span></a>
+          <a class="btn btn-ghost" href="#how">See how it works <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="fine">No credit card. No endless feed. Just people.</p>
+      </div>
+
+      <div class="hero-art" aria-label="Preview of a Tandem profile card">
+        <div class="orbit" aria-hidden="true">
+          <svg viewBox="0 0 400 400" fill="none">
+            <circle cx="200" cy="200" r="170" stroke="currentColor" stroke-dasharray="2 8"/>
+            <circle cx="200" cy="200" r="122" stroke="currentColor" stroke-opacity=".7"/>
+            <circle cx="200" cy="200" r="74" stroke="currentColor" stroke-opacity=".5" stroke-dasharray="3 7"/>
+          </svg>
+        </div>
+        <div class="stack">
+          <div class="card card-back" aria-hidden="true">
+            <div class="card-top"><span class="tag">Verified</span><span class="online"><i></i> Active today</span></div>
+            <div class="avatar av-3"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="30" r="14" fill="currentColor"/><path d="M12 76c0-16 12-26 28-26s28 10 28 26z" fill="currentColor"/></svg></div>
+            <div class="card-body"><h3>Ari, 31</h3><p>Architect · Lisbon</p></div>
+          </div>
+          <div class="card card-mid" aria-hidden="true">
+            <div class="card-top"><span class="tag">Verified</span><span class="online"><i></i> Active now</span></div>
+            <div class="avatar av-2"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="30" r="14" fill="currentColor"/><path d="M12 76c0-16 12-26 28-26s28 10 28 26z" fill="currentColor"/></svg></div>
+            <div class="card-body"><h3>Jules, 29</h3><p>Reporter · Montréal</p></div>
+          </div>
+          <article class="card card-front">
+            <div class="card-top"><span class="tag">Verified</span><span class="online"><i></i> Active now</span></div>
+            <div class="avatar av-1"><svg viewBox="0 0 80 80" aria-hidden="true"><circle cx="40" cy="30" r="14" fill="currentColor"/><path d="M12 76c0-16 12-26 28-26s28 10 28 26z" fill="currentColor"/></svg></div>
+            <div class="card-body">
+              <h3>Mira, 28 <span class="verified" aria-label="Verified">✓</span></h3>
+              <p>Designer · Berlin</p>
+              <div class="chips"><span>Book club</span><span>Trail runs</span><span>Slow mornings</span></div>
+            </div>
+            <div class="card-actions">
+              <button class="round" type="button" data-pass aria-label="Pass on Mira">✕</button>
+              <button class="round round-accent" type="button" data-like aria-label="Like Mira">♥</button>
+            </div>
+          </article>
+          <div class="match-toast" id="matchToast" role="status"><span class="dot" aria-hidden="true"></span> You and Mira liked each other</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="features">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">01 — Why Tandem</p>
+        <h2>Less scrolling.<br><span class="muted-h">More of the good stuff.</span></h2>
+        <p class="section-sub">Everything here is built to get you out of the app and into a real conversation.</p>
+      </div>
+      <div class="bento">
+        <article class="cell cell-lg">
+          <div class="cell-label">Deeper signals</div>
+          <div>
+            <h3>Matched on more than a photo</h3>
+            <p>We weigh the little things — how you spend weekends, what you're curious about, the kind of life you're trying to build. Compatibility you can actually feel.</p>
+            <div class="signal-bars" aria-hidden="true">
+              <div class="signal"><span>Values</span><span class="track"><span class="fill" style="width:94%"></span></span><b>94%</b></div>
+              <div class="signal"><span>Curiosity</span><span class="track"><span class="fill" style="width:88%"></span></span><b>88%</b></div>
+              <div class="signal"><span>Rhythm</span><span class="track"><span class="fill" style="width:81%"></span></span><b>81%</b></div>
+              <div class="signal"><span>Humor</span><span class="track"><span class="fill" style="width:76%"></span></span><b>76%</b></div>
+            </div>
+          </div>
+        </article>
+        <article class="cell">
+          <div class="cell-label">Conversations</div>
+          <div>
+            <h3>A better first hello</h3>
+            <p>Prompts that start real conversations — not another “hey”.</p>
+            <div class="chat" aria-hidden="true">
+              <div class="bubble them">Best thing you've read this year?</div>
+              <div class="bubble me">A book about maps. Give me a week.</div>
+            </div>
+          </div>
+        </article>
+        <article class="cell">
+          <div class="cell-label">Verified</div>
+          <div>
+            <h3>Real people, checked</h3>
+            <p>Every profile goes through a quick verification.</p>
+            <ul class="checks"><li>Photo verification</li><li>Identity check</li><li>Report &amp; block, always</li></ul>
+          </div>
+        </article>
+        <article class="cell cell-wide">
+          <div class="cell-label">Offline first</div>
+          <div>
+            <h3>The goal is to meet.</h3>
+            <p>No games, no endless chat. When it feels right, Tandem helps you make a plan — and get off the screen.</p>
+            <div class="date-plan" aria-hidden="true"><span>Saturday · 18:40</span><span class="line"></span><span>Cafe Lumen</span></div>
+          </div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="numbers">
+    <div class="container numbers-grid">
+      <div><strong>1.8M</strong><span>conversations started</span></div>
+      <div><strong>74%</strong><span>make it to a second date</span></div>
+      <div><strong>0</strong><span>bots, ever</span></div>
+    </div>
+  </section>
+
+  <section class="section" id="how">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">02 — How it works</p>
+        <h2>Three steps.<br><span class="muted-h">One real life.</span></h2>
+        <p class="section-sub">Set up once, then let the right people find you.</p>
+      </div>
+      <ol class="steps">
+        <li><span class="step-n">01 / Tell us what matters</span><h3>Build your profile</h3><p>A few prompts, a handful of photos, and the things you'd rather talk about than small talk.</p></li>
+        <li><span class="step-n">02 / Get matched</span><h3>Meet your kind of people</h3><p>One thoughtful match at a time. No swipe fatigue, no algorithm theatre.</p></li>
+        <li><span class="step-n">03 / Take it offline</span><h3>Actually meet</h3><p>Suggest a place, pick a time, and see where the conversation goes in person.</p></li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="section" id="stories">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">03 — Stories</p>
+        <h2>People who<br><span class="muted-h">stopped scrolling.</span></h2>
+      </div>
+      <div class="stories-grid">
+        <article class="story"><blockquote>“We matched over a shared obsession with bad sci-fi. Six months later we're still arguing about the ending.”</blockquote><div class="who"><i>NK</i><div><strong>Nina &amp; Kai</strong><br><span>together 6 months</span></div></div></article>
+        <article class="story"><blockquote>“It was the first app where I didn't feel like I was performing. The conversations just felt normal.”</blockquote><div class="who"><i>AM</i><div><strong>Amara</strong><br><span>Berlin</span></div></div></article>
+        <article class="story"><blockquote>“I deleted the other apps after a week. One good match was worth more than a hundred likes.”</blockquote><div class="who"><i>TR</i><div><strong>Tomas</strong><br><span>Prague</span></div></div></article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section" id="pricing">
+    <div class="container">
+      <div class="section-head">
+        <p class="kicker">04 — Pricing</p>
+        <h2>Simple, like it<br><span class="muted-h">should be.</span></h2>
+        <p class="section-sub">Start free. Upgrade only when you want a little more reach.</p>
+      </div>
+      <div class="plans">
+        <article class="plan">
+          <h3>Free</h3>
+          <div class="price">€0<span> / forever</span></div>
+          <ul><li>A complete profile</li><li>Daily matches</li><li>Unlimited conversations</li></ul>
+          <a class="btn btn-ghost" href="#join">Get started</a>
+        </article>
+        <article class="plan plan-featured">
+          <span class="plan-tag">Most popular</span>
+          <h3>Plus</h3>
+          <div class="price">€12<span> / month</span></div>
+          <ul><li>Everything in Free</li><li>Unlimited matches</li><li>See who liked you</li><li>Priority profile review</li></ul>
+          <a class="btn btn-primary" href="#join">Try Plus <span aria-hidden="true">→</span></a>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta" id="join">
+    <div class="container">
+      <p class="kicker">Your move</p>
+      <h2>Your person is<br>out there.</h2>
+      <p class="lead">Join Tandem today. The first conversation is on us.</p>
+      <form class="join-form" id="joinForm" novalidate>
+        <label class="sr-only" for="joinEmail">Email address</label>
+        <input id="joinEmail" type="email" placeholder="you@email.com" autocomplete="email" required>
+        <button class="btn btn-dark" type="submit">Get started <span aria-hidden="true">→</span></button>
+      </form>
+      <p class="form-note" id="joinNote" role="status"></p>
+      <p class="fine">Free to join. No credit card. Cancel anytime.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer-top">
+      <div class="footer-brand">
+        <a class="brand" href="#top" aria-label="Tandem home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <circle cx="12" cy="16" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="20" cy="16" r="8" fill="none" stroke="currentColor" stroke-width="2"/>
+            <circle cx="16" cy="16" r="2.6" style="fill: var(--accent)"/>
+          </svg>
+          <span>tandem<span class="brand-dot">.</span></span>
+        </a>
+        <p>A quieter way to meet someone worth knowing.</p>
+      </div>
+      <div class="footer-col"><h4>Product</h4><a href="#features">Why Tandem</a><a href="#how">How it works</a><a href="#pricing">Pricing</a></div>
+      <div class="footer-col"><h4>Company</h4><a href="#stories">Stories</a><a href="#top">About</a><a href="#top">Careers</a></div>
+      <div class="footer-col"><h4>Legal</h4><a href="#top">Privacy</a><a href="#top">Terms</a><a href="#top">Safety</a></div>
+    </div>
+    <div class="footer-bottom"><span>© 2026 Tandem</span><span>Made for real connections.</span></div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  var toast = document.getElementById('matchToast');
+  var timer;
+  function showToast(text) {
+    if (!toast) return;
+    toast.lastChild.textContent = ' ' + text;
+    toast.classList.add('show');
+    clearTimeout(timer);
+    timer = setTimeout(function () { toast.classList.remove('show'); }, 2200);
+  }
+  var front = document.querySelector('.card-front');
+  var like = document.querySelector('[data-like]');
+  var pass = document.querySelector('[data-pass]');
+  if (like) like.addEventListener('click', function () {
+    if (front) front.classList.add('liked');
+    showToast('You and Mira liked each other');
+  });
+  if (pass) pass.addEventListener('click', function () {
+    if (front) front.classList.add('passed');
+    showToast('Passed on Mira — no hard feelings');
+  });
+
+  var form = document.getElementById('joinForm');
+  var note = document.getElementById('joinNote');
+  if (form) form.addEventListener('submit', function (event) {
+    event.preventDefault();
+    var email = document.getElementById('joinEmail');
+    if (note) note.textContent = email && email.value.indexOf('@') > 0
+      ? 'You’re on the list. Check your inbox soon.'
+      : 'Please enter a valid email address.';
+  });
+})();
+</script>
+</body>
+</html>

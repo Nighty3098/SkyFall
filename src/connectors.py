@@ -504,8 +504,8 @@ def setup_ip_logger_connectors(controller: "IpLoggerController"):
     controller.ui.ipLoggerPortEdit.returnPressed.connect(
         lambda: asyncio.ensure_future(controller.toggle_server())
     )
-    controller.ui.ipLoggerStyleSelector.currentIndexChanged.connect(
-        controller.style_changed
+    controller.ui.ipLoggerSiteSelector.currentIndexChanged.connect(
+        controller.site_changed
     )
 
 

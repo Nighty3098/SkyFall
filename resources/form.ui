@@ -4904,12 +4904,15 @@
              <number>0</number>
             </property>
             <item>
-             <widget class="QComboBox" name="ipLoggerStyleSelector">
+             <widget class="QComboBox" name="ipLoggerSiteSelector">
               <property name="minimumSize">
                <size>
                 <width>200</width>
                 <height>0</height>
                </size>
+              </property>
+              <property name="toolTip">
+               <string>HTML site served on the port (src/templates or ~/.skyfall/data/www_templates)</string>
               </property>
              </widget>
             </item>

@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from src.controllers.download_controller import DownloadController
     from src.controllers.file_analyzer_controller import FileAnalyzeController
     from src.controllers.github_controller import GitHubController
+    from src.controllers.ip_logger_controller import IpLoggerController
     from src.controllers.mac_location_controller import MacLocationController
     from src.controllers.mail_controller import MailController
     from src.controllers.phone_controller import PhoneController
@@ -493,6 +494,18 @@ def setup_phone_connectors(controller: "PhoneController"):
 def setup_mac_location_connectors(controller: "MacLocationController"):
     controller.ui.checkMacAddrButton.clicked.connect(
         lambda: asyncio.ensure_future(controller.start_searching())
+    )
+
+
+def setup_ip_logger_connectors(controller: "IpLoggerController"):
+    controller.ui.ipLoggerStartButton.clicked.connect(
+        lambda: asyncio.ensure_future(controller.toggle_server())
+    )
+    controller.ui.ipLoggerPortEdit.returnPressed.connect(
+        lambda: asyncio.ensure_future(controller.toggle_server())
+    )
+    controller.ui.ipLoggerSiteSelector.currentIndexChanged.connect(
+        controller.site_changed
     )
 
 

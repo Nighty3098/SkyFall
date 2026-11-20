@@ -61,6 +61,7 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 | **Shodan**        | Host lookup, full-text search + facets, count, DNS records, honeyscore, exploit database, on-demand scans, alerts and API catalog — plus one-click graph export and graph transforms                                                                                                                                                                                                                                            |
 | **Phone**         | Parse/validate (phonenumbers), reverse lookup (NumVerify/AbstractAPI), leaks (IntelX), reviews (7tel.ru)                                                                                                                                                                                                                                                                                                                        |
 | **MAC**           | BSSID geolocation via Yandex/Apple/Google/Microsoft/Mylnikov with a map                                                                                                                                                                                                                                                                                                                                                         |
+| **IP Logger**     | Serves an HTML "trap" site on a chosen port and logs every visitor: real client IP (PROXY protocol + X-Forwarded-For spoofing protection), geolocation, ISP/ASN, user-agent, referrer and browser details; templates from `src/templates` / `~/.skyfall/data/www_templates`, privileged ports below 1024 opened through the native admin prompt, dual-stack IPv4/IPv6, a public-IP link and a Leaflet hit map                   |
 | **Blockchain**    | Find transactions by indirect data (time, amount, memo) across Tron, TON, Ethereum, BSC, Base, Solana, BTC, LTC, DOGE, BCH                                                                                                                                                                                                                                                                                                      |
 | **Steganography** | LSB counts + chi-square, FFT spectral analysis, end-of-file payloads, tail-data detection, ELA heatmap                                                                                                                                                                                                                                                                                                                          |
 | **Files**         | Metadata + hashes, printable strings, VirusTotal, GPS map, and metadata cleaning (many formats)                                                                                                                                                                                                                                                                                                                                 |
@@ -72,6 +73,15 @@ curl -fsSL https://raw.githubusercontent.com/Nighty3098/SkyFall/main/install.sh 
 | **Cases**         | Investigation workspace with automatic per-module Markdown autosave                                                                                                                                                                                                                                                                                                                                                             |
 
 > Detailed per-tab reference, settings and API keys: [`DOC.md`](./DOC.md).
+
+## `IP LOGGER`
+
+Serves an HTML "trap" site on a chosen port and logs every visitor. Drop your own pages into `src/templates/` or `~/.skyfall/data/www_templates/`, pick one in the **site selector**, and a tracking beacon is injected into the page automatically.
+
+- **Client address** — the real TCP peer is logged by default; `X-Forwarded-For` / `X-Real-IP` are honoured only when the immediate peer is a configured trusted proxy.
+- **Privileged ports (<1024)** — a small elevated helper (native `pkexec` / UAC / `osascript` prompt) owns the low port and relays with the **PROXY protocol**, so the real client IP survives the relay.
+- **Dual-stack** — non-privileged binds listen on IPv4 **and** IPv6; the router's public IP is detected and shown as an external link.
+- **Debug panel** — per-hit geolocation, ISP/ASN, user-agent, referrer, browser details (screen, timezone, language) and proxy headers, plus a Leaflet hit map.
 
 ## `CUSTOM GRAPH TRANSFORMS`
 

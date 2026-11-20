@@ -31,6 +31,7 @@ from src.connectors import (
     setup_graph_connectors,
     setup_graph_layout_connectors,
     setup_graph_transform_connectors,
+    setup_ip_logger_connectors,
     setup_leak_connectors,
     setup_mac_location_connectors,
     setup_mail_connectors,
@@ -65,6 +66,7 @@ from src.controllers.graph_layout_controller import GraphLayoutController
 from src.controllers.graph_node_controller import GraphNodeController
 from src.controllers.graph_stats_controller import GraphStatsController
 from src.controllers.graph_transform_controller import GraphTransformController
+from src.controllers.ip_logger_controller import IpLoggerController
 from src.controllers.leak_controller import LeakController
 from src.controllers.mac_location_controller import MacLocationController
 from src.controllers.mail_controller import MailController
@@ -95,6 +97,7 @@ from src.modules.file_analyzer import FileAnalyzer
 from src.modules.geo_analysis import GeoAnalysis
 from src.modules.github_search import GitHubSearch
 from src.modules.google_dorks import GoogleDorksDB
+from src.modules.ip_logger import IpLogger
 from src.modules.leak_search import LeakSearch
 from src.modules.mac_location import MacLocation
 from src.modules.maigret_search import MaigretSearch
@@ -301,6 +304,11 @@ class MainWindow(QMainWindow):
                 await self.tgOSINT.close()
             except Exception:
                 logger.exception("Failed to close the TG OSINT client")
+        if hasattr(self, "ipLogger"):
+            try:
+                await self.ipLogger.stop()
+            except Exception:
+                logger.exception("Failed to stop the IP logger server")
         self._shutdown_complete = True
         self.close()
 
@@ -341,6 +349,7 @@ class MainWindow(QMainWindow):
         self.usernameSearch = UsernameSearch()
         self.macLocation = MacLocation()
         self.wifiMap = WifiMap()
+        self.ipLogger = IpLogger()
         self.cameraInventoryController = CameraInventoryController(self.ui)
         self.maigretSearch = MaigretSearch()
         self.domainAnalyzer = DomainAnalyzer(
@@ -430,6 +439,9 @@ class MainWindow(QMainWindow):
             self.emailHeaderAnalyzer.ip2locationio_api_key = getattr(
                 settings, "ip2locationio_api_key", ""
             )
+
+        if hasattr(self, "ipLogger"):
+            self.ipLogger.set_api_key(getattr(settings, "ip2locationio_api_key", ""))
 
         self.blockchainSearch._set_env_keys(
             {
@@ -562,6 +574,7 @@ class MainWindow(QMainWindow):
         self.archiveController = ArchiveController(self.ui, self.archiveSearch)
         self.macLocationController = MacLocationController(self.ui, self.macLocation)
         self.wifiMapController = WifiMapController(self.ui, self.wifiMap)
+        self.ipLoggerController = IpLoggerController(self.ui, self.ipLogger)
         self.tgOsintController = TgOSINTController(
             self.ui, self.tgOSINT, proxy=self.proxy
         )
@@ -613,6 +626,7 @@ class MainWindow(QMainWindow):
         setup_phone_connectors(self.phoneController)
         setup_mac_location_connectors(self.macLocationController)
         setup_wifi_map_connectors(self.wifiMapController)
+        setup_ip_logger_connectors(self.ipLoggerController)
         setup_tg_connectors(self.tgOsintController)
         setup_camera_inventory_connectors(self.cameraInventoryController)
         asyncio.ensure_future(self.cameraInventoryController.load_from_url())

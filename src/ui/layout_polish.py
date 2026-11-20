@@ -45,6 +45,7 @@ PRIMARY_BUTTONS = (
     "githubUserSearchBtn",
     "phoneLookupBtn",
     "checkMacAddrButton",
+    "ipLoggerStartButton",
     "bcSearchButton",
     "runS4FButton",
     "downloadFromLinkButton",

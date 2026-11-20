@@ -22,6 +22,7 @@ NAV_GROUPS = [
     (
         "Identity",
         [
+            "IP LOGGER",
             "SEARCH4FACES",
             "PHONE",
             "GEO",

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1667</width>
-    <height>1099</height>
+    <width>1518</width>
+    <height>873</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>20</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -3051,8 +3051,8 @@
                       <rect>
                        <x>0</x>
                        <y>0</y>
-                       <width>707</width>
-                       <height>963</height>
+                       <width>617</width>
+                       <height>894</height>
                       </rect>
                      </property>
                      <layout class="QVBoxLayout" name="shodanScrollLayout">
@@ -4807,8 +4807,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1017</width>
-               <height>979</height>
+               <width>868</width>
+               <height>759</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="verticalLayout_26">
@@ -4875,6 +4875,68 @@
              <string/>
             </property>
            </widget>
+          </item>
+         </layout>
+        </widget>
+        <widget class="QWidget" name="ip_logger">
+         <attribute name="title">
+          <string>IP LOGGER</string>
+         </attribute>
+         <layout class="QGridLayout" name="gridLayout_13">
+          <item row="3" column="0" colspan="3">
+           <widget class="QSplitter" name="ipLoggerSplitter">
+            <property name="orientation">
+             <enum>Qt::Orientation::Horizontal</enum>
+            </property>
+            <widget class="QPlainTextEdit" name="ipLoggerDebug"/>
+            <widget class="QWebEngineView" name="ipLoggerMap">
+             <property name="url">
+              <url>
+               <string>about:blank</string>
+              </url>
+             </property>
+            </widget>
+           </widget>
+          </item>
+          <item row="1" column="0" colspan="3">
+           <layout class="QHBoxLayout" name="horizontalLayout_3">
+            <property name="topMargin">
+             <number>0</number>
+            </property>
+            <item>
+             <widget class="QComboBox" name="ipLoggerSiteSelector">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="toolTip">
+               <string>HTML site served on the port (src/templates or ~/.skyfall/data/www_templates)</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QLineEdit" name="ipLoggerPortEdit">
+              <property name="placeholderText">
+               <string>PORT</string>
+              </property>
+             </widget>
+            </item>
+            <item>
+             <widget class="QPushButton" name="ipLoggerStartButton">
+              <property name="minimumSize">
+               <size>
+                <width>200</width>
+                <height>0</height>
+               </size>
+              </property>
+              <property name="text">
+               <string>START SERVER</string>
+              </property>
+             </widget>
+            </item>
+           </layout>
           </item>
          </layout>
         </widget>
@@ -5446,8 +5508,8 @@
               <rect>
                <x>0</x>
                <y>0</y>
-               <width>1413</width>
-               <height>1294</height>
+               <width>1264</width>
+               <height>1222</height>
               </rect>
              </property>
              <layout class="QVBoxLayout" name="settingsTabScrollContainerLayout">
@@ -5923,8 +5985,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1667</width>
-     <height>24</height>
+     <width>1518</width>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

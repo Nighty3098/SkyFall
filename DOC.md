@@ -32,6 +32,7 @@ Author: Nighty3098.
    - [Blockchain](#blockchain)
    - [Steganography](#steganography)
    - [Search4Faces](#search4faces)
+   - [IP Logger](#ip-logger)
    - [Graph](#graph)
    - [AI Report](#ai-report)
    - [Settings](#settings)
@@ -147,7 +148,7 @@ Additionally, the Settings tab has an **MCP Server** block (`mcpStatusLabel`, `m
 
 ## Program Tabs
 
-All 24 tabs are opened via the side menu (navigation), grouped into sections: **Home**, **Telegram**, **Identity & OSINT**, **Web & Infrastructure**, **Workspace**, **System**. The menu is toggled via **View → Toggle Navigation** (or `Ctrl+Shift+B`). The UI theme (dark/light) is generated from a single template `resources/style.template.qss` + the palette in `src/ui/theme.py` — both themes use the same set of rules and do not "drift apart".
+All 26 tabs are opened via the side menu (navigation), grouped into sections: **Home**, **Social**, **Identity**, **Web & Infrastructure**, **Blockchain**, **File analyze**, **Workspace**, **System**. The menu is toggled via **View → Toggle Navigation** (or `Ctrl+Shift+B`). The UI theme (dark/light) is generated from a single template `resources/style.template.qss` + the palette in `src/ui/theme.py` — both themes use the same set of rules and do not "drift apart".
 
 File drop zones in **File Analyze**, **Steganography**, and **Search4Faces** show only a centered 120 px file-drop icon; drag a file onto the icon to load it. The icon color follows the active theme's text color.
 
@@ -455,6 +456,22 @@ Reverse face search via the **search4faces.com** service (VK photos; scraping pr
 - `runS4FButton` — start the search.
 - Results — `S4FResultWidget` cards in `s4fResultsScrollArea`: face thumbnail, first/last name, age, city, country, similarity %, VK link.
 - `s4fSearchEdit` — search among the profiles in the results (Enter — jump to the next match).
+
+### IP Logger
+
+A built-in HTTP server that serves a selected HTML page on a chosen port and logs every visitor. The page is served by the app and a tracking beacon is injected before `</body>` — the template itself is not modified.
+
+- `ipLoggerSiteSelector` — the site to serve. Templates are discovered in `src/templates`, `src/www_templates` and `~/.skyfall/data/www_templates` (same-name files are labelled with their folder); when no HTML file exists, a built-in fallback page is served.
+- `ipLoggerPortEdit` — listening port (Enter also toggles the server).
+- `ipLoggerStartButton` — start/stop the server.
+- `ipLoggerDebug` — live report: each hit with time, IP, geolocation, ISP/ASN, method/path, `Host`, user-agent, referrer, `Accept-Language`, browser details (title, URL, screen, timezone, language) and the raw proxy headers (`x-forwarded-for`, `x-real-ip`, `forwarded`), plus the reachable links (public IP, LAN, loopback).
+- `ipLoggerMap` — Leaflet map of all geolocated hits.
+
+**Client address.** The real TCP peer is logged by default; `X-Forwarded-For` / `X-Real-IP` are only trusted when the peer is in the configured `trusted_proxies` list (IPs or CIDRs). Otherwise the proxy headers are kept as separate fields and never override the IP.
+
+**Privileged ports (<1024).** The site stays on an ephemeral loopback port while an elevated helper (`ip_logger_forwarder.py`, started through the native prompt — `pkexec` / UAC / `osascript`) owns the low port and relays TCP to it, prepending a **PROXY protocol v1** header so the real client IP survives the relay.
+
+**Networking.** Non-privileged binds listen on IPv4 + IPv6 (dual-stack); the router's public IP is resolved in the background and added to the link list. Geolocation uses the shared **IP2Location.io** client (`ip2locationio_api_key`).
 
 ### Graph
 
@@ -823,6 +840,9 @@ src/
   utils.py                  — list filtering, text highlighting
   searxng_search.py         — local SearXNG client
   modules/                  — data collection (UI-independent)
+    ip_logger.py            — IP LOGGER HTTP site + hit logger (templates, beacon, PROXY, public IP)
+    ip_logger_privilege.py  — native elevation for privileged ports (pkexec / UAC / osascript)
+    ip_logger_forwarder.py  — elevated TCP relay that adds the PROXY protocol header
     entity_resolution.py    — identifier normalisation, duplicate matching and graph merging
     js_secrets.py           — JS scan for keys/secrets/endpoints (Web)
     threat_intel.py         — AbuseIPDB/GreyNoise/ThreatFox/URLHaus aggregator
@@ -850,7 +870,7 @@ thirdparty/txfetch/         — vendored transaction search library
 
 ## Data and Storage
 
-- **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs), `transforms/` (custom transform plugins and their README template).
+- **`~/.skyfall/`**: `settings.json` (settings/keys; sensitive values are encrypted), `secret.key` (encryption key, `0600`), `mcp_token` (bearer token for MCP/bridge, `0600`), `proxies.txt`, `logs/`, `data/` (cases, `SkyFall_TG.db`, `SkyFall_TG_media/`, graphs), `transforms/` (custom transform plugins and their README template), `data/www_templates/` (HTML sites served by the IP LOGGER).
 - **`data/dorks.json`** — 14 categories, ~7,944 dorks. **`data/dorks.xml`** — the original GHDB database.
 - **`data/username_data.json`** — 481 site specifications for username search (URL templates, error codes, regex).
 - **`resources/form.ui`** — UI (5499 lines), loaded at runtime.
@@ -869,6 +889,7 @@ thirdparty/txfetch/         — vendored transaction search library
 | Google Safe Browsing | domain reputation | `google_safe_api_key` |
 | ipinfo.io / ipapi.co / ip-api.com | IP geolocation (multi-provider consensus) | ipinfo — optional |
 | IP2Location.io | IP geolocation, ASN, proxy/fraud signals (threat intel, Infra/Security tabs, email origin IP, graph) | optional (keyless 1,000/day; free key 50,000/month) |
+| api.ipify.org / ifconfig.me / icanhazip.com | IP LOGGER: detect the router's public IP for the external link | no |
 | GitHub REST API | search | `github_token` |
 | Shodan API | hosts, search, DNS, exploits, scans, alerts | `shodan_api_key` |
 | NumVerify / AbstractAPI | phones | `numverify` / `abstractapi` |

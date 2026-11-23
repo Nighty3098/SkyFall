@@ -658,6 +658,12 @@ QPushButton#addNodeButton:hover {
     border-color: $border_hover;
 }
 
+QPushButton#currentIpLabel {
+    background-color: transparent;
+    border: none;
+    color: $text;
+}
+
 /* -------------------------------------------------------------- graph tab */
 
 QListWidget#entityPalette::item {

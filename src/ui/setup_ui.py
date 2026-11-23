@@ -170,10 +170,14 @@ def normalize_splitters(parent, outer=12, gap=8, spacing=8):
 
 
 def setup_home_tab(parent):
-    label = getattr(parent.ui, "currentIpLabel", None)
-    if label is None:
+    button = getattr(parent.ui, "currentIpLabel", None)
+    if button is None:
         return
-    label.setText(f"Current IP: {get_current_ip()}")
+    def _update_ip(button):
+        button.setText(f"Current IP: {get_current_ip()}")
+
+    _update_ip(button)
+    button.clicked.connect(lambda: _update_ip(button))
 
 
 def setup_ui(self):

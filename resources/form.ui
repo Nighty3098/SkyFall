@@ -75,7 +75,7 @@
          <enum>QTabWidget::TabPosition::North</enum>
         </property>
         <property name="currentIndex">
-         <number>20</number>
+         <number>0</number>
         </property>
         <property name="tabBarAutoHide">
          <bool>true</bool>
@@ -170,12 +170,12 @@
              </spacer>
             </item>
             <item>
-             <widget class="QLabel" name="currentIpLabel">
-              <property name="text">
-               <string>IP:</string>
+             <widget class="QPushButton" name="currentIpLabel">
+              <property name="toolTip">
+               <string>Click to update</string>
               </property>
-              <property name="alignment">
-               <set>Qt::AlignmentFlag::AlignCenter</set>
+              <property name="text">
+               <string/>
               </property>
              </widget>
             </item>

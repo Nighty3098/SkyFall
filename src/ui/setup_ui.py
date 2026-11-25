@@ -173,6 +173,7 @@ def setup_home_tab(parent):
     button = getattr(parent.ui, "currentIpLabel", None)
     if button is None:
         return
+
     def _update_ip(button):
         button.setText(f"Current IP: {get_current_ip()}")
 

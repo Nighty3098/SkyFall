@@ -1,5 +1,5 @@
 from typing import TYPE_CHECKING
-
+from loguru import logger
 import requests
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import QTextEdit
@@ -44,4 +44,5 @@ def find_text(controller, text):
 
 
 def get_current_ip():
+    logger.debug("Get current ip")
     return requests.get("https://api.ipify.org/?format=text").text

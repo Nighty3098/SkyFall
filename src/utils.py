@@ -1,6 +1,7 @@
 from typing import TYPE_CHECKING
-from loguru import logger
+
 import requests
+from loguru import logger
 from PySide6.QtGui import QColor, QTextCharFormat, QTextCursor
 from PySide6.QtWidgets import QTextEdit
 
